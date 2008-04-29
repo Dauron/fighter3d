@@ -1,0 +1,256 @@
+#include "xMath.h"
+
+#define EPSILON     0.0000000001
+#define IsZero(a)   (fabs(a) <= EPSILON)
+
+// Multiply the xMatrix by another xMatrix
+xMatrix &xMatrix::operator *= (const xMatrix &m)
+{
+    xMatrix res;
+    for (unsigned int r = 0; r < 4; ++r)
+    for (unsigned int c = 0; c < 4; ++c)
+    {
+        xFLOAT f = 0;
+        f += (matrix[r][0] * m.row0[c]);
+        f += (matrix[r][1] * m.row1[c]);
+        f += (matrix[r][2] * m.row2[c]);
+        f += (matrix[r][3] * m.row3[c]);
+        res.matrix[r][c] = f;
+    }
+    return (*this = res);
+}
+
+// Transpose the xMatrix
+xMatrix &xMatrix::transpose()
+{
+    for (unsigned int c = 0; c < 4; ++c)
+    for (unsigned int r = c + 1; r < 4; ++r)
+    {
+        xFLOAT t = matrix[r][c];
+        matrix[r][c] = matrix[c][r];
+        matrix[c][r] = t;
+    }
+    return *this;
+}
+
+// Invert the xMatrix
+xMatrix &xMatrix::invert()
+{
+    xMatrix a(*this);
+    xMatrix b(xMatrix::Identity());
+
+    unsigned int r, c;
+    unsigned int cc;
+    unsigned int rowMax; // Points to max abs value row in this column
+    xFLOAT tmp;
+
+    // Go through columns
+    for (c=0; c<4; ++c)
+    {
+        // Find the row with max value in this column
+        rowMax = c;
+        for (r=c+1; r<4; ++r)
+            if (fabs(a.matrix[r][c]) > fabs(a.matrix[rowMax][c]))
+                rowMax = r;
+
+        // If the max value here is 0, we can't invert.  Return identity.
+        if (a.matrix[rowMax][c] == 0.0F)
+            return(identity());
+
+        // Swap row "rowMax" with row "c"
+        if (rowMax != c)
+            for (cc=0; cc<4; ++cc)
+            {
+                tmp = a.matrix[c][cc];
+                a.matrix[c][cc] = a.matrix[rowMax][cc];
+                a.matrix[rowMax][cc] = tmp;
+                tmp = b.matrix[c][cc];
+                b.matrix[c][cc] = b.matrix[rowMax][cc];
+                b.matrix[rowMax][cc] = tmp;
+            }
+
+        // Now everything we do is on row "c".
+        // Set the max cell to 1 by dividing the entire row by that value
+        tmp = a.matrix[c][c];
+        for (cc=0; cc<4; ++cc)
+        {
+            a.matrix[c][cc] /= tmp;
+            b.matrix[c][cc] /= tmp;
+        }
+
+        // Now do the other rows, so that this column only has a 1 and 0's
+        for (r = 0; r < 4; ++r)
+            if (r != c)
+            {
+                tmp = a.matrix[r][c];
+                for (cc=0; cc<4; ++cc)
+                {
+                    a.matrix[r][cc] -= a.matrix[c][cc] * tmp;
+                    b.matrix[r][cc] -= b.matrix[c][cc] * tmp;
+                }
+            }
+    }
+    return (*this = b);
+}
+
+xMatrix xMatrixFromQuaternion(xVector4 q)
+{
+    xMatrix res;
+    res.x0 = 1.0f - 2.0f * (q.y*q.y + q.z*q.z);
+    res.y0 = 2.0f * (q.z*q.y - q.w*q.z);
+    res.z0 = 2.0f * (q.w*q.y + q.x*q.z);
+    res.w0 = 0.0f;
+    res.x1 = 2.0f * (q.x*q.y + q.w*q.z);
+    res.y1 = 1.0f - 2.0f * (q.x*q.x + q.z*q.z);
+    res.z1 = 2.0f * (q.y*q.z - q.w*q.x);
+    res.w1 = 0.0f;
+    res.x2 = 2.0f * (q.x*q.z - q.w*q.y);
+    res.y2 = 2.0f * (q.y*q.z + q.w*q.x);
+    res.z2 = 1.0f - 2.0f * (q.x*q.x + q.y*q.y);
+    res.w2 = 0.0f;
+    res.x3 = 0.0f;
+    res.y3 = 0.0f;
+    res.z3 = 0.0f;
+    res.w3 = 1.0f;
+    return res;
+}
+
+xVector4 xMatrixToQuaternion(const xMatrix &m)
+{
+    xVector4 q;
+    /*
+    This code can be optimized for m[kW][kW] = 1, which
+    should always be true.  This optimization is excluded
+    here for clarity.
+    */
+    double Tr = m.x0 + m.y1 + m.z2 + m.w3, fourD;
+    int i,j,k;
+    /* w >= 0.5 ? */
+    if (Tr >= 1.0)
+    {
+    fourD = 2.0*sqrt(Tr);
+        q.w = fourD/4.0;
+    q.x = (m.z1 - m.y2)/fourD;
+    q.y = (m.x2 - m.z0)/fourD;
+    q.z = (m.y0 - m.x1)/fourD;
+    }
+    else
+    {
+    /* Find the largest component. */
+    if (m.x0 > m.y1)
+        i = 0;
+    else
+        i = 1;
+        if (m.z2 > m.matrix[i][i])
+        i = 2;
+
+    /* Set j and k to point to the next two components */
+    j = (i+1)%3;
+    k = (j+1)%3;
+    /* fourD = 4 * largest component */
+        fourD = 2.0*sqrt(m.matrix[i][i] - m.matrix[j][j] - m.matrix[k][k] + 1.0 );
+    /* Set the largest component */
+        q.xyzw[i] = fourD/4.0;
+    /* Calculate remaining components */
+    q.xyzw[j]  = (m.matrix[j][i] + m.matrix[i][j])/fourD;
+        q.xyzw[k]  = (m.matrix[k][i] + m.matrix[i][k])/fourD;
+        q.w = (m.matrix[k][j] - m.matrix[j][k])/fourD;
+    }
+
+    float angle = (q.w > 0 ? acos(q.w) : PI-acos(q.w));
+    float inv = angle > PI*1.f/3.f ? Sign(q.w) : -1.f;
+    xVector3 a = inv * q.vector3;
+    a.normalize() *= sin(angle);
+    return xVector4::Create(a, cos(angle));
+}
+
+// Return a 3D axis-rotation xMatrix
+// Pass in 'x', 'y', or 'z' for the axis.
+xMatrix xMatrixRotateRad(xFLOAT radX, xFLOAT radY, xFLOAT radZ)
+{
+    xMatrix ret;
+    xMatrix tmp;
+    bool filled = false;
+    xFLOAT sinA, cosA;
+
+    if (!IsZero(radX))
+    {
+        sinA = (xFLOAT)sin(radX);
+        cosA = (xFLOAT)cos(radX);
+
+        ret.matrix[0][0] =  1.0F; ret.matrix[1][0] =  0.0F; ret.matrix[2][0] =  0.0F;
+        ret.matrix[0][1] =  0.0F; ret.matrix[1][1] =  cosA; ret.matrix[2][1] = -sinA;
+        ret.matrix[0][2] =  0.0F; ret.matrix[1][2] =  sinA; ret.matrix[2][2] =  cosA;
+
+        ret.matrix[0][3] =  0.0F; ret.matrix[1][3] =  0.0F; ret.matrix[2][3] =  0.0F;
+        ret.matrix[3][0] =  0.0F; ret.matrix[3][1] =  0.0F; ret.matrix[3][2] =  0.0F; ret.matrix[3][3] = 1.0F;
+
+        filled = true;
+    }
+
+    if (!IsZero(radY))
+    {
+        sinA = (xFLOAT)sin(radY);
+        cosA = (xFLOAT)cos(radY);
+
+        tmp.matrix[0][0] =  cosA; tmp.matrix[1][0] =  0.0F; tmp.matrix[2][0] =  sinA;
+        tmp.matrix[0][1] =  0.0F; tmp.matrix[1][1] =  1.0F; tmp.matrix[2][1] =  0.0F;
+        tmp.matrix[0][2] = -sinA; tmp.matrix[1][2] =  0.0F; tmp.matrix[2][2] =  cosA;
+
+        tmp.matrix[0][3] =  0.0F; tmp.matrix[1][3] =  0.0F; tmp.matrix[2][3] =  0.0F;
+        tmp.matrix[3][0] =  0.0F; tmp.matrix[3][1] =  0.0F; tmp.matrix[3][2] =  0.0F; tmp.matrix[3][3] = 1.0F;
+
+        if (filled)
+            ret *= tmp;
+        else
+        {
+            ret = tmp;
+            filled = true;
+        }
+    }
+
+    if (!IsZero(radZ))
+    {
+        sinA = (xFLOAT)sin(radZ);
+        cosA = (xFLOAT)cos(radZ);
+
+        tmp.matrix[0][0] =  cosA; tmp.matrix[1][0] = -sinA; tmp.matrix[2][0] =  0.0F;
+        tmp.matrix[0][1] =  sinA; tmp.matrix[1][1] =  cosA; tmp.matrix[2][1] =  0.0F;
+        tmp.matrix[0][2] =  0.0F; tmp.matrix[1][2] =  0.0F; tmp.matrix[2][2] =  1.0F;
+
+        tmp.matrix[0][3] =  0.0F; tmp.matrix[1][3] =  0.0F; tmp.matrix[2][3] =  0.0F;
+        tmp.matrix[3][0] =  0.0F; tmp.matrix[3][1] =  0.0F; tmp.matrix[3][2] =  0.0F; tmp.matrix[3][3] = 1.0F;
+
+        if (filled)
+            ret *= tmp;
+        else
+        {
+            ret = tmp;
+            filled = true;
+        }
+    }
+
+    if (!filled) ret.identity();
+
+    return ret;
+}
+
+// Return a 3D translation xMatrix
+xMatrix xMatrixTranslate(xFLOAT x, xFLOAT y, xFLOAT z)
+{
+  xMatrix ret;
+  ret.identity();
+  ret.w0 = x;
+  ret.w1 = y;
+  ret.w2 = z;
+  return ret;
+}
+xMatrix xMatrixTranslate(const xFLOAT3 xyz)
+{
+  xMatrix ret;
+  ret.identity();
+  ret.w0 = xyz[0];
+  ret.w1 = xyz[1];
+  ret.w2 = xyz[2];
+  return ret;
+}
