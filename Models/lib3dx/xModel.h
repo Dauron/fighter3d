@@ -25,8 +25,16 @@ struct xMaterial {
     xColor   ambient;
     xColor   diffuse;
     xColor   specular;
-    xFLOAT   shininess;
+    xFLOAT   shininess_gloss;
+    xFLOAT   shininess_level;
     xFLOAT   transparency;
+    bool     self_illum;
+    char    *shader;
+    bool     two_sided;
+    bool     use_wire;
+    bool     use_wire_abs;
+    xFLOAT   wire_size;
+
     xTexture texture;
 
     xMaterial *nextP; // next sibling
@@ -118,6 +126,8 @@ struct xCollisionHierarchy
 {
     xWORD                 facesC;
     xWORD3             ** facesP;
+    xWORD                 verticesC;
+    xDWORD             *  verticesP;
 
     xWORD                 kidsC;
     xCollisionHierarchy * kidsP;

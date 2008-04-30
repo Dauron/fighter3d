@@ -216,6 +216,14 @@ xMaterial *xMaterialLoad(FILE *file)
     {
         mat->nextP = NULL;
         mat->texture.htex = 0;
+        //mat->ambient = mato->ambient;
+        //mat->diffuse = mato->diffuse;
+        //mat->specular = mato->specular;
+        //mat->name = mato->name;
+        //mat->shininess_gloss = mato->shininess_gloss;
+        //mat->shininess_level = 0.f;
+        //mat->texture.name = mato->texture.name;
+        //mat->transparency = mato->transparency;
 
         if (mat->name)
         {
@@ -329,6 +337,18 @@ void xCollisionHierarchyLoad(FILE *file, xElement *elem, xCollisionHierarchy *co
     }
     else
         colH->facesP = 0;
+
+//    colH->verticesC = 0;
+//    colH->verticesP = 0;
+
+    fread(&colH->verticesC, sizeof(colH->verticesC), 1, file);
+    if (colH->verticesC && !colH->kidsC)
+    {
+        colH->verticesP = new xDWORD[colH->verticesC];
+        fread(colH->verticesP, sizeof(xDWORD), colH->verticesC, file);
+    }
+    else
+        colH->verticesP = 0;
 }
 
 void xCollisionHierarchySave(FILE *file, xElement *elem, xCollisionHierarchy *colH)
@@ -354,6 +374,10 @@ void xCollisionHierarchySave(FILE *file, xElement *elem, xCollisionHierarchy *co
             fwrite(&idx, sizeof(idx), 1, file);
         }
     }
+
+    fwrite(&colH->verticesC, sizeof(colH->verticesC), 1, file);
+    if (colH->verticesC && !colH->kidsC && colH->verticesP)
+        fwrite(colH->verticesP, sizeof(xDWORD), colH->verticesC, file);
 }
 
 void xCollisionDataLoad(FILE *file, xElement *elem)
@@ -389,10 +413,10 @@ void xCollisionInfo_Fill(xFile *xfile, xElement *elem)
         for (; last; last = last->nextP)
             xCollisionInfo_Fill(xfile, last);
     }
-    /*if (elem->collisionData.hierarchyP) { // force Octree recalculation
-        xElement_FreeCollisionHierarchy(elem->collisionData.hierarchyP, elem->collisionData.hierarchyC);
-        elem->collisionData.hierarchyP = NULL;
-    }*/
+    //if (elem->collisionData.hierarchyP) { // force Octree recalculation
+    //    xElement_FreeCollisionHierarchy(elem->collisionData.hierarchyP, elem->collisionData.hierarchyC);
+    //    elem->collisionData.hierarchyP = NULL;
+    //}
     if (elem->collisionData.hierarchyP == NULL)
         xElement_GetCollisionHierarchy(xfile, elem);
 }

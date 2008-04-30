@@ -45,10 +45,10 @@ public:
         ModelObj::Update(deltaTime);
         CollidedModels.clear();
 
+        xRender *renderer = GetRenderer();
+
         if (actions.actions.size())
         {
-            xRender *renderer = GetRenderer();
-
             xDWORD delta = (xDWORD)(deltaTime*1000);
 
             actions.Update(delta);
@@ -59,13 +59,15 @@ public:
                 xAnimation::SaveToSkeleton(renderer->xModel->spineP, bones);
                 delete[] bones;
 
-                CollisionInfo_ReFill();
+                //CollisionInfo_ReFill();
             }
             renderer->CalculateSkeleton();
             CollisionInfo_ReFill();
 
             if (actions.progress > 10000) actions.progress = 0;
         }
+        else
+            xSkeletonReset(renderer->xModel->spineP);
     }
 
     xActionSet actions;

@@ -310,15 +310,18 @@ void   xBoneDelete(xFile *model, xBone *boneToDel)
 
         if (parent->kidsP) {
             xBone *ptr = parent->kidsP;
-            while (ptr->nextP) {                    // move through the whole list
+            while (ptr->nextP) {             // move through the whole list
                 if (ptr->nextP == boneToDel)        //   if next bone is the del bone
                     ptr->nextP = boneToDel->nextP;  //     remove it from the list
-                ptr = ptr->nextP;                   //   check next bone on the list
+                else
+                    ptr = ptr->nextP;               //   check next bone on the list
             }
             ptr->nextP = boneToDel->kidsP;          // move kids to the parent bone
         }
         else
             parent->kidsP = boneToDel->kidsP;       // move kids to the parent bone
+
+        parent->kidsC += boneToDel->kidsC - 1;      // add node's kids, but remove node
 
         if (boneToDel->id != cnt) // if it is not the bone with the last id,
         {                         //   then we have to correct largest id (= count)

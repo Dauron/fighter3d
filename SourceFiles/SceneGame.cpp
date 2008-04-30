@@ -54,9 +54,10 @@ bool SceneGame::InitGL()
 
     //setFog();
 
-    if (!shader.IsInitialized())
+    //if (!shader.IsInitialized())
     {
         shader.Terminate();
+        shader.Load("Data/program.vert", "Data/program.frag");
         shader.Initialize();
     }
     return true;

@@ -15,8 +15,10 @@ HFont FontMgr :: GetFont( const char* name, const char size )
         GLFont* fnt = m_HandleMgr.Acquire( rc.first->second );
         if ( !fnt->Load( name, size ) )
         {
-            IncReferences( rc.first->second );
-            DeleteFont( rc.first->second );
+            m_HandleMgr.Release( rc.first->second );
+            m_NameIndex.erase( rc.first );
+            //IncReferences( rc.first->second );
+            //DeleteFont( rc.first->second );
             assert (false);
             return HFont();
         }

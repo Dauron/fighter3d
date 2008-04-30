@@ -11,8 +11,10 @@ HModel ModelMgr :: GetModel( const char* name )
         Model3dx* mod = m_HandleMgr.Acquire( rc.first->second );
         if ( !mod->Load( rc.first->first.data() ) )
         {
-            IncReferences( rc.first->second );
-            DeleteModel( rc.first->second );
+            m_HandleMgr.Release( rc.first->second );
+            m_NameIndex.erase( rc.first );
+            //IncReferences( rc.first->second );
+            //DeleteModel( rc.first->second );
             assert (false);
             return HModel();
         }

@@ -25,7 +25,6 @@ struct xBox
 struct xCollisionHierarchyBounds
 {
     xBox           bounding;
-    xBox          *faceBoundings;
 
     xCollisionHierarchyBounds *kids;
 };

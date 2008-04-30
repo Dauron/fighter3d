@@ -206,8 +206,15 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
         lastm->name = strdup(mat->name);
         lastm->id = ++matId;
         lastm->nextP = NULL;
-        lastm->shininess = mat->shininess;
+        lastm->shininess_gloss = mat->shininess;
+        lastm->shininess_level = mat->shin_strength;
         lastm->transparency = mat->transparency;
+        lastm->self_illum = mat->self_illum;
+        lastm->shader = 0;
+        lastm->two_sided = mat->two_sided;
+        lastm->use_wire = mat->use_wire;
+        lastm->use_wire_abs = mat->use_wire_abs;
+        lastm->wire_size = mat->wire_size;
         lastm->texture.name = mat->texture1_map.name[0] ? strdup(mat->texture1_map.name) : NULL;
         ++(file->materialC);
     }

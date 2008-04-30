@@ -59,7 +59,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     std::string                         m_AnimationName;
 
     int                  lastX, lastY;
-    bool                 mouseLIsDown;
+    bool                 mouseLIsDown, mouseRIsDown;
     bool                 showBonesOnAnim;
     bool                 play;
     int                  currentAction;
@@ -71,6 +71,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     xElement            *selectedElement;
     GLuint               selectedElemID;
     std::vector<xDWORD>  selectedVert;
+    xDWORD               hoveredVert;
     int                  selStartX, selStartY;
     xVector4             lastBoneQuaternion;
     std::string          command;
@@ -85,6 +86,8 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     void        UpdateMouse(float deltaTime);
     void        MouseLDown(int X, int Y);
     void        MouseLUp  (int X, int Y);
+    void        MouseRDown(int X, int Y);
+    void        MouseRUp  (int X, int Y);
     void        MouseMove (int X, int Y);
     /* 3D */
     xVector3    Get3dPos  (int X, int Y, xVector3 planeP);

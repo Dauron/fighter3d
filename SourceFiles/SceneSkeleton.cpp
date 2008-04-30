@@ -13,8 +13,8 @@
 
 SceneSkeleton::SceneSkeleton(Scene *prevScene, const char* modelName)
         : m_EditMode(emMain), m_PrevScene(prevScene),
-          modifyButton(NULL), acceptButton(NULL), mouseLIsDown(false),
-          play(false), currentAction(0), selectedBone(NULL), selectedElemID(-1),
+          modifyButton(NULL), acceptButton(NULL), mouseLIsDown(false), mouseRIsDown(false),
+          play(false), currentAction(0), selectedBone(NULL), selectedElemID(-1), hoveredVert((xDWORD)-1),
           currentAnimation(NULL)
 
 {
@@ -119,7 +119,6 @@ void SceneSkeleton::InitInputMgr()
     im.SetInputCode(VK_ESCAPE, IC_Reject);
     im.SetInputCode(VK_BACK,   IC_Con_BackSpace);
     im.SetInputCode(VK_F11,    IC_FullScreen);
-    im.SetInputCode(VK_BACK,   IC_Con_BackSpace);
 #ifdef WIN32
     im.SetInputCode(VK_OEM_3,  IC_Console);
 #else
@@ -139,6 +138,8 @@ void SceneSkeleton::InitInputMgr()
     im.SetInputCode('V',       IC_PolyModeChange);
 
     im.SetInputCode(VK_LBUTTON, IC_LClick);
+    im.SetInputCode(VK_RBUTTON, IC_RClick);
+    im.SetInputCode(VK_SHIFT,   IC_RunModifier);
     im.SetInputCode(VK_CONTROL, IC_BE_Modifier);
     im.SetInputCode(VK_DELETE,  IC_BE_Delete);
     im.SetInputCode('N', IC_BE_Select);
@@ -190,6 +191,8 @@ void SceneSkeleton::Terminate()
     m_Directories.clear();
 }
 
+#define fractf(a)    ((a)-floorf(a))
+
 /************************** RENDER *************************************/
 bool SceneSkeleton::Render()
 {
@@ -200,12 +203,18 @@ bool SceneSkeleton::Render()
     glPolygonMode(GL_FRONT_AND_BACK, g_PolygonMode);
 
     // Set projection
+    glViewport(Left, Top, Width, Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    xglPerspective(45, AspectRatio, 0.1, 1000);
+    if (m_Cameras.Current == &m_Cameras.Perspective)
+        xglPerspective(45, AspectRatio, 0.1, 1000);
+    else
+    {
+        double scale = fabs((m_Cameras.Current->eye - m_Cameras.Current->center).length());
+        glOrtho( -scale*AspectRatio, scale*AspectRatio, -scale, scale, 0.1, 1000 );
+    }
     glMatrixMode(GL_MODELVIEW);
-    glViewport(Left, Top, Width, Height);
-
+    glLoadIdentity();
     setLights(); // lights at viewer position
     Camera_Aim_GL(*m_Cameras.Current);
 
@@ -288,6 +297,15 @@ bool SceneSkeleton::Render()
             "Skinning | Drag: Select Vertices | %s+Drag: Unselect Vertices | %s: Assign bones to selected Vertices",
             modifyButton, acceptButton);
         pFont->PrintF(5.f, Height-40.f, 0.f, "%d vertices selected", selectedVert.size());
+
+        if (selectedElement->skeletized && hoveredVert != (xDWORD)-1)
+        {
+            size_t stride = selectedElement->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+            xVertexSkel *vert = (xVertexSkel*)(((xBYTE*)selectedElement->verticesP)+stride*hoveredVert);
+
+            for (int i=0; i < 4 && fractf(vert->bone[i]) != 0.f; ++i)
+                pFont->PrintF(5.f, Height - 20.f * (i+3), 0.f, "Bone id%d : %d", (int)floorf(vert->bone[i]), (int)(fractf(vert->bone[i])*1000));
+        }
     }
     else if (m_EditMode == emSelectBone)
         pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Click: Select Bone");
@@ -425,7 +443,13 @@ std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)
     glViewport(Left, Top, Width, Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    xglPerspective(45.f, AspectRatio, 0.1f, 1000.f);
+    if (m_Cameras.Current == &m_Cameras.Perspective)
+        xglPerspective(45, AspectRatio, 0.1, 1000);
+    else
+    {
+        double scale = fabs((m_Cameras.Current->eye - m_Cameras.Current->center).length());
+        glOrtho( -scale*AspectRatio, scale*AspectRatio, -scale, scale, 0.1, 1000 );
+    }
     glMatrixMode(GL_MODELVIEW);
     Camera_Aim_GL(*m_Cameras.Current);
 

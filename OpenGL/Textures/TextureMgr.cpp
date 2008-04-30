@@ -11,9 +11,11 @@ HTexture TextureMgr :: GetTexture( const char* name )
         Texture* tex = m_HandleMgr.Acquire( rc.first->second );
         if ( !tex->Load( rc.first->first, true ) )
         {
-            IncReferences( rc.first->second );
-            DeleteTexture( rc.first->second );
-            assert (false);
+            m_HandleMgr.Release( rc.first->second );
+            m_NameIndex.erase( rc.first );
+            //IncReferences( rc.first->second );
+            //DeleteTexture( rc.first->second );
+            //assert (false);
             return HTexture();
         }
     }

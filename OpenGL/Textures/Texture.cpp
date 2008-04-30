@@ -16,7 +16,7 @@ bool Texture :: Load( const std::string& name, bool mipmap )
         image = LoadBMP( fname );
     if (!image) return false;
 
-    m_Name = name;
+    m_Name   = name;
     m_MipMap = mipmap;
     m_Width  = image->sizeX;
     m_Height = image->sizeY;

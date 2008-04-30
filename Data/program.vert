@@ -36,6 +36,6 @@ void main()
 	
 	//// Leave texture without changes
 	gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
-   	gl_FrontColor  = gl_Color;
+   	gl_BackColor   = gl_FrontColor  = gl_Color;
 	gl_Position    = ftransform(); //gl_ModelViewProjectionMatrix * gl_Vertex;
 }

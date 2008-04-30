@@ -208,6 +208,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             xRender *renderer = m_Model.GetRenderer();
             xBoneDelete(renderer->xModel, selectedBone);
             selectedBone = NULL;
+            renderer->FreeRenderData();
             renderer->CalculateSkeleton();
         }
         return true;
@@ -423,6 +424,17 @@ void SceneSkeleton::UpdateMouse(float deltaTime)
         mouseLIsDown = false;
         MouseLUp(im.mouseX, im.mouseY);
     }
+
+    if (!mouseRIsDown && im.GetInputState(IC_RClick)) {
+        mouseRIsDown = true;
+        MouseRDown(im.mouseX, im.mouseY);
+        return;
+    }
+
+    if (mouseRIsDown && !im.GetInputState(IC_RClick)) {
+        mouseRIsDown = false;
+        MouseRUp(im.mouseX, im.mouseY);
+    }
 }
 
 void SceneSkeleton::MouseLDown(int X, int Y)
@@ -541,6 +553,14 @@ void SceneSkeleton::MouseLUp(int X, int Y)
     }
 }
 
+void SceneSkeleton::MouseRDown(int X, int Y)
+{
+}
+void SceneSkeleton::MouseRUp(int X, int Y)
+{
+    if (m_EditMode == emSelectVertex)
+        selectedVert.clear();
+}
 void SceneSkeleton::MouseMove(int X, int Y)
 {
     std::vector<GLButton>::iterator begin = m_Buttons[m_EditMode].begin();
@@ -554,6 +574,21 @@ void SceneSkeleton::MouseMove(int X, int Y)
     {
         selectedBone->ending = Get3dPos(X, Y, selectedBone->ending);
         m_Model.GetRenderer()->CalculateSkeleton();                           // refresh model in GPU
+    }
+    else
+    if (m_EditMode == emSelectVertex)
+    {
+        std::vector<xDWORD> *sel = SelectCommon(X-3, Y-3, 6, 6);
+        // if there were vertices inside the selection box
+        if (sel) {
+            std::vector<xDWORD>::iterator iter = sel->begin();
+            while (iter != sel->end() && *iter >= selectedElement->verticesC)
+                ++iter;
+            hoveredVert = (iter != sel->end()) ? *iter : (xDWORD)-1;
+            delete sel;
+        }
+        else
+            hoveredVert = (xDWORD)-1;
     }
     else
     if (m_EditMode == emAnimateBones && mouseLIsDown && currentAction == IC_BE_Move)
@@ -623,7 +658,6 @@ xVector3 SceneSkeleton::CastPoint(xVector3 rayPos, xVector3 planeP)
 
 xVector3 SceneSkeleton::Get3dPos(int X, int Y, xVector3 planeP)
 {
-    float near_height = 0.1f * tan(45.0f * PI / 360.0f);
     float norm_x = 1.0f - (float)X/(Width/2.0f);
     float norm_y = (float)Y/(Height/2.0f) - 1.0f;
 
@@ -635,9 +669,21 @@ xVector3 SceneSkeleton::Get3dPos(int X, int Y, xVector3 planeP)
     modelView.invert();
 
     // get ray of the mouse
-    xVector3 rayDir; rayDir.Init(near_height * AspectRatio * norm_x, near_height * norm_y, 0.1f);
+    xVector3 rayDir;
+    xVector3 rayPos;
+    if (m_Cameras.Current == &m_Cameras.Perspective)
+    {
+        float near_height = 0.1f * tan(45.0f * PI / 360.0f);
+        rayPos = (xVector4::Create(0.0f,0.0f,0.0f,1.0f)*modelView).vector3;
+        rayDir.Init(near_height * AspectRatio * norm_x, near_height * norm_y, 0.1f);
+    }
+    else
+    {
+        double scale = fabs((m_Cameras.Current->eye - m_Cameras.Current->center).length());
+        rayPos = (xVector4::Create(-scale *AspectRatio * norm_x,-scale * norm_y,0.0f,1.0f)*modelView).vector3;
+        rayDir.Init(0.f, 0.f, 0.1f);
+    }
     rayDir = rayDir * modelView;
-    xVector3 rayPos = (xVector4::Create(0.0f,0.0f,0.0f,1.0f)*modelView).vector3;
 
     // get plane of ray intersection
     xVector3 planeN = (m_Cameras.Current->center - m_Cameras.Current->eye).normalize();
@@ -688,7 +734,7 @@ void SceneSkeleton::GetInputWeight()
             if (sum >= 100) {
                 m_EditMode = emSelectVertex;
                 SetVertexWghts();
-                selectedVert.clear();
+                //selectedVert.clear();
             }
             else {
                 m_EditMode = emSelectBone;
@@ -844,8 +890,9 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
     if (im.GetInputStateAndClear(IC_CameraPerspective))
         m_Cameras.Current = &m_Cameras.Perspective;
 
+    float scale = (m_Cameras.Current->eye - m_Cameras.Current->center).length();
     float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
-    float deltaTmp = deltaTime*MULT_MOVE*run;
+    float deltaTmp = deltaTime * scale * run;
 
     if (im.GetInputState(IC_MoveForward))
         m_Cameras.Current->Move (deltaTmp, 0.0f, 0.0f);
@@ -861,14 +908,6 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
         m_Cameras.Current->Move (0.0f, 0.0f, -deltaTmp);
     if (im.mouseWheel != 0)
     {
-        xVector3 center;
-
-        if (m_EditMode == emSelectVertex && selectedElement)
-            center = xCenterOfTheElement(selectedElement, m_Model.GetRenderer()->bonesM);
-        else
-            center = m_Cameras.Current->center;
-
-        m_Cameras.Current->center = center;
         float scl = im.mouseWheel/240.0f;
         if (scl < 0.0) scl = -1/scl;
         m_Cameras.Current->eye = m_Cameras.Current->center + (m_Cameras.Current->eye - m_Cameras.Current->center)*scl;
@@ -878,13 +917,7 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
     if (m_Cameras.Current == &m_Cameras.Perspective)
     {
         deltaTmp = deltaTime*MULT_ROT*run;
-
-        xVector3 center;
-        if (m_Cameras.Current == &m_Cameras.Perspective && m_EditMode == emSelectVertex
-            && selectedElement)
-            center = xCenterOfTheElement(selectedElement, m_Model.GetRenderer()->bonesM);
-        else
-            center = xCenterOfTheModel(m_Model.GetRenderer()->xModel, m_Model.GetRenderer()->bonesM);
+        xVector3 center = m_Cameras.Current->center;
 
         if (im.GetInputState(IC_TurnLeft))
             m_Cameras.Current->Rotate (deltaTmp, 0.0f, 0.0f);

@@ -727,6 +727,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\World\World.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\World\World.h"
 				>
 			</File>
@@ -803,6 +807,10 @@
 			Name="Physics"
 			>
 			<File
+				RelativePath="..\Physics\CollisionDetector.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Physics\CollisionDetector.h"
 				>
 			</File>
@@ -816,6 +824,10 @@
 			</File>
 			<File
 				RelativePath="..\Physics\RayTrCollisionDetector.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Physics\RigidBody.h"
 				>
 			</File>
 		</Filter>

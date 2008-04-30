@@ -145,17 +145,22 @@ bool RayTrCollisionDetector::CheckOctreeLevel(CollisionInfo             *ci,
                 continue;
             }
 
-            xBox *faceB = chb->faceBoundings;
-            for (int i1 = ch->facesC; i1; --i1, ++faceB)
+            for (int i1 = ch->facesC; i1; --i1)
             {
-                // Exclude elements that can't collide
-                if (!CollideBox(*faceB))
-                    continue;
-
                 xWORD3 **face1 = ch->facesP + ch->facesC - i1;
                 xVector3 *a1 = &(ci->verticesP + (**face1)[0])->vector3;
                 xVector3 *a2 = &(ci->verticesP + (**face1)[1])->vector3;
                 xVector3 *a3 = &(ci->verticesP + (**face1)[2])->vector3;
+                // Exclude elements that can't collide
+                xBox faceB;
+                faceB.min.x = min(a1->x, min(a2->x, a3->x));
+                faceB.min.y = min(a1->y, min(a2->y, a3->y));
+                faceB.min.z = min(a1->z, min(a2->z, a3->z));
+                faceB.max.x = max(a1->x, max(a2->x, a3->x));
+                faceB.max.y = max(a1->y, max(a2->y, a3->y));
+                faceB.max.z = max(a1->z, max(a2->z, a3->z));
+                if (!CollideBox(faceB))
+                    continue;
 
                 if (IntersectTriangles(a1,a2,a3,&colPoint))
                 {

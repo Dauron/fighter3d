@@ -1,148 +1,123 @@
 #include "ModelObj.h"
+#include "../Physics/RigidBody.h"
 
-void ModelObj::Update(float deltaTime)
+float time1;
+float time2;
+float time1b = 0.f;
+float time2b = 0.f;
+
+void ModelObj:: Initialize (const char *filename)
 {
-    if (deltaTime > 0.5f)
+    assert(modelHandle.IsNull());
+    modelHandle = g_ModelMgr.GetModel(filename);
+    renderer.Initialize(NULL);
+    collisionInfo = NULL;
+    centerOfTheMass.x = centerOfTheMass.y = centerOfTheMass.z = 0.f;
+    transVelocity.x = transVelocity.y = transVelocity.z = 0.f;
+    rotatVelocity.x = rotatVelocity.y = rotatVelocity.z = 0.f; rotatVelocity.w = 1.f;
+    transVelocityPrev = transVelocity;
+    rotatVelocityPrev = rotatVelocity;
+    mass       = 1.f;
+    resilience = 0.5f;
+    physical   = false;
+    phantom    = true;
+}
+
+void ModelObj:: Finalize ()
+{
+    if (collisionInfo)
     {
-        CollidedModels.clear();
-        return;
+        CollisionInfo_Free(GetRenderer()->xModel->firstP, collisionInfo);
+        delete[] collisionInfo;
+        collisionInfo = NULL;
     }
-
-    xVector3 T = transVelocity;
-    T = T.normalize() * 1.f * deltaTime;
-    if (fabs(T.x) > fabs(transVelocity.x) || fabs(T.y) > fabs(transVelocity.y) || fabs(T.z) > fabs(transVelocity.z))
-        transVelocity.x = transVelocity.y = transVelocity.z = 0.f;
-    else
-        transVelocity -= T;
-
-    xVector4 TR = xQuaternion::interpolateFull(rotatVelocity, deltaTime);
-    TR.vector3.invert();
-    rotatVelocity = xQuaternion::product(rotatVelocity, TR);
-
-    if (physical)
-        transVelocity.z -= 10.f * deltaTime;
-
-    if (!CollidedModels.empty())
+    if (!modelHandle.IsNull())
     {
-        std::vector<Collisions>::iterator iter, end;
+        assert(ModelMgr::GetSingletonPtr());
+        //if (ModelMgr::GetSingletonPtr()) // not needed when the World is used
+        g_ModelMgr.DeleteModel(modelHandle);
+        modelHandle = HModel();
+    }
+    renderer.xModel = NULL; // do not free the model and its render data, it may be used by other ModelObj, Model3dx will free it, when needed
+    renderer.Finalize();
+}
 
-        xVector3 collisionNorm; collisionNorm.Init(0.f, 0.f, 0.f);
-        xVector3 collisionVelo; collisionVelo.Init(0.f, 0.f, 0.f);
-        xVector3 collisionCent; collisionCent.Init(0.f, 0.f, 0.f);
-        float    normScale = 0;
-        float    massScale = 0;
-        for (int i = CollidedModels.size()-1; i >= 0; --i)
+void ModelObj:: RenderObject()
+{
+    transVelocityPrev = transVelocity;
+    rotatVelocityPrev = rotatVelocity;
+
+    assert(!modelHandle.IsNull());
+    GetRenderer()->RenderModel();
+/*
+    if (!phantom)
+        if (!CollidedModels.empty())
         {
-            //xVector3 normM(0.f, 0.f, 0.f);
-            float    normMSc = 0;
-            xVector3 centM; centM.Init(0.f, 0.f, 0.f);
-            xWORD    numCM = CollidedModels[i].collisions.size();
-
-            iter = CollidedModels[i].collisions.begin();
-            end  = CollidedModels[i].collisions.end();
-            for (; iter != end; ++iter)
+            srand(100);
+            //if (idx.empty())
             {
-                xVector3 norm1 = xVector3::CrossProduct( iter->face1v[1] - iter->face1v[0], iter->face1v[2] - iter->face1v[0] ).normalize();
-                xVector3 norm2 = xVector3::CrossProduct( iter->face2v[1] - iter->face2v[0], iter->face2v[2] - iter->face2v[0] ).normalize();
-                float scale = (fabs(xVector3::DotProduct(norm1, norm2)) + 0.01f);
-                normMSc += scale;
-                centM += /*scale **/ iter->colPoint;
-            }
-
-            float massScaleM = CollidedModels[i].model2->mass;
-            centM /= numCM /** normMSc*/;
-            xVector3 velo = CollidedModels[i].model2->transVelocityPrev +
-                xVector3::CrossProduct(
-                    xQuaternion::angularVelocity(CollidedModels[i].model2->rotatVelocityPrev),
-                    CollidedModels[i].model2->centerOfTheMass-centM);
-            //velo *= 1.f - CollidedModels[i].model2->resilience;
-
-            collisionVelo += velo * massScaleM;
-            collisionNorm +=  velo.normalize() * normMSc * massScaleM / numCM;
-            collisionCent += centM * massScaleM;
-            normScale += normMSc;
-            massScale += massScaleM;
-        }
-        if (!collisionNorm.length())
-            collisionNorm = -transVelocityPrev;
-        if (collisionNorm.length())
-        {
-            collisionNorm.normalize();
-
-            collisionCent /= CollidedModels.size() * massScale;
-            collisionVelo /= CollidedModels.size() * mass;
-
-            //cp = collisionCent;
-            //com = centerOfTheMass;
-            //cno = cp + collisionNorm;
-
-            // angular velocity
-            xVector3 vArm  = (centerOfTheMass - collisionCent);
-            xVector3 vArmN = vArm.normalize();
-            float cosColAngle = xVector3::DotProduct(vArmN, collisionNorm);
-            float sinColAngle = fabs(sqrt(1.f - cosColAngle*cosColAngle));
-
-            if (sinColAngle > 0.01f)
-            {
-                float velo = ( xVector3::CrossProduct(xQuaternion::angularVelocity(rotatVelocityPrev), vArm).length()
-                    + transVelocityPrev.length() ) * resilience;
-                velo += collisionVelo.length();
-                float Angle = sinColAngle * 0.5f * velo / vArm.length();
-                if (Angle > 0.1f)
+                std::vector<CollisionWithModel>::iterator cmiter;
+                for (cmiter = CollidedModels.begin(); cmiter < CollidedModels.end(); ++cmiter)
                 {
-                    xVector3 vAxis = xVector3::CrossProduct(vArmN, collisionNorm).normalize();
-                    vAxis *= sin(Angle);
-                    xVector4 q; q.Init(vAxis, cos(Angle));
-                    rotatVelocity = xQuaternion::product(rotatVelocity, q);
+                    std::vector<Collisions>::iterator iter;
+                    std::vector<xDWORD>::iterator found;
+                    xElement *prevElem = NULL;
+                    for (iter = cmiter->collisions.begin(); iter < cmiter->collisions.end(); ++iter)
+                    {
+                        if (prevElem != iter->elem1)
+                        {
+                            if (prevElem)
+                                GetRenderer()->RenderFaces(prevElem->id, &idx);
+                            prevElem = iter->elem1;
+                            idx.clear();
+                        }
+                        found = std::find(idx.begin(), idx.end(), (xDWORD)iter->face1);
+                        if (found == idx.end()) idx.push_back((xDWORD)iter->face1);
+                    }
+                    if (prevElem)
+                        GetRenderer()->RenderFaces(prevElem->id, &idx);
+                    idx.clear();
                 }
             }
-
-            // straight movement
-            if (1.f-sinColAngle)
-            {
-                float resilienceVeloL = transVelocity.length() * resilience;
-                xVector3 resilianceVelo = collisionNorm * resilienceVeloL;
-                //xVector3 resilianceVelo = transVelocity * (-resilience);
-                transVelocity = (resilianceVelo + collisionVelo) * (1.f-sinColAngle);
-                if (transVelocity.length() < 0.01f)
-                    transVelocity.x = transVelocity.y = transVelocity.z = 0.f;
-            }
         }
-        CollidedModels.clear();
-    }
-
-    bool needsRefill = false;
-    if (xVector4::Normalize(rotatVelocity).vector3.length() > 0.01f)
+*/
+/*
+    GetCollisionInfo();
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
+    g_TextureMgr.DisableTextures();
+    glColor3f(1.f, 1.f, 0.f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPointSize(5.f);
+    glPopMatrix();
+    CollisionInfo_Render(GetRenderer()->xModel->firstP, collisionInfo);
+    glBegin(GL_LINES);
     {
-        xMatrix rotation = xMatrixFromQuaternion( xQuaternion::interpolateFull(rotatVelocity, deltaTime));
-        mLocationMatrix = rotation * mLocationMatrix;
-        needsRefill = true;
+        glColor3f(1.f, 1.f, 0.f);
+        glVertex3fv(cp.xyz);
+        glVertex3fv(com.xyz);
+        glColor3f(1.f, 0.f, 0.f);
+        glVertex3fv(cp.xyz);
+        glVertex3fv(cno.xyz);
     }
-    else
-    {
-        rotatVelocity.x = rotatVelocity.y = rotatVelocity.z = 0.f;
-        rotatVelocity.w = 1.f;
-    }
+    glEnd();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glPushMatrix();
+    glDisable(GL_COLOR_MATERIAL);
+    glEnable(GL_DEPTH_TEST);
+*/
+}
 
-    if (transVelocity.length() > 0.01f)
-    {
-        xMatrix translation;
-        translation.identity();
-        translation.row3.vector3 = transVelocity * deltaTime;
-
-        mLocationMatrix *= translation;
-        needsRefill = true;
-    }
-    else
-        transVelocity.x = transVelocity.y = transVelocity.z = 0.f;
-
-    if (needsRefill)
-        CollisionInfo_ReFill();
+void ModelObj:: Update(float deltaTime)
+{
+    RigidBody::CalculateMovement(this, deltaTime);
 }
 
 CollisionInfo *ModelObj::GetCollisionInfo()
 {
     if (collisionInfo) return collisionInfo;
+
+    float delta = GetTick();
 
     idx.clear();
     xRender *rend  = GetRenderer();
@@ -159,6 +134,8 @@ CollisionInfo *ModelObj::GetCollisionInfo()
     if (verticesC)
         centerOfTheMass /= (float)verticesC;
 
+    time1 += GetTick() - delta;
+
     return collisionInfo;
 }
 
@@ -166,6 +143,8 @@ void ModelObj::CollisionInfo_ReFill()
 {
     if (collisionInfo)
     {
+        float delta = GetTick();
+
         xRender *rend  = GetRenderer();
         centerOfTheMass.x = centerOfTheMass.y = centerOfTheMass.z = 0.f;
         xDWORD   verticesC = 0;
@@ -173,6 +152,8 @@ void ModelObj::CollisionInfo_ReFill()
             verticesC += CollisionInfo_Fill(rend, elem, collisionInfo, false);
         if (verticesC)
             centerOfTheMass /= (float)verticesC;
+
+        time1 += GetTick() - delta;
     }
 }
 

@@ -48,7 +48,7 @@ void main()
 						color += spotEffect * gl_FrontLightProduct[i].diffuse * NdotL;
 						// specular light
 						NdotHV = max(dot(n,normalize(halfV[i])),0.0);
-						color += spotEffect * gl_FrontLightProduct[i].specular * pow(NdotHV,gl_FrontMaterial.shininess);
+						specular += spotEffect * gl_FrontLightProduct[i].specular * pow(NdotHV,gl_FrontMaterial.shininess);
 					}
 				}
 			}
@@ -61,5 +61,5 @@ void main()
 	if (texturing > 0)
 		color *= texture2D(tex,gl_TexCoord[0].st);
 	
-	gl_FragColor = (color + specular) * gl_Color;
+	gl_FragColor = clamp(color * gl_Color + specular, 0.0, 1.0);
 }

@@ -20,6 +20,11 @@ bool Model3dx :: Load ( const char *name )
         Lib3dsFile *file3ds = lib3ds_file_load (name);
         renderer.Initialize(xImportFileFrom3ds(file3ds));
         lib3ds_file_free(file3ds);
+        // save
+        char *fname = strdup (name);
+        fname[size-1] = 'x';
+        xFileSave(fname, renderer.xModel);
+        delete[] fname;
     }
 
     // save

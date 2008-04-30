@@ -37,7 +37,8 @@
 #define IC_Con_FirstPage IC_Con_BackSpace+5
 #define IC_Con_LastPage  IC_Con_BackSpace+6
 
-#define IC_LClick        IC_FullScreen-1
+#define IC_LClick        IC_Undefined+98
+#define IC_RClick        IC_Undefined+99
 
 #define IC_FullScreen    IC_Undefined+100
 

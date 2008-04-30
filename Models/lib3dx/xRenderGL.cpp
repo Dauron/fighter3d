@@ -186,9 +186,10 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
     {
         glMaterialfv(GL_FRONT, GL_AMBIENT, mat->ambient.col);
         glMaterialfv(GL_FRONT, GL_DIFFUSE, mat->diffuse.col);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, mat->specular.col);
+        xVector4 spec = *(xVector4*)(mat->specular.col) * mat->shininess_level;
+        glMaterialfv(GL_FRONT, GL_SPECULAR, spec.xyzw);
 
-        float shininess = pow(2, 10.0 * mat->shininess);
+        float shininess = pow(2, mat->shininess_gloss);
         if (shininess > 128.0)
             shininess = 128.0;
         glMaterialf(GL_FRONT, GL_SHININESS, shininess);
@@ -203,8 +204,8 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
         else
         {
             g_TextureMgr.DisableTextures();
-            float specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-            glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+            //float specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+            //glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
         }
         //glColor4f(mat->diffuse.r,mat->diffuse.g,mat->diffuse.b, 1.0f-mat->transparency);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -218,6 +219,7 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
         glMaterialfv(GL_FRONT, GL_AMBIENT,  ambient);
         glMaterialfv(GL_FRONT, GL_DIFFUSE,  diffuse);
         glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+        glMaterialf(GL_FRONT, GL_SHININESS, 2.0f);
         g_TextureMgr.DisableTextures();
     }
 }

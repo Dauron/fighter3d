@@ -400,6 +400,13 @@ test  = ";
     return false;
 }
 
+extern int testsLevel0;
+extern int testsLevel1;
+extern int testsLevel2;
+extern int testsLevel3;
+extern float time1b;
+extern float time2b;
+
 bool SceneConsole::Render()
 {
     prevScene->Render();
@@ -444,8 +451,8 @@ bool SceneConsole::Render()
 
     glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
     pFont->PrintF(0.0f, (float)cHeight-lineHeight, 0.0f,
-        "Console    MinFPS: %u MeanFPS: %u MaxFPS: %u FPS: %u",
-        (int)minFPS, (int) meanFPS, (int)maxFPS, (int)curFPS);
+        "Console    MinFPS: %u MeanFPS: %u MaxFPS: %u FPS: %u L0: %u L1: %u L2: %u L3: %u, T1: %f, T2: %f",
+        (int)minFPS, (int) meanFPS, (int)maxFPS, (int)curFPS, testsLevel0,testsLevel1,testsLevel2,testsLevel3, time1b, time2b);
 
     glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
     glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing

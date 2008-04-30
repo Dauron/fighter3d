@@ -8,11 +8,11 @@
 class Object3D
 {
     protected:
-        xMatrix mLocationMatrix;
-
         virtual void RenderObject() = 0;
 
     public:
+        xMatrix mLocationMatrix;
+
         virtual ~Object3D() {}
 
         void Translate(xFLOAT x, xFLOAT y, xFLOAT z);
