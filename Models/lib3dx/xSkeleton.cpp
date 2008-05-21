@@ -154,7 +154,13 @@ void _xElement_AddSkeleton(xFile *file, xElement *elem)
             else
             {
                 delete[] elem->renderData.verticesP;
-                elem->renderData.verticesP = (xVertex*)ptrN;
+                if (elem->renderData.verticesP == elem->verticesP)
+                {
+                    elem->verticesP = elem->renderData.verticesP = (xVertex*)ptrN;
+                    break;
+                }
+                else
+                    elem->renderData.verticesP = (xVertex*)ptrN;
             }
         }
     }

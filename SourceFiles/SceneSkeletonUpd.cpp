@@ -90,6 +90,14 @@ bool SceneSkeleton::Update(float deltaTime)
             return true;
         }
     }
+    if (m_EditMode != emSelectVertex && m_EditMode != emSelectBone && m_EditMode != emInputWght &&
+        im.GetInputStateAndClear(IC_ViewPhysicalModel))
+    {
+        m_EditGraphical = !m_EditGraphical;
+        xRender *renderer = m_Model.GetRenderer();
+        renderer->xModelToRender = (m_EditGraphical) ? renderer->xModelGraphics : renderer->xModelPhysical;
+        m_Buttons[emMain][3].Down = !m_EditGraphical;
+    }
     if (m_EditMode == emInputWght)
     {
         GetInputWeight();

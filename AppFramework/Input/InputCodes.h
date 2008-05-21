@@ -53,8 +53,9 @@
 #define IC_CameraPerspective IC_CameraChange+8
 
 #define IC_PolyModeChange    IC_CameraPerspective+1
+#define IC_ViewPhysicalModel IC_PolyModeChange+1
 
-#define IC_BE_Create         IC_PolyModeChange+10
+#define IC_BE_Create         IC_ViewPhysicalModel+10
 #define IC_BE_Edit           IC_BE_Create+1
 #define IC_BE_Delete         IC_BE_Create+2
 #define IC_BE_Select         IC_BE_Create+3

@@ -70,10 +70,20 @@ public:
 
     void CopySpineToPhysical()
     {
-        if (xModelPhysical && xModelGraphics != xModelPhysical)
+        if (xModelGraphics != xModelPhysical)
         {
             xBoneFree(xModelPhysical->spineP);
             xBoneCopy(xModelGraphics->spineP, xModelPhysical->spineP);
+        }
+    }
+
+    void CopySpineToGraphics()
+    {
+        if (xModelGraphics != xModelPhysical)
+        {
+            xBoneFree(xModelGraphics->spineP);
+            xBoneCopy(xModelPhysical->spineP, xModelGraphics->spineP);
+            spineP = xModelGraphics->spineP;
         }
     }
 

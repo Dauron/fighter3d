@@ -125,7 +125,7 @@ void World:: Initialize()
         objects.push_back(model);
 
         modelA = new SkeletizedObj(-0.3f, -3.2f, 0.0f, 0.0f, 0.0f, 170.0f);
-        modelA->Initialize("Data/models/human2.3dx");
+        modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
         modelA->phantom = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
@@ -134,7 +134,7 @@ void World:: Initialize()
         objects.push_back(modelA);
 
         modelA = new SkeletizedObj(-0.5f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
-        modelA->Initialize("Data/models/human2.3dx");
+        modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
         modelA->phantom = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
@@ -144,7 +144,7 @@ void World:: Initialize()
         objects.push_back(modelA);
 /*
         modelA = new SkeletizedObj(4.5f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
-        modelA->Initialize("Data/models/human2.3dx");
+        modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
         modelA->phantom = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
@@ -153,7 +153,7 @@ void World:: Initialize()
         objects.push_back(modelA);
 */
         modelA = new SkeletizedObj(5.f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
-        modelA->Initialize("Data/models/human3.3dx");
+        modelA->Initialize("Data/models/human3.3dx", "Data/models/human3_fst.3dx");
         modelA->phantom  = false;
         modelA->physical = false;
         modelA->mass     = 70.f;

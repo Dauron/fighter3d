@@ -60,6 +60,17 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
     m_Model.Initialize(gr_modelName, ph_modelName);
 
     xRender *renderer = m_Model.GetRenderer();
+    if (!renderer->xModelPhysical->spineP && renderer->xModelGraphics->spineP)
+    {
+        xSkeletonAdd(renderer->xModelPhysical); //   add skeleton to model
+        renderer->CopySpineToPhysical();
+    }
+    else
+    if (!renderer->xModelGraphics->spineP && renderer->xModelPhysical->spineP)
+    {
+        xSkeletonAdd(renderer->xModelGraphics); //   add skeleton to model
+        renderer->CopySpineToGraphics();
+    }
     xSkeletonReset(renderer->spineP);
     renderer->CalculateSkeleton();
 
@@ -137,6 +148,7 @@ void SceneSkeleton::InitInputMgr()
     im.SetInputCode('7',       IC_CameraPerspective);
 
     im.SetInputCode('V',       IC_PolyModeChange);
+    im.SetInputCode('F',       IC_ViewPhysicalModel);
 
     im.SetInputCode(VK_LBUTTON, IC_LClick);
     im.SetInputCode(VK_RBUTTON, IC_RClick);
