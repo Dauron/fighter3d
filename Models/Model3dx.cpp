@@ -26,11 +26,13 @@ bool Model3dx :: Load ( const char *name )
                 lib3ds_file_free(file3ds);
             }
         }
-        // save
-        char *fname = strdup (name);
-        fname[size-1] = 'x';
-        model->fileName = fname;
-        xFileSave(model);
+        if (model) {
+            // save
+            char *fname = strdup (name);
+            fname[size-1] = 'x';
+            model->fileName = fname;
+            xFileSave(model);
+        }
     }
 
     return model;
@@ -84,11 +86,13 @@ void Model3dx :: FreeElementRenderData(xElement *elem, bool listOnly)
         p = elem->renderData.indexB;
     }
     else
-    if (elem->renderData.mode == xRENDERMODE_LIST && elem->renderData.listID)
-        glDeleteLists(elem->renderData.listID, 1);
+    if (elem->renderData.mode == xRENDERMODE_LIST)
+    {
+        if (elem->renderData.listID) glDeleteLists(elem->renderData.listID, 1);
+        if (elem->renderData.listIDTransp) glDeleteLists(elem->renderData.listIDTransp, 1);
+    }
     elem->renderData.vertexB = 0;
     elem->renderData.normalB = 0;
     elem->renderData.indexB = 0;
-    elem->renderData.listID = 0;
     elem->renderData.mode = xRENDERMODE_NULL;
 }

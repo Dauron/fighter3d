@@ -3,19 +3,24 @@
 
 #include "SkeletizedObj.h"
 #include "../OpenGL/ISelectionProvider.h"
-#include "../OpenGL/GLShader.h"
 #include "../Physics/CD_MeshToMesh.h"
 #include "../Physics/CD_RayToMesh.h"
 
 class World : public ISelectionProvider
 {
+public:
     typedef std::vector<ModelObj*> objectVec;
+    typedef std::vector<xLight>    lightsVec;
     objectVec objects;
+    lightsVec lights;
 
+private:
     CD_MeshToMesh cd_MeshToMesh;
     CD_RayToMesh  cd_RayToMesh;
 
     bool m_Valid;
+
+    ModelObj *shadowCaster;
 
     virtual void RenderSelect()
     {
@@ -25,7 +30,8 @@ class World : public ISelectionProvider
         objectVec::iterator i, begin = objects.begin(), end = objects.end();
         for ( i = begin ; i != end ; ++i ) {
             glLoadName(++objectID);
-            (*i)->Render();
+            (*i)->Render(false);
+            (*i)->Render(true);
         }
     }
     virtual unsigned int CountSelectable()
@@ -46,17 +52,16 @@ public:
         return objectIDs == NULL ? NULL : objects[objectIDs->back()];
     }
 
-    void Update(float deltaTime);
-    void Render();
-    void Initialize();
-    void Finalize();
+    void Load       (char *mapFileName);
+    void Initialize ();
+    void Update     (float deltaTime);
+    void Finalize   ();
 
-    void Load(char *mapFileName);
 
-   ~World( void )
-   {
+    ~World( void )
+    {
         Finalize();
-   }
+    }
 };
 
 #endif

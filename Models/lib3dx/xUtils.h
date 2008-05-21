@@ -31,9 +31,17 @@ struct xSkinnedData
 struct xCollisionHierarchyBounds
 {
     xBox           bounding;
+    xVector3       center;
+    xFLOAT         radius;
     bool           sorted;
 
     xCollisionHierarchyBounds *kids;
+};
+
+struct xCollisionHierarchyBoundsRoot : public xCollisionHierarchyBounds
+{
+    xVector4                  * verticesP;
+    xDWORD                      verticesC;
 };
 
 xVector4 * xElement_GetSkinnedVertices(const xElement *elem, const xMatrix *bones, bool fromRenderData = true);
@@ -52,7 +60,7 @@ xBox       xBoundingBox               (const xVector4* vertices, xDWORD count);
 void xElement_GetCollisionHierarchy        (const xFile *file, xElement *elem);
 void xElement_FreeCollisionHierarchy       (xCollisionData *pcData);
 void xElement_FreeCollisionHierarchyBounds (xCollisionData *pcData, xCollisionHierarchyBounds *hierarchyBP);
-xBox xElement_CalcCollisionHierarchyBox    (const xVector4* vertices,
-                                            xCollisionData *pcData, xCollisionHierarchyBounds *&bounds);
+void xElement_CalcCollisionHierarchyBox    (const xVector4* vertices,
+                                            xCollisionData *pcData, xCollisionHierarchyBounds *pBound);
 
 #endif

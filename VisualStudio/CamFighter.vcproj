@@ -276,11 +276,19 @@
 					>
 				</File>
 				<File
+					RelativePath="..\Models\lib3dx\xLight.h"
+					>
+				</File>
+				<File
 					RelativePath="..\Models\lib3dx\xModel.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\Models\lib3dx\xModel.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xRender.cpp"
 					>
 				</File>
 				<File

@@ -75,7 +75,7 @@ void main()
 	else
 		color = gl_FrontMaterial.diffuse;
 	
-	if (texturing > 0)
-		color *= texture2D(tex,gl_TexCoord[0].st);
+    if (texturing > 0)
+        color *= texture2D(tex,gl_TexCoord[0].st/gl_TexCoord[0].w);
 	gl_FragColor = clamp(color * gl_Color + specular, 0.0, 1.0);
 }

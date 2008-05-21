@@ -3,7 +3,6 @@
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
-#include "../OpenGL/Textures/TextureMgr.h"
 
 #include "../OpenGL/GLAnimSkeletal.h"
 #include "../Models/lib3dx/xRender.h"
@@ -14,7 +13,7 @@
 SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName)
         : m_EditMode(emMain), m_PrevScene(prevScene), m_EditGraphical(true),
           modifyButton(NULL), acceptButton(NULL), mouseLIsDown(false), mouseRIsDown(false),
-          play(false), currentAction(0), selectedBone(NULL), selectedElemID(-1), hoveredVert((xDWORD)-1),
+          play(false), currentAction(0), selectedBone(NULL), selectedElemID(xWORD_MAX), hoveredVert(xDWORD_MAX),
           currentAnimation(NULL)
 
 {
@@ -111,8 +110,8 @@ bool SceneSkeleton::InitGL()
 
     glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
     glDisable (GL_POINT_SMOOTH);
-    glEnable (GL_LINE_SMOOTH);
-    glEnable (GL_POLYGON_SMOOTH);           // produces errors on many cards... use FSAA!
+    //glEnable (GL_LINE_SMOOTH);
+    //glEnable (GL_POLYGON_SMOOTH);           // produces errors on many cards... use FSAA!
 
     glHint(GL_POINT_SMOOTH_HINT, GL_FASTEST /*GL_NICEST*/);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -232,9 +231,10 @@ bool SceneSkeleton::Render()
     Camera_Aim_GL(*m_Cameras.Current);
 
     xRender *renderer = m_Model.GetRenderer();
-    renderer->RenderModel();
+    renderer->RenderModel(false);
+    renderer->RenderModel(true);
 
-    g_TextureMgr.DisableTextures();
+    GLShader::EnableTexturing(0);
     GLShader::EnableLighting(0);
     glDisable(GL_LIGHTING);
 
@@ -242,7 +242,7 @@ bool SceneSkeleton::Render()
         renderer->RenderVertices(xRender::smNone, selectedElemID, &selectedVert);
     if (m_EditMode == emSelectBone || m_EditMode == emCreateBone ||
         m_EditMode == emInputWght  || (m_EditMode == emAnimateBones && showBonesOnAnim))
-        renderer->RenderSkeleton(false, selectedBone ? selectedBone->id : -1);
+        renderer->RenderSkeleton(false, selectedBone ? selectedBone->id : xWORD_MAX);
 
     glFlush();
 
@@ -311,7 +311,7 @@ bool SceneSkeleton::Render()
             modifyButton, acceptButton);
         pFont->PrintF(5.f, Height-40.f, 0.f, "%d vertices selected", selectedVert.size());
 
-        if (selectedElement->skeletized && hoveredVert != (xDWORD)-1)
+        if (selectedElement->skeletized && hoveredVert != xDWORD_MAX)
         {
             size_t stride = selectedElement->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
             xVertexSkel *vert = (xVertexSkel*)(((xBYTE*)selectedElement->verticesP)+stride*hoveredVert);
@@ -484,15 +484,15 @@ xBone *SceneSkeleton::SelectBone(int X, int Y)
     delete sel;
     return NULL;
 }
-xDWORD SceneSkeleton::SelectElement(int X, int Y)
+xWORD SceneSkeleton::SelectElement(int X, int Y)
 {
     std::vector<xDWORD> *sel = SelectCommon(X, Y);
 
     if (sel && sel->size()) {
         GLuint id = sel->back();
         delete sel;
-        return id;
+        return (xWORD)id;
     }
     delete sel;
-    return -1;
+    return xWORD_MAX;
 }

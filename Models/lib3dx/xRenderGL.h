@@ -9,13 +9,14 @@
 class xRenderGL : public xRender
 {
   public:
-    virtual void RenderModel   ();
-    virtual void RenderSkeleton( bool selectionRendering, xWORD selBoneId );
+    virtual void RenderModel   ( bool transparent );
+    virtual void RenderShadow  ( const xShadowMap &shadowMap, const xMatrix &locationMatrix);
+    virtual void RenderSkeleton( bool selectionRendering, xWORD selBoneId = xWORD_MAX);
     virtual void RenderVertices( SelectionMode         selectionMode    = smNone,
-                                 xWORD                 selElementId     = -1,
-                                 std::vector<xDWORD> * selectedVertices = NULL );
+                                  xWORD                 selElementId     = xWORD_MAX,
+                                  std::vector<xDWORD> * selectedVertices = NULL );
     virtual void RenderFaces   ( xWORD                 selectedElement,
-                                 std::vector<xDWORD> * facesToRender );
+                                 std::vector<xDWORD>  * facesToRender );
 
 
     xRenderGL() : UseVBO(agl_VBOLoaded), UseList(true) {};
@@ -36,6 +37,13 @@ class xRenderGL : public xRender
             g_ModelMgr.GetModel(hModelPhysical)->FreeRenderData(true);
         }
     }
+
+    virtual void FreeRenderData()
+    {
+        if (this->shadowTexId) glDeleteTextures(1, (GLuint*)&this->shadowTexId);
+    }
+
+    virtual xDWORD CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight);
 
   private:
     bool       UseVBO;
@@ -65,8 +73,11 @@ class xRenderGL : public xRender
                                xWORD                 selElementId,
                                std::vector<xDWORD> * facesToRender);
 
-    void RenderModelVBO( xElement * elem );
-    void RenderModelLST( xElement * elem );
+    void RenderModelVBO( xElement * elem, bool transparent );
+    void RenderModelLST( xElement * elem, bool transparent );
+
+    void RenderShadowLST(xElement *elem);
+    void RenderShadowVBO(xElement *elem);
 };
 
 #endif

@@ -663,8 +663,8 @@ void xElement_FreeCollisionHierarchyBounds(xCollisionData *pcData, xCollisionHie
     }
 }
 
-xBox xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
-                                        xCollisionData *pcData, xCollisionHierarchyBounds *&bounds)
+void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
+                                        xCollisionData *pcData, xCollisionHierarchyBounds *pBound)
 {
     xBox res;
     res.max.x = -1000000000.f; res.max.y = -1000000000.f; res.max.z = -1000000000.f;
@@ -672,30 +672,28 @@ xBox xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
 
     if (pcData->kidsP)
     {
-        bool init = !bounds;
+        bool init = !pBound->kids;
         if (init)
-            bounds = new xCollisionHierarchyBounds[pcData->kidsC];
+            pBound->kids = new xCollisionHierarchyBounds[pcData->kidsC];
 
-        xCollisionHierarchyBounds *bound     = bounds;
+        xCollisionHierarchyBounds *bound     = pBound->kids;
         xCollisionHierarchy       *hierarchy = pcData->kidsP;
 
         for (int i=pcData->kidsC; i; --i, ++bound, ++hierarchy)
         {
             if (init)
                 bound->kids = NULL;
-            bound->sorted = NULL;
+            bound->sorted = false;
 
             if (hierarchy->kidsC)
               {
-                xBox tmp = xElement_CalcCollisionHierarchyBox(vertices, hierarchy, bound->kids);
-
-                bound->bounding = tmp;
-                if (tmp.min.x < res.min.x) res.min.x = tmp.min.x;
-                if (tmp.min.y < res.min.y) res.min.y = tmp.min.y;
-                if (tmp.min.z < res.min.z) res.min.z = tmp.min.z;
-                if (tmp.max.x > res.max.x) res.max.x = tmp.max.x;
-                if (tmp.max.y > res.max.y) res.max.y = tmp.max.y;
-                if (tmp.max.z > res.max.z) res.max.z = tmp.max.z;
+                xElement_CalcCollisionHierarchyBox(vertices, hierarchy, bound);
+                if (bound->bounding.min.x < res.min.x) res.min.x = bound->bounding.min.x;
+                if (bound->bounding.min.y < res.min.y) res.min.y = bound->bounding.min.y;
+                if (bound->bounding.min.z < res.min.z) res.min.z = bound->bounding.min.z;
+                if (bound->bounding.max.x > res.max.x) res.max.x = bound->bounding.max.x;
+                if (bound->bounding.max.y > res.max.y) res.max.y = bound->bounding.max.y;
+                if (bound->bounding.max.z > res.max.z) res.max.z = bound->bounding.max.z;
             }
             else
             if (hierarchy->verticesP)
@@ -829,6 +827,8 @@ xBox xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                 }
 #endif
                 bound->bounding = tmp;
+                bound->center   = (tmp.min + tmp.max) * 0.5f;
+                bound->radius   = (tmp.min - bound->center).length();
                 if (tmp.min.x < res.min.x) res.min.x = tmp.min.x;
                 if (tmp.min.y < res.min.y) res.min.y = tmp.min.y;
                 if (tmp.min.z < res.min.z) res.min.z = tmp.min.z;
@@ -845,7 +845,7 @@ xBox xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
 
                 xWORD3 ** iterF = hierarchy->facesP;
                 xBox      iterB;
-                for (int j=hierarchy->facesC; j; --j, ++iterF, iterB)
+                for (int j=hierarchy->facesC; j; --j, ++iterF)
                 {
                     const xVector4 *v1 = vertices + (**iterF)[0];
                     const xVector4 *v2 = vertices + (**iterF)[1];
@@ -867,6 +867,8 @@ xBox xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                 }
 
                 bound->bounding = tmp;
+                bound->center   = (tmp.min + tmp.max) * 0.5f;
+                bound->radius   = (tmp.min - bound->center).length();
                 if (tmp.min.x < res.min.x) res.min.x = tmp.min.x;
                 if (tmp.min.y < res.min.y) res.min.y = tmp.min.y;
                 if (tmp.min.z < res.min.z) res.min.z = tmp.min.z;
@@ -877,5 +879,7 @@ xBox xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
         }
     }
 
-    return res;
+    pBound->bounding = res;
+    pBound->center   = (res.min + res.max) * 0.5f;
+    pBound->radius   = (res.min - pBound->center).length();
 }

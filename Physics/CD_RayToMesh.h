@@ -18,11 +18,11 @@ class CD_RayToMesh
     bool CollideBox(xBox &box);
 
     bool IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, xVector3 *crossing);
-    bool CheckOctreeLevel(CollisionInfo *ci,
+    bool CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,
                           xCollisionData *pcd,
                           xCollisionHierarchyBounds *chb,
                           xElement *elem);
-    bool CollideElements(CollisionInfo *&ci, xElement *elem);
+    bool CollideElements(xCollisionHierarchyBoundsRoot *&ci, xElement *elem);
 
 public:
 

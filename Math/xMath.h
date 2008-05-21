@@ -37,6 +37,9 @@ typedef xFLOAT xFLOAT3   [3];
 typedef xFLOAT xFLOAT4   [4];
 typedef xFLOAT xFLOAT4x4 [4][4];
 
+const xDWORD xDWORD_MAX = (xDWORD)-1;
+const xWORD  xWORD_MAX  = (xWORD)-1;
+
 #include "xVector3.h"
 #include "xVector4.h"
 #include "xQuaternion.h"

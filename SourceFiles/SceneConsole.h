@@ -2,6 +2,7 @@
 #define __incl_SceneConsole_h
 
 #include <string>
+#include "../Math/xMath.h"
 #include "../AppFramework/Scene.h"
 #include "../OpenGL/Fonts/FontMgr.h"
 
@@ -12,9 +13,9 @@ class SceneConsole : public Scene
     {
         this->prevScene = prevScene;
         prevTick = 0;
-        minFPS = -1; // max uint
-        meanFPS = 50.0f;
-        maxFPS = 0;
+        minFPS   = xDWORD_MAX; // max uint
+        meanFPS  = 50.0f;
+        maxFPS   = 0;
         carretTick = 0;
         font = HFont();
         overlayInput = false;
@@ -37,24 +38,24 @@ class SceneConsole : public Scene
   private:
     void InitInputMgr();
 
-    Scene      *prevScene;
-    HFont       font;
+    Scene   *prevScene;
+    HFont    font;
 
-    float        prevTick;
-    unsigned int curFPS;
-    unsigned int minFPS;
-    float        meanFPS;
-    unsigned int maxFPS;
+    float    prevTick;
+    xDWORD   curFPS;
+    xDWORD   minFPS;
+    float    meanFPS;
+    xDWORD   maxFPS;
 
-    float       carretTick;
-    bool        carretVisible;
+    float    carretTick;
+    bool     carretVisible;
 
-    int         scroll_v;
-    int         pageSize;
+    int      scroll_v;
+    int      pageSize;
 
-    bool        justOpened; // skip the key that has opened the console
-    bool        overlayInput;
-    bool        overlayClock;
+    bool     justOpened; // skip the key that has opened the console
+    bool     overlayInput;
+    bool     overlayClock;
 
     std::string history;    // console history
     int         histLines;  // no of lines in history

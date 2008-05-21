@@ -46,8 +46,8 @@ public:
         renderer.UpdatePointers();
         return &renderer;
     }
-    CollisionInfo *GetCollisionInfo();
-    xWORD          GetCollisionInfoC() { return collisionInfoC; }
+    xCollisionHierarchyBoundsRoot *GetCollisionInfo();
+    xWORD                          GetCollisionInfoC() { return collisionInfoC; }
 
     std::vector<CollisionWithModel> CollidedModels;
 
@@ -56,20 +56,38 @@ public:
 
     void   CollisionInfo_ReFill ();
 
+    void       CreateShadowMap(xLight *light)
+    {
+        xMatrix    blocker;
+        GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, 256);
+        smap.texId = GetRenderer()->CreateShadowMap(256, blocker);
+    }
+    xShadowMap GetShadowMap()
+    {
+        return smap;
+    }
+
+    void RenderShadow(xShadowMap smap)
+    {
+        GetRenderer()->RenderShadow(smap, mLocationMatrix);
+    }
+
 protected:
     bool           forceNotStatic;
     xRenderGL      renderer;
+    xShadowMap smap;
 
-    CollisionInfo *collisionInfo;
-    xWORD          collisionInfoC;
+    xCollisionHierarchyBoundsRoot *collisionInfo;
+    xWORD                          collisionInfoC;
     std::vector<xDWORD> idx;
 
-    void RenderObject();
+    void RenderObject(bool transparent);
 
-    xDWORD CollisionInfo_Fill   (xRender *rend, xElement *elem, CollisionInfo *ci, bool firstTime);
-    void   CollisionInfo_Free   (xElement *elem, CollisionInfo *ci);
+    void CollisionInfo_Fill   (xRender *rend, xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime);
+    void CollisionInfo_Free   (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
+    void CollisionInfo_Render (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
 
-    void   CollisionInfo_Render (xElement *elem, CollisionInfo *ci);
+    void GetShadowProjectionMatrix (xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width);
 };
 
 extern float time1b;

@@ -44,7 +44,7 @@ bool SceneSkeleton::Update(float deltaTime)
         if (m_EditMode == emSelectVertex)
         {
             m_EditMode = emSelectElement;
-            selectedElemID = -1;
+            selectedElemID = xWORD_MAX;
         }
         else
         if (m_EditMode == emSelectBone)
@@ -513,7 +513,7 @@ void SceneSkeleton::MouseLUp(int X, int Y)
     if (m_EditMode == emSelectElement) // select element
     {
         selectedElemID = (int) SelectElement(X,Y);
-        if (selectedElemID != (GLuint)-1) { // MAXUINT
+        if (selectedElemID != xWORD_MAX) { // MAXUINT
             if (m_EditGraphical)
                 selectedElement = xElementById(renderer->xModelGraphics, selectedElemID);
             else

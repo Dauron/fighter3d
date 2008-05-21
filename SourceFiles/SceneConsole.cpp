@@ -2,7 +2,6 @@
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
-#include "../OpenGL/Textures/TextureMgr.h"
 #include "../OpenGL/GLAnimSkeletal.h"
 
 #include "../Utils/Debug.h"
@@ -370,7 +369,7 @@ test  = ";
     {
         maxFPS = 0;
         meanFPS = 50.0f;
-        minFPS = -1;
+        minFPS = xDWORD_MAX;
         return true;
     }
     if (cmd.substr(0, 4) == "log ")
@@ -417,7 +416,7 @@ bool SceneConsole::Render()
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
     glDisable(GL_LIGHTING);                        // Disable lighting
     GLShader::EnableLighting(0);
-    g_TextureMgr.DisableTextures();
+    GLShader::EnableTexturing(0);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable (GL_BLEND);                    // Enable blending

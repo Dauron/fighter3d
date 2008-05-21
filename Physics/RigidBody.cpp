@@ -9,8 +9,8 @@ float RigidBody :: CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVect
     float W = -(planeP.x*planeN.x + planeP.y*planeN.y + planeP.z*planeN.z);
     float Pmax = 0.0f;
 
-    CollisionInfo  *ci = model->GetCollisionInfo();
-    xWORD           cc = model->GetCollisionInfoC();
+    xCollisionHierarchyBoundsRoot *ci = model->GetCollisionInfo();
+    xWORD                          cc = model->GetCollisionInfoC();
 
     for (; cc; --cc, ++ci)
     {
@@ -29,6 +29,8 @@ float RigidBody :: CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVect
 
 void RigidBody :: CalculateCollisions(ModelObj *model)
 {
+    if (!model->physical) return;
+
     model->penetrationCorrection.zero();
     if (!model->CollidedModels.empty())
     {
@@ -94,6 +96,12 @@ void RigidBody :: CalculateCollisions(ModelObj *model)
 
 void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
 {
+    if (!model->physical)
+    {
+        model->CollidedModels.clear();
+        return;
+    }
+
     xVector3 T = model->transVelocity;
     T = T * FRICTION_AIR * deltaTime;
     if (fabs(T.x) > fabs(model->transVelocity.x) ||

@@ -1,5 +1,5 @@
-#include "World.h"
 #include <fstream>
+#include "World.h"
 #include "../Utils/Filesystem.h"
 
 ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
@@ -10,7 +10,7 @@ ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 
     ModelObj *res = NULL;
     xVector3  colPoint;
-    float     colDist = 0, minDist;
+    float     colDist = 0.f, minDist = 0.f;
     bool      collided = false;
 
     objectVec::iterator i, j, begin = objects.begin(), end = objects.end();
@@ -63,14 +63,6 @@ void World:: Update(float deltaTime)
     }
 }
 
-void World:: Render()
-{
-    assert(m_Valid);
-    objectVec::iterator i, begin = objects.begin(), end = objects.end();
-    for ( i = begin ; i != end ; ++i )
-        (*i)->Render();
-}
-
 void World:: Initialize()
 {
     assert(!m_Valid);
@@ -78,28 +70,38 @@ void World:: Initialize()
     ModelObj *model;
     SkeletizedObj *modelA;
 
+    lights.clear();
+    xLight light;
+    light.color.r = 0.9f;
+    light.color.g = 0.7f;
+    light.color.b = 0.0f;
+    light.color.a = 1.0f;
+    light.position.init(0.0f, 0.0f, 10.0f);
+    light.type = xLight_SPOT;
+    light.constAttenuation  = 1.f;
+    light.linearAttenuation = 0.004f;
+    light.squareAttenuation = 0.0008f;
+    lights.push_back(light);
+
     if (!g_Test)
     {
         Load("Data/models/dojo/dojo.map");
 
-        model = new ModelObj(-4.0f, -2.0f, 0.0f);
+        model = new ModelObj(-4.0f, -2.0f, 1.0f);
         model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
-        model->resilience = 0.2f;
         objects.push_back(model);
 
         model = new ModelObj(-2.0f, -5.0f, 0.0f);
         model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
-        model->resilience = 0.2f;
         objects.push_back(model);
 
         model = new ModelObj(2.f, 0.f, 0.0f, 0.0f, 0.0f, 45.0f);
         model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
-        model->resilience = 0.2f;
         objects.push_back(model);
-
+/*
         model = new ModelObj(10.0f, -2.0f, 0.0f);
         model->Initialize("Data/models/1barbells.3dx");
         objects.push_back(model);
@@ -107,12 +109,12 @@ void World:: Initialize()
         model = new ModelObj(10.0f, 0.0f, 0.6f);
         model->Initialize("Data/models/2stend.3dx");
         objects.push_back(model);
-
-        model = new ModelObj(5.0f, -10.0f, 5.0f);
+*/
+        shadowCaster = model = new ModelObj(0.0f, -10.0f, 5.0f);
         model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
         model->mass     = 60.f;
         objects.push_back(model);
-
+/*
         modelA = new SkeletizedObj(-0.3f, -3.2f, 0.0f, 0.0f, 0.0f, 170.0f);
         modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx", false, false);
         modelA->mass     = 70.f;
@@ -126,7 +128,7 @@ void World:: Initialize()
         modelA->AddAnimation("Data/models/anims/human/garda.ska", 0, 4700);
         modelA->AddAnimation("Data/models/anims/human/skulony.ska", 4700);
         modelA->AddAnimation("Data/models/anims/human/kiwa_sie.ska", 4700);
-        objects.push_back(modelA);
+        objects.push_back(modelA);*/
 /*
         modelA = new SkeletizedObj(4.5f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
         modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
@@ -136,7 +138,7 @@ void World:: Initialize()
         //modelA->AddAnimation("Data/models/anims/human/idzie.ska");
         //modelA->AddAnimation("Data/models/anims/human/garda.ska");
         objects.push_back(modelA);
-*/
+*//*
         modelA = new SkeletizedObj(5.f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
         modelA->Initialize("Data/models/human3.3dx", "Data/models/human3_fst.3dx", false, false);
         modelA->mass     = 70.f;
@@ -145,7 +147,7 @@ void World:: Initialize()
         model = new ModelObj(1.0f, 5.0f, 0.0f);
         model->Initialize("Data/models/wolf.3dx", "Data/models/wolf.3dx", false, false);
         model->mass     = 65.f;
-        objects.push_back(model);
+        objects.push_back(model);*/
     }
     else
     if (g_Test == 1)
@@ -255,6 +257,13 @@ void World:: Load(char *mapFileName)
                 float mass;
                 sscanf(buffer, "mass\t%f", &mass);
                 model->mass = mass;
+                continue;
+            }
+            if (StartsWith(buffer, "resilience"))
+            {
+                float resilience;
+                sscanf(buffer, "resilience\t%f", &resilience);
+                model->resilience = resilience;
                 continue;
             }
         }

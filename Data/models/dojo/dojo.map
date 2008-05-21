@@ -3,43 +3,36 @@ model	floor0.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	floor1.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	ceiling_lower.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	ceiling_upper.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	skeleton.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	stairs.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	wall_entrance.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 # North
 #
@@ -47,25 +40,21 @@ model	wall_inner_short.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_short.3dx
 position	0.001	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_short.3dx
 position	-7.75	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_short.3dx
 position	7.75	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 # South
 #
@@ -74,28 +63,24 @@ position	0.04	0.18	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_short.3dx
 position	0.03	0.15	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_short.3dx
 position	-7.72	0.15	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_short.3dx
 position	7.79	0.15	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 # West
 #
@@ -103,25 +88,21 @@ model	wall_inner_long.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_long.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	wall_inner_long.3dx
 position	0.0	19.8	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_long.3dx
 position	0.0	19.32	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 # East
 #
@@ -130,28 +111,24 @@ position	0.04	0.1	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_long.3dx
 position	0.04	0.1	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	wall_inner_long.3dx
 position	0.04	19.9	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	grates_long.3dx
 position	0.04	19.42	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 # External wall west
 #
@@ -159,37 +136,31 @@ model	wall_long.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.0	9.7	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.0	19.2	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.0	29.4	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.0	39.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 # External wall east
 #
@@ -199,42 +170,36 @@ position	0.05	0.2	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.05	-0.22	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.05	9.48	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.05	18.98	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.05	29.18	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar.3dx
 position	0.05	38.78	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 # Internal pillars west
 #
@@ -242,19 +207,16 @@ model	pillar_inner.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar_inner_slim.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar_inner.3dx
 position	0.0	38.735	-0.21
 physical	0
 phantom	0
-mass	100000000
 #
 # Internal pillars east
 #
@@ -263,21 +225,18 @@ position	0.04	0.1	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar_inner_slim.3dx
 position	0.04	0.1	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar_inner.3dx
 position	0.04	38.835	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
-mass	100000000
 #
 # Internal pillars north
 #
@@ -286,14 +245,12 @@ position	7.85	3.904	-0.21
 rotation	0	0	90
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar_inner_slim.3dx
 position	7.85	-3.845	-0.21
 rotation	0	0	90
 physical	0
 phantom	0
-mass	100000000
 #
 # Internal pillars south
 #
@@ -302,12 +259,20 @@ position	7.7	3.94	-0.21
 rotation	0	0	-90
 physical	0
 phantom	0
-mass	100000000
 #
 model	pillar_inner_slim.3dx
 position	7.7	-3.82	-0.21
 rotation	0	0	-90
 physical	0
 phantom	0
-mass	100000000
+#
+#
+# Stuff
+#
+model	rack.3dx
+position	8.0	15.60	0.265
+rotation	0	0	90
+physical	1
+phantom	0
+mass	50
 #

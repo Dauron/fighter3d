@@ -72,6 +72,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
             glVertexAttribPointerARB (aBoneIdxWghts, 4, GL_FLOAT, GL_FALSE, stride, (void *)(3*sizeof(xFLOAT)));
             glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.vertexB );
             glVertexPointer (3, GL_FLOAT, stride, 0);
+            if (g_ShadowRendering) glTexCoordPointer (3, GL_FLOAT, stride, 0);
 
             /************************* LOAD NORMALS ****************************/
             if (!g_SelectionRendering && element->renderData.normalP) {
@@ -84,6 +85,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
             glVertexAttribPointerARB    (aBoneIdxWghts, 4, GL_FLOAT, GL_FALSE,
                 stride, element->renderData.verticesSP->bone);
             glVertexPointer (3, GL_FLOAT, stride, element->renderData.verticesP);
+            if (g_ShadowRendering) glTexCoordPointer (3, GL_FLOAT, stride, element->renderData.verticesP);
 
             /************************* LOAD NORMALS ****************************/
             if (!g_SelectionRendering && element->renderData.normalP) {
@@ -98,6 +100,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
         sft_normals  = sData.normalsP;
         if (VBO) glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
         glVertexPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
+        if (g_ShadowRendering) glTexCoordPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
         glNormalPointer (GL_FLOAT, sizeof(xVector3), sft_normals);
         glEnableClientState(GL_NORMAL_ARRAY);
     }

@@ -24,12 +24,4 @@ struct CollisionWithModel
     std::vector<Collisions> collisions;
 };
 
-struct CollisionInfo
-{
-    xBox                        bounding;
-    xCollisionHierarchyBounds * collisionHP;
-    xVector4                  * verticesP;
-    xDWORD                      verticesC;
-};
-
 #endif

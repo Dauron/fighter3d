@@ -10,7 +10,7 @@ std::vector<xDWORD> * ISelectionProvider:: Select(int X, int Y, int W, int H)
     if (W == 0) W = 1; if (H == 0) H = 1;
 
     int nbRecords = 0;
-    GLuint objectID = -1;
+    GLuint objectID = xDWORD_MAX;
 
     //Calculate select buffer capacity and allocate data if necessary
     int capacity = 4*CountSelectable()*1; //Each object take in maximium : 4 * name stack depth

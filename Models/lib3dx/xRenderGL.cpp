@@ -17,7 +17,7 @@ void xRenderGL :: RenderSkeleton(bool selectionRendering, xWORD selBoneId)
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        g_TextureMgr.DisableTextures();
+        GLShader::EnableTexturing(0);
         glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
         glEnable(GL_COLOR_MATERIAL);
 
@@ -133,20 +133,36 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
             HTexture htext;
             htext.SetHandle(mat->texture.htex);
             g_TextureMgr.BindTexture(htext);
-            g_TextureMgr.EnableTextures();
+            GLShader::EnableTexturing(1);
         }
         else
         {
-            g_TextureMgr.DisableTextures();
+            GLShader::EnableTexturing(0);
             //float specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
             //glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
         }
-        //glColor4f(mat->diffuse.r,mat->diffuse.g,mat->diffuse.b, 1.0f-mat->transparency);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        if (mat->transparency > 0.f)
+        {
+            glEnable(GL_BLEND);
+            //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
+            glColor4f(1.f,1.f,1.f, 1.f-mat->transparency);
+        }
+        else
+        {
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            glDisable(GL_BLEND);
+        }
+        if (mat->two_sided)
+            glDisable(GL_CULL_FACE);
+        else
+            glEnable(GL_CULL_FACE);
     }
     else
     {
+        glEnable(GL_CULL_FACE);
         glColor4fv(color.col);
+        glDisable(GL_BLEND);
         float ambient[4]  = {0.2f, 0.2f, 0.2f, 1.0f};
         float diffuse[4]  = {0.8f, 0.8f, 0.8f, 1.0f};
         float specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -154,7 +170,7 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
         glMaterialfv(GL_FRONT, GL_DIFFUSE,  diffuse);
         glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
         glMaterialf(GL_FRONT, GL_SHININESS, 2.0f);
-        g_TextureMgr.DisableTextures();
+        GLShader::EnableTexturing(0);
     }
 }
 
@@ -169,7 +185,7 @@ void xRenderGL :: RenderFaces( xWORD                 selectedElement,
         CalculateSkeleton();
 
     glColor4f( 0.8f, 0.8f, 0.f, 1.f );
-    g_TextureMgr.DisableTextures();
+    GLShader::EnableTexturing(0);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
 
@@ -324,7 +340,7 @@ void xRenderGL :: RenderVertices( SelectionMode         selectionMode,
         CalculateSkeleton();
 
     glColor4f( 0.8f, 0.8f, 0.f, 1.f );
-    g_TextureMgr.DisableTextures();
+    GLShader::EnableTexturing(0);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
 
@@ -502,7 +518,7 @@ void xRenderGL :: RenderElementVerticesLST(
 }
 
 /********************************* model ************************************/
-void xRenderGL :: RenderModel()
+void xRenderGL :: RenderModel(bool transparent)
 {
     assert(xModelToRender);
     if (!xModelToRender->texturesInited)
@@ -530,23 +546,27 @@ void xRenderGL :: RenderModel()
     for (xElement *elem = xModelToRender->firstP; elem; elem = elem->nextP)
         // NOTE: MIX of display lists and VBO appears to be much slower than VBO only
         if (UseVBO)
-            RenderModelVBO(elem);
+            RenderModelVBO(elem, transparent);
         else
-            RenderModelLST(elem);
+            RenderModelLST(elem, transparent);
 
     if (g_SelectionRendering) g_AnimSkeletal.ForceSoftware(false);
 
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-void xRenderGL :: RenderModelLST(xElement *elem)
+void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
 {
     for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
-        RenderModelLST(selem);
+        RenderModelLST(selem, transparent);
 
-    if (!elem->renderData.verticesC) return;
+    if (!elem->renderData.verticesC
+        || (transparent && !elem->renderData.transparent)
+        || (!transparent && !elem->renderData.opaque)) return;
 
-    if (g_SelectionRendering || !UseList || !elem->renderData.listID)
+    xDWORD &listID = transparent ? elem->renderData.listIDTransp : elem->renderData.listID;
+
+    if (g_SelectionRendering || !UseList || !listID)
     {
         if (g_SelectionRendering || !UseList) {
             glPushMatrix();
@@ -554,11 +574,11 @@ void xRenderGL :: RenderModelLST(xElement *elem)
         }
         else {
             elem->renderData.mode = xRENDERMODE_LIST;
-            glNewList(elem->renderData.listID = glGenLists(1), GL_COMPILE);
+            glNewList(listID = glGenLists(1), GL_COMPILE);
         }
 
         if (elem->skeletized) {
-            if (elem->textured && !g_SelectionRendering) {
+            if (elem->textured && !g_SelectionRendering && !g_ShadowMapRendering) {
                 glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                 glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.verticesTSP->tx));
             }
@@ -571,7 +591,7 @@ void xRenderGL :: RenderModelLST(xElement *elem)
             if (elem->textured) {
                 glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), elem->renderData.verticesTP);
 
-                if (!g_SelectionRendering) {
+                if (!g_SelectionRendering && !g_ShadowMapRendering) {
                     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                     glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), &(elem->renderData.verticesTP->tx));
                 }
@@ -579,7 +599,7 @@ void xRenderGL :: RenderModelLST(xElement *elem)
             else
                 glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), elem->renderData.verticesP);
 
-            if (!g_SelectionRendering && elem->renderData.normalP)
+            if (!g_SelectionRendering && !g_ShadowMapRendering && elem->renderData.normalP)
             {
                 glNormalPointer (GL_FLOAT, sizeof(xVector3), elem->renderData.normalP);
                 glEnableClientState(GL_NORMAL_ARRAY);
@@ -589,11 +609,14 @@ void xRenderGL :: RenderModelLST(xElement *elem)
         xFaceList *faceL = elem->faceListP;
         for(int i=elem->faceListC; i; --i, ++faceL)
         {
-            if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
+            if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
+                (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
+                continue;
+            if (!g_SelectionRendering && !g_ShadowMapRendering && faceL->materialP != m_currentMaterial)
                 SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
-        if (!g_SelectionRendering)
+        if (!g_SelectionRendering && !g_ShadowMapRendering)
         {
             glDisableClientState(GL_NORMAL_ARRAY);
             if (elem->textured) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -607,23 +630,25 @@ void xRenderGL :: RenderModelLST(xElement *elem)
             glEndList();
     }
 
-    if (!g_SelectionRendering && UseList && elem->renderData.listID)
+    if (!g_SelectionRendering && UseList && listID)
     {
         glPushMatrix();
         {
             glMultMatrixf(&elem->matrix.matrix[0][0]);
-            glCallList(elem->renderData.listID);
+            glCallList(listID);
         }
         glPopMatrix();
     }
 }
 
-void xRenderGL :: RenderModelVBO(xElement *elem)
+void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
 {
     for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
-        RenderModelVBO(selem);
+        RenderModelVBO(selem, transparent);
 
-    if (!elem->renderData.verticesC) return;
+    if (!elem->renderData.verticesC
+        || (transparent && !elem->renderData.transparent)
+        || (!transparent && !elem->renderData.opaque)) return;
 
     /************************* INIT VBO ****************************/
     if (elem->renderData.mode == xRENDERMODE_NULL)
@@ -635,7 +660,7 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
 
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.vertexB );
     if (elem->skeletized) {
-        if (elem->textured && !g_SelectionRendering) {
+        if (elem->textured && !g_SelectionRendering && !g_ShadowMapRendering) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), (void *)(7*sizeof(xFLOAT)));
         }
@@ -647,7 +672,7 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
     {
         if (elem->textured) {
             glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), 0);
-            if (!g_SelectionRendering) {
+            if (!g_SelectionRendering && !g_ShadowMapRendering) {
                 glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                 glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), (void *)(3*sizeof(xFLOAT)));
             }
@@ -655,7 +680,7 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
         else
             glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), 0);
         /************************* LOAD NORMALS ****************************/
-        if (!g_SelectionRendering && elem->renderData.normalP) {
+        if (!g_SelectionRendering && !g_ShadowMapRendering && elem->renderData.normalP) {
             glBindBufferARB ( GL_ARRAY_BUFFER_ARB, elem->renderData.normalB );
             glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
             glEnableClientState(GL_NORMAL_ARRAY);
@@ -667,14 +692,17 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
     xFaceList *faceL = elem->faceListP;
     for(int i=elem->faceListC; i; --i, ++faceL)
     {
-        if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
+        if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
+            (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
+            continue;
+        if (!g_SelectionRendering && !g_ShadowMapRendering && faceL->materialP != m_currentMaterial)
             SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
         glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
     }
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB ( GL_ARRAY_BUFFER_ARB, 0 );
 
-    if (!g_SelectionRendering)
+    if (!g_SelectionRendering && !g_ShadowMapRendering)
     {
         glDisableClientState(GL_NORMAL_ARRAY);
         if (elem->textured) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -683,4 +711,211 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
         g_AnimSkeletal.EndAnimation();
 
     glPopMatrix();
+}
+
+/********************************* shadows ************************************/
+void xRenderGL :: RenderShadow(const xShadowMap &shadowMap, const xMatrix &locationMatrix)
+{
+    assert(xModelToRender);
+
+    if (!bonesC && spineP)
+        CalculateSkeleton();
+
+    g_ShadowRendering = true;
+
+    glBindTexture(GL_TEXTURE_2D, shadowMap.texId );
+    GLShader::EnableTexturing(1);
+    GLShader::EnableLighting(0);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_DST_COLOR, GL_ZERO);
+
+    glPushMatrix();
+    glMultMatrixf(&locationMatrix.x0);
+    glMatrixMode(GL_TEXTURE);
+    glPushMatrix();
+    xMatrix mtxTextureMapping = locationMatrix * shadowMap.receiverUVMatrix;
+    glLoadMatrixf(&mtxTextureMapping.x0);
+    //glLoadIdentity();
+    //glMultMatrixf(&shadowMap.receiverUVMatrix.x0);
+    //glMultMatrixf(&locationMatrix.x0);
+
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+
+    for (xElement *elem = xModelToRender->firstP; elem; elem = elem->nextP)
+        if (UseVBO)
+            RenderShadowVBO(elem);
+        else
+            RenderShadowLST(elem);
+
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glDisable(GL_BLEND);
+
+    g_ShadowRendering = false;
+}
+
+void xRenderGL :: RenderShadowLST(xElement *elem)
+{
+    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+        RenderShadowLST(selem);
+
+    if (!elem->renderData.verticesC) return;
+
+    glPushMatrix();
+    glMultMatrixf(&elem->matrix.x0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glMultMatrixf(&elem->matrix.x0);
+
+    if (elem->skeletized) {
+        g_AnimSkeletal.BeginAnimation();
+        g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetElement(elem);
+    }
+    else
+    {
+        size_t stride = elem->textured ? sizeof(xVertexTex) : sizeof(xVertex);
+        glVertexPointer   ( 3, GL_FLOAT, stride, elem->renderData.verticesP );
+        glTexCoordPointer ( 3, GL_FLOAT, stride, elem->renderData.verticesP );
+        glNormalPointer   ( GL_FLOAT, sizeof(xVector3), elem->renderData.normalP );
+    }
+
+    glDrawElements(GL_TRIANGLES, 3*elem->facesC, GL_UNSIGNED_SHORT, elem->renderData.facesP);
+
+    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+
+    glPopMatrix();
+    glMatrixMode(GL_TEXTURE);
+    glPopMatrix();
+}
+
+void xRenderGL :: RenderShadowVBO(xElement *elem)
+{
+    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+        RenderShadowVBO(selem);
+
+    if (!elem->renderData.verticesC) return;
+
+    if (elem->renderData.mode == xRENDERMODE_NULL) InitVBO(elem);
+
+    glPushMatrix();
+    glMultMatrixf(&elem->matrix.x0);
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glMultMatrixf(&elem->matrix.x0);
+
+    glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.vertexB );
+    if (elem->skeletized) {
+        g_AnimSkeletal.BeginAnimation();
+        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetElement(elem, true);
+    }
+    else
+    {
+        size_t stride = elem->textured ? sizeof(xVertexTex) : sizeof(xVertex);
+        glVertexPointer   (3, GL_FLOAT, stride, 0);
+        glTexCoordPointer (3, GL_FLOAT, stride, 0);
+        glBindBufferARB ( GL_ARRAY_BUFFER_ARB, elem->renderData.normalB );
+        glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
+    }
+
+    /************************* RENDER FACES ****************************/
+    glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, elem->renderData.indexB );
+    glDrawElements  ( GL_TRIANGLES, 3*elem->facesC, GL_UNSIGNED_SHORT, 0);
+
+    glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
+    glBindBufferARB ( GL_ARRAY_BUFFER_ARB, 0 );
+
+    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+
+    glPopMatrix();
+    glMatrixMode(GL_TEXTURE);
+    glPopMatrix();
+}
+
+
+xDWORD xRenderGL :: CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight)
+{
+    glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT | GL_TRANSFORM_BIT);
+    glViewport(0, 0, width, width);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, 0, width, width);
+
+    // We will make a dark grey on white shadow-map,
+    // so clear the buffer with white
+    glClearColor(1.0, 1.0, 1.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glMatrixMode(GL_PROJECTION);
+    // Save OpenGL's old PROJECTION matrix
+    glPushMatrix(); //glGetFloatv (GL_MODELVIEW_MATRIX, &mtxProjection.x0);
+    // Clear OpenGL's PROJECTION matrix
+    glLoadIdentity();
+    // Load BlockerLocalToShadowMap matrix
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadMatrixf(&mtxBlockerToLight.x0);
+
+    glDisable(GL_BLEND);
+    GLShader::EnableLighting(0);
+    GLShader::EnableTexturing(0);
+
+    //glDisable(GL_CULL_FACE);
+    // Shadow color
+    glColor3f(0.5f, 0.5f, 0.5f);
+
+    // DRAW
+    g_ShadowMapRendering = true;
+    xFile * xModelToRenderOld = xModelToRender;
+    xModelToRender = xModelPhysical;
+    this->RenderModel(false);
+    xModelToRender = xModelToRenderOld;
+    g_ShadowMapRendering = false;
+
+    //glEnable(GL_CULL_FACE);
+    glPopMatrix();
+    // Restore OpenGL's PROJECTION matrix
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();//glLoadMatrixf(&mtxProjection.x0);
+    glMatrixMode(GL_MODELVIEW);
+    glPopAttrib();
+
+    // Make the image we just rendered (the shadow-map) an OpenGL texture
+    if (width != this->shadowWidth)
+    {
+        if (this->texture) delete[] this->texture;
+        this->texture = NULL;
+        this->shadowWidth = width;
+    }
+    if (!this->texture)
+        this->texture = new xDWORD[width*width];
+    if(this->texture)
+    {
+        glReadBuffer(GL_BACK);
+        glReadPixels(0, 0, width, width, GL_RGBA, GL_UNSIGNED_BYTE, this->texture);
+        // Send the shadow map to OpenGL
+        if (!this->shadowTexId)
+            glGenTextures(1, (GLuint*)&this->shadowTexId);
+        glBindTexture(GL_TEXTURE_2D, this->shadowTexId);
+
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        float Sh_TxBorder[4]= { 1.0, 1.0, 1.0, 1.0};
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, Sh_TxBorder);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, 4, width, width, 0, GL_RGBA, GL_UNSIGNED_BYTE, this->texture );
+    }
+    return this->shadowTexId;
 }

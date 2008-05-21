@@ -36,18 +36,6 @@ public:
         {  return ( m_HandleMgr.Dereference( htex )->m_GLTexture );  }
     void BindTexture( HTexture htex ) const
         { glBindTexture(GL_TEXTURE_2D, m_HandleMgr.Dereference( htex )->m_GLTexture ); }
-
-    void EnableTextures()
-    {
-        glEnable(GL_TEXTURE_2D);
-        GLShader::EnableTexturing(1);
-    }
-
-    void DisableTextures()
-    {
-        glDisable(GL_TEXTURE_2D);
-        GLShader::EnableTexturing(0);
-    }
 };
 
 #endif

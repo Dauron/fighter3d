@@ -286,7 +286,7 @@ bool CD_MeshToMesh:: IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3
 
 
 
-bool CD_MeshToMesh:: CheckOctreeLevel(CollisionInfo *ci1,              CollisionInfo *ci2,
+bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xCollisionHierarchyBoundsRoot *ci2,
                                       xCollisionHierarchy *ch1,        xCollisionHierarchy *ch2,
                                       xCollisionHierarchyBounds *chb1, xCollisionHierarchyBounds *chb2,
                                       xWORD cnt1,                      xWORD cnt2,
@@ -405,11 +405,12 @@ bool CD_MeshToMesh:: CheckOctreeLevel(CollisionInfo *ci1,              Collision
 }
 
 // Scan all elements in model2
-bool CD_MeshToMesh:: Collide2(CollisionInfo *ci1, CollisionInfo *&ci2, xElement *elem1, xElement *elem2)
+bool CD_MeshToMesh:: Collide2(xCollisionHierarchyBoundsRoot *ci1, xCollisionHierarchyBoundsRoot *&ci2,
+                              xElement *elem1, xElement *elem2)
 {
     bool res = false;
 
-    if (elem2->verticesC && ci1->collisionHP && ci2->collisionHP &&
+    if (elem2->verticesC && ci1->kids && ci2->kids &&
         ci1->bounding.min.x < ci2->bounding.max.x &&
         ci1->bounding.max.x > ci2->bounding.min.x &&
         ci1->bounding.min.y < ci2->bounding.max.y &&
@@ -417,8 +418,7 @@ bool CD_MeshToMesh:: Collide2(CollisionInfo *ci1, CollisionInfo *&ci2, xElement 
         ci1->bounding.min.z < ci2->bounding.max.z &&
         ci1->bounding.max.z > ci2->bounding.min.z)
         res |= CheckOctreeLevel(ci1, ci2,
-            elem1->collisionData.kidsP, elem2->collisionData.kidsP,
-            ci1->collisionHP, ci2->collisionHP,
+            elem1->collisionData.kidsP, elem2->collisionData.kidsP, ci1->kids, ci2->kids,
             elem1->collisionData.kidsC, elem2->collisionData.kidsC, elem1, elem2);
 
     for (xElement *celem2 = elem2->kidsP; celem2; celem2 = celem2->nextP)
@@ -428,10 +428,10 @@ bool CD_MeshToMesh:: Collide2(CollisionInfo *ci1, CollisionInfo *&ci2, xElement 
 }
 
 // Scan all elements in model1
-bool CD_MeshToMesh:: Collide1(CollisionInfo *&ci1, CollisionInfo *&ci2, xElement *elem1, xElement *elem2)
+bool CD_MeshToMesh:: Collide1(xCollisionHierarchyBoundsRoot *&ci1, xCollisionHierarchyBoundsRoot *&ci2,
+                              xElement *elem1, xElement *elem2)
 {
-    CollisionInfo *cci2 = ci2;
-
+    xCollisionHierarchyBoundsRoot *cci2 = ci2;
     bool res = false;
 
     if (elem1->verticesC)

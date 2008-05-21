@@ -8,7 +8,7 @@
 class Object3D
 {
     protected:
-        virtual void RenderObject() = 0;
+        virtual void RenderObject(bool transparent) = 0;
 
     public:
         xMatrix mLocationMatrix;
@@ -18,11 +18,11 @@ class Object3D
         void Translate(xFLOAT x, xFLOAT y, xFLOAT z);
         void Rotate   (xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ);
 
-        void Render()
+        void Render(bool transparent)
         {
             glPushMatrix();
             glMultMatrixf(&mLocationMatrix.x0);
-            RenderObject();
+            RenderObject(transparent);
             glPopMatrix();
         }
 

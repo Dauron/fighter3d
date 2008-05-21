@@ -103,9 +103,14 @@ struct xRenderData
             xDWORD     normalB;
             xDWORD     indexB;
         };
-        xDWORD         listID;       // Compiled Render List
+        struct {
+            xDWORD     listID;       // Compiled Render List
+            xDWORD     listIDTransp; // Compiled Render List for transparent faces
+        };
     };
     xBYTE              mode;
+    bool               transparent;  // Are there transparent faces?
+    bool               opaque;       // Are there opaque faces?
 
 #define xRENDERMODE_NULL      0
 #define xRENDERMODE_VBO       1
@@ -190,13 +195,15 @@ struct xFile {
 
     bool       texturesInited;
     bool       saveCollisionData;
+    bool       transparent;  // Are there transparent faces?
+    bool       opaque;       // Are there opaque faces?
 };
 
 
 // Other methods
 xMaterial *xMaterialByName(const xFile *file, char *materialName);
-xMaterial *xMaterialById  (const xFile *file, xWORD materialId);
-xElement  *xElementById   (const xFile* model, xDWORD selectedElement = -1);
+xMaterial *xMaterialById  (const xFile *file,  xWORD materialId);
+xElement  *xElementById   (const xFile* model, xWORD elementId = -1);
 xWORD      xElementCount  (const xFile* model);
 
 void       xBoneFree(xBone *bone);

@@ -349,6 +349,9 @@ bool       xMaterialsLoad(FILE *file, xFile *xfile)
                 xFileFree(xfile);
                 return false;
             }
+            bool transparent = last->transparency > 0.f;
+            xfile->transparent |= transparent;
+            xfile->opaque      |= !transparent;
         }
     }
     return true;
@@ -479,26 +482,29 @@ void xCollisionInfo_Fill(xFile *xfile, xElement *elem)
 }
 
 ////////////////////// xElement
-xElement *_xElementById(xElement *elem, xDWORD &currElemID, xDWORD selectedElement)
+xElement *_xElementById(xElement *elem, xWORD elementId, xWORD &currElemID)
 {
-    if (currElemID == selectedElement)
-        return elem;
-
+    xElement *relem;
     for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
     {
-        xElement *relem = _xElementById(selem, ++currElemID, selectedElement);
-        if (relem) return relem;
+        if ( ++currElemID == elementId )
+            return selem;
+        if ( (relem = _xElementById(selem, elementId, currElemID)) )
+            return relem;
     }
     return NULL;
 }
 
-xElement *xElementById(const xFile* model, xDWORD selectedElement)
+xElement *xElementById(const xFile* model, xWORD elementId)
 {
-    xDWORD currElemID = -1;
+    xWORD     currElemID = xWORD_MAX;
+    xElement *relem;
     for (xElement *selem = model->firstP; selem; selem = selem->nextP)
     {
-        xElement *relem = _xElementById(selem, ++currElemID, selectedElement);
-        if (relem) return relem;
+        if ( ++currElemID == elementId )
+            return selem;
+        if ( (relem = _xElementById(selem, elementId, currElemID)) )
+            return relem;
     }
     return NULL;
 }
@@ -643,7 +649,17 @@ xElement *xElementLoad(FILE *file, xFile *xfile)
 
             xFaceList *faceL = elem->faceListP;
             for (int fL=elem->faceListC; fL; --fL, ++faceL)
+            {
                 faceL->materialP = xMaterialById(xfile, faceL->materialId);
+                if (faceL->materialP)
+                {
+                    bool transparent = faceL->materialP->transparency > 0.f;
+                    elem->renderData.transparent |= transparent;
+                    elem->renderData.opaque      |= !transparent;
+                }
+                else
+                    xfile->opaque = elem->renderData.opaque = true;
+            }
             xElementCalculateSmoothVertices(elem);
         }
         if (elem->kidsC)
@@ -859,6 +875,8 @@ xFile *xFileLoad(const char *fileName, bool createCollisionInfo)
         if (xfile)
         {
             xfile->texturesInited = false;
+            xfile->transparent = false;
+            xfile->opaque = false;
 
             xDWORD len;
             fread(&len, sizeof(len), 1, file);

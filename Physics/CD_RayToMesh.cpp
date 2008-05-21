@@ -126,10 +126,10 @@ bool CD_RayToMesh::IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, 
     return false;
 }
 
-bool CD_RayToMesh::CheckOctreeLevel(CollisionInfo             *ci,
-                                    xCollisionData            *pcd,
-                                    xCollisionHierarchyBounds *chb,
-                                    xElement                  *elem)
+bool CD_RayToMesh::CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,
+                                    xCollisionData                *pcd,
+                                    xCollisionHierarchyBounds     *chb,
+                                    xElement                      *elem)
 {
     bool res = false;
     xVector3 colPoint;
@@ -180,12 +180,12 @@ bool CD_RayToMesh::CheckOctreeLevel(CollisionInfo             *ci,
 
 
 
-bool CD_RayToMesh::CollideElements(CollisionInfo *&ci, xElement *elem)
+bool CD_RayToMesh::CollideElements(xCollisionHierarchyBoundsRoot *&ci, xElement *elem)
 {
     bool res = false;
 
-    if (elem->verticesC && ci->collisionHP && CollideBox(ci->bounding))
-        res |= CheckOctreeLevel(ci, &elem->collisionData, ci->collisionHP, elem);
+    if (elem->verticesC && ci->kids && CollideBox(ci->bounding))
+        res |= CheckOctreeLevel(ci, &elem->collisionData, ci->kids, elem);
 
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
         res |= CollideElements(++ci, celem);
@@ -197,7 +197,7 @@ bool CD_RayToMesh::Collide(ModelObj *model,
                                      xVector3 &rayB, xVector3 &rayE,
                                      xVector3 &colPoint, float &colDist)
 {
-    CollisionInfo *ci = model->GetCollisionInfo()-1;
+    xCollisionHierarchyBoundsRoot *ci = model->GetCollisionInfo()-1;
     xRender *r = model->GetRenderer();
 
     this->rayB = rayB;

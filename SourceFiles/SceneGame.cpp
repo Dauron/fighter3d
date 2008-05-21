@@ -7,7 +7,7 @@
 #include "../AppFramework/Application.h"
 #include "../Math/Cameras/CameraHuman.h"
 #include "../OpenGL/GLAnimSkeletal.h"
-#include "LightsAndMaterials.h"
+#include "../SourceFiles/LightsAndMaterials.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
@@ -33,8 +33,6 @@ bool SceneGame::Initialize(int left, int top, unsigned int width, unsigned int h
 
 bool SceneGame::InitGL()
 {
-    glClearColor( 0.1f, 0.1f, 0.3f, 0.0f ); // Background color
-
     glClearDepth(100.0f);                   // Draw distance ???
     glDepthFunc(GL_LEQUAL);                 // Depth testing function
 
@@ -44,15 +42,13 @@ bool SceneGame::InitGL()
 
     glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
     glEnable (GL_POINT_SMOOTH);
-    glEnable (GL_LINE_SMOOTH);
+//    glEnable (GL_LINE_SMOOTH);
 //    glEnable (GL_POLYGON_SMOOTH);         // produces errors on many cards... use FSAA!
 
     glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Nice perspective calculations
-
-    //setFog();
 
     //if (!shader.IsInitialized())
     {
@@ -240,24 +236,16 @@ bool SceneGame::Render()
     if (!g_FontMgr.IsHandleValid(m_Font2))
         m_Font2 = g_FontMgr.GetFont("Courier New", 15);
 
-    if (g_UseCustomShader && shader.IsInitialized())
-        shader.Start();
-
     glViewport(Left, Top, Width, Height);
-    // Clear surface
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT/* | GL_STENCIL_BUFFER_BIT*/);
-
     // Set projection
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     xglPerspective(45.0f, AspectRatio, 0.1f, 1000.0f);
     glMatrixMode(GL_MODELVIEW);
 
-    glEnable(GL_DEPTH_TEST);                // Enable depth testing
     glPolygonMode(GL_FRONT_AND_BACK, g_PolygonMode);
 
     Camera_Aim_GL(*DefaultCamera);
-    setLights();
 
     if (g_Init)
     {
@@ -265,13 +253,65 @@ bool SceneGame::Render()
         world.Initialize();
         g_Init = false;
     }
-    world.Render();
+    //world.Render();
 
-    // Flush the buffer to force drawing of all objects thus far
-    glFlush();
+    // Render the contents of the world
+    World::objectVec::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
 
+//    xShadowMap smap;
+//    smap.texId = 0;
+//    if (shadowCaster) smap = shadowCaster->GetShadowMap(&lights[0]);
+    for ( i = begin+45 ; i != end ; ++i )
+        (*i)->CreateShadowMap(&world.lights[0]);
+
+    // Clear surface
+    glClearColor( 0.1f, 0.1f, 0.3f, 0.0f ); // Background color
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT/* | GL_STENCIL_BUFFER_BIT*/);
+    glEnable(GL_DEPTH_TEST);
+
+    if (g_UseCustomShader && shader.IsInitialized())
+        shader.Start();
+    setLights();
+    for ( i = begin ; i != end ; ++i )
+        (*i)->Render(false);
     if (g_UseCustomShader && shader.IsInitialized())
         shader.Suspend();
 
+    for ( i = begin+45 ; i != end ; ++i )
+    {
+        xShadowMap &smap = (*i)->GetShadowMap();
+        //(*begin)->RenderShadow(smap);
+        for ( j = begin ; j != begin+45 ; ++j )
+            if (*i != *j)
+                (*j)->RenderShadow(smap);
+    }
+
+    if (g_UseCustomShader && shader.IsInitialized())
+        shader.Start();
+    setLights();
+    for ( i = begin ; i != end ; ++i )
+        (*i)->Render(true);
+    if (g_UseCustomShader && shader.IsInitialized())
+        shader.Suspend();
+
+    /*glBindTexture(GL_TEXTURE_2D, (*(end-4))->GetShadowMap().texId);
+    GLShader::EnableTexturing(1);
+    GLShader::EnableLighting(0);
+    glDisable(GL_BLEND);
+    glBegin(GL_QUADS);
+    {
+        glTexCoord2f(0.f,0.f);
+        glVertex3f(0.f, 0.f, 0.5f);
+        glTexCoord2f(1.f,0.f);
+        glVertex3f(1.f, 0.f, 0.5f);
+        glTexCoord2f(1.f,1.f);
+        glVertex3f(1.f, 1.f, 0.5f);
+        glTexCoord2f(0.f,1.f);
+        glVertex3f(0.f, 1.f, 0.5f);
+    }
+    glEnd();*/
+
+    // Flush the buffer to force drawing of all objects thus far
+    glFlush();
     return true;
 }

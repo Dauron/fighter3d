@@ -20,22 +20,24 @@ class CD_MeshToMesh
     bool IntersectTriangles (xVector3 *a1, xVector3 *a2, xVector3 *a3,
                              xVector3 *b1, xVector3 *b2, xVector3 *b3, xVector3 *crossing);
 
-    bool CheckOctreeLevel(CollisionInfo *ci1,              CollisionInfo *ci2,
+    bool CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xCollisionHierarchyBoundsRoot *ci2,
                           xCollisionHierarchy *ch1,        xCollisionHierarchy *ch2,
                           xCollisionHierarchyBounds *chb1, xCollisionHierarchyBounds *chb2,
                           xWORD cnt1,                      xWORD cnt2,
                           xElement *elem1,                 xElement *elem2);
     // Scan all elements in model2
-    bool Collide2(CollisionInfo *ci1, CollisionInfo *&ci2, xElement *elem1, xElement *elem2);
+    bool Collide2(xCollisionHierarchyBoundsRoot *ci1, xCollisionHierarchyBoundsRoot *&ci2,
+                  xElement *elem1, xElement *elem2);
     // Scan all elements in model1
-    bool Collide1(CollisionInfo *&ci1, CollisionInfo *&ci2, xElement *elem1, xElement *elem2);
+    bool Collide1(xCollisionHierarchyBoundsRoot *&ci1, xCollisionHierarchyBoundsRoot *&ci2,
+                  xElement *elem1, xElement *elem2);
 
 public:
 
     bool Collide(ModelObj *model1, ModelObj *model2)
     {
-        CollisionInfo *ci1 = model1->GetCollisionInfo()-1;
-        CollisionInfo *ci2 = model2->GetCollisionInfo()-1;
+        xCollisionHierarchyBoundsRoot *ci1 = model1->GetCollisionInfo()-1;
+        xCollisionHierarchyBoundsRoot *ci2 = model2->GetCollisionInfo()-1;
 
         float delta = GetTick();
 

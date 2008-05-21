@@ -70,7 +70,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     xBYTE                param;
     xBone               *selectedBone;
     xElement            *selectedElement;
-    GLuint               selectedElemID;
+    xWORD                selectedElemID;
     std::vector<xDWORD>  selectedVert;
     xDWORD               hoveredVert;
     int                  selStartX, selStartY;
@@ -106,7 +106,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     virtual unsigned int CountSelectable();
     std::vector<xDWORD> *SelectCommon  (int X, int Y, int W = 1, int H = 1);
     xBone               *SelectBone    (int X, int Y);
-    xDWORD               SelectElement (int X, int Y);
+    xWORD                SelectElement (int X, int Y);
 
 };
 

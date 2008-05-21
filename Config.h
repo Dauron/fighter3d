@@ -8,6 +8,8 @@ extern bool g_EnableLighting;
 extern bool g_UseCustomShader;
 extern int  g_PolygonMode;
 extern bool g_SelectionRendering;
+extern bool g_ShadowMapRendering;
+extern bool g_ShadowRendering;
 
 extern int   g_Test;
 extern float g_Speed;

@@ -124,11 +124,19 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
             {
                 if (firstF->material[0]) {
                     if (!lastM || strcmp(firstF->material, lastM->name))
+                    {
                         lastM = xMaterialByName(file,firstF->material);
+                        bool transparent = lastM->transparency > 0.f;
+                        elem->renderData.transparent |= transparent;
+                        elem->renderData.opaque      |= !transparent;
+                    }
                     mid = lastM->id;
                 }
                 else
+                {
                     mid = 0;
+                    file->opaque = elem->renderData.opaque = true;
+                }
 
                 xDWORD smooth = firstF->smoothing;
                 xBYTE  smGrp = smooth ? 1 : 0;
@@ -209,6 +217,8 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
     file->materialP = 0;
     file->materialC = 0;
     file->texturesInited = false;
+    file->transparent = false;
+    file->opaque = false;
     file->spineP = 0;
     file->saveCollisionData = true;
     file->fileName = 0;
@@ -237,6 +247,9 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
         lastm->use_wire_abs = mat->use_wire_abs;
         lastm->wire_size = mat->wire_size;
         lastm->texture.name = mat->texture1_map.name[0] ? strdup(mat->texture1_map.name) : NULL;
+        bool transparent = lastm->transparency > 0.f;
+        file->transparent |= transparent;
+        file->opaque      |= !transparent;
         ++(file->materialC);
     }
 
