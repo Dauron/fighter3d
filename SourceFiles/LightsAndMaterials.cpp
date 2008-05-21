@@ -20,7 +20,7 @@ void setMaterials()
 
 void setLights()
 {
-    if (g_EnableLighting)
+    if (Config::EnableLighting)
     {
         GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
 
@@ -106,7 +106,7 @@ void setLights()
     else
     {
         glDisable(GL_LIGHTING);
-        GLShader::EnableLighting(0);
+        GLShader::EnableLighting(-1);
     }
 }
 

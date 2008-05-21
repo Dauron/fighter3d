@@ -46,15 +46,41 @@ const xWORD  xWORD_MAX  = (xWORD)-1;
 #include "xMatrix.h"
 
 typedef xVector4 xPlane;
+typedef xVector4 xColor;
 
 struct xBox
 {
     xVector3 min;
     xVector3 max;
 
+    xVector3 points[8];
+
     bool Contains(const xVector3 &vert) const
     {
         return vert >= min && vert <= max;
+    }
+
+    const xVector3 *TransformatedPoints(xMatrix transformation)
+    {
+        points[0] = min;
+        points[1] = max;
+        points[2].init(min.x, min.y, max.z);
+        points[3].init(min.x, max.y, max.z);
+        points[4].init(max.x, min.y, max.z);
+        points[5].init(max.x, max.y, min.z);
+        points[6].init(max.x, min.y, min.z);
+        points[7].init(min.x, max.y, min.z);
+
+        points[0] = transformation.preTransformP(points[0]);
+        points[1] = transformation.preTransformP(points[1]);
+        points[2] = transformation.preTransformP(points[2]);
+        points[3] = transformation.preTransformP(points[3]);
+        points[4] = transformation.preTransformP(points[4]);
+        points[5] = transformation.preTransformP(points[5]);
+        points[6] = transformation.preTransformP(points[6]);
+        points[7] = transformation.preTransformP(points[7]);
+
+        return points;
     }
 };
 

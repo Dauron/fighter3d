@@ -212,7 +212,7 @@ bool SceneSkeleton::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT/* | GL_STENCIL_BUFFER_BIT*/);
 
     glEnable(GL_DEPTH_TEST);
-    glPolygonMode(GL_FRONT_AND_BACK, g_PolygonMode);
+    glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
 
     // Set projection
     glViewport(Left, Top, Width, Height);
@@ -235,7 +235,7 @@ bool SceneSkeleton::Render()
     renderer->RenderModel(true, NULL);
 
     GLShader::EnableTexturing(0);
-    GLShader::EnableLighting(0);
+    GLShader::EnableLighting(-1);
 
     if (m_EditMode == emSelectVertex)
         renderer->RenderVertices(xRender::smNone, selectedElemID, &selectedVert);

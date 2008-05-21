@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1250"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="CamFighter"
 	ProjectGUID="{EEDB48FF-1411-48BA-AA59-11165C3985A4}"
 	RootNamespace="CamFighter"
@@ -273,10 +273,6 @@
 				</File>
 				<File
 					RelativePath="..\Models\lib3dx\xImport.h"
-					>
-				</File>
-				<File
-					RelativePath="..\Models\lib3dx\xLight.h"
 					>
 				</File>
 				<File
@@ -848,6 +844,14 @@
 			>
 			<File
 				RelativePath="..\Math\xFieldOfView.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Math\xLight.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Math\xLight.h"
 				>
 			</File>
 			<File

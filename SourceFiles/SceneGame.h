@@ -30,7 +30,7 @@ class SceneGame : public Scene
   private:
     bool InitGL();
     void InitInputMgr();
-    void SetLights();
+    void SetLight(xLight &light);
 
     long  accum;
     float stepAccum;

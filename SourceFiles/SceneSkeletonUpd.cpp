@@ -863,7 +863,7 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
     InputMgr &im = g_InputMgr;
 
     if (im.GetInputStateAndClear(IC_PolyModeChange))
-        g_PolygonMode = (g_PolygonMode == GL_FILL) ? GL_LINE : GL_FILL;
+        Config::PolygonMode = (Config::PolygonMode == GL_FILL) ? GL_LINE : GL_FILL;
 
     if (im.GetInputStateAndClear(IC_CameraChange))
     {

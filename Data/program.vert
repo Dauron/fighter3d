@@ -1,38 +1,29 @@
 #version 110
 
-const int numLights = 3;
-
 uniform int lighting;
 uniform int texturing;
 
 varying vec3  normal;
-varying vec3  lightDir[numLights];
-varying float dist    [numLights];
-varying vec3  halfV   [numLights];
+varying vec3  lightDir;
+varying float dist;
+varying vec3  halfV;
 
 void main()
 {
 	//// Lighting
 	vec3 vertex;
-	vec3 aux;
 	
 	/* first transform the normal into eye space and normalize the result */
 	normal = normalize(gl_NormalMatrix * gl_Normal);
 	vertex = vec3(gl_ModelViewMatrix * gl_Vertex);
 
-	for (int i=0; i < numLights; ++i) {
-		if (i < lighting) {
-			/* compute the light's direction */
-			aux = gl_LightSource[i].position.xyz-vertex;
-			lightDir[i] = normalize(aux);
-			dist[i] = length(aux);
-            halfV[i] = normalize(gl_LightSource[i].halfVector.xyz);
-		}
-		else {
-            break;
-			//lightDir[i] = vec3(1.0,0.0,0.0);
-			//dist[i] = 0.0;
-		}
+    if (lighting > 0)
+    {
+        /* compute the light's direction */
+		vec3 aux = gl_LightSource[0].position.xyz-vertex;
+		lightDir = normalize(aux);
+		dist = length(aux);
+        halfV = normalize(gl_LightSource[0].halfVector.xyz);
 	}
 	
 	//// Leave texture without changes

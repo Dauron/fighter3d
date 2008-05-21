@@ -141,21 +141,9 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
             //glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
         }
         if (mat->transparency > 0.f)
-        {
-            glEnable(GL_BLEND);
-            //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
             glColor4f(1.f,1.f,1.f, 1.f-mat->transparency);
-            glDisable (GL_LINE_SMOOTH);
-            glDisable (GL_POLYGON_SMOOTH);
-        }
         else
-        {
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-            glDisable(GL_BLEND);
-            glEnable (GL_LINE_SMOOTH);
-            glEnable (GL_POLYGON_SMOOTH);         // produces errors on many cards... use FSAA!
-        }
         if (mat->two_sided)
             glDisable(GL_CULL_FACE);
         else
@@ -165,7 +153,6 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
     {
         glEnable(GL_CULL_FACE);
         glColor4fv(color.col);
-        glDisable(GL_BLEND);
         float ambient[4]  = {0.2f, 0.2f, 0.2f, 1.0f};
         float diffuse[4]  = {0.8f, 0.8f, 0.8f, 1.0f};
         float specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -421,9 +408,9 @@ void xRenderGL :: RenderElementVerticesVBO(
         glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     }
     else { //if (selectionMode == smNone) {
-        xColor cNotSkinned(0.8f, 0.8f, 0.f, 1.f);
-        xColor cSkinned   (0.f, 0.8f, 0.8f, 1.f);
-        xColor cSelected  (1.f, 0.f, 0.f, 1.f);
+        xColor cNotSkinned; cNotSkinned.init(0.8f, 0.8f, 0.f, 1.f);
+        xColor cSkinned;    cSkinned.init(0.f, 0.8f, 0.8f, 1.f);
+        xColor cSelected;   cSelected.init(1.f, 0.f, 0.f, 1.f);
 
         xColor *colors = new xColor[elem->renderData.verticesC];
         xColor *citer  = colors;
@@ -496,9 +483,9 @@ void xRenderGL :: RenderElementVerticesLST(
     if (selectionMode == smElement)
         glDrawElements (GL_TRIANGLES, 3*elem->facesC, GL_UNSIGNED_SHORT, elem->renderData.facesP);
     else { // if (selectionMode == smNone) {
-        xColor cNotSkinned(0.8f, 0.8f, 0.f, 1.f);
-        xColor cSkinned   (0.f, 0.8f, 0.8f, 1.f);
-        xColor cSelected  (1.f, 0.f, 0.f, 1.f);
+        xColor cNotSkinned; cNotSkinned.init(0.8f, 0.8f, 0.f, 1.f);
+        xColor cSkinned;    cSkinned.init(0.f, 0.8f, 0.8f, 1.f);
+        xColor cSelected;   cSelected.init(1.f, 0.f, 0.f, 1.f);
 
         xColor *colors = new xColor[elem->renderData.verticesC];
         xColor *citer  = colors;
@@ -558,7 +545,7 @@ void xRenderGL :: RenderModel(bool transparent, const xFieldOfView *FOV )
     m_currentMaterial = (xMaterial*)1;
     glEnableClientState(GL_VERTEX_ARRAY);
     // NOTE: SelectionRendering doesn't like custom shaders (speed!!!)
-    if (g_SelectionRendering) g_AnimSkeletal.ForceSoftware(true);
+    if (State::RenderingSelection) g_AnimSkeletal.ForceSoftware(true);
 
     for (xElement *elem = xModelToRender->firstP; elem; elem = elem->nextP)
         // NOTE: MIX of display lists and VBO appears to be much slower than VBO only
@@ -567,7 +554,7 @@ void xRenderGL :: RenderModel(bool transparent, const xFieldOfView *FOV )
         else
             RenderModelLST(elem, transparent);
 
-    if (g_SelectionRendering) g_AnimSkeletal.ForceSoftware(false);
+    if (State::RenderingSelection) g_AnimSkeletal.ForceSoftware(false);
 
     glDisableClientState(GL_VERTEX_ARRAY);
 }
@@ -582,16 +569,21 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
         || (!transparent && !elem->renderData.opaque)) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
-    if (FOV && !FOV->CheckSphere(
+    if (FOV &&
+        (!FOV->CheckSphere(
             location.preTransformP(elem->matrix.preTransformP(instance->bsCenter)),
-            instance->bsRadius))
+            instance->bsRadius) ||
+         !FOV->CheckBox(instance->bbBox.TransformatedPoints(elem->matrix * location)) ) )
+    {
+        ++Performance.CulledElements;
         return;
+    }
 
     xDWORD &listID = transparent ? instance->listIDTransp : instance->listID;
 
-    if (g_SelectionRendering || !UseList || !listID)
+    if (State::RenderingSelection || !UseList || !listID)
     {
-        if (g_SelectionRendering || !UseList) {
+        if (State::RenderingSelection || !UseList) {
             glPushMatrix();
             glMultMatrixf(&elem->matrix.matrix[0][0]);
         }
@@ -601,7 +593,7 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
         }
 
         if (elem->skeletized) {
-            if (elem->textured && !g_SelectionRendering) {
+            if (elem->textured && !State::RenderingSelection) {
                 glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                 glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.verticesTSP->tx));
             }
@@ -613,7 +605,7 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
         {
             if (elem->textured) {
                 glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), elem->renderData.verticesTP);
-                if (!g_SelectionRendering) {
+                if (!State::RenderingSelection) {
                     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                     glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), &(elem->renderData.verticesTP->tx));
                 }
@@ -634,24 +626,24 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
             if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
                 (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
                 continue;
-            if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
+            if (!State::RenderingSelection && faceL->materialP != m_currentMaterial)
                 SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
-        if (!g_SelectionRendering && elem->textured)
+        if (!State::RenderingSelection && elem->textured)
             glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         if (elem->renderData.normalP && GLShader::LightingState())
             glDisableClientState(GL_NORMAL_ARRAY);
         if (elem->skeletized)
             g_AnimSkeletal.EndAnimation();
 
-        if (g_SelectionRendering || !UseList)
+        if (State::RenderingSelection || !UseList)
             glPopMatrix();
         else
             glEndList();
     }
 
-    if (!g_SelectionRendering && UseList && listID)
+    if (!State::RenderingSelection && UseList && listID)
     {
         glPushMatrix();
         {
@@ -672,10 +664,15 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
         || (!transparent && !elem->renderData.opaque)) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
-    if (FOV && !FOV->CheckSphere(
+    if (FOV &&
+        (!FOV->CheckSphere(
             location.preTransformP(elem->matrix.preTransformP(instance->bsCenter)),
-            instance->bsRadius))
+            instance->bsRadius) ||
+         !FOV->CheckBox(instance->bbBox.TransformatedPoints(elem->matrix * location)) ) )
+    {
+        ++Performance.CulledElements;
         return;
+    }
 
     /************************* INIT VBO ****************************/
     if (instance->mode == xElementInstance::xRenderMode_NULL)
@@ -687,7 +684,7 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
 
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, instance->vertexB );
     if (elem->skeletized) {
-        if (elem->textured && !g_SelectionRendering) {
+        if (elem->textured && !State::RenderingSelection) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), (void *)(7*sizeof(xFLOAT)));
         }
@@ -699,7 +696,7 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
     {
         if (elem->textured) {
             glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), 0);
-            if (!g_SelectionRendering) {
+            if (!State::RenderingSelection) {
                 glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                 glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), (void *)(3*sizeof(xFLOAT)));
             }
@@ -722,14 +719,14 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
         if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
             (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
             continue;
-        if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
+        if (!State::RenderingSelection && faceL->materialP != m_currentMaterial)
             SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
         glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
     }
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB ( GL_ARRAY_BUFFER_ARB, 0 );
 
-    if (!g_SelectionRendering && elem->textured)
+    if (!State::RenderingSelection && elem->textured)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     if (elem->renderData.normalP && GLShader::LightingState())
         glDisableClientState(GL_NORMAL_ARRAY);
@@ -751,11 +748,11 @@ void xRenderGL :: RenderShadow(const xShadowMap &shadowMap, const xFieldOfView *
 
     this->FOV = FOV;
 
-    g_ShadowRendering = true;
+    State::RenderingShadows = true;
 
     glBindTexture(GL_TEXTURE_2D, shadowMap.texId );
     GLShader::EnableTexturing(1);
-    GLShader::EnableLighting(0);
+    GLShader::EnableLighting(-1);
 
     glEnable(GL_BLEND);
     glDisable (GL_LINE_SMOOTH);
@@ -789,7 +786,7 @@ void xRenderGL :: RenderShadow(const xShadowMap &shadowMap, const xFieldOfView *
 
     glDisable(GL_BLEND);
 
-    g_ShadowRendering = false;
+    State::RenderingShadows = false;
 }
 
 void xRenderGL :: RenderShadowLST(xElement *elem)
@@ -800,10 +797,15 @@ void xRenderGL :: RenderShadowLST(xElement *elem)
     if (!elem->renderData.verticesC) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
-    if (FOV && !FOV->CheckSphere(
+    if (FOV &&
+        (!FOV->CheckSphere(
             location.preTransformP(elem->matrix.preTransformP(instance->bsCenter)),
-            instance->bsRadius))
+            instance->bsRadius) ||
+         !FOV->CheckBox(instance->bbBox.TransformatedPoints(elem->matrix * location)) ) )
+    {
+        ++Performance.CulledElements;
         return;
+    }
 
     glPushMatrix();
     glMultMatrixf(&elem->matrix.x0);
@@ -841,10 +843,15 @@ void xRenderGL :: RenderShadowVBO(xElement *elem)
     if (!elem->renderData.verticesC) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
-    if (FOV && !FOV->CheckSphere(
+    if (FOV &&
+        (!FOV->CheckSphere(
             location.preTransformP(elem->matrix.preTransformP(instance->bsCenter)),
-            instance->bsRadius))
+            instance->bsRadius) ||
+         !FOV->CheckBox(instance->bbBox.TransformatedPoints(elem->matrix * location)) ) )
+    {
+        ++Performance.CulledElements;
         return;
+    }
     if (instance->mode == xElementInstance::xRenderMode_NULL)
         InitVBO(elem, instance);
 

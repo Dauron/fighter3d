@@ -120,7 +120,8 @@ GLenum GLShader::Initialize()
             linker_log[slen-1] = 0;
             LOG("%s,%s\n%s", vertexShaderFile, fragmentShaderFile, linker_log);
 
-            if (strstr(linker_log, "error") || strstr(linker_log, "failed"))
+            if (strstr(linker_log, "error") || strstr(linker_log, "failed")
+                || strstr(linker_log, "software"))
             {
                 delete[] linker_log;
                 Terminate();

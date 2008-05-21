@@ -1,7 +1,11 @@
 union xVector4 {
     xFLOAT4 xyzw;
+    xFLOAT4 col;
     struct {
         xFLOAT  x, y, z, w;
+    };
+    struct {
+        xFLOAT r, g, b, a;
     };
     struct {
         xVector3 vector3;

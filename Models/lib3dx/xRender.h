@@ -3,7 +3,6 @@
 
 #include "../ModelMgr.h"
 #include "xSkeleton.h"
-#include "xLight.h"
 #include "../../Math/xFieldOfView.h"
 #include "xUtils.h"
 

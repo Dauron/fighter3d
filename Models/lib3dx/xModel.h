@@ -4,18 +4,6 @@
 #include "../../Math/xMath.h"
 
 // Materials
-union xColor {
-    struct {
-        xFLOAT r, g, b, a;
-    };
-    xFLOAT4 col;
-
-    xColor() {};
-    xColor(xFLOAT R, xFLOAT G, xFLOAT B, xFLOAT A) : r(R), g(G), b(B), a(A) {}
-
-    void init(xFLOAT R, xFLOAT G, xFLOAT B, xFLOAT A) { r = R; g = G; b = B; a = A; }
-};
-
 struct xTexture {
     char    *name;
     xDWORD   htex;

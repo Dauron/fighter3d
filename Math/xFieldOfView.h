@@ -88,6 +88,72 @@ public:
         // Inside the field of view
         return true;
     }
+
+    bool CheckBox(const xVector3 boundingPoints[8]) const
+    {
+        xVector3 viewPos[8];
+        const xVector3 *iterS;
+        xVector3 *iterD;
+        bool culled;
+        int v;
+
+        iterS = boundingPoints;
+        iterD = viewPos;
+        for (v = 8; v; --v, ++iterS, ++iterD)
+            iterD->z = -(ViewTransform.z0 * iterS->x
+                       + ViewTransform.z1 * iterS->y
+                       + ViewTransform.z2 * iterS->z
+                       + ViewTransform.z3);
+        // In front of the Front Clipping plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->z < FrontClip;
+        if (culled) return false;
+        // Behind the Back Clipping plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->z > BackClip;
+        if (culled) return false;
+
+        iterS = boundingPoints;
+        iterD = viewPos;
+        for (v = 8; v; --v, ++iterS, ++iterD)
+            iterD->x = -(ViewTransform.x0 * iterS->x
+                       + ViewTransform.x1 * iterS->y
+                       + ViewTransform.x2 * iterS->z
+                       + ViewTransform.x3);
+        // Test the left plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->x * LeftPlane.x + iterD->z * LeftPlane.z > 0;
+        if (culled) return false;
+        // Test the right plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->x * RightPlane.x + iterD->z * RightPlane.z > 0;
+        if (culled) return false;
+
+        iterS = boundingPoints;
+        iterD = viewPos;
+        for (v = 8; v; --v, ++iterS, ++iterD)
+            iterD->x = -(ViewTransform.y0 * iterS->x
+                       + ViewTransform.y1 * iterS->y
+                       + ViewTransform.y2 * iterS->z
+                       + ViewTransform.y3);
+        // Test the top plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->y * TopPlane.x + iterD->z * TopPlane.z > 0;
+        if (culled) return false;
+        // Test the bottom plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->y * BottomPlane.x + iterD->z * BottomPlane.z > 0;
+        if (culled) return false;
+
+        // None of the planes could cull this box
+        return true;
+    }
 };
 
 #endif

@@ -225,7 +225,6 @@ bool SceneConsole::ProcessCmd(std::string cmd)
     ------------------------------------------------------------------------\n\
     toggle_lights       | tls           | turns the lighting on and off\n\
     reinitialize        | init          | reinitialize objects, etc.\n\
-    toggle_normals      | tnrm          | toggles visibility of normals\n\
     toggle_shader       | tshd          | toggles custom shader\n\
     toggle_polygon_mode | tpm           | toggle polygon mode\n\
     zero_fps_counters   | clrfps        | clears min & max fps counters\n\
@@ -295,7 +294,7 @@ bool SceneConsole::ProcessCmd(std::string cmd)
     }
     if (cmd == "tls" || cmd == "toggle_lights")
     {
-        if (g_EnableLighting = !g_EnableLighting)
+        if (Config::EnableLighting = !Config::EnableLighting)
             AppendConsole("\nThe lights are ON.\n");
         else
             AppendConsole("\nThe lights are OFF.\n");
@@ -306,10 +305,10 @@ bool SceneConsole::ProcessCmd(std::string cmd)
     std::stringstream ss;
     std::string txt = "\n\
 speed = *", txt2;
-    ss << g_Speed; ss >> txt2; txt += txt2 + "\n\
+    ss << Config::Speed; ss >> txt2; txt += txt2 + "\n\
 test  = ";
     ss.clear();
-    ss << g_Test;  ss >> txt2; txt += txt2 + '\n';
+    ss << Config::TestCase;  ss >> txt2; txt += txt2 + '\n';
     AppendConsole(txt);
     if (g_AnimSkeletal.HardwareEnabled())
         AppendConsole("hardware skeletal animation ENABLED\n");
@@ -319,47 +318,38 @@ test  = ";
     }
     if (cmd == "init" || cmd == "reinitialize")
     {
-        g_Init = true;
+        Config::Initialize = true;
         return true;
     }
     if (cmd.substr(0, 5) == "test ")
     {
-    g_Test = atoi(cmd.substr(5).data());
-        g_Init = true;
+        Config::TestCase = atoi(cmd.substr(5).data());
+        Config::Initialize = true;
         return true;
     }
     if (cmd.substr(0, 6) == "speed ")
     {
-        g_Speed = atof(cmd.substr(6).data());
-        return true;
-    }
-    if (cmd == "tnrm" || cmd == "toggle_normals")
-    {
-        if (g_ShowNormals = !g_ShowNormals)
-            AppendConsole("\nThe normals are ON.\n");
-        else
-            AppendConsole("\nThe normals are OFF.\n");
-        g_ModelMgr.InvalidateItems();
+        Config::Speed = atof(cmd.substr(6).data());
         return true;
     }
     if (cmd == "tshd" || cmd == "toggle_shader")
     {
-        if (g_UseCustomShader = !g_UseCustomShader)
-            AppendConsole("\nThe custom shader is ON.\n");
+        if (Config::EnableShaders = !Config::EnableShaders)
+            AppendConsole("\nThe shaders are ON.\n");
         else
-            AppendConsole("\nThe custom shader is OFF.\n");
+            AppendConsole("\nThe shaders are OFF.\n");
         return true;
     }
     if (cmd == "tpm" || cmd == "toggle_polygon_mode")
     {
-        switch (g_PolygonMode)
+        switch (Config::PolygonMode)
         {
             case GL_FILL:
-                g_PolygonMode = GL_LINE;
+                Config::PolygonMode = GL_LINE;
                 AppendConsole("\nPolygon mode: GL_LINE.\n");
                 break;
             case GL_LINE:
-                g_PolygonMode = GL_FILL;
+                Config::PolygonMode = GL_FILL;
                 AppendConsole("\nPolygon mode: GL_FILL.\n");
                 break;
         }
@@ -414,7 +404,7 @@ bool SceneConsole::Render()
 
     glViewport(Left, Top+cHeight, Width, cHeight); // Set viewport
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
-    GLShader::EnableLighting(0);
+    GLShader::EnableLighting(-1);
     GLShader::EnableTexturing(0);
     glDisable (GL_POLYGON_SMOOTH);
 
@@ -452,6 +442,8 @@ bool SceneConsole::Render()
     pFont->PrintF(0.0f, (float)cHeight-lineHeight, 0.0f,
         "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u FPS: %2u L0: %5u L1: %5u L2: %5u L3: %5u, T1: %f, T2: %f",
         (int)minFPS, (int) meanFPS, (int)maxFPS, (int)curFPS, testsLevel0,testsLevel1,testsLevel2,testsLevel3, time1b, time2b);
+    pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
+        "   Num culled elements: %u", (int)Performance.CulledElements);
 
     glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
     glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing

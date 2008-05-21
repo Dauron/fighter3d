@@ -2,6 +2,7 @@
 #define __incl_ModelObj_h
 
 #include "Object3D.h"
+#include "../Math/xLight.h"
 #include "../Models/ModelMgr.h"
 #include "../Models/lib3dx/xSkeleton.h"
 #include "../Models/lib3dx/xRenderGL.h"
@@ -79,8 +80,8 @@ public:
     void       CreateShadowMap(xLight *light)
     {
         xMatrix blocker;
-        GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, g_ShadowMapSize);
-        smap.texId = GetRenderer()->CreateShadowMap(g_ShadowMapSize, blocker);
+        GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, Config::ShadowMapSize);
+        smap.texId = GetRenderer()->CreateShadowMap(Config::ShadowMapSize, blocker);
     }
     xShadowMap GetShadowMap ()                { return smap; }
     void       RenderShadow (xShadowMap smap, const xFieldOfView *FOV)

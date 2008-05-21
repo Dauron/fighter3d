@@ -20,8 +20,8 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const xFieldOfView *FOV, int X
     //Send select buffer to OpenGl and use select mode to track object hits
     glSelectBuffer(capacity, selectBuffer);
     glRenderMode(GL_SELECT);
-    g_SelectionRendering = true;
-    GLShader::EnableLighting(0);
+    State::RenderingSelection = true;
+    GLShader::EnableLighting(-1);
     GLShader::EnableTexturing(0);
 
     //Retrieve viewport (x, y, width, height) & projection matrix
@@ -46,7 +46,7 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const xFieldOfView *FOV, int X
         RenderSelect(FOV);
         //Return to render mode, glRenderMode returns the number of hits (only because GL_SELECT was selected before)
         nbRecords = glRenderMode(GL_RENDER);
-        g_SelectionRendering = false;
+        State::RenderingSelection = false;
     }
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();

@@ -32,7 +32,7 @@ void World:: Update(float deltaTime)
     assert(m_Valid);
 
     if (deltaTime > 0.05f) deltaTime = 0.05f;
-    deltaTime *= g_Speed;
+    deltaTime *= Config::Speed;
 
     testsLevel0 = testsLevel1 = testsLevel2 = testsLevel3 = 0;
     time1b = ((time1b*49.0f + time1)/50.0f);
@@ -73,6 +73,7 @@ void World:: Initialize()
     lights.clear();
     xLight light;
     light.modified = true;
+    light.turned_on = true;
     light.attenuationConst  = 1.f;
     light.attenuationLinear = 0.004f;
     light.attenuationSquare = 0.0008f;
@@ -97,7 +98,7 @@ void World:: Initialize()
     light.attenuationSquare = 0.f;
     lights.push_back(light);
 
-    if (!g_Test)
+    if (!Config::TestCase)
     {
         Load("Data/models/dojo/dojo.map");
 
@@ -164,7 +165,7 @@ void World:: Initialize()
         objects.push_back(model);*/
     }
     else
-    if (g_Test == 1)
+    if (Config::TestCase == 1)
     {
         model = new ModelObj(-3.75f, -3.75f, 0.75f, 0.f, 0.f, 0.f);
         model->Initialize("Data/models/crate.3dx", false, false);

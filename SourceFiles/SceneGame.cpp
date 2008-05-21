@@ -239,43 +239,39 @@ bool SceneGame::Update(float deltaTime)
         return true;
     }
 
+    memset(&Performance, 0, sizeof(Performance));
+
     world.Update(deltaTime);
     return true;
 }
 
-void SceneGame::SetLights()
+void SceneGame::SetLight(xLight &light)
 {
-    World::lightsVec::iterator light, begin = world.lights.begin(), end = world.lights.end();
-    GLuint lightNo = GL_LIGHT0;
+    GLfloat vec[4];
+    GLfloat ambient_off[] = { 0.0, 0.0, 0.0, 1.0 };
+    int i;
 
-    for (light=begin; light!=end; ++light, ++lightNo)
+    // turn off ambient lighting
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient_off);
+
+    xVector4 position; position.init(light.position, light.type == xLight_INFINITE ? 0.f : 1.f);
+    glLightfv(GL_LIGHT0, GL_POSITION, position.xyzw);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  light.color.col); // direct light
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light.color.col); // light on mirrors/metal
+
+    // rozpraszanie siê œwiat³a
+    glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION,  light.attenuationConst);
+    glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION,    light.attenuationLinear);
+    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, light.attenuationSquare);
+
+    if (light.type == xLight_SPOT)
     {
-        xVector4 position; position.init(light->position, light->type == xLight_INFINITE ? 0.f : 1.f);
-        glLightfv(lightNo, GL_POSITION, position.xyzw);
-
-        xVector4 ambient; ambient.init(light->color.col); ambient *= 0.1f;
-        glLightfv(lightNo, GL_AMBIENT,  ambient.xyzw);     // environment
-        glLightfv(lightNo, GL_DIFFUSE,  light->color.col); // direct light
-        glLightfv(lightNo, GL_SPECULAR, light->color.col); // light on mirrors/metal
-
-        // rozpraszanie siê œwiat³a
-        glLightf(lightNo, GL_CONSTANT_ATTENUATION,  light->attenuationConst);
-        glLightf(lightNo, GL_LINEAR_ATTENUATION,    light->attenuationLinear);
-        glLightf(lightNo, GL_QUADRATIC_ATTENUATION, light->attenuationSquare);
-
-        if (light->type == xLight_SPOT)
-        {
-            glLightfv(lightNo, GL_SPOT_DIRECTION, light->spotDirection.xyz);
-            glLightf(lightNo,  GL_SPOT_CUTOFF,    light->spotCutOff);
-            glLightf(lightNo,  GL_SPOT_EXPONENT,  light->spotAttenuation);
-        }
-        else
-            glLightf(lightNo, GL_SPOT_CUTOFF, 180.0f);
-
-        glEnable(lightNo);
+        glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, light.spotDirection.xyz);
+        glLightf(GL_LIGHT0,  GL_SPOT_CUTOFF,    light.spotCutOff);
+        glLightf(GL_LIGHT0,  GL_SPOT_EXPONENT,  light.spotAttenuation);
     }
-    for (; lightNo < GL_LIGHT0+GL_MAX_LIGHTS; ++lightNo)
-        glDisable(lightNo);
+    else
+        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0f);
 }
 
 bool SceneGame::Render()
@@ -285,47 +281,22 @@ bool SceneGame::Render()
     if (!g_FontMgr.IsHandleValid(m_Font2))
         m_Font2 = g_FontMgr.GetFont("Courier New", 15);
 
-    if (g_Init)
+    if (Config::Initialize)
     {
         world.Finalize();
         world.Initialize();
-        g_Init = false;
+        Config::Initialize = false;
     }
 
-    glPolygonMode(GL_FRONT_AND_BACK, g_PolygonMode);
-
-    GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+    glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE); // GL_TRUE=two, GL_FALSE=one
+    glDisable (GL_LINE_SMOOTH);
+    glDisable (GL_POLYGON_SMOOTH);                    // produces errors on many cards... use FSAA!
 
     // Render the contents of the world
-    World::objectVec::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
-
-    //////////////////// SHADOW MAPS - BEGIN
-
-    glViewport(0, 0, g_ShadowMapSize, g_ShadowMapSize);
-    //glEnable(GL_SCISSOR_TEST);
-    //glScissor(0, 0, g_ShadowMapSize, g_ShadowMapSize);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    // We will make a dark grey on white shadow-map, so clear the buffer with white
-    glClearColor(1.0, 1.0, 1.0, 0.0);
-    glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-    GLShader::EnableLighting(0);
-    GLShader::EnableTexturing(0);
-    glShadeModel(GL_FLAT);
-    glDisable (GL_POINT_SMOOTH);
-    glDisable (GL_LINE_SMOOTH);
-    glDisable (GL_POLYGON_SMOOTH);
-    for ( i = begin + 35 ; i != end ; ++i )
-        if (world.lights[0].modified || !(*i)->GetShadowMap().texId)
-            (*i)->CreateShadowMap(&world.lights[0]);
-
-    //////////////////// SHADOW MAPS - END
-
-    world.lights[0].modified = false;
+    World::objectVec::iterator i,j,   begin = world.objects.begin(), end = world.objects.end();
+    World::lightsVec::iterator light, beginL = world.lights.begin(), endL = world.lights.end();
 
     //////////////////// WORLD - BEGIN
 
@@ -338,49 +309,129 @@ bool SceneGame::Render()
     glLoadMatrixf(&FOV.ViewTransform.x0); //Camera_Aim_GL(*DefaultCamera);
 
     glShadeModel(GL_SMOOTH);
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    GLShader::EnableLighting(-1);
+    GLShader::EnableTexturing(0);
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     /////// Render the SKY
     (*begin)->Render(false, NULL);
 
-    SetLights();
-    glEnable(GL_DEPTH_TEST);
-
-    /////// Render the opaque World
-    if (g_UseCustomShader && shader.IsInitialized()) shader.Start();
-    if (g_EnableLighting)                            GLShader::EnableLighting(world.lights.size());
-    for ( i = begin+1 ; i != end ; ++i )             (*i)->Render(false, &FOV);
-    if (g_UseCustomShader && shader.IsInitialized()) shader.Suspend();
-    /////// Render shadows of the World
-    glClearStencil(0);
-    //glEnable( GL_STENCIL_TEST );
-    glStencilFunc( GL_NOTEQUAL, 1, 1 );
-    glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE );
-    for ( j = begin+1 ; j != begin+35 ; ++j )
+    if (Config::EnableLighting)
     {
-        glClear(GL_STENCIL_BUFFER_BIT);
-        for ( i = begin+35 ; i != end ; ++i )
-            if (*i != *j)
+        ////// RENDER AMBIENT PASS
+
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glEnable   (GL_DEPTH_TEST);
+        glDepthMask(1);
+        glDepthFunc(GL_LESS);
+        glEnable   (GL_CULL_FACE);
+        glCullFace (GL_BACK);
+        glColorMask(1, 1, 1, 1);
+        GLShader::EnableTexturing(0);
+        GLShader::EnableLighting(0);
+        glDisable(GL_LIGHT0);
+        GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+        for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, &FOV);
+        glPopAttrib();
+
+        ////// RENDER SHADOWS AND LIGHTS
+
+        for (light=beginL; light!=endL; ++light)
+        {
+            light->update();
+            if (light->turned_on && light->isVisible(&FOV))
             {
-                xShadowMap &smap = (*i)->GetShadowMap();
-                if (smap.texId)
-                {
-                    xVector3 vecI = (xVector4::Create((*i)->centerOfTheMass, 1.f) * (*i)->mLocationMatrix).vector3;
-                    xVector3 vecJ = (xVector4::Create((*j)->centerOfTheMass, 1.f) * (*j)->mLocationMatrix).vector3;
-                    vecI -= world.lights[0].position;
-                    vecJ -= world.lights[0].position;
-                    if (xVector3::DotProduct(vecI, vecJ) > 0.f)
-                        (*j)->RenderShadow(smap, &FOV);
-                }
+                SetLight(*light);
+
+                ////// SHADOW DETERMINATION PASS
+                glPushAttrib(GL_ALL_ATTRIB_BITS);
+                glClear(GL_STENCIL_BUFFER_BIT);
+                glEnable(GL_STENCIL_TEST);          // write to stencil buffer
+                glStencilMask(0xff);                // allow writing to the first byte of buffer
+                glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
+                glEnable   (GL_DEPTH_TEST);
+                glDepthMask(0);                     // do not write to z-buffer
+                glDepthFunc(GL_LESS);
+                glEnable(GL_CULL_FACE);             // enable face culling
+                glColorMask(0, 0, 0, 0);            // do not write to frame buffer
+
+                glPopAttrib();
+
+                ////// ILLUMINATION PASS
+                glPushAttrib(GL_ALL_ATTRIB_BITS);
+                glEnable(GL_STENCIL_TEST);          // read from stencil buffer
+                glStencilMask(0);                   // do not write to stencil buffer
+                glStencilFunc(GL_EQUAL, 0, 0xff);   // set stencil test function
+                glEnable   (GL_DEPTH_TEST);
+                glDepthMask(0);                     // do not write to z-buffer
+                glDepthFunc(GL_LEQUAL);
+                glEnable(GL_CULL_FACE);             // enable face culling
+                glCullFace(GL_BACK);
+                glColorMask(1,1,1,1);
+                glEnable(GL_BLEND);                 // add light contribution to frame buffer
+                glBlendFunc(GL_ONE, GL_ONE);
+                GLShader::EnableTexturing(0);
+                GLShader::EnableLighting(1);
+                glEnable(GL_LIGHT0);                // light0 should be set to have the
+                                                    // characteristics of the light
+                                                    // we want to use for this pass
+                if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
+                for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, &FOV);
+                if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
+                glPopAttrib();
             }
+            light->modified = false;
+        }
+
+        ////// RENDER TRANSPARENT PASS
+
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glEnable   (GL_DEPTH_TEST);
+        glDepthMask(1);
+        glDepthFunc(GL_LESS);
+        glEnable   (GL_CULL_FACE);
+        glCullFace (GL_BACK);
+        glColorMask(1, 1, 1, 1);
+        glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
+        GLShader::EnableTexturing(0);
+        GLShader::EnableLighting(0);
+        glDisable(GL_LIGHT0);
+        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+        for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(true, &FOV);
+        glPopAttrib();
     }
-    glDisable( GL_STENCIL_TEST );
-    /////// Render the transparent World
-    //if (g_UseCustomShader && shader.IsInitialized()) shader.Start();
-    if (g_EnableLighting)                            GLShader::EnableLighting(world.lights.size());
-    for ( i = begin+1 ; i != end ; ++i )             (*i)->Render(true, &FOV);
-    //if (g_UseCustomShader && shader.IsInitialized()) shader.Suspend();
+    else
+    {
+        ////// RENDER OPAQUE PASS
+
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glEnable   (GL_DEPTH_TEST);
+        glDepthMask(1);
+        glDepthFunc(GL_LESS);
+        glEnable   (GL_CULL_FACE);
+        glCullFace (GL_BACK);
+        glColorMask(1, 1, 1, 1);
+        GLShader::EnableTexturing(0);
+        GLShader::EnableLighting(-1);
+
+        for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, &FOV);
+
+        ////// RENDER TRANSPARENT PASS
+
+        glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
+
+        for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(true, &FOV);
+
+        glPopAttrib();
+    }
 
     //////////////////// WORLD - END
 

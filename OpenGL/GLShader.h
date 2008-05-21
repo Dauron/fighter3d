@@ -109,8 +109,10 @@ public:
         }
     }
 
-    static void EnableTexturing(int val) // 0, 1, 2
+    static void EnableTexturing(int val) // -1, 0, 1, 2
     {
+        if (textures < 0 && val > 0)
+            return; // textures are disabled
         textures = val;
         if (currShader)
             glUniform1iARB(currShader->uTexturing, textures);
@@ -120,12 +122,12 @@ public:
             glDisable(GL_TEXTURE_2D);
     }
 
-    static void EnableLighting(int val) // 0, 1, 2, 3
+    static void EnableLighting(int val) // -1, 0, 1, 2, 3
     {
         lights = val;
         if (currShader)
             glUniform1iARB(currShader->uLighting, lights);
-        if (val)
+        if (val >= 0)
             glEnable(GL_LIGHTING);
         else
             glDisable(GL_LIGHTING);
