@@ -21,7 +21,14 @@ public:
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL,
                              bool physicalNotLocked = false, bool phantom = true);
     virtual void Finalize ();
+
+    virtual void LocationChanged() {
+        UpdateVerletSystem();
+        UpdateVerletSystem();
+        memset(verletSystem.accelerationP, 0, sizeof(xVector3)*verletSystem.particleC);
+    }
     virtual void ResetVerletSystem();
+    virtual void UpdateVerletSystem();
 
     void AddAnimation(const char *fileName, xDWORD startTime = 0, xDWORD endTime = 0);
 

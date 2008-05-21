@@ -19,6 +19,8 @@ class Object3D
         void Translate(xFLOAT x, xFLOAT y, xFLOAT z);
         void Rotate   (xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ);
 
+        virtual void LocationChanged() {}
+
         void Render(bool transparent, const xFieldOfView &FOV)
         {
             RenderObject(transparent, FOV);

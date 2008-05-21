@@ -42,6 +42,16 @@ void SkeletizedObj :: ResetVerletSystem()
         }
 }
 
+void SkeletizedObj :: UpdateVerletSystem()
+{
+    xIKNode  *bone   = xModelGr->spine.boneP;
+    xVector3 *pos    = verletSystem.positionOldP;
+    xMatrix  *mtx    = modelInstanceGr.bonesM;
+    for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++mtx)
+        *pos   = mLocationMatrix.preTransformP( mtx->postTransformP(bone->pointE) );
+    verletSystem.SwapPositions();
+}
+
 void SkeletizedObj :: Finalize ()
 {
     ModelObj::Finalize();
@@ -125,14 +135,5 @@ void SkeletizedObj :: Update(float deltaTime)
     else
         GetModelGr()->spine.ResetQ();
 
-    xIKNode  *bone   = xModelGr->spine.boneP;
-    xVector3 *pos    = verletSystem.positionOldP,
-             *a      = verletSystem.accelerationP;
-    xMatrix  *mtx    = modelInstanceGr.bonesM;
-    for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++a, ++mtx)
-    {
-        *pos   = mLocationMatrix.preTransformP( mtx->postTransformP(bone->pointE) );
-        a->zero();
-    }
-    verletSystem.SwapPositions();
+    UpdateVerletSystem();
 }

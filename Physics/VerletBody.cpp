@@ -89,17 +89,24 @@ void VerletBody :: CalculateCollisions(SkeletizedObj *model)
 
     model->collisionConstraints.clear();
 
+    xVector3 *forces = model->verletSystem.accelerationP;
+    xVector3 *a = forces;
+    for (xWORD i = model->verletSystem.particleC; i; --i, ++a)
+    {
+        *a = *a * 0.99f; // damping
+        a->z -= 10.f;   // gravity
+    }
+
     if (!model->CollidedModels.empty())
     {
-        model->verletWeight = 1.f;
+        model->verletWeight = 0.5f;
         std::vector<Collisions>::iterator iter, end;
 
         xSkeleton &spine = model->GetModelGr()->spine;
-
         xFLOAT   *bones  = new xFLOAT[spine.boneC];
-        xVector3 *forces = model->verletSystem.accelerationP;
-        memset(bones, 0, spine.boneC * sizeof(xFLOAT));
-        memset(forces, 0, spine.boneC * sizeof(xVector3));
+
+        xVector3 dampPlus; dampPlus.zero();
+        xVector3 dampMinus; dampMinus.zero();
 
         for (int i = model->CollidedModels.size()-1; i >= 0; --i)
         {
@@ -141,17 +148,54 @@ void VerletBody :: CalculateCollisions(SkeletizedObj *model)
                 for (int bi = 0; bi < spine.boneC; ++bi)
                     if (bones[bi] > 0.f)
                     {
-                        forces[bi] += speed * bones[bi];
-                        /*
+                        speed = planeN;
+                        xVector3 &force = forces[bi];
+                        xFLOAT forceN = xVector3::DotProduct(planeN, force);
+                        if (forceN < 0.f) // damp force in the direction of collision (Fn = -Fc)
+                        {
+                            xVector3 damp = planeN * forceN;
+                            if (damp.x > 0) dampPlus.x = max (dampPlus.x, damp.x);
+                            else            dampMinus.x = min (dampMinus.x, damp.x);
+                            if (damp.y > 0) dampPlus.y = max (dampPlus.y, damp.y);
+                            else            dampMinus.y = min (dampMinus.y, damp.y);
+                            if (damp.z > 0) dampPlus.z = max (dampPlus.z, damp.z);
+                            else            dampMinus.z = min (dampMinus.z, damp.z);
+                        }
+                        force += speed * bones[bi];
+
                         xVConstraintCollision constr;
                         constr.particle = bi;
                         constr.planeN = planeN;
                         xVector3 planeP = iter->colPoint + planeN * bones[bi];
                         constr.planeD = -(planeP.x*planeN.x + planeP.y*planeN.y + planeP.z*planeN.z);
                         model->collisionConstraints.push_back(constr);
-                        */
                     }
             }
+        }
+
+        a = forces;
+        for (xWORD i = model->verletSystem.particleC; i; --i, ++a)
+        {
+            if (a->x > 0)
+                if (a->x > dampPlus.x)  a->x -= dampPlus.x;
+                else                    a->x = 0.f;
+            else
+                if (a->x < dampMinus.x) a->x -= dampMinus.x;
+                else                    a->x = 0.f;
+
+            if (a->y > 0)
+                if (a->y > dampPlus.y)  a->y -= dampPlus.y;
+                else                    a->y = 0.f;
+            else
+                if (a->y < dampMinus.y) a->y -= dampMinus.y;
+                else                    a->y = 0.f;
+
+            if (a->z > 0)
+                if (a->z > dampPlus.z)  a->z -= dampPlus.z;
+                else                    a->z = 0.f;
+            else
+                if (a->z < dampMinus.z) a->z -= dampMinus.z;
+                else                    a->z = 0.f;
         }
 
         delete[] bones;
@@ -171,19 +215,20 @@ void VerletBody :: CalculateMovement(SkeletizedObj *model, float deltaTime)
         return;
     }
 
-    if (model->verletWeight > 0.f)
+    //if (model->verletWeight > 0.f)
     {
         xSkeleton &spine = model->GetModelGr()->spine;
         model->verletSystem.constraintsP = spine.constraintsP;
         model->verletSystem.constraintsC = spine.constraintsC;
+        model->verletSystem.constraintsLenEql = spine.boneConstrP;
         model->verletSystem.spine = &spine;
         model->verletSystem.locationMatrix   = model->mLocationMatrix;
         model->verletSystem.locationMatrixIT = xMatrix::Invert(model->mLocationMatrix).transpose();
 
         xVerletSolver engine;
         engine.Init(& model->verletSystem);
-        engine.timeStep = 1.f;
-        engine.passesC = 1;
+        engine.timeStep = deltaTime;
+        engine.passesC = 5;
         engine.Verlet();
         engine.SatisfyConstraints();
 
@@ -195,9 +240,10 @@ void VerletBody :: CalculateMovement(SkeletizedObj *model, float deltaTime)
 
         model->mLocationMatrix.postTranslateT(spine.boneP->quaternion.vector3);
         spine.boneP->quaternion.zeroQ();
+        model->verletQuaternions[0].zeroQ();
 
         model->verletWeight -= deltaTime;
     }
     model->CollidedModels.clear();
-    model->verletWeight = max(0.5f, model->verletWeight);
+    model->verletWeight = max(0.0f, model->verletWeight);
 }

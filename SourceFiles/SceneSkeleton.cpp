@@ -386,6 +386,7 @@ bool SceneSkeleton::Render()
                 else
                     pFont->PrintF(5.f, 85.f-20.f*i, 0.f, "%s Angle: %2.2f", label, Constraint.angles[i]);
             }
+        else
         if (Constraint.type == IC_BE_CreateConstrWeight)
             pFont->PrintF(5.f, 25, 0.f, "Weight: (%2.2f) %s", Constraint.length, InputState.String.c_str());
         else

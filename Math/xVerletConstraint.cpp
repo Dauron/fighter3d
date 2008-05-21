@@ -33,8 +33,8 @@ bool xVConstraintLengthEql :: Satisfy(xVerletSystem *system)
     xVector3 delta  = p1-p2;
     xFLOAT deltaLengthSqr = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
     if (fabs(restLengthSqr - deltaLengthSqr) < EPSILON2) return false;
-    delta *= restLengthSqr/(deltaLengthSqr+restLengthSqr)-0.5f;
-    //delta *= -1.f + restLength / sqrt(deltaLengthSqr);
+    //delta *= restLengthSqr/(deltaLengthSqr+restLengthSqr)-0.5f;
+    delta *= -1.f + restLength / sqrt(deltaLengthSqr);
 
     xFLOAT w1 = system->weightP[particleA];
     xFLOAT w2 = system->weightP[particleB];
@@ -311,7 +311,7 @@ bool xVConstraintCollision :: Satisfy(xVerletSystem *system)
 {
     xVector3 &p = system->positionP[particle];
     xFLOAT dist = xVector3::DotProduct(planeN, p) + planeD;
-    if (dist > -EPSILON2) return false;
+    if (dist > 0.f) return false;
     p -= planeN * dist;
     return true;
 }
@@ -345,7 +345,6 @@ void xVerletSolver :: SatisfyConstraints()
 {
     for (xBYTE pass_n = passesC; pass_n; --pass_n)
     {
-/*
         if (system->collisions)
         {
             xVConstraintCollisionVector::iterator iter = system->collisions->begin(),
@@ -361,7 +360,7 @@ void xVerletSolver :: SatisfyConstraints()
             for (; iterL != endL; ++iterL)
                 iterL->Satisfy(system);
         }
-*/
+
         xIVConstraint **constr = system->constraintsP;
         for (xWORD i = system->constraintsC; i; --i, ++constr)
             (*constr)->Satisfy(system);
@@ -371,7 +370,7 @@ void xVerletSolver :: SatisfyConstraints()
 void xVerletSolver :: AccumulateForces()
 {
     xVector3 *a = system->accelerationP;
-    for (xWORD i = system->particleC; i; --i, ++a) *a = gravity;
+    for (xWORD i = system->particleC; i; --i, ++a) *a += gravity;
 }
 
 void xVerletSolver :: Verlet()
@@ -383,10 +382,10 @@ void xVerletSolver :: Verlet()
 
     if (system->accelerationP)
         for (xWORD i = system->particleC; i; --i, ++pC, ++pO, ++a)
-            *pO = *pC + /*2 * *pC - *pO + */*a * timeStepSqr;
+            *pO = *pC /*+ 0.9f * (*pC - *pO)*/ + *a * timeStepSqr;
     else
         for (xWORD i = system->particleC; i; --i, ++pC, ++pO, ++a)
-            *pO = 2 * *pC - *pO;
+            *pO = *pC /*+ 0.9f * (*pC - *pO)*/;
 
     system->SwapPositions();
 }

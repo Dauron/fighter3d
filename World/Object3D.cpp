@@ -27,6 +27,7 @@ void Object3D::Translate(xFLOAT x, xFLOAT y, xFLOAT z)
     matrT.y3 = y;
     matrT.z3 = z;
     mLocationMatrix *= matrT;
+    LocationChanged();
 }
 
 void Object3D::Rotate(xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
@@ -75,4 +76,5 @@ void Object3D::Rotate(xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
 
         mLocationMatrix *= matrX;
     }
+    LocationChanged();
 }
