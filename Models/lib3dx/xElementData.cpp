@@ -20,7 +20,6 @@ void xCollisionHierarchy :: Load ( FILE *file, xElement *elem )
     else
         this->facesP = 0;
 
-    xDWORD tmp;
     fread(&this->verticesC, sizeof(xWORD), 1, file);
     if (this->verticesC && !this->kidsC)
     {

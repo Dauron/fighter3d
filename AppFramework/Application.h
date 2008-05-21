@@ -25,7 +25,8 @@ class Application : public Singleton<Application>
     Scene&    CurrentScene() { return *m_scene; }
     bool      SetCurrentScene(Scene* scene, bool destroyPrev = true);
 
-    Application() : m_scene(NULL), m_title(NULL), m_OpenGL(true), OnApplicationInvalidate(NULL), OnApplicationTerminate(NULL)
+    Application() : OnApplicationInvalidate(NULL), OnApplicationTerminate(NULL),
+                    m_scene(NULL), m_title(NULL), m_OpenGL(true)
     {
         if (m_OpenGL)
             m_window = new GLWindow();

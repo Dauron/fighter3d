@@ -3,12 +3,12 @@
 
 int   Config::Initialize        = false;
 bool  Config::EnableLighting    = true;
-bool  Config::EnableShadows     = false;
+bool  Config::EnableShadows     = true;
 bool  Config::DisplayShadowVolumes = false;
 bool  Config::EnableShaders     = true;
 int   Config::PolygonMode       = 0x1B02;
 
-int   Config::TestCase          = 2;
+int   Config::TestCase          = 0;
 float Config::Speed             = 1.f;
 int   Config::ShadowMapSize     = 512;
 
@@ -44,6 +44,11 @@ void _Performance :: NextFrame(float ticks)
     CollidedTreeLevels     = 0;
     CollidedTriangleBounds = 0;
     CollidedTriangles      = 0;
+
+    ShadowDataFill1        = 0.f;
+    ShadowDataFill2        = 0.f;
+    ShadowDataFill3        = 0.f;
+    ShadowDataFill4        = 0.f;
 
     CollisionDataFillMS_max      = CollisionDataFillMS > CollisionDataFillMS_max ? CollisionDataFillMS : CollisionDataFillMS_max;
     CollisionDeterminationMS_max = CollisionDeterminationMS > CollisionDeterminationMS_max ? CollisionDeterminationMS : CollisionDeterminationMS_max;

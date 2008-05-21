@@ -8,6 +8,7 @@
 #else
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <GL/glext.h>
 #define aLoadExtension(functype,funcname) ((funcname = (functype) glXGetProcAddressARB( (const GLubyte*) #funcname )) == NULL)
 #endif
 

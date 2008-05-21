@@ -161,6 +161,9 @@ void   xRenderGL :: RenderShadowMapTexture(bool transparent)
 {
     assert(xModelToRender);
 
+    if ((transparent && !xModelToRender->transparent) ||
+        (!transparent && !xModelToRender->opaque)) return;
+
     if (!bonesC && spineP)
         CalculateSkeleton();
     if (!instanceDataTRP)
@@ -184,11 +187,10 @@ void   xRenderGL :: RenderShadowMapTextureLST(xElement *elem, bool transparent)
         RenderShadowMapTextureLST(selem, transparent);
 
     if (!elem->renderData.verticesC
-        || (transparent && !elem->renderData.transparent)
-        || (!transparent && !elem->renderData.opaque)) return;
+        || (transparent && !elem->transparent)
+        || (!transparent && !elem->opaque)) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
-    xDWORD &listID = transparent ? instance->gpuMain.listIDTransp : instance->gpuMain.listID;
 
     glPushMatrix();
     glMultMatrixf(&elem->matrix.matrix[0][0]);
@@ -226,8 +228,8 @@ void   xRenderGL :: RenderShadowMapTextureVBO(xElement *elem, bool transparent)
         RenderShadowMapTextureVBO(selem, transparent);
 
     if (!elem->renderData.verticesC
-        || (transparent && !elem->renderData.transparent)
-        || (!transparent && !elem->renderData.opaque)) return;
+        || (transparent && !elem->transparent)
+        || (!transparent && !elem->opaque)) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
 
@@ -352,7 +354,9 @@ xDWORD xRenderGL :: CreateShadowMapTexture(xWORD width, xMatrix &mtxBlockerToLig
     // NOTE: glCopyTexImage2D is MUCH faster than glReadPixels+glTexImage2D
     if (!this->shadowMapTexId)
     {
-        glGenTextures(1, (GLuint*)&this->shadowMapTexId);
+        GLuint tid;
+        glGenTextures(1, &tid);
+        this->shadowMapTexId = tid;
         glBindTexture(GL_TEXTURE_2D, this->shadowMapTexId);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -373,12 +377,7 @@ xDWORD xRenderGL :: CreateShadowMapTexture(xWORD width, xMatrix &mtxBlockerToLig
 void xRenderGL :: RenderShadowVolume(xLight &light, xFieldOfView *FOV)
 {
     assert(xModelToRender);
-/*
-    xModel * xModelToRenderOld = xModelToRender;
-    xModelToRender = xModelPhysical;
-    if (xModelToRenderOld != xModelPhysical)
-        SetRenderMode(xRender::rmPhysical);
-*/
+
     if (!bonesC && spineP)
         CalculateSkeleton();
     if (!instanceDataTRP)
@@ -397,10 +396,6 @@ void xRenderGL :: RenderShadowVolume(xLight &light, xFieldOfView *FOV)
     glDisableClientState(GL_VERTEX_ARRAY);
 
     glPopMatrix();
-/*
-    if (xModelToRenderOld != xModelPhysical)
-        SetRenderMode(xRender::rmGraphical);
-*/
 }
 void xRenderGL :: RenderShadowVolumeElem(xElement *elem, xLight &light)
 {
@@ -414,42 +409,53 @@ void xRenderGL :: RenderShadowVolumeElem(xElement *elem, xLight &light)
 
     if (!light.elementReceivesLight((elem->matrix * location).preTransformP(instance->bsCenter), instance->bsRadius)) return;
 
-    if (!xShadows_ViewportMaybeShadowed(elem, instance, location, FOV, light))
-        RenderShadowVolumeZPass(elem, light);
-    else
-        RenderShadowVolumeZFail(elem, light);
-}
-void xRenderGL :: RenderShadowVolumeZPass(xElement *elem, xLight &light)
-{
-    xElementInstance *instance = instanceDataTRP + elem->id;
+    bool zPass = !xShadows_ViewportMaybeShadowed(elem, instance, location, FOV, light);
+    bool infiniteL = light.type == xLight_INFINITE;
+
+    xShadowData &shadowData = instance->GetShadowData(light, zPass);
+    if (!shadowData.indexP)
+    {
+        xMatrix  mtxWorldToObject = (elem->matrix * location).invert();
+        xVector3 lightPos;
+        if (infiniteL)
+            lightPos = mtxWorldToObject.preTransformV(light.position);
+        else
+            lightPos = mtxWorldToObject.preTransformP(light.position);
+
+        bool *facingFlag = NULL;
+        bool  useBackCapOptimization
+            = (lightPos - instance->bsCenter).lengthSqr() > instance->bsRadius*instance->bsRadius;
+
+        float t1 = GetTick();
+        xElement_GetSkinnedElementForShadow(elem, bonesM, bonesMod, infiniteL, shadowData);
+        float t2 = GetTick();
+        Performance.ShadowDataFill1 += t2 - t1;
+        xShadows_ExtrudePoints(elem, infiniteL, lightPos, shadowData);
+        t1 = GetTick();
+        Performance.ShadowDataFill2 += t1 - t2;
+        xShadows_GetBackFaces (elem, infiniteL, shadowData, facingFlag);
+        t2 = GetTick();
+        Performance.ShadowDataFill3 += t2 - t1;
+        xShadows_GetSilhouette(elem, infiniteL, useBackCapOptimization, facingFlag, shadowData);
+        t1 = GetTick();
+        Performance.ShadowDataFill4 += t1 - t2;
+        delete[] facingFlag;
+    }
 
     glPushMatrix();
     glMultMatrixf(&elem->matrix.x0);
 
-    xMatrix  mtxWorldToObject = (elem->matrix * location).invert();
-    xVector3 lightPos;
-    bool infiniteL = light.type == xLight_INFINITE;
-    if (infiniteL)
-        lightPos = mtxWorldToObject.preTransformV(light.position);
+    if (zPass)
+        RenderShadowVolumeZPass(shadowData, infiniteL);
     else
-        lightPos = mtxWorldToObject.preTransformP(light.position);
+        RenderShadowVolumeZFail(shadowData, infiniteL);
 
-    bool              *facingFlag = NULL;
-    xRenderShadowData  shadowData; shadowData.indexP = NULL;
-    bool               useBackCapOptimization
-        = (lightPos - instance->bsCenter).lengthSqr() > instance->bsRadius*instance->bsRadius;
-
-    shadowData.verticesP = NULL;
-    shadowData.normalsP  = NULL;
-    shadowData.indexP    = NULL;
-    xElement_GetSkinnedElementForShadow(elem, bonesM, infiniteL, shadowData);
-    xShadows_ExtrudePoints(elem, infiniteL, lightPos, shadowData);
-    xShadows_GetBackFaces (elem, infiniteL, shadowData, facingFlag);
-    xShadows_GetSilhouette(elem, infiniteL, useBackCapOptimization, facingFlag, shadowData);
-
-    glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
-
+    glPopMatrix();
+}
+void xRenderGL :: RenderShadowVolumeZPass(xShadowData &shadowData, bool infiniteL)
+{
     /************************* RENDER FACES ****************************/
+    glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
 
     if (GLExtensions::Exists_EXT_StencilTwoSide)
     {
@@ -498,46 +504,11 @@ void xRenderGL :: RenderShadowVolumeZPass(xElement *elem, xLight &light)
         else
             glDrawElements ( GL_TRIANGLES, 3*shadowData.sideC, GL_UNSIGNED_SHORT, shadowData.indexP);
     }
-
-    delete[] facingFlag;
-    delete[] shadowData.indexP;
-    delete[] shadowData.verticesP;
-    if (shadowData.normalsP)
-        delete[] shadowData.normalsP;
-
-    glPopMatrix();
 }
-void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
+void xRenderGL :: RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL)
 {
-    xElementInstance *instance = instanceDataTRP + elem->id;
-
-    glPushMatrix();
-    glMultMatrixf(&elem->matrix.x0);
-
-    xMatrix  mtxWorldToObject = (elem->matrix * location).invert();
-    xVector3 lightPos;
-    bool infiniteL = light.type == xLight_INFINITE;
-    if (infiniteL)
-        lightPos = mtxWorldToObject.preTransformV(light.position);
-    else
-        lightPos = mtxWorldToObject.preTransformP(light.position);
-
-    bool              *facingFlag = NULL;
-    xRenderShadowData  shadowData; shadowData.indexP = NULL;
-    bool               useBackCapOptimization
-        = (lightPos - instance->bsCenter).lengthSqr() > instance->bsRadius*instance->bsRadius;
-
-    shadowData.verticesP = NULL;
-    shadowData.normalsP  = NULL;
-    shadowData.indexP    = NULL;
-    xElement_GetSkinnedElementForShadow(elem, bonesM, infiniteL, shadowData);
-    xShadows_ExtrudePoints(elem, infiniteL, lightPos, shadowData);
-    xShadows_GetBackFaces (elem, infiniteL, shadowData, facingFlag);
-    xShadows_GetSilhouette(elem, infiniteL, useBackCapOptimization, facingFlag, shadowData);
-
-    glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
-
     /************************* RENDER FACES ****************************/
+    glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
 
     if (GLExtensions::Exists_EXT_StencilTwoSide)
     {
@@ -629,12 +600,4 @@ void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
                 shadowData.indexP + 3*shadowData.sideC);
         }
     }
-
-    delete[] facingFlag;
-    delete[] shadowData.indexP;
-    delete[] shadowData.verticesP;
-    if (shadowData.normalsP)
-        delete[] shadowData.normalsP;
-
-    glPopMatrix();
 }

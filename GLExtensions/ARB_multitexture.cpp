@@ -1,6 +1,6 @@
 #include "ARB_multitexture.h"
 
-#ifdef WIN32
+#ifndef GL_VERSION_1_2
 
 // Functions pointers for ARB_multitexture Extension:
 
@@ -38,8 +38,6 @@ PFNGLMULTITEXCOORD4IARBPROC glMultiTexCoord4iARB = NULL;
 PFNGLMULTITEXCOORD4IVARBPROC glMultiTexCoord4ivARB = NULL;
 PFNGLMULTITEXCOORD4SARBPROC glMultiTexCoord4sARB = NULL;
 PFNGLMULTITEXCOORD4SVARBPROC glMultiTexCoord4svARB = NULL;
-
-#endif
 
 bool GL_init_ARB_multitexture(void)
 {
@@ -82,3 +80,12 @@ bool GL_init_ARB_multitexture(void)
 
   return error == 0;
 }
+
+#else
+
+bool GL_init_ARB_multitexture(void)
+{
+    return GL_ExtensionExists("GL_ARB_multitexture");
+}
+
+#endif

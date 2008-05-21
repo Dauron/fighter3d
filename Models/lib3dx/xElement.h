@@ -3,6 +3,7 @@
 
 #include "xVertex.h"
 #include "xElementData.h"
+#include "xElementRunTime.h"
 
 struct xModel;
 
@@ -30,6 +31,8 @@ struct xElement {
 
     bool       textured;
     bool       skeletized;
+    bool       transparent;  // Are there transparent faces?
+    bool       opaque;       // Are there opaque faces?
 
     xElement  *nextP; // next sibling
     xElement  *kidsP; // first kid

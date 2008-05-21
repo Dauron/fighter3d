@@ -520,6 +520,10 @@ void xRenderGL :: RenderElementVerticesLST(
 void xRenderGL :: RenderModel(bool transparent, const xFieldOfView *FOV )
 {
     assert(xModelToRender);
+
+    if ((transparent && !xModelToRender->transparent) ||
+        (!transparent && !xModelToRender->opaque)) return;
+
     if (!xModelToRender->texturesInited)
         for (xMaterial *mat = xModelToRender->materialP; mat; mat = mat->nextP)
             if (mat->texture.name)
@@ -564,8 +568,8 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
         RenderModelLST(selem, transparent);
 
     if (!elem->renderData.verticesC
-        || (transparent && !elem->renderData.transparent)
-        || (!transparent && !elem->renderData.opaque)) return;
+        || (transparent && !elem->transparent)
+        || (!transparent && !elem->opaque)) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
     xMatrix mtxTrasformation = elem->matrix * location;
@@ -659,8 +663,8 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
         RenderModelVBO(selem, transparent);
 
     if (!elem->renderData.verticesC
-        || (transparent && !elem->renderData.transparent)
-        || (!transparent && !elem->renderData.opaque)) return;
+        || (transparent && !elem->transparent)
+        || (!transparent && !elem->opaque)) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
     xMatrix mtxTrasformation = elem->matrix * location;

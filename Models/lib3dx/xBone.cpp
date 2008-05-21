@@ -12,6 +12,7 @@ void   xBone :: Zero()
 {
     memset(this, 0, sizeof(xBone));
     this->quaternion.w = 1.f;
+    this->modified = true;
 }
 void   xBone :: Free()
 {
@@ -42,6 +43,7 @@ xBone *xBone :: Clone() const
         boneDst->quaternion = this->quaternion;
         boneDst->kidsP = NULL;
         boneDst->nextP = NULL;
+        boneDst->modified = this->modified;
 
         if (boneDst->kidsC)
         {
@@ -79,6 +81,7 @@ xBone *xBone :: Load(FILE *file)
 
     bone->kidsP = NULL;
     bone->nextP = NULL;
+    bone->modified = true;
 
     if (bone->name)
     {
@@ -214,33 +217,37 @@ xMatrix xBoneCalculateMatrix(const xBone *spine, int boneId)
     return res;
 }
 
-void   _xBoneCalculateMatrices(const xBone *bone, xMatrix *&boneP, const xBone *pbone)
+void   _xBoneCalculateMatrices(const xBone *bone, xMatrix *&boneP, bool *boneMod, const xBone *pbone)
 {
     xMatrix *boneDst = boneP + bone->id;
+    bool    *modDst  = boneMod + bone->id;
     xMatrix *parent  = pbone ? boneP + pbone->id : NULL;
 
+    xMatrix newMat;
     if (parent)
-    {
-        *boneDst  = *parent;
-        *boneDst *= xMatrixFromQuaternion(bone->quaternion).preTranslate(pbone->ending).postTranslate(-pbone->ending);
-    }
+        newMat = *parent * xMatrixFromQuaternion(bone->quaternion).preTranslate(pbone->ending).postTranslate(-pbone->ending);
     else
-        *boneDst = xMatrixTranslate(bone->quaternion.vector3.xyz);
+        newMat = xMatrixTranslate(bone->quaternion.vector3.xyz);
+    *modDst  = *boneDst != newMat;
+    *boneDst = newMat;
+
     for (xBone *cbone = bone->kidsP; cbone; cbone = cbone->nextP)
-        _xBoneCalculateMatrices(cbone, boneP, bone);
+        _xBoneCalculateMatrices(cbone, boneP, boneMod, bone);
 }
 
-void    xBoneCalculateMatrices(const xBone *spine, xMatrix *&boneP, xBYTE &boneC)
+void    xBoneCalculateMatrices(const xBone *spine, xMatrix *&boneP, bool *&boneMod, xBYTE &boneC)
 {
     if (!spine)
     {
         boneC = 0;
-        boneP = NULL;
+        if (boneP)   { delete[] boneP; boneP = NULL; }
+        if (boneMod) { delete[] boneMod; boneMod = NULL; }
         return;
     }
     boneC = spine->CountAllKids() + 1;
     if (!boneP) boneP = new xMatrix[boneC];
-    _xBoneCalculateMatrices(spine, boneP, NULL);
+    if (!boneMod) boneMod = new bool[boneC];
+    _xBoneCalculateMatrices(spine, boneP, boneMod, NULL);
 }
 
 void   _xBoneCalculateQuats(const xBone *bone, xVector4 *&boneP, const xBone *pBone)

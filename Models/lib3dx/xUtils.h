@@ -29,8 +29,8 @@ xVector3 * xElement_GetSkinnedVertices(const xElement *elem, const xMatrix *bone
 xVector3 * xElement_GetSkinnedVertices(const xElement *elem, const xMatrix *bones, xMatrix transformation,
                                        xVector3 *&dst, bool fromRenderData = true);
 xSkinnedData xElement_GetSkinnedElement(const xElement *elem, const xMatrix *bones);
-void         xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bones,
-                                                 bool infiniteL, xRenderShadowData &shadowData);
+void         xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bones, const bool *boneMods,
+                                                 bool infiniteL, xShadowData &shadowData);
 
 xVector3   xCenterOfTheMass           (const xElement *elem, const xMatrix *bones);
 xVector3   xCenterOfTheModelMass      (const xModel    *file, const xMatrix *bones);

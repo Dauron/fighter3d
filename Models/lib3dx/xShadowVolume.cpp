@@ -2,7 +2,7 @@
 #include "xShadowVolume.h"
 
 void xShadows_ExtrudePoints (const xElement *elem, bool infiniteL, const xVector3 &lightPos,
-                             xRenderShadowData &shadowData)
+                             xShadowData &shadowData)
 {
     xVector4 *dest = shadowData.verticesP + elem->verticesC;
 
@@ -18,7 +18,7 @@ void xShadows_ExtrudePoints (const xElement *elem, bool infiniteL, const xVector
 }
 
 void xShadows_GetBackFaces (const xElement *elem, bool infiniteL,
-                            const xRenderShadowData &shadowData, bool *&backFaces)
+                            const xShadowData &shadowData, bool *&backFaces)
 {
     if (backFaces == NULL)
         backFaces = new bool[elem->facesC];
@@ -66,15 +66,20 @@ void xShadows_GetBackFaces (const xElement *elem, bool infiniteL,
     }
 }
 
+xBYTE *buffer = NULL;
+xDWORD buffSize = 0;
+
 void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeBackCap,
-                            const bool *facingFlag, xRenderShadowData &shadowData)
+                            const bool *facingFlag, xShadowData &shadowData)
 {
     shadowData.sideC = 0;
     shadowData.frontC = 0;
     shadowData.backC = 0;
     if (shadowData.indexP) delete[] shadowData.indexP;
 
-    xWORD3 *frontCapP = new xWORD3[elem->facesC];
+    xWORD3 *frontCapP = NULL;
+    if (!shadowData.zPassOnly)
+        frontCapP = new xWORD3[elem->facesC];
     xWORD3 *frontDest = frontCapP;
 
     xEdge  *edgeIter = elem->edgesP;
@@ -84,14 +89,21 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
     {
         xWORD  backFirst = elem->verticesC + edgeIter->vert1;
 
-        xWORD4 *sideQadsP = new xWORD4[elem->edgesC];
-        xWORD3 *backCapP;
-        if (optimizeBackCap)
-            backCapP = new xWORD3[elem->edgesC];
-        else
-            backCapP = new xWORD3[elem->facesC];
-
+        if (buffSize < elem->edgesC*sizeof(xWORD4))
+        {
+            if (buffer) delete[] buffer;
+            buffSize = elem->edgesC*sizeof(xWORD4);
+            buffer = new xBYTE[buffSize];
+        }
+        xWORD4 *sideQadsP = (xWORD4*)buffer;
         xWORD4 *sideDest  = sideQadsP;
+        xWORD3 *backCapP  = NULL;
+
+        if (!shadowData.zPassOnly)
+            if (optimizeBackCap)
+                backCapP = new xWORD3[elem->edgesC];
+            else
+                backCapP = new xWORD3[elem->facesC];
         xWORD3 *backDest  = backCapP;
 
         for (; edgeIter != edgeEnd; ++edgeIter)
@@ -111,7 +123,7 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
                     (*sideDest)[2] = elem->verticesC + edgeIter->vert2;
                     (*sideDest)[3] = elem->verticesC + edgeIter->vert1;
                 }
-                if (optimizeBackCap)
+                if (optimizeBackCap && !shadowData.zPassOnly)
                 {
                     (*backDest)[0] = backFirst;
                     (*backDest)[1] = (*sideDest)[3];
@@ -123,46 +135,58 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
                 ++shadowData.sideC;
             }
 
-        xFaceList *faceList = elem->faceListP;
-        for (int i=elem->faceListC; i; --i, ++faceList)
+        if (!shadowData.zPassOnly)
         {
-            if (!faceList->materialP || faceList->materialP->transparency == 0.f)
+            xFaceList *faceList = elem->faceListP;
+            for (int i=elem->faceListC; i; --i, ++faceList)
             {
-                xWORD3     *face     = elem->facesP + faceList->indexOffset;
-                const bool *faceFlag = facingFlag + faceList->indexOffset;
-                for (int j = faceList->indexCount; j; --j, ++face, ++faceFlag)
-                    if (*faceFlag)
-                    {
-                        (*frontDest)[0] = (*face)[0];
-                        (*frontDest)[1] = (*face)[1];
-                        (*frontDest)[2] = (*face)[2];
-                        ++shadowData.frontC;
-                        ++frontDest;
-                    }
-                    else
-                    if(!optimizeBackCap)
-                    {
-                        (*backDest)[0] = elem->verticesC + (*face)[0];
-                        (*backDest)[1] = elem->verticesC + (*face)[1];
-                        (*backDest)[2] = elem->verticesC + (*face)[2];
-                        ++shadowData.backC;
-                        ++backDest;
-                    }
+                if (!faceList->materialP || faceList->materialP->transparency == 0.f)
+                {
+                    xWORD3     *face     = elem->facesP + faceList->indexOffset;
+                    const bool *faceFlag = facingFlag + faceList->indexOffset;
+                    for (int j = faceList->indexCount; j; --j, ++face, ++faceFlag)
+                        if (*faceFlag)
+                        {
+                            (*frontDest)[0] = (*face)[0];
+                            (*frontDest)[1] = (*face)[1];
+                            (*frontDest)[2] = (*face)[2];
+                            ++shadowData.frontC;
+                            ++frontDest;
+                        }
+                        else
+                        if(!optimizeBackCap)
+                        {
+                            (*backDest)[0] = elem->verticesC + (*face)[0];
+                            (*backDest)[1] = elem->verticesC + (*face)[1];
+                            (*backDest)[2] = elem->verticesC + (*face)[2];
+                            ++shadowData.backC;
+                            ++backDest;
+                        }
+                }
             }
+            shadowData.indexP = new xWORD[4*shadowData.sideC + 3*shadowData.frontC + 3*shadowData.backC];
+            memcpy(shadowData.indexP, sideQadsP, shadowData.sideC*sizeof(xWORD4));
+            memcpy(shadowData.indexP + shadowData.sideC*4, frontCapP, shadowData.frontC*sizeof(xWORD3));
+            delete[] frontCapP;
+            memcpy(shadowData.indexP + shadowData.sideC*4 + shadowData.frontC*3,
+                   backCapP, shadowData.backC*sizeof(xWORD3));
+            delete[] backCapP;
         }
-
-        shadowData.indexP = new xWORD[4*shadowData.sideC + 3*shadowData.frontC + 3*shadowData.backC];
-        memcpy(shadowData.indexP, sideQadsP, shadowData.sideC*sizeof(xWORD4));
-        delete[] sideQadsP;
-        memcpy(shadowData.indexP + shadowData.sideC*4, frontCapP, shadowData.frontC*sizeof(xWORD3));
-        delete[] frontCapP;
-        memcpy(shadowData.indexP + shadowData.sideC*4 + shadowData.frontC*3,
-               backCapP, shadowData.backC*sizeof(xWORD3));
-        delete[] backCapP;
+        else
+        {
+            shadowData.indexP = new xWORD[4*shadowData.sideC];
+            memcpy(shadowData.indexP, sideQadsP, shadowData.sideC*sizeof(xWORD4));
+        }
     }
     else
     {
-        xWORD3 *sideTrisP = new xWORD3[elem->edgesC];
+        if (buffSize < elem->edgesC*sizeof(xWORD3))
+        {
+            if (buffer) delete[] buffer;
+            buffSize = elem->edgesC*sizeof(xWORD3);
+            buffer = new xBYTE[buffSize];
+        }
+        xWORD3 *sideTrisP = (xWORD3*) buffer;
         xWORD3 *sideDest = sideTrisP;
 
         for (; edgeIter != edgeEnd; ++edgeIter)
@@ -184,30 +208,36 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
                 ++shadowData.sideC;
             }
 
-        xFaceList *faceList = elem->faceListP;
-        for (int i=elem->faceListC; i; --i, ++faceList)
+        if (!shadowData.zPassOnly)
         {
-            if (!faceList->materialP || faceList->materialP->transparency == 0.f)
+            xFaceList *faceList = elem->faceListP;
+            for (int i=elem->faceListC; i; --i, ++faceList)
             {
-                xWORD3     *face     = elem->facesP + faceList->indexOffset;
-                const bool *faceFlag = facingFlag + faceList->indexOffset;
-                for (int j = faceList->indexCount; j; --j, ++face, ++faceFlag)
-                    if (*faceFlag)
-                    {
-                        (*frontDest)[0] = (*face)[0];
-                        (*frontDest)[1] = (*face)[1];
-                        (*frontDest)[2] = (*face)[2];
-                        ++shadowData.frontC;
-                        ++frontDest;
-                    }
+                if (!faceList->materialP || faceList->materialP->transparency == 0.f)
+                {
+                    xWORD3     *face     = elem->facesP + faceList->indexOffset;
+                    const bool *faceFlag = facingFlag + faceList->indexOffset;
+                    for (int j = faceList->indexCount; j; --j, ++face, ++faceFlag)
+                        if (*faceFlag)
+                        {
+                            (*frontDest)[0] = (*face)[0];
+                            (*frontDest)[1] = (*face)[1];
+                            (*frontDest)[2] = (*face)[2];
+                            ++shadowData.frontC;
+                            ++frontDest;
+                        }
+                }
             }
+            shadowData.indexP = new xWORD[3*shadowData.sideC + 3*shadowData.frontC];
+            memcpy(shadowData.indexP, sideTrisP, shadowData.sideC*sizeof(xWORD3));
+            memcpy(shadowData.indexP + shadowData.sideC*3, frontCapP, shadowData.frontC*sizeof(xWORD3));
+            delete[] frontCapP;
         }
-
-        shadowData.indexP = new xWORD[3*shadowData.sideC + 3*shadowData.frontC];
-        memcpy(shadowData.indexP, sideTrisP, shadowData.sideC*sizeof(xWORD3));
-        delete[] sideTrisP;
-        memcpy(shadowData.indexP + shadowData.sideC*3, frontCapP, shadowData.frontC*sizeof(xWORD3));
-        delete[] frontCapP;
+        else
+        {
+            shadowData.indexP = new xWORD[3*shadowData.sideC];
+            memcpy(shadowData.indexP, sideTrisP, shadowData.sideC*sizeof(xWORD3));
+        }
     }
 }
 

@@ -3,7 +3,7 @@
 bool GL_init_ARB_vertex_buffer_object(void);
 
 #ifndef GL_ARB_vertex_buffer_object
-#define GL_ARB_vertex_buffer_object
+#define GL_ARB_vertex_buffer_object                    1
 
 typedef INT_PTR GLintptrARB;
 typedef INT_PTR GLsizeiptrARB;
@@ -57,8 +57,8 @@ typedef GLvoid *    (APIENTRY * PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum ac
 typedef GLboolean   (APIENTRY * PFNGLUNMAPBUFFERARBPROC) (GLenum target);
 typedef GLvoid      (APIENTRY * PFNGLGETBUFFERPARAMETERIVARBPROC) (GLenum target, GLenum pname, GLint *params);
 typedef GLvoid      (APIENTRY * PFNGLGETBUFFERPOINTERVARBPROC) (GLenum target, GLenum pname, GLvoid **params);
-#endif /* GL_ARB_vertex_buffer_object*/
 
+#endif /* GL_ARB_vertex_buffer_object*/
 
 // Function pointers for ARB_vertex_buffer_object Extension:
 extern PFNGLBINDBUFFERARBPROC glBindBufferARB;
@@ -72,6 +72,3 @@ extern PFNGLMAPBUFFERARBPROC glMapBufferARB;
 extern PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB;
 extern PFNGLGETBUFFERPARAMETERIVARBPROC glGetBufferParameterivARB;
 extern PFNGLGETBUFFERPOINTERVARBPROC glGetBufferPointervARB;
-
-
-

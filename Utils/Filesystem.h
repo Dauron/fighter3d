@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <iostream>
+#include <cassert>
 
 class LinuxFileInfo
 {
@@ -158,7 +159,7 @@ public:
             FindClose(h);
         }
         else
-            LOG("Directory open error %d - %s", GetLastError(), path.c_str());
+            log("Directory open error %d - %s", GetLastError(), path.c_str());
 #else
         dirent **eps;
         dirent **dirp;
@@ -180,7 +181,7 @@ public:
            delete[] eps;
         }
         else
-            LOG("Directory open error: %s - %s", strerror(errno), path.c_str());
+            log("Directory open error: %s - %s", strerror(errno), path.c_str());
 #endif
 
         return vec;
@@ -208,7 +209,7 @@ public:
             FindClose(h);
         }
         else
-            LOG("Directory open error: %d - %s", GetLastError(), path.c_str());
+            log("Directory open error: %d - %s", GetLastError(), path.c_str());
 #else
         dirent **eps;
         dirent **dirp;
@@ -231,7 +232,7 @@ public:
            delete[] eps;
         }
         else
-            LOG("Directory open error: %s - %s", strerror(errno), path.c_str());
+            log("Directory open error: %s - %s", strerror(errno), path.c_str());
 #endif
         return vec;
     }

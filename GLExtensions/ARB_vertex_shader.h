@@ -47,7 +47,6 @@ typedef GLvoid (APIENTRY *PFNGLENABLEVERTEXATTRIBARRAYARBPROC)(GLuint index);
 
 #endif /* GL_ARB_vertex_shader */
 
-
 extern PFNGLBINDATTRIBLOCATIONARBPROC       glBindAttribLocationARB;
 extern PFNGLGETACTIVEATTRIBARBPROC          glGetActiveAttribARB;
 extern PFNGLGETATTRIBLOCATIONARBPROC        glGetAttribLocationARB;

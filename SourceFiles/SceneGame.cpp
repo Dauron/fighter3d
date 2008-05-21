@@ -248,9 +248,7 @@ bool SceneGame::Update(float deltaTime)
 
 void SceneGame::SetLight(xLight &light)
 {
-    GLfloat vec[4];
     GLfloat ambient_off[] = { 0.0, 0.0, 0.0, 1.0 };
-    int i;
 
     // turn off ambient lighting
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient_off);
@@ -505,6 +503,7 @@ bool SceneGame::Render()
 
     //////////////////// WORLD - END
 
-    glFlush();
+    //glFlush();
+    glFinish();
     return true;
 }

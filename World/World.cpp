@@ -85,16 +85,19 @@ void World:: Initialize()
         light.spotCutOff = 45.f;
         light.spotAttenuation = 1.f;
         // YELLOW
+        light.create();
         light.color.init(0.7f, 0.4f, 0.f, 1.f);
         light.position.init(0.f, 0.f, 10.f);
         light.type = xLight_POINT;
         lights.push_back(light);
         // RED
+        light.create();
         light.color.init(0.8f, 0.f, 0.f, 1.f);
         light.position.init(10.f, -5.f, 5.f);
         light.type = xLight_SPOT;
         //lights.push_back(light);
         // SKY
+        light.create();
         light.color.init(0.4f, 0.4f, 0.4f, 1.f);
         light.position.init(-20.f, 20.f, 100.f);
         light.type = xLight_INFINITE;
@@ -132,11 +135,11 @@ void World:: Initialize()
         model->castsShadows = true;
         objects.push_back(model);
 
-        //model = new ModelObj(0.0f, -10.0f, 5.0f);
-        //model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
-        //model->mass     = 60.f;
-        //model->castsShadows = true;
-        //objects.push_back(model);
+        model = new ModelObj(0.0f, -10.0f, 5.0f);
+        model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
+        model->mass     = 60.f;
+        model->castsShadows = true;
+        objects.push_back(model);
 
         modelA = new SkeletizedObj(-0.3f, -3.2f, -0.21f, 0.0f, 0.0f, 170.0f);
         modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx", false, false);
@@ -189,6 +192,7 @@ void World:: Initialize()
         light.spotCutOff = 45.f;
         light.spotAttenuation = 1.f;
         // YELLOW
+        light.create();
         light.color.init(0.7f, 0.4f, 0.f, 1.f);
         light.position.init(0.5f, 1.f, 1.f);
         light.type = xLight_INFINITE;
@@ -229,6 +233,7 @@ void World:: Initialize()
         light.spotCutOff = 45.f;
         light.spotAttenuation = 1.f;
         // YELLOW
+        light.create();
         light.color.init(0.7f, 0.4f, 0.f, 1.f);
         light.position.init(0.5f, 1.f, 1.f);
         light.type = xLight_INFINITE;
@@ -282,12 +287,15 @@ void World:: Load(const char *mapFileName)
     {
         std::string dir = Filesystem::GetParentDir(mapFileName);
         char buffer[255];
+        int  len;
         ModelObj *model = NULL;
 
         while (in.good())
         {
             in.getline(buffer, 255);
             if (buffer[0] == '#') continue;
+            len = strlen(buffer);
+            if (buffer[len - 1] == '\r') buffer[len - 1] = 0;
 
             if (StartsWith(buffer, "model"))
             {

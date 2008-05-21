@@ -288,6 +288,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\Models\lib3dx\xElementRunTime.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xElementRunTime.h"
+					>
+				</File>
+				<File
 					RelativePath="..\Models\lib3dx\xImport.cpp"
 					>
 				</File>

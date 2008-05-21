@@ -2,10 +2,8 @@
 
 bool GL_init_EXT_texture3D(void);
 
-#ifdef WIN32
-
 #ifndef GL_EXT_texture3D
-#define GL_EXT_texture3D
+#define GL_EXT_texture3D                 1
 
 #define GL_TEXTURE_BINDING_3D            0x806A
 #define GL_PACK_SKIP_IMAGES              0x806B
@@ -33,11 +31,12 @@ typedef GLvoid (APIENTRY * PFNGLCOPYTEXSUBIMAGE3DPROC)(GLenum target, GLint leve
                                                        GLint yoffset, GLint zoffset, GLint x,
                                                        GLint y, GLsizei width, GLsizei height);
 
-
 #endif /* GL_EXT_texture3D */
 
-extern PFNGLTEXIMAGE3DEXTPROC glTexImage3D;
-extern PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D;
+#ifndef GL_VERSION_1_2
+
+extern PFNGLTEXIMAGE3DEXTPROC     glTexImage3D;
+extern PFNGLTEXSUBIMAGE3DPROC     glTexSubImage3D;
 extern PFNGLCOPYTEXSUBIMAGE3DPROC glCopyTexSubImage3D;
 
 #endif

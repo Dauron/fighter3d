@@ -5,20 +5,25 @@
 #include <cassert>
 #include <cmath>
 
-#ifndef FILE_CURRENT
-#define FILE_CURRENT 1
-#endif
-
 const float  PI   = 3.1415926535f;
 const double PI_d = 3.1415926535897932384626433832795;
 static inline float DegToRad(float a) { return a*0.01745329252f;}
 static inline float RadToDeg(float a) { return a*57.29577951f;}
 
-#ifndef WIN32
-//static inline float abs(float f)            { return f < 0.f ? -f : f; }
-static inline float max(float f1, float f2) { return f1 < f2 ? f2 : f1; }
-static inline float min(float f1, float f2) { return f1 > f2 ? f2 : f1; }
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
 #endif
+
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
+//static inline float fabs(float f)            { return f < 0.f ? -f : f; }
+//static inline float max(float f1, float f2) { return f1 < f2 ? f2 : f1; }
+//static inline float min(float f1, float f2) { return f1 > f2 ? f2 : f1; }
+//static inline int   max(int   i1, int   i2) { return i1 < i2 ? i2 : i1; }
+//static inline int   min(int   i1, int   i2) { return i1 > i2 ? i2 : i1; }
+
 #define EPSILON  0.0000000001
 #define EPSILON2 0.0001
 static inline bool IsZero(float f)   { return fabs(f) <= EPSILON; }
@@ -29,14 +34,6 @@ static inline float Sign(float f)
     if (f < 0.f) return -1.f;
     return 0.f;
 }
-
-#ifndef max
-#define max(a,b)            (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a,b)            (((a) < (b)) ? (a) : (b))
-#endif
 
 typedef unsigned char  xBYTE;
 typedef unsigned short xWORD;

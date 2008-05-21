@@ -83,8 +83,8 @@ xSkinnedData xElement_GetSkinnedElement(const xElement *elem, const xMatrix *bon
     return dst;
 }
 
-void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bones,
-                                         bool infiniteL, xRenderShadowData &shadowData)
+void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bones, const bool *boneMods,
+                                         bool infiniteL, xShadowData &shadowData)
 {
     xWORD     count  = elem->verticesC;
     xBYTE    *srcV   = (xBYTE *) elem->verticesP;
@@ -93,17 +93,15 @@ void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bo
         ? (elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
         : (elem->textured ? sizeof(xVertexTex)     : sizeof(xVertex));
 
-    if (shadowData.verticesP) delete[] shadowData.verticesP;
-    if (shadowData.normalsP)  delete[] shadowData.normalsP;
-    if (infiniteL)
-         shadowData.verticesP = new xVector4[count + 1];
-    else
-         shadowData.verticesP = new xVector4[count << 1];
-    xVector4 *itrV = shadowData.verticesP;
-
     if (elem->skeletized)
     {
-        shadowData.normalsP  = new xVector3[count];
+        bool old_refill = shadowData.verticesP;
+        if (!old_refill)
+        {
+            shadowData.verticesP = (infiniteL) ? new xVector4[count + 1] : new xVector4[count << 1];
+            shadowData.normalsP  = new xVector3[count];
+        }
+        xVector4 *itrV = shadowData.verticesP;
         xVector3 *itrN = shadowData.normalsP;
         for (int i = count; i > 0; --i, ++itrV, ++itrN, srcV += stride, ++srcN)
         {
@@ -112,13 +110,29 @@ void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bo
             xVector4 vec;  vec.init(* (xVector3 *)vert->pos, 1.f);
             xMatrix  bone;
 
+            int   idx[4];
+            idx[0] = (int) floor(vert->bone[0]);
+            idx[1] = (int) floor(vert->bone[1]);
+            idx[2] = (int) floor(vert->bone[2]);
+            idx[3] = (int) floor(vert->bone[3]);
+            float wght[4];
+            wght[0] = (vert->bone[0] - idx[0]);
+            wght[1] = (vert->bone[1] - idx[1]);
+            wght[2] = (vert->bone[2] - idx[2]);
+            wght[3] = (vert->bone[3] - idx[3]);
+
+            if (old_refill)
+                if (!boneMods[idx[0]] &&
+                    (!boneMods[idx[1]] || wght[1] < 0.001f) &&
+                    (!boneMods[idx[2]] || wght[2] < 0.001f) &&
+                    (!boneMods[idx[3]] || wght[3] < 0.001f))
+                    continue; // vertex has not changed
+
             itrV->init(0.f, 0.f, 0.f, 0.f);
             itrN->init(0.f, 0.f, 0.f);
             for (int b=0; b<4; ++b)
             {
-                int   i = (int) floor(vert->bone[b]);
-                float w = (vert->bone[b] - i)*10;
-                bone = bones[i] * w;
+                bone = bones[idx[b]] * wght[b]*10;
                 *itrV  += bone * vec;
                 *itrN  += bone.postTransformV(*srcN);
             }
@@ -126,10 +140,15 @@ void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bo
     }
     else
     {
-        shadowData.normalsP = NULL;
-        for (int i = count; i > 0; --i, ++itrV, srcV += stride)
-            itrV->init(*(xVector3 *)srcV, 1.f);
-        //memcpy(dst.normalsP, elem->renderData.normalP, sizeof(xVector3)*count);
+        if (!shadowData.verticesP)
+        {
+            shadowData.verticesP = (infiniteL) ? new xVector4[count + 1] : new xVector4[count << 1];
+            shadowData.normalsP  = NULL;
+            xVector4 *itrV = shadowData.verticesP;
+            for (int i = count; i > 0; --i, ++itrV, srcV += stride)
+                itrV->init(*(xVector3 *)srcV, 1.f);
+            //memcpy(dst.normalsP, elem->renderData.normalP, sizeof(xVector3)*count);
+        }
     }
 }
 

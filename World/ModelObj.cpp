@@ -155,12 +155,12 @@ void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     xVector3 centerOfTheMassG = (xVector4::Create(centerOfTheMass, 1.f)*mLocationMatrix).vector3;
     xVector3 lFAxis = (light->position - centerOfTheMassG).normalize();
     xVector3 tmp;
-    if (abs(lFAxis.x) <= abs(lFAxis.y))
-        if (abs(lFAxis.z) <= abs(lFAxis.x)) tmp.init(0.f,0.f,1.f);
-        else                                tmp.init(1.f,0.f,0.f);
+    if (fabs(lFAxis.x) <= fabs(lFAxis.y))
+        if (fabs(lFAxis.z) <= fabs(lFAxis.x)) tmp.init(0.f,0.f,1.f);
+        else                                  tmp.init(1.f,0.f,0.f);
     else
-        if (abs(lFAxis.z) <= abs(lFAxis.y)) tmp.init(0.f,0.f,1.f);
-        else                                tmp.init(0.f,1.f,0.f);
+        if (fabs(lFAxis.z) <= fabs(lFAxis.y)) tmp.init(0.f,0.f,1.f);
+        else                                  tmp.init(0.f,1.f,0.f);
 
     xVector3 lRAxis = xVector3::CrossProduct(lFAxis, tmp).normalize();
     xVector3 lUAxis = xVector3::CrossProduct(lFAxis, lRAxis);
@@ -185,8 +185,8 @@ void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
             v.z = 1.f / v.z;
             v.x *= v.z; v.y *= v.z;
 
-            if (abs(v.x) > RxMax) RxMax = abs(v.x);
-            if (abs(v.y) > RyMax) RyMax = abs(v.y);
+            if (fabs(v.x) > RxMax) RxMax = fabs(v.x);
+            if (fabs(v.y) > RyMax) RyMax = fabs(v.y);
         }
     }
     float ZNear=0.1f, ZFar=1000.f;

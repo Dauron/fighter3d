@@ -1,5 +1,7 @@
 #include "xLight.h"
 
+xBYTE xLight::counter = 0;
+
 xFLOAT staticCalculateIntensity ( xFLOAT distance, const xVector3& attenuation )
 {
     return 1.0 / (attenuation.x + attenuation.y * distance + attenuation.z * distance * distance);

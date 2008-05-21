@@ -11,8 +11,8 @@ int main( int argc, char **argv )
     Filesystem::WorkingDirectory = Filesystem::GetParentDir(argv[0]);
     Filesystem::SetSystemWorkingDirectory(Filesystem::WorkingDirectory);
 
-    DEB__log(false, "***********************************");
-    DEB__log(true, "Game started");
+    logEx(false, "***********************************");
+    logEx(true, "Game started");
 
     Application game;
     game.OnApplicationInvalidate = OnApplicationInvalidate;
@@ -22,8 +22,8 @@ int main( int argc, char **argv )
     int res = game.Run();
     game.Terminate();
 
-    DEB__log(true, "Game finished");
-    DEB__log(false, "***********************************");
+    logEx(true, "Game finished");
+    logEx(false, "***********************************");
 
     return res;
 }
@@ -60,6 +60,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     main(1, &buff);
     delete[] buff;
 }
+
+#endif
 
 #include "../AppFramework/Input/InputMgr.h"
 #include "../MotionCapture/CaptureInput.h"
@@ -122,5 +124,3 @@ void OnApplicationTerminate(Application* sender)
     if (GLAnimSkeletal::GetSingletonPtr())
         delete GLAnimSkeletal::GetSingletonPtr();
 }
-
-#endif

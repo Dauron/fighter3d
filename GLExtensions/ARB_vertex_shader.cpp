@@ -12,21 +12,19 @@ PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointerARB       = NULL;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB   = NULL;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glDisableVertexAttribArrayARB  = NULL;
 
-
 bool GL_init_ARB_vertex_shader(void)
 {
-  int error = 0;
+    int error = 0;
 
-  error |= aLoadExtension(PFNGLBINDATTRIBLOCATIONARBPROC,glBindAttribLocationARB);
-  error |= aLoadExtension(PFNGLGETACTIVEATTRIBARBPROC,glGetActiveAttribARB);
-  error |= aLoadExtension(PFNGLGETATTRIBLOCATIONARBPROC,glGetAttribLocationARB);
+    error |= aLoadExtension(PFNGLBINDATTRIBLOCATIONARBPROC,glBindAttribLocationARB);
+    error |= aLoadExtension(PFNGLGETACTIVEATTRIBARBPROC,glGetActiveAttribARB);
+    error |= aLoadExtension(PFNGLGETATTRIBLOCATIONARBPROC,glGetAttribLocationARB);
 
-  error |= aLoadExtension(PFNGLVERTEXATTRIB4FPROC,glVertexAttrib4f);
-  error |= aLoadExtension(PFNGLVERTEXATTRIB4FVPROC,glVertexAttrib4fv);
-  error |= aLoadExtension(PFNGLVERTEXATTRIBPOINTERARBPROC,glVertexAttribPointerARB);
-  error |= aLoadExtension(PFNGLENABLEVERTEXATTRIBARRAYARBPROC,glEnableVertexAttribArrayARB);
-  error |= aLoadExtension(PFNGLENABLEVERTEXATTRIBARRAYARBPROC,glDisableVertexAttribArrayARB);
+    error |= aLoadExtension(PFNGLVERTEXATTRIB4FPROC,glVertexAttrib4f);
+    error |= aLoadExtension(PFNGLVERTEXATTRIB4FVPROC,glVertexAttrib4fv);
+    error |= aLoadExtension(PFNGLVERTEXATTRIBPOINTERARBPROC,glVertexAttribPointerARB);
+    error |= aLoadExtension(PFNGLENABLEVERTEXATTRIBARRAYARBPROC,glEnableVertexAttribArrayARB);
+    error |= aLoadExtension(PFNGLENABLEVERTEXATTRIBARRAYARBPROC,glDisableVertexAttribArrayARB);
 
-  return error == 0;
+    return error == 0 && GL_ExtensionExists("GL_ARB_vertex_shader");
 }
-

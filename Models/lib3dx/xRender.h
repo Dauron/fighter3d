@@ -18,7 +18,7 @@ class xRender
 protected:
     HModel     hModelGraphics;
     HModel     hModelPhysical;
-    xModel    * xModelToRender;
+    xModel   * xModelToRender;
 
     xDWORD             shadowMapTexId;
 
@@ -47,8 +47,6 @@ public:
     }
     void SetRenderMode(RenderingMode mode)
     {
-        bool rend_graph = xModelToRender == xModelGraphics;
-        bool rend_phys  = xModelToRender == xModelPhysical;
         xModelToRender =  (mode == rmGraphical) ? xModelGraphics : xModelPhysical;
         instanceDataTRP = (mode == rmGraphical) ? instanceDataGrP : instanceDataPhP;
         instanceDataTRC = (mode == rmGraphical) ? instanceDataGrC : instanceDataPhC;
@@ -98,6 +96,7 @@ public:
     xMatrix  * bonesM;
     xVector4 * bonesQ;
     xBYTE      bonesC;
+    bool     * bonesMod;
     const xFieldOfView *FOV;
 
     virtual void RenderModel              ( bool transparent, const xFieldOfView *FOV ) = 0;
@@ -128,11 +127,13 @@ public:
     {
         if (bonesM) delete[] bonesM;
         if (bonesQ) delete[] bonesQ;
+        if (bonesMod) delete[] bonesMod;
 
         g_ModelMgr.DeleteModel(hModelGraphics);
         g_ModelMgr.DeleteModel(hModelPhysical);
         hModelGraphics = hModelPhysical = HModel();
         xModelPhysical = xModelGraphics = xModelToRender = NULL;
+        FreeShadowRenderData();
     }
 
     void CopySpine(const xBone *src, xBone *&dst)
@@ -153,6 +154,38 @@ public:
         CopySpine(xModelPhysical->spineP, xModelGraphics->spineP);
     }
 
+    void FreeShadowRenderData(xElementInstance *instanceDataP, xBYTE instanceDataC)
+    {
+        if (instanceDataP)
+        {
+            xElementInstance *iter = instanceDataP;
+            for (int i = instanceDataC; i; --i, ++iter)
+                iter->FreeShadowData();
+        }
+    }
+    void FreeShadowRenderData()
+    {
+        FreeShadowRenderData(instanceDataGrP, instanceDataGrC);
+        if (hModelGraphics != hModelPhysical)
+            FreeShadowRenderData(instanceDataPhP, instanceDataPhC);
+    }
+
+    void InvalidateShadowRenderData(xElementInstance *instanceDataP, xBYTE instanceDataC)
+    {
+        if (instanceDataP)
+        {
+            xElementInstance *iter = instanceDataP;
+            for (int i = instanceDataC; i; --i, ++iter)
+                iter->InvalidateShadowData();
+        }
+    }
+    void InvalidateShadowRenderData()
+    {
+        InvalidateShadowRenderData(instanceDataGrP, instanceDataGrC);
+        if (hModelGraphics != hModelPhysical)
+            InvalidateShadowRenderData(instanceDataPhP, instanceDataPhC);
+    }
+
     virtual void VerticesChanged()
     {
         PrepareInstanceData(instanceDataGrP, instanceDataGrC = xModelGraphics->elementC);
@@ -167,6 +200,7 @@ public:
             instanceDataPhC = instanceDataGrC;
             instanceDataPhP = instanceDataGrP;
         }
+        FreeShadowRenderData();
     }
 
     virtual void CalculateSkeleton()
@@ -174,12 +208,13 @@ public:
         if (!spineP) return;
         if (spineP->CountAllKids()+1 != bonesC)
         {
-            if (bonesM) { delete[] bonesM; bonesM = NULL; }
-            if (bonesQ) { delete[] bonesQ; bonesQ = NULL; }
+            if (bonesM)   { delete[] bonesM; bonesM = NULL; }
+            if (bonesQ)   { delete[] bonesQ; bonesQ = NULL; }
+            if (bonesMod) { delete[] bonesMod; bonesMod = NULL; }
             if (!bonesC) // skeleton was added, so refresh VBO data
                 VerticesChanged();
         }
-        xBoneCalculateMatrices (spineP, bonesM, bonesC);
+        xBoneCalculateMatrices (spineP, bonesM, bonesMod, bonesC);
         xBoneCalculateQuats    (spineP, bonesQ, bonesC);
 
         PrepareInstanceData(instanceDataGrP, instanceDataGrC = xModelGraphics->elementC);
@@ -194,6 +229,7 @@ public:
             instanceDataPhC = instanceDataGrC;
             instanceDataPhP = instanceDataGrP;
         }
+        //InvalidateShadowRenderData();
     }
 };
 

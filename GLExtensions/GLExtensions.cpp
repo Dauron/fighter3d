@@ -28,10 +28,8 @@ bool GL_Init_Extensions(void)
     GLExtensions::Exists_EXT_StencilWrap    = GL_init_EXT_stencil_wrap();
     GLExtensions::Exists_EXT_StencilTwoSide = GL_init_EXT_stencil_two_side();
 
-#ifdef WIN32
     GL_init_ARB_multitexture();
     GL_init_EXT_texture3D();
-#endif
 
     return true;
 }

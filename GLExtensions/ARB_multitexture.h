@@ -1,7 +1,5 @@
 #include "GLExtensions.h"
 
-#ifdef WIN32
-
 bool GL_init_ARB_multitexture(void);
 
 #ifndef GL_ARB_multitexture
@@ -79,6 +77,8 @@ typedef GLvoid (APIENTRY * PFNGLMULTITEXCOORD4SARBPROC) (GLenum texture, GLshort
 typedef GLvoid (APIENTRY * PFNGLMULTITEXCOORD4SVARBPROC) (GLenum texture, const GLshort *v);
 
 #endif /* GL_ARB_multitexture */
+
+#ifndef GL_VERSION_1_2
 
 // function pointers
 extern PFNGLACTIVETEXTUREARBPROC glActiveTextureARB;

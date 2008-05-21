@@ -12,74 +12,13 @@ struct xFaceList {
     xMaterial *materialP;
 };
 
+typedef xWORD3 xFace;
+
 struct xEdge {
     xWORD face1;
     xWORD face2;
     xWORD vert1;
     xWORD vert2;
-};
-
-typedef xWORD3 xFace;
-
-union xGPUPointers
-{
-    struct {
-        xDWORD vertexB;
-        xDWORD normalB;
-        xDWORD indexB;
-    };
-    struct {
-        xDWORD listID;       // Compiled Render List
-        xDWORD listIDTransp; // Compiled Render List for transparent faces
-    };
-};
-
-struct xRenderShadowData
-{
-    xGPUPointers gpuPointers;
-
-    xVector4 *verticesP;
-    xVector3 *normalsP;
-    xWORD    *indexP;
-    xWORD     sideC;
-    xWORD     frontC;
-    xWORD     backC;
-};
-
-struct xElementInstance
-{
-    typedef enum {
-        xRenderMode_NULL = 0,
-        xRenderMode_VBO  = 1,
-        xRenderMode_LIST = 2
-    } xRenderMode;
-
-    xRenderMode mode;
-
-    xGPUPointers       gpuMain;
-    xRenderShadowData *gpuShadows;
-
-    xBox     bbBox;
-    xVector3 bsCenter;
-    xFLOAT   bsRadius;
-};
-
-struct xRenderData
-{
-    bool       transparent;  // Are there transparent faces?
-    bool       opaque;       // Are there opaque faces?
-
-    union {                  // smooth vertices
-        xVertex        *verticesP;
-        xVertexTex     *verticesTP;
-        xVertexSkel    *verticesSP;
-        xVertexTexSkel *verticesTSP;
-    };
-    xWORD              verticesC;
-    xVector3          *normalP; // smooth normals
-    xFace            *facesP;
-
-    xVector3          *faceNormalsP;
 };
 
 struct xModel;

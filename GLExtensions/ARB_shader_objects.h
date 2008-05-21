@@ -151,8 +151,8 @@ typedef GLvoid              (APIENTRY *PFNGLGETSHADERSOURCEARBPROC)(GLhandleARB 
                                                                     GLsizei maxLength,
                                                                     GLsizei *length,
                                                                     GLcharARB *source);
-#endif /* GL_ARB_shader_objects */
 
+#endif /* GL_ARB_shader_objects */
 
 extern PFNGLDELETEOBJECTARBPROC                    glDeleteObjectARB;
 extern PFNGLGETHANDLEARBPROC                       glGetHandleARB;
@@ -193,4 +193,3 @@ extern PFNGLGETACTIVEUNIFORMARBPROC                glGetActiveUniformARB;
 extern PFNGLGETUNIFORMFVARBPROC                    glGetUniformfvARB;
 extern PFNGLGETUNIFORMIVARBPROC                    glGetUniformivARB;
 extern PFNGLGETSHADERSOURCEARBPROC                 glGetShaderSourceARB;
-

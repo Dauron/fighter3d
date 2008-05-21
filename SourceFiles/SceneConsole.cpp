@@ -370,26 +370,26 @@ test  = ";
     }
     if (cmd.substr(0, 4) == "log ")
     {
-        DEB__log(true, cmd.substr(4).c_str());
+        logEx(true, cmd.substr(4).c_str());
         return true;
     }
     if (cmd == "tail" || cmd == "log_tail")
     {
-        char *res = DEB__log_tail();
+        char *res = log_tail();
         AppendConsole("\nLog tail:\n");
         AppendConsole(res);
         return true;
     }
     if (cmd == "read" || cmd == "log_read")
     {
-        char *res = DEB__log_read();
+        char *res = log_read();
         AppendConsole("\nLog file:\n");
         AppendConsole(res);
         return true;
     }
     if (cmd == "clrlog" || cmd == "log_clear")
     {
-        DEB__log_clear();
+        log_clear();
         return true;
     }
     return false;
@@ -439,13 +439,15 @@ bool SceneConsole::Render()
 
     glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
     pFont->PrintF(0.0f, (float)cHeight-lineHeight, 0.0f,
-        "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u FPS: %2u L0: %5u L1: %5u L2: %5u L3: %5u, T1: %f, T2: %f",
+        "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u FPS: %2u L0: %5u L1: %5u L2: %5u L3: %5u, T1: %2.2f, T2: %2.2f",
         (int)Performance.FPSmin, (int)Performance.FPSsnap, (int)Performance.FPSmax, (int)Performance.FPS,
         Performance.CollidedPreTreeLevels, Performance.CollidedTreeLevels,
         Performance.CollidedTriangleBounds, Performance.CollidedTriangles,
         Performance.snapCollisionDataFillMS, Performance.snapCollisionDeterminationMS);
     pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
-        "   Num culled elements: %u", (int)Performance.CulledElements);
+        "   Num culled elements: %3u, ST1: %2.2f, ST2: %2.2f, ST3: %2.2f, ST4: %2.2f",
+        (int)Performance.CulledElements, Performance.ShadowDataFill1, Performance.ShadowDataFill2,
+        Performance.ShadowDataFill3, Performance.ShadowDataFill4);
 
     glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
     glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing

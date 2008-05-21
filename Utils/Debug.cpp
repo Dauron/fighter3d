@@ -12,14 +12,22 @@
 #include <stdarg.h>
 #endif
 
-FILE *log;
+FILE *log_file;
 
-void DEB__log(bool withtime, const char *fmt, ...)
+void log(const char *fmt, ...)
 {
-    if (!log)
-        log = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
-    assert(log);
-    if (!log)
+    va_list        ap;              // Pointer To List Of Arguments
+    va_start(ap, fmt);              // Parses The String For Variables
+    logEx (false, fmt, ap);
+    va_end(ap);                     // Results Are Stored In Text
+}
+
+void logEx(bool withtime, const char *fmt, ...)
+{
+    if (!log_file)
+        log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
+    assert(log_file);
+    if (!log_file)
         return;
 
     if (withtime)
@@ -29,79 +37,79 @@ void DEB__log(bool withtime, const char *fmt, ...)
 
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
-        fprintf(log, "%4d.%2.2d.%2.2d %2d:%2.2d,%2.2d\t", 1900+timeinfo->tm_year, 1+timeinfo->tm_mon, timeinfo->tm_mday,
+        fprintf(log_file, "%4d.%2.2d.%2.2d %2d:%2.2d,%2.2d\t", 1900+timeinfo->tm_year, 1+timeinfo->tm_mon, timeinfo->tm_mday,
             timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
     }
 
     va_list ap;                        // Pointer To List Of Arguments
     va_start(ap, fmt);                 // Parses The String For Variables
-    vfprintf(log, fmt, ap);            // And Converts Symbols To Actual Numbers
+    vfprintf(log_file, fmt, ap);            // And Converts Symbols To Actual Numbers
     va_end(ap);                        // Results Are Stored In Text
 
-    fprintf(log, "\n");
+    fprintf(log_file, "\n");
 
-    fclose(log);
-    log = NULL;
+    fclose(log_file);
+    log_file = NULL;
 }
 
-char *DEB__log_read()
+char *log_read()
 {
-    if (!log)
-        log = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
-    assert(log);
-    if (!log)
+    if (!log_file)
+        log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
+    assert(log_file);
+    if (!log_file)
         return NULL;
 
-    fseek(log, 0, SEEK_END);
-    long size = ftell(log);
+    fseek(log_file, 0, SEEK_END);
+    long size = ftell(log_file);
     char *buffer = new char[size+1];
-    rewind(log);
+    rewind(log_file);
 
-    size = fread(buffer, 1, size, log);
+    size = fread(buffer, 1, size, log_file);
     buffer[size] = 0;
 
     return buffer;
 }
 
-char *DEB__log_tail()
+char *log_tail()
 {
-    if (!log)
-        log = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
-    assert(log);
-    if (!log)
+    if (!log_file)
+        log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
+    assert(log_file);
+    if (!log_file)
         return NULL;
 
-    fseek(log, 0, SEEK_END);
-    long size = ftell(log);
+    fseek(log_file, 0, SEEK_END);
+    long size = ftell(log_file);
     if (size > 1024) size = 1024;
     char *buffer = new char[size+1];
-    fseek(log, -size, SEEK_END);
+    fseek(log_file, -size, SEEK_END);
 
-    size = fread(buffer, 1, size, log);
+    size = fread(buffer, 1, size, log_file);
     buffer[size] = 0;
 
     return buffer;
 }
 
-void DEB__log_clear()
+void log_clear()
 {
-    if (log)
+    if (log_file)
     {
-        fclose(log);
-        log = NULL;
+        fclose(log_file);
+        log_file = NULL;
     }
     remove(Filesystem::GetFullPath("log.txt").c_str());
 }
 
-bool DEB_CheckForGLError(char *file, int line)
+bool _CheckForGLError(char *file, int line)
 {
     int error;
     bool wasE = false;
 
     while ((error = glGetError())) {
         if (!wasE)
-            DEB__log(true, "%s\t%d:", file, line);
-        DEB__log(false, "OpenGL error: %d", error);
+            logEx(true, "%s\t%d:", file, line);
+        logEx(false, "OpenGL error: %d", error);
         wasE = true;
     }
     return wasE;

@@ -126,15 +126,15 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
                     {
                         lastM = xmodel->materialP->ByName(firstF->material);
                         bool transparent = lastM->transparency > 0.f;
-                        elem->renderData.transparent |= transparent;
-                        elem->renderData.opaque      |= !transparent;
+                        elem->transparent |= transparent;
+                        elem->opaque      |= !transparent;
                     }
                     mid = lastM->id;
                 }
                 else
                 {
                     mid = 0;
-                    elem->renderData.opaque = true;
+                    xmodel->opaque = elem->opaque = true;
                 }
 
                 xDWORD smooth = firstF->smoothing;
@@ -309,6 +309,8 @@ xModel *xLoadFrom3dmFile(const char *fileName)
             elem->matrix.matrix[x][y] = (x == y ? 1.0f : 0.0f);
     elem->skeletized = true;
     elem->textured = true;
+    model->transparent = elem->transparent = false;
+    model->opaque      = elem->opaque      = true;
     elem->edgesP = NULL;
 
     elem->collisionData.kidsC = 0;

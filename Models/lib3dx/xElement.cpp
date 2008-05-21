@@ -169,11 +169,11 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool createCollisionInfo
             if (faceL->materialP)
             {
                 bool transparent = faceL->materialP->transparency > 0.f;
-                elem->renderData.transparent |= transparent;
-                elem->renderData.opaque      |= !transparent;
+                elem->transparent |= transparent;
+                elem->opaque      |= !transparent;
             }
             else
-                elem->renderData.opaque = true;
+                xmodel->opaque = elem->opaque = true;
         }
         elem->CalculateSmoothVertices();
     }

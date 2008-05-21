@@ -60,15 +60,15 @@ GLenum GLShader::Initialize()
         !GLExtensions::Exists_ARB_VertexShader  ||
         !GLExtensions::Exists_ARB_FragmentShader)
     {
-        if (!GLExtensions::Exists_ARB_ShaderObjects)  LOG("WARNING: ARB_ShaderObjects is not supported\n");
-        if (!GLExtensions::Exists_ARB_VertexShader)   LOG("WARNING: ARB_VertexShader is not supported\n");
-        if (!GLExtensions::Exists_ARB_FragmentShader) LOG("WARNING: ARB_FragmentShader is not supported\n");
+        if (!GLExtensions::Exists_ARB_ShaderObjects)  log("WARNING: ARB_ShaderObjects is not supported\n");
+        if (!GLExtensions::Exists_ARB_VertexShader)   log("WARNING: ARB_VertexShader is not supported\n");
+        if (!GLExtensions::Exists_ARB_FragmentShader) log("WARNING: ARB_FragmentShader is not supported\n");
         return 0;
     }
 
     if (!vertexShaderSrc && !fragmentShaderSrc)
     {
-        LOG("WARNING: shader source not found\n");
+        log("WARNING: shader source not found\n%s,%s\n", vertexShaderFile, fragmentShaderFile);
         return 0;
     }
 
@@ -116,11 +116,11 @@ GLenum GLShader::Initialize()
         {
             char *linker_log;
             if ((linker_log = new GLcharARB[blen]) == NULL)
-                LOG("ERROR: Could not allocate compiler_log buffer\n");
+                DEB_LOG("ERROR: Could not allocate compiler_log buffer\n");
 
             glGetInfoLogARB(program, blen, &slen, linker_log);
             linker_log[slen-1] = 0;
-            LOG("%s,%s\n%s", vertexShaderFile, fragmentShaderFile, linker_log);
+            log("%s,%s\n%s", vertexShaderFile, fragmentShaderFile, linker_log);
 
             if (strstr(linker_log, "error") || strstr(linker_log, "failed")
                 || strstr(linker_log, "software"))

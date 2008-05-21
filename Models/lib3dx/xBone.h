@@ -14,6 +14,8 @@ struct xBone {
     xBone     *kidsP; // first kid
     xBYTE      kidsC; // no of kids
 
+    bool       modified;
+
     xBone *ByName    ( const char *boneName );
     xBone *ById      ( xBYTE id );
     xBone *ParentById( xBYTE id );
@@ -29,7 +31,7 @@ struct xBone {
 };
 
 xMatrix xBoneCalculateMatrix   (const xBone *spine, int boneId);
-void    xBoneCalculateMatrices (const xBone *spine, xMatrix  *&boneP, xBYTE &boneC);
+void    xBoneCalculateMatrices (const xBone *spine, xMatrix  *&boneP, bool *&boneMod, xBYTE &boneC);
 void    xBoneCalculateQuats    (const xBone *spine, xVector4 *&boneP, xBYTE &boneC);
 
 #endif

@@ -7,7 +7,7 @@ SOURCE = ./Config.cpp \
          ./App\ Framework/*.cpp \
          ./App\ Framework/GL/*.cpp \
          ./App\ Framework/Input/*.cpp \
-         ./GLExtensions/aGL_Extensions.cpp \
+         ./GLExtensions/*.cpp \
          ./Math/*.cpp \
          ./Math/Cameras/*.cpp \
          ./Models/*.cpp \

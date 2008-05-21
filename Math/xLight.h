@@ -12,6 +12,7 @@ typedef enum
 
 struct xLight
 {
+    xBYTE       id;
     char*       name;
     char*       prefix;            // Light prefix
 
@@ -34,6 +35,7 @@ struct xLight
     xFLOAT      radius;
     xVector3    boundingPoints[8];
 
+    void create() { id = ++counter; modified = true; }
     void update();
 
     bool isVisible(xFieldOfView *FOV) const
@@ -43,6 +45,9 @@ struct xLight
     }
 
     bool elementReceivesLight(const xVector3 &bsCenter, float bsRadius) const;
+
+private:
+    static xBYTE counter;
 };
 
 #endif
