@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400"
+				PreprocessorDefinitions="NOMINMAX;WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -66,7 +66,7 @@
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				EntryPointSymbol=""
 				TargetMachine="1"
 			/>
@@ -120,7 +120,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400"
+				PreprocessorDefinitions="NOMINMAX;WIN32;NDEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="2"
@@ -143,7 +143,7 @@
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="true"
-				SubSystem="2"
+				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -260,14 +260,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\Models\lib3dx\xBone.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\Models\lib3dx\xBone.h"
-					>
-				</File>
-				<File
 					RelativePath="..\Models\lib3dx\xElement.cpp"
 					>
 				</File>
@@ -344,7 +336,23 @@
 					>
 				</File>
 				<File
+					RelativePath="..\Models\lib3dx\xRenderGLAmbient.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xRenderGLDepth.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xRenderGLDiffuse.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\Models\lib3dx\xRenderGLShadow.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xRenderGLShadowV.cpp"
 					>
 				</File>
 				<File
@@ -353,6 +361,14 @@
 				</File>
 				<File
 					RelativePath="..\Models\lib3dx\xShadowVolume.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xSkeleton.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xSkeleton.h"
 					>
 				</File>
 				<File
@@ -823,6 +839,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\GLExtensions\ARB_multisample.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\ARB_multisample.h"
+				>
+			</File>
+			<File
 				RelativePath="..\GLExtensions\ARB_multitexture.cpp"
 				>
 			</File>
@@ -884,6 +908,10 @@
 			</File>
 			<File
 				RelativePath="..\GLExtensions\GLExtensions.h"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\wglext.h"
 				>
 			</File>
 		</Filter>
@@ -1160,6 +1188,10 @@
 			</File>
 			<File
 				RelativePath="..\Math\xVector4.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Math\xVerletConstraint.cpp"
 				>
 			</File>
 			<File

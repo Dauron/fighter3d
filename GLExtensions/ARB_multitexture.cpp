@@ -78,14 +78,14 @@ bool GL_init_ARB_multitexture(void)
   error |= aLoadExtension(PFNGLMULTITEXCOORD4SARBPROC, glMultiTexCoord4sARB );
   error |= aLoadExtension(PFNGLMULTITEXCOORD4SVARBPROC, glMultiTexCoord4svARB );
 
-  return error == 0;
+  return error == 0 && GLExtensions::Exists("GL_ARB_multitexture");
 }
 
 #else
 
 bool GL_init_ARB_multitexture(void)
 {
-    return GL_ExtensionExists("GL_ARB_multitexture");
+    return GLExtensions::Exists("GL_ARB_multitexture");
 }
 
 #endif

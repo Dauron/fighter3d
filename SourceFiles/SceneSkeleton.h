@@ -29,7 +29,6 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     virtual bool Render();
 
   private:
-    bool        InitGL();
     void        InitInputMgr();
 
     struct
@@ -41,6 +40,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     enum
     {
         emMain, emCreateBone,
+        emCreateConstraint_Type, emCreateConstraint_Node, emCreateConstraint_Length,
         emSelectElement, emSelectVertex, emSelectBone, emInputWght,
         emSelectAnimation, emEditAnimation, emAnimateBones, emFrameParams,
         emLoadAnimation, emSaveAnimation, emLast
@@ -67,6 +67,8 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     xBYTE                boneIds[4];
     xBYTE                boneWghts[4];
     xLONG                frameParams[2];
+    xLONG                constrType;
+    xFLOAT               constrLen;
     xBYTE                param;
     xIKNode             *selectedBone;
     xElement            *selectedElement;
@@ -95,6 +97,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     xVector3    CastPoint(xVector3 rayPos, xVector3 planeP);
     /* TEXT INPUT */
     void        GetCommand();
+    void        GetConstraintParams();
     void        GetInputWeight();
     void        SetVertexWghts();
     void        GetFrameParams();

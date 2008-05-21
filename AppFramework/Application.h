@@ -25,7 +25,9 @@ class Application : public Singleton<Application>
     Scene&    CurrentScene() { return *m_scene; }
     bool      SetCurrentScene(Scene* scene, bool destroyPrev = true);
 
-    Application() : OnApplicationInvalidate(NULL), OnApplicationTerminate(NULL),
+    Application() : OnApplicationInitialize(NULL),
+                    OnApplicationInvalidate(NULL),
+                    OnApplicationTerminate(NULL),
                     m_scene(NULL), m_title(NULL), m_OpenGL(true)
     {
         if (m_OpenGL)
@@ -38,6 +40,7 @@ class Application : public Singleton<Application>
     bool OpenGL()  { return m_OpenGL; }
     bool DirectX() { return !m_OpenGL; }
 
+    void (*OnApplicationInitialize)(Application* sender);
     void (*OnApplicationInvalidate)(Application* sender);
     void (*OnApplicationTerminate) (Application* sender);
 

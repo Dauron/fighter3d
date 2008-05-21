@@ -1,0 +1,136 @@
+[general]
+import	dojo/dojo.map
+
+# LIGHTS
+
+# yellow
+[light]
+type	POINT
+att_const	0.9
+att_linear	0.005
+att_square	0.0005
+color	1	0.7	0
+softness	0.3
+position	0	0	10
+
+# red
+[light]
+type	SPOT
+att_const	1
+att_linear	0.0004
+att_square	0.00008
+color	0.7	0	0
+softness	0.1
+position	7	-5	5
+spot_dir	0	0	-1
+spot_cut	45
+spot_att	1
+
+# night sky
+[light]
+type	INFINITE
+color	0.05	0.05	0.05
+softness	0.8
+direction	20	-20	-100
+
+# OBJECTS
+
+[model]
+fastm	crate_fst.3dx
+model	crate.3dx
+position	-4	-2	1
+physical	1
+locked	0
+phantom	0
+mass	50
+shadows 1
+
+[model]
+fastm	crate_fst.3dx
+model	crate.3dx
+position	-2	-5	0
+physical	1
+locked	0
+phantom	0
+mass	50
+shadows 1
+
+[model]
+fastm	crate_fst.3dx
+model	crate.3dx
+position	2	0	0
+rotation	0	0	45
+physical	1
+locked	0
+phantom	0
+mass	50
+shadows 1
+
+[model]
+model	1barbells.3dx
+position	10	-2	-0.2
+physical	0
+phantom	0
+mass	50
+shadows 1
+
+[model]
+model	2stend.3dx
+position	10	0	-0.2
+physical	0
+phantom	0
+mass	50
+shadows 1
+
+[model]
+fastm	3vaulting_gym_fst.3dx
+model	3vaulting_gym.3dx
+position	0	-10	5
+physical	1
+locked	0
+phantom	0
+mass	60
+shadows 1
+
+[skeletized]
+fastm	human2_fst.3dx
+model	human2.3dx
+rotation	0	0	170
+position	-0.3	-3.2	-0.2
+physical	0
+phantom	0
+mass	70
+shadows 1
+animation	anims/human/yoko-geri2.ska	4000	5300
+animation	anims/human/garda.ska	0	0
+
+[skeletized]
+fastm	human2_fst.3dx
+model	human2.3dx
+position	-0.5	-1.5	-0.2
+physical	0
+phantom	0
+mass	70
+shadows 1
+animation	anims/human/garda.ska	0	4700
+animation	anims/human/skulony.ska	4700	4700
+animation	anims/human/kiwa_sie.ska	4700	4700
+
+[skeletized]
+fastm	human2_fst.3dx
+model	human2.3dx
+position	4.5	-1.5	-0.2
+physical	0
+phantom	0
+mass	70
+shadows 1
+camera_controled
+
+
+[skip model]
+model	wolf.3ds
+position	1	5	-0.21
+physical	0
+phantom	0
+mass	65
+shadows 1

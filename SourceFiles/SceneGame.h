@@ -27,6 +27,8 @@ class SceneGame : public Scene
         FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
     }
 
+    World          world;
+
   private:
     bool InitGL();
     void InitInputMgr();
@@ -36,7 +38,6 @@ class SceneGame : public Scene
     float stepAccum;
 
     CameraHuman    hCamera;
-    World          world;
 
     HFont          m_Font1;
     HFont          m_Font2;

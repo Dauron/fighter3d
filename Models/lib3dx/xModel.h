@@ -1,9 +1,10 @@
 #ifndef __incl_xModel_h
 #define __incl_xModel_h
 
-#include "xBone.h"
+#include "xSkeleton.h"
 #include "xMaterial.h"
 #include "xElement.h"
+
 
 struct xModel {
     char      *fileName;
@@ -15,7 +16,6 @@ struct xModel {
     xBYTE      kidsC;     // model's elements
     xBYTE      elementC;  // count of all kids
 
-    //xBone     *spineP;    // spine of the model
     xSkeleton  spine;
 
     bool       texturesInited;

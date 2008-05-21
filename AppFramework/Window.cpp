@@ -33,6 +33,5 @@ bool IWindow::SetFullScreen(bool fullscreen)
 //#endif
 
     return Initialize(title, width, height, fullscreen)
-        && g_Application.Invalidate()
         && g_Application.CurrentScene().Initialize(0, 0, width, height);
 }

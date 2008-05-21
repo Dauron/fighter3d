@@ -18,9 +18,14 @@ class GLWindow : public IWindow
     HINSTANCE  hInstance;
     MSG        msg;
 
+    int                   PixelFormat;
+    PIXELFORMATDESCRIPTOR pfd;
+    bool                  queryForMultisample;
+    bool                  multisampleAviable;
+
   public:
-     GLWindow() : hWnd(NULL), hRC(NULL), hInstance(NULL) {}
-    virtual ~GLWindow() { this->Terminate(); }
+     GLWindow() : hWnd(NULL), hRC(NULL), hInstance(NULL), queryForMultisample(true), multisampleAviable(false) {}
+    virtual ~GLWindow() {}
 
     virtual bool Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen);
     virtual void Terminate();

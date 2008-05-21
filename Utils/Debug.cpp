@@ -31,7 +31,8 @@ void log(int level, const char *fmt, ...)
 
     fprintf(log_file, "\n");
 
-    fclose(log_file);
+    //fclose(log_file);
+    fflush(log_file);
     log_file = NULL;
 }
 
@@ -63,7 +64,8 @@ void logEx(int level, bool withtime, const char *fmt, ...)
 
     fprintf(log_file, "\n");
 
-    fclose(log_file);
+    //fclose(log_file);
+    fflush(log_file);
     log_file = NULL;
 }
 

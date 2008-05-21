@@ -1,4 +1,4 @@
-#include "xBone.h"
+#include "xSkeleton.h"
 #include "xModel.h"
 
 /* xSkeleton */
@@ -12,12 +12,21 @@ void xSkeleton :: Clear()
         delete[] boneP;
         boneP = NULL;
     }
+    if (constraintsP)
+    {
+        xIVConstraint **constr = constraintsP;
+        for (; constraintsC; --constraintsC, ++constr)
+            delete *constr;
+        delete[] constraintsP;
+        constraintsP = NULL;
+    }
 }
 
 xSkeleton xSkeleton :: Clone() const
 {
     xSkeleton res;
-    res.boneC = this->boneC;
+    res.boneC        = this->boneC;
+    res.constraintsC = this->constraintsC;
 
     if (this->boneP)
     {
@@ -30,6 +39,18 @@ xSkeleton xSkeleton :: Clone() const
     }
     else
         res.boneP = NULL;
+
+    if (this->constraintsP)
+    {
+        res.constraintsP = new xIVConstraint*[res.constraintsC];
+        xIVConstraint **nodeS = this->constraintsP;
+        xIVConstraint **nodeD = res.constraintsP;
+
+        for (int i = this->constraintsC; i; --i, ++nodeS, ++nodeD)
+            (*nodeS)->CloneTo(*nodeD);
+    }
+    else
+        res.constraintsP = NULL;
 
     return res;
 }
@@ -68,20 +89,29 @@ xIKNode * xSkeleton :: BoneAdd(xBYTE parentId, xVector3 ending)
 void xSkeleton :: Load( FILE *file )
 {
     fread(&boneC, sizeof(xBYTE), 1, file);
-
     boneP = new xIKNode[boneC];
     xIKNode *node = boneP;
     for (int i = boneC; i; --i, ++node)
         node->Load(file);
+
+    fread(&constraintsC, sizeof(xBYTE), 1, file);
+    constraintsP = new xIVConstraint*[constraintsC];
+    xIVConstraint **constr = constraintsP;
+    for (int i = constraintsC; i; --i, ++constr)
+        *constr = xIVConstraint::LoadType(file);
 }
 
 void xSkeleton :: Save( FILE *file ) const
 {
     fwrite(&boneC, sizeof(xBYTE), 1, file);
-
     xIKNode *node = boneP;
     for (int i = boneC; i; --i, ++node)
         node->Save(file);
+
+    fwrite(&constraintsC, sizeof(xBYTE), 1, file);
+    xIVConstraint **constr = constraintsP;
+    for (int i = constraintsC; i; --i, ++constr)
+        (*constr)->Save(file);
 }
 
 /* MATRICES */
@@ -94,7 +124,6 @@ void   _xBoneCalculateMatrices(const xIKNode *boneP, xBYTE boneId, xModelInstanc
     xMatrix newMat;
     if (bone->joinsBC)
     {
-        const xIKNode *pbone = boneP + bone->joinsBP[0];
         xMatrix *parent = instance.bonesM + bone->joinsBP[0];
         newMat = *parent * xMatrixFromQuaternion(bone->quaternion).preTranslate(bone->pointB).postTranslate(-bone->pointB);
     }

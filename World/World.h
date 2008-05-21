@@ -10,9 +10,8 @@ class World : public ISelectionProvider
 {
 public:
     typedef std::vector<ModelObj*> objectVec;
-    typedef std::vector<xLight>    lightsVec;
-    objectVec objects;
-    lightsVec lights;
+    objectVec    objects;
+    xLightVector lights;
 
 private:
     CD_MeshToMesh cd_MeshToMesh;
@@ -30,8 +29,6 @@ private:
             glLoadName(++objectID);
             ModelObj &mdl = **i;
             mdl.renderer.RenderVertices(*mdl.GetModelGr(), mdl.modelInstanceGr, xRender::smModel);
-            //(*i)->Render(false, *FOV);
-            //(*i)->Render(true,  *FOV);
         }
     }
     virtual unsigned int CountSelectable()

@@ -25,6 +25,7 @@ struct ShaderProgram
     char *fragmentShaderSrc;
 
     ShaderProgram();
+    virtual ~ShaderProgram() {}
 
     void Load(const char *vShaderFile, const char *fShaderFile);
     void Unload();
@@ -47,6 +48,7 @@ struct ShaderSkeletal : public ShaderProgram
     int aBoneIdxWghts;
 
     ShaderSkeletal();
+    virtual ~ShaderSkeletal() {}
 
     virtual GLenum Initialize();
 };
@@ -83,13 +85,16 @@ class GLShader
     static bool specular;
 
     static ShaderLighting slNoLighting;
-    static ShaderLighting slGlobalAmbient;
-    static ShaderLighting slInfiniteAmbient;
-    static ShaderLighting slInfiniteDiffuseSpecular;
-    static ShaderLighting slPointAmbient;
-    static ShaderLighting slPointDiffuseSpecular;
-    static ShaderLighting slSpotAmbient;
-    static ShaderLighting slSpotDiffuseSpecular;
+    static ShaderLighting slGlobalA;
+    static ShaderLighting slInfiniteA;
+    static ShaderLighting slInfiniteDS;
+    static ShaderLighting slInfiniteADS;
+    static ShaderLighting slPointA;
+    static ShaderLighting slPointDS;
+    static ShaderLighting slPointADS;
+    static ShaderLighting slSpotA;
+    static ShaderLighting slSpotDS;
+    static ShaderLighting slSpotADS;
 
     GLShader() {}
     ~GLShader() {}
@@ -98,6 +103,7 @@ public:
     static ShaderProgram *currShader;
 
     static void Load();
+    static void Unload();
     static void Initialize();
     static void Terminate();
     static void Invalidate();
@@ -109,6 +115,7 @@ public:
     {
         if (shaderState == xState_Disable && val != xState_Enable)
             return; // textures are disabled
+        if (val == xState_Disable) Suspend();
         shaderState = val;
     }
 
@@ -121,7 +128,12 @@ public:
     {
         lightType = type;
         if (type == xLight_NONE)
+        {
             glDisable(GL_LIGHTING);
+            GLShader::ambient  = false;
+            GLShader::diffuse  = false;
+            GLShader::specular = false;
+        }
         else
         {
             glEnable(GL_LIGHTING);

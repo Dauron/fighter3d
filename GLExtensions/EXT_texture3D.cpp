@@ -14,14 +14,14 @@ bool GL_init_EXT_texture3D(void)
     error |= aLoadExtension(PFNGLTEXSUBIMAGE3DPROC, glTexSubImage3D);
     error |= aLoadExtension(PFNGLCOPYTEXSUBIMAGE3DPROC, glCopyTexSubImage3D);
 
-    return error == 0 && GL_ExtensionExists("GL_EXT_texture3D");
+    return error == 0 && GLExtensions::Exists("GL_EXT_texture3D");
 }
 
 #else
 
 bool GL_init_EXT_texture3D(void)
 {
-    return GL_ExtensionExists("GL_EXT_texture3D");
+    return GLExtensions::Exists("GL_EXT_texture3D");
 }
 
 #endif

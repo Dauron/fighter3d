@@ -15,7 +15,7 @@ class GLWindow : public IWindow
 
   public:
      GLWindow() : glctx(NULL) {}
-    virtual ~GLWindow() { this->Terminate(); }
+    virtual ~GLWindow() {}
 
     bool Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen);
     void Terminate();

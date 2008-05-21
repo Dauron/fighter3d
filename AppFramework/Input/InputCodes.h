@@ -55,19 +55,24 @@
 #define IC_PolyModeChange    IC_CameraPerspective+1
 #define IC_ViewPhysicalModel IC_PolyModeChange+1
 
-#define IC_BE_Create         IC_ViewPhysicalModel+10
-#define IC_BE_Edit           IC_BE_Create+1
-#define IC_BE_Delete         IC_BE_Create+2
-#define IC_BE_Select         IC_BE_Create+3
-#define IC_BE_Move           IC_BE_Create+4
-#define IC_BE_ModeSkeletize  IC_BE_Create+5
-#define IC_BE_ModeSkin       IC_BE_Create+6
-#define IC_BE_ModeAnimate    IC_BE_Create+7
-#define IC_BE_Save           IC_BE_Create+8
-#define IC_BE_Play           IC_BE_Create+9
-#define IC_BE_Loop           IC_BE_Create+10
-#define IC_BE_Modifier       IC_BE_Create+11
+#define IC_BE_Create          IC_ViewPhysicalModel+10
+#define IC_BE_Edit            IC_BE_Create+1
+#define IC_BE_Delete          IC_BE_Create+2
+#define IC_BE_Select          IC_BE_Create+3
+#define IC_BE_Move            IC_BE_Create+4
+#define IC_BE_ModeSkeletize   IC_BE_Create+5
+#define IC_BE_ModeSkin        IC_BE_Create+6
+#define IC_BE_ModeAnimate     IC_BE_Create+7
+#define IC_BE_Save            IC_BE_Create+8
+#define IC_BE_Play            IC_BE_Create+9
+#define IC_BE_Loop            IC_BE_Create+10
+#define IC_BE_Modifier        IC_BE_Create+11
+#define IC_BE_CreateConstr    IC_BE_Create+12
+#define IC_BE_DeleteConstr    IC_BE_Create+13
+#define IC_BE_CreateConstrMax IC_BE_Create+14
+#define IC_BE_CreateConstrMin IC_BE_Create+15
+#define IC_BE_CreateConstrEql IC_BE_Create+16
 
-#define IC_LAST_CODE         IC_BE_Modifier
+#define IC_LAST_CODE         IC_BE_CreateConstrEql
 
 #endif

@@ -3,6 +3,7 @@
 #include "ARB_shader_objects.h"
 #include "ARB_vertex_shader.h"
 #include "ARB_multitexture.h"
+#include "ARB_multisample.h"
 #include "ARB_vertex_buffer_object.h"
 #include "EXT_texture3D.h"
 #include "EXT_stencil_wrap.h"
@@ -16,8 +17,9 @@ bool GLExtensions::Exists_ARB_FragmentShader     = false;
 bool GLExtensions::Exists_ARB_VertexBufferObject = false;
 bool GLExtensions::Exists_EXT_StencilWrap        = false;
 bool GLExtensions::Exists_EXT_StencilTwoSide     = false;
+bool GLExtensions::Exists_ARB_Multisample        = false;
 
-bool GL_Init_Extensions(void)
+bool GLExtensions::Init ()
 {
     GLExtensions::Exists_ARB_ShaderObjects  = GL_init_ARB_shader_objects();
     GLExtensions::Exists_ARB_VertexShader   = GL_init_ARB_vertex_shader();
@@ -28,6 +30,8 @@ bool GL_Init_Extensions(void)
     GLExtensions::Exists_EXT_StencilWrap    = GL_init_EXT_stencil_wrap();
     GLExtensions::Exists_EXT_StencilTwoSide = GL_init_EXT_stencil_two_side();
 
+    GLExtensions::Exists_ARB_Multisample    = GL_init_ARB_multisample();
+
     GL_init_ARB_multitexture();
     GL_init_EXT_texture3D();
 
@@ -36,7 +40,7 @@ bool GL_Init_Extensions(void)
 
 char *extensions = NULL;
 
-bool GL_ExtensionExists(const char *extensionName)
+bool GLExtensions::Exists(const char *extensionName)
 {
     if (!extensions)
     {
@@ -50,4 +54,13 @@ bool GL_ExtensionExists(const char *extensionName)
     char *found = strstr(extensions, extensionName);
 
     return found && (found[len] == 0 || found[len] == '\n');
+}
+
+void GLExtensions::SetVSync(bool enable)
+{
+    typedef bool (APIENTRY *PFNWGLSWAPINTERVALFARPROC)(int);
+    PFNWGLSWAPINTERVALFARPROC wglSwapIntervalEXT = 0;
+
+    if (!aLoadExtension(PFNWGLSWAPINTERVALFARPROC, wglSwapIntervalEXT))
+        wglSwapIntervalEXT(enable ? 1 : 0);
 }

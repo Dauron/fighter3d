@@ -12,7 +12,7 @@ bool Application::Initialize(char *title, unsigned int width, unsigned int heigh
         throw "The scene cannot be null";
 
     bool error = m_window->Initialize(title, width, height, fullscreen);
-    error |= Invalidate();
+    if (OnApplicationInitialize) OnApplicationInitialize(this);
     error |= m_scene->Initialize(0, 0, width, height);
     return error;
 }
@@ -35,22 +35,17 @@ bool Application::SetCurrentScene(Scene* scene, bool destroyPrev)
 
 bool Application::Invalidate()
 {
-    if (OnApplicationInvalidate)
-        OnApplicationInvalidate(this);
-
     m_scene->Invalidate();
-
+    if (OnApplicationInvalidate) OnApplicationInvalidate(this);
     return true;
 }
 
 void Application::Terminate()
 {
+    m_window->Terminate();
     m_scene->Terminate();
     delete m_scene;
-    m_window->Terminate();
-
-    if (OnApplicationTerminate)
-        OnApplicationTerminate(this);
+    if (OnApplicationTerminate) OnApplicationTerminate(this);
 }
 
 int Application::Run()

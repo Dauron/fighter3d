@@ -2,6 +2,7 @@
 #define __incl_lib3dx_xLight_h
 
 #include "xFieldOfView.h"
+#include <vector>
 
 typedef enum
 {
@@ -23,6 +24,8 @@ struct xLight
     xLightType  type;
     xVector3    position;
     xColor      color;
+    xColor      ambient;
+    xColor      diffuse;
     xFLOAT      softness;
 
     xVector3    spotDirection;
@@ -48,9 +51,12 @@ struct xLight
     }
 
     bool elementReceivesLight(const xVector3 &bsCenter, float bsRadius) const;
+    bool elementReceivesDiffuseLight(const xFieldOfView &FOV, xVector3 boundingPoints[8]) const;
 
 private:
     static xBYTE counter;
 };
+
+typedef std::vector<xLight> xLightVector;
 
 #endif

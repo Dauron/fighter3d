@@ -31,8 +31,24 @@ private:
     float CollisionDataFillMS_max;
     float CollisionDeterminationMS_max;
 
+    float FPSmeanAccum;
+    float FPSmeanCount;
+
 public:
+    struct _Shadows
+    {
+        int shadows;
+        int culled;
+        int zPass;
+        int zFail;
+        int zFailS;
+        int zFailF;
+        int zFailB;
+
+    } Shadows;
+
     int CulledElements;
+    int CulledDiffuseElements;
 
     int CollidedPreTreeLevels;
     int CollidedTreeLevels;

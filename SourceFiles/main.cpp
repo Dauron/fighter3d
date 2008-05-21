@@ -3,6 +3,7 @@
 #include "../Utils/Debug.h"
 #include "../Utils/Filesystem.h"
 
+void OnApplicationInitialize(Application* sender);
 void OnApplicationInvalidate(Application* sender);
 void OnApplicationTerminate (Application* sender);
 
@@ -15,13 +16,17 @@ int main( int argc, char **argv )
     logEx(0, true, "Game started");
 
     GLShader::Load();
+
     Application game;
+    game.OnApplicationInitialize = OnApplicationInitialize;
     game.OnApplicationInvalidate = OnApplicationInvalidate;
-    game.OnApplicationTerminate = OnApplicationTerminate;
+    game.OnApplicationTerminate  = OnApplicationTerminate;
     if (!game.Initialize("Camera Fighter", 800, 600, false, new SceneGame()))
         return 1;
     int res = game.Run();
     game.Terminate();
+
+    GLShader::Unload();
 
     logEx(0, true, "Game finished");
     logEx(0, false, "***********************************");
@@ -58,8 +63,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         buff[lenJ-1] = ' ';
         buff[lenJ]   = 0;
     }
-    main(1, &buff);
+    int res = main(1, &buff);
     delete[] buff;
+    return res;
 }
 
 #endif
@@ -72,9 +78,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #include "../Models/ModelMgr.h"
 #include "../Models/lib3dx/xAnimationMgr.h"
 
-void OnApplicationInvalidate(Application* sender)
+void OnApplicationInitialize(Application* sender)
 {
-    GL_Init_Extensions();
+    GLExtensions::Init();
 
     if (!InputMgr::GetSingletonPtr())
         new InputMgr();
@@ -84,15 +90,10 @@ void OnApplicationInvalidate(Application* sender)
 
     if (!FontMgr::GetSingletonPtr())
         new FontMgr();
-    else
-        g_FontMgr.InvalidateItems();
 
     if (!TextureMgr::GetSingletonPtr())
         new TextureMgr();
-    else
-        g_TextureMgr.InvalidateItems();
 
-    GLShader::Invalidate();
     GLShader::Initialize();
 
     if (!GLAnimSkeletal::GetSingletonPtr())
@@ -100,12 +101,25 @@ void OnApplicationInvalidate(Application* sender)
 
     if (!xAnimationMgr::GetSingletonPtr())
         new xAnimationMgr();
-    else
-        g_AnimationMgr.InvalidateItems();
 
     if (!ModelMgr::GetSingletonPtr())
         new ModelMgr();
-    else
+}
+
+void OnApplicationInvalidate(Application* sender)
+{
+    if (FontMgr::GetSingletonPtr())
+        g_FontMgr.InvalidateItems();
+
+    if (TextureMgr::GetSingletonPtr())
+        g_TextureMgr.InvalidateItems();
+
+    GLShader::Invalidate();
+
+    if (xAnimationMgr::GetSingletonPtr())
+        g_AnimationMgr.InvalidateItems();
+
+    if (ModelMgr::GetSingletonPtr())
         g_ModelMgr.InvalidateItems();
 }
 

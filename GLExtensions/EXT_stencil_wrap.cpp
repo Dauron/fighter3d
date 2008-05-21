@@ -2,5 +2,5 @@
 
 bool GL_init_EXT_stencil_wrap(void)
 {
-    return GL_ExtensionExists("GL_EXT_stencil_wrap");
+    return GLExtensions::Exists("GL_EXT_stencil_wrap");
 }

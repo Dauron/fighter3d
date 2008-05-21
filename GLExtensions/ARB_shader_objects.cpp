@@ -89,5 +89,5 @@ bool GL_init_ARB_shader_objects(void)
     error |= aLoadExtension(PFNGLUNIFORMMATRIX3FVARBPROC    , glUniformMatrix3fvARB);
     error |= aLoadExtension(PFNGLUNIFORMMATRIX4FVARBPROC    , glUniformMatrix4fvARB);
 
-    return error == 0 && GL_ExtensionExists("GL_ARB_shader_objects");
+    return error == 0 && GLExtensions::Exists("GL_ARB_shader_objects");
 }

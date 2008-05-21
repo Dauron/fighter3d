@@ -26,6 +26,8 @@ void xShadows_GetBackFaces (const xElement *elem, const xElementInstance &instan
     bool     *dest = backFaces;
     xFace    *face = elem->facesP;
     xVector4 *extrVerticesP = shadowData.verticesP + elem->verticesC;
+    xFaceList *iterL = elem->faceListP;
+    xWORD      maxOffset = iterL->indexOffset+iterL->indexCount-1;
 
     if (infiniteL)
     {
@@ -33,17 +35,29 @@ void xShadows_GetBackFaces (const xElement *elem, const xElementInstance &instan
         if (elem->skeletized)
         {
             xVector3 faceNormal;
-            for (int i = elem->facesC; i; --i, ++face, ++dest)
+            for (int i = 0; i < elem->facesC; ++i, ++face, ++dest)
             {
-                faceNormal = instance.normalsP[(*face)[0]] + instance.normalsP[(*face)[1]] + instance.normalsP[(*face)[2]];
-                *dest = xVector3::DotProduct(lightDir, faceNormal) > 0;
+                if (i > maxOffset) { ++iterL; maxOffset = iterL->indexOffset+iterL->indexCount-1; }
+                if (iterL->materialP && iterL->materialP->two_sided)
+                    *dest = true;
+                else
+                {
+                    faceNormal = instance.normalsP[(*face)[0]] + instance.normalsP[(*face)[1]] + instance.normalsP[(*face)[2]];
+                    *dest = xVector3::DotProduct(lightDir, faceNormal) > 0;
+                }
             }
         }
         else
         {
             xVector3 *faceNormal = elem->renderData.faceNormalsP;
-            for (int i = elem->facesC; i; --i, ++face, ++faceNormal, ++dest)
-                *dest = xVector3::DotProduct(lightDir, *faceNormal) > 0;
+            for (int i = 0; i < elem->facesC; ++i, ++face, ++faceNormal, ++dest)
+            {
+                if (i > maxOffset) { ++iterL; maxOffset = iterL->indexOffset+iterL->indexCount-1; }
+                if (iterL->materialP && iterL->materialP->two_sided)
+                    *dest = true;
+                else
+                    *dest = xVector3::DotProduct(lightDir, *faceNormal) > 0;
+            }
         }
     }
     else
@@ -51,17 +65,29 @@ void xShadows_GetBackFaces (const xElement *elem, const xElementInstance &instan
         if (elem->skeletized)
         {
             xVector3 faceNormal;
-            for (int i = elem->facesC; i; --i, ++face, ++dest)
+            for (int i = 0; i < elem->facesC; ++i, ++face, ++dest)
             {
-                faceNormal = instance.normalsP[(*face)[0]] + instance.normalsP[(*face)[1]] + instance.normalsP[(*face)[2]];
-                *dest = xVector3::DotProduct((extrVerticesP + *face[0])->vector3, faceNormal) > 0;
+                if (i > maxOffset) { ++iterL; maxOffset = iterL->indexOffset+iterL->indexCount-1; }
+                if (iterL->materialP && iterL->materialP->two_sided)
+                    *dest = true;
+                else
+                {
+                    faceNormal = instance.normalsP[(*face)[0]] + instance.normalsP[(*face)[1]] + instance.normalsP[(*face)[2]];
+                    *dest = xVector3::DotProduct((extrVerticesP + *face[0])->vector3, faceNormal) > 0;
+                }
             }
         }
         else
         {
             xVector3 *faceNormal = elem->renderData.faceNormalsP;
-            for (int i = elem->facesC; i; --i, ++face, ++faceNormal, ++dest)
-                *dest = xVector3::DotProduct((extrVerticesP + (*face)[0])->vector3, *faceNormal) > 0;
+            for (int i = 0; i < elem->facesC; ++i, ++face, ++faceNormal, ++dest)
+            {
+                if (i > maxOffset) { ++iterL; maxOffset = iterL->indexOffset+iterL->indexCount-1; }
+                if (iterL->materialP && iterL->materialP->two_sided)
+                    *dest = true;
+                else
+                    *dest = xVector3::DotProduct((extrVerticesP + (*face)[0])->vector3, *faceNormal) > 0;
+            }
         }
     }
 }
@@ -164,7 +190,8 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
                         }
                 }
             }
-            shadowData.indexP = new xWORD[4*shadowData.sideC + 3*shadowData.frontC + 3*shadowData.backC];
+            shadowData.indexSize = 4*shadowData.sideC + 3*shadowData.frontC + 3*shadowData.backC;
+            shadowData.indexP = new xWORD[shadowData.indexSize];
             memcpy(shadowData.indexP, sideQadsP, shadowData.sideC*sizeof(xWORD4));
             memcpy(shadowData.indexP + shadowData.sideC*4, frontCapP, shadowData.frontC*sizeof(xWORD3));
             delete[] frontCapP;
@@ -174,7 +201,8 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
         }
         else
         {
-            shadowData.indexP = new xWORD[4*shadowData.sideC];
+            shadowData.indexSize = 4*shadowData.sideC;
+            shadowData.indexP = new xWORD[shadowData.indexSize];
             memcpy(shadowData.indexP, sideQadsP, shadowData.sideC*sizeof(xWORD4));
         }
     }
@@ -228,14 +256,16 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
                         }
                 }
             }
-            shadowData.indexP = new xWORD[3*shadowData.sideC + 3*shadowData.frontC];
+            shadowData.indexSize = 3*shadowData.sideC + 3*shadowData.frontC;
+            shadowData.indexP = new xWORD[shadowData.indexSize];
             memcpy(shadowData.indexP, sideTrisP, shadowData.sideC*sizeof(xWORD3));
             memcpy(shadowData.indexP + shadowData.sideC*3, frontCapP, shadowData.frontC*sizeof(xWORD3));
             delete[] frontCapP;
         }
         else
         {
-            shadowData.indexP = new xWORD[3*shadowData.sideC];
+            shadowData.indexSize = 3*shadowData.sideC;
+            shadowData.indexP = new xWORD[shadowData.indexSize];
             memcpy(shadowData.indexP, sideTrisP, shadowData.sideC*sizeof(xWORD3));
         }
     }

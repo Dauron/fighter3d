@@ -17,13 +17,16 @@ bool           GLShader::specular         = false;
 GLenum         ShaderProgram::currProgram = 0;
 
 ShaderLighting GLShader::slNoLighting;
-ShaderLighting GLShader::slGlobalAmbient;
-ShaderLighting GLShader::slInfiniteAmbient;
-ShaderLighting GLShader::slInfiniteDiffuseSpecular;
-ShaderLighting GLShader::slPointAmbient;
-ShaderLighting GLShader::slPointDiffuseSpecular;
-ShaderLighting GLShader::slSpotAmbient;
-ShaderLighting GLShader::slSpotDiffuseSpecular;
+ShaderLighting GLShader::slGlobalA;
+ShaderLighting GLShader::slInfiniteA;
+ShaderLighting GLShader::slInfiniteDS;
+ShaderLighting GLShader::slInfiniteADS;
+ShaderLighting GLShader::slPointA;
+ShaderLighting GLShader::slPointDS;
+ShaderLighting GLShader::slPointADS;
+ShaderLighting GLShader::slSpotA;
+ShaderLighting GLShader::slSpotDS;
+ShaderLighting GLShader::slSpotADS;
 
 ShaderProgram :: ShaderProgram()
 {
@@ -240,76 +243,158 @@ void GLShader :: Load()
     slNoLighting.PlainSkeletal.Load("NoLights_noTex_Skel.vert", "NoLights_noTex.frag");
     slNoLighting.TexturedSkeletal.Load("NoLights_Tex_Skel.vert", "NoLights_Tex.frag");
 
-    slGlobalAmbient.Plain.Load("Global_A_noTex.vert", "Global_A_noTex.frag");
-    slGlobalAmbient.Textured.Load("Global_A_Tex.vert", "Global_A_Tex.frag");
-    slGlobalAmbient.PlainSkeletal.Load("Global_A_noTex_Skel.vert", "Global_A_noTex.frag");
-    slGlobalAmbient.TexturedSkeletal.Load("Global_A_Tex_Skel.vert", "Global_A_Tex.frag");
+    slGlobalA.Plain.Load("Global_A_noTex.vert", "Global_A_noTex.frag");
+    slGlobalA.Textured.Load("Global_A_Tex.vert", "Global_A_Tex.frag");
+    slGlobalA.PlainSkeletal.Load("Global_A_noTex_Skel.vert", "Global_A_noTex.frag");
+    slGlobalA.TexturedSkeletal.Load("Global_A_Tex_Skel.vert", "Global_A_Tex.frag");
 
-    slInfiniteAmbient.Plain.Load("Infinite_A_noTex.vert", "Infinite_A_noTex.frag");
-    slInfiniteAmbient.Textured.Load("Infinite_A_Tex.vert", "Infinite_A_Tex.frag");
-    slInfiniteAmbient.PlainSkeletal.Load("Infinite_A_noTex_Skel.vert", "Infinite_A_noTex.frag");
-    slInfiniteAmbient.TexturedSkeletal.Load("Infinite_A_Tex_Skel.vert", "Infinite_A_Tex.frag");
+    slInfiniteA.Plain.Load("Infinite_A_noTex.vert", "Infinite_A_noTex.frag");
+    slInfiniteA.Textured.Load("Infinite_A_Tex.vert", "Infinite_A_Tex.frag");
+    slInfiniteA.PlainSkeletal.Load("Infinite_A_noTex_Skel.vert", "Infinite_A_noTex.frag");
+    slInfiniteA.TexturedSkeletal.Load("Infinite_A_Tex_Skel.vert", "Infinite_A_Tex.frag");
 
-    slInfiniteDiffuseSpecular.Plain.Load("Infinite_DS_noTex.vert", "Infinite_DS_noTex.frag");
-    slInfiniteDiffuseSpecular.Textured.Load("Infinite_DS_Tex.vert", "Infinite_DS_Tex.frag");
-    slInfiniteDiffuseSpecular.PlainSkeletal.Load("Infinite_DS_noTex_Skel.vert", "Infinite_DS_noTex.frag");
-    slInfiniteDiffuseSpecular.TexturedSkeletal.Load("Infinite_DS_Tex_Skel.vert", "Infinite_DS_Tex.frag");
+    slInfiniteDS.Plain.Load("Infinite_DS_noTex.vert", "Infinite_DS_noTex.frag");
+    slInfiniteDS.Textured.Load("Infinite_DS_Tex.vert", "Infinite_DS_Tex.frag");
+    slInfiniteDS.PlainSkeletal.Load("Infinite_DS_noTex_Skel.vert", "Infinite_DS_noTex.frag");
+    slInfiniteDS.TexturedSkeletal.Load("Infinite_DS_Tex_Skel.vert", "Infinite_DS_Tex.frag");
 
-    slPointAmbient.Plain.Load("Point_A_noTex.vert", "Point_A_noTex.frag");
-    slPointAmbient.Textured.Load("Point_A_Tex.vert", "Point_A_Tex.frag");
-    slPointAmbient.PlainSkeletal.Load("Point_A_noTex_Skel.vert", "Point_A_noTex.frag");
-    slPointAmbient.TexturedSkeletal.Load("Point_A_Tex_Skel.vert", "Point_A_Tex.frag");
+    slInfiniteADS.Plain.Load("Infinite_DS_noTex.vert", "Infinite_ADS_noTex.frag");
+    slInfiniteADS.Textured.Load("Infinite_DS_Tex.vert", "Infinite_ADS_Tex.frag");
+    slInfiniteADS.PlainSkeletal.Load("Infinite_DS_noTex_Skel.vert", "Infinite_ADS_noTex.frag");
+    slInfiniteADS.TexturedSkeletal.Load("Infinite_DS_Tex_Skel.vert", "Infinite_ADS_Tex.frag");
 
-    slPointDiffuseSpecular.Plain.Load("Point_DS_noTex.vert", "Point_DS_noTex.frag");
-    slPointDiffuseSpecular.Textured.Load("Point_DS_Tex.vert", "Point_DS_Tex.frag");
-    slPointDiffuseSpecular.PlainSkeletal.Load("Point_DS_noTex_Skel.vert", "Point_DS_noTex.frag");
-    slPointDiffuseSpecular.TexturedSkeletal.Load("Point_DS_Tex_Skel.vert", "Point_DS_Tex.frag");
+    slPointA.Plain.Load("Point_A_noTex.vert", "Point_A_noTex.frag");
+    slPointA.Textured.Load("Point_A_Tex.vert", "Point_A_Tex.frag");
+    slPointA.PlainSkeletal.Load("Point_A_noTex_Skel.vert", "Point_A_noTex.frag");
+    slPointA.TexturedSkeletal.Load("Point_A_Tex_Skel.vert", "Point_A_Tex.frag");
 
-    slSpotAmbient.Plain.Load("Spot_A_noTex.vert", "Spot_A_noTex.frag");
-    slSpotAmbient.Textured.Load("Spot_A_Tex.vert", "Spot_A_Tex.frag");
-    slSpotAmbient.PlainSkeletal.Load("Spot_A_noTex_Skel.vert", "Spot_A_noTex.frag");
-    slSpotAmbient.TexturedSkeletal.Load("Spot_A_Tex_Skel.vert", "Spot_A_Tex.frag");
+    slPointDS.Plain.Load("Point_DS_noTex.vert", "Point_DS_noTex.frag");
+    slPointDS.Textured.Load("Point_DS_Tex.vert", "Point_DS_Tex.frag");
+    slPointDS.PlainSkeletal.Load("Point_DS_noTex_Skel.vert", "Point_DS_noTex.frag");
+    slPointDS.TexturedSkeletal.Load("Point_DS_Tex_Skel.vert", "Point_DS_Tex.frag");
 
-    slSpotDiffuseSpecular.Plain.Load("Spot_DS_noTex.vert", "Spot_DS_noTex.frag");
-    slSpotDiffuseSpecular.Textured.Load("Spot_DS_Tex.vert", "Spot_DS_Tex.frag");
-    slSpotDiffuseSpecular.PlainSkeletal.Load("Spot_DS_noTex_Skel.vert", "Spot_DS_noTex.frag");
-    slSpotDiffuseSpecular.TexturedSkeletal.Load("Spot_DS_Tex_Skel.vert", "Spot_DS_Tex.frag");
+    slPointADS.Plain.Load("Point_DS_noTex.vert", "Point_ADS_noTex.frag");
+    slPointADS.Textured.Load("Point_DS_Tex.vert", "Point_ADS_Tex.frag");
+    slPointADS.PlainSkeletal.Load("Point_DS_noTex_Skel.vert", "Point_ADS_noTex.frag");
+    slPointADS.TexturedSkeletal.Load("Point_DS_Tex_Skel.vert", "Point_ADS_Tex.frag");
+
+    slSpotA.Plain.Load("Spot_A_noTex.vert", "Spot_A_noTex.frag");
+    slSpotA.Textured.Load("Spot_A_Tex.vert", "Spot_A_Tex.frag");
+    slSpotA.PlainSkeletal.Load("Spot_A_noTex_Skel.vert", "Spot_A_noTex.frag");
+    slSpotA.TexturedSkeletal.Load("Spot_A_Tex_Skel.vert", "Spot_A_Tex.frag");
+
+    slSpotDS.Plain.Load("Spot_DS_noTex.vert", "Spot_DS_noTex.frag");
+    slSpotDS.Textured.Load("Spot_DS_Tex.vert", "Spot_DS_Tex.frag");
+    slSpotDS.PlainSkeletal.Load("Spot_DS_noTex_Skel.vert", "Spot_DS_noTex.frag");
+    slSpotDS.TexturedSkeletal.Load("Spot_DS_Tex_Skel.vert", "Spot_DS_Tex.frag");
+
+    slSpotADS.Plain.Load("Spot_DS_noTex.vert", "Spot_ADS_noTex.frag");
+    slSpotADS.Textured.Load("Spot_DS_Tex.vert", "Spot_ADS_Tex.frag");
+    slSpotADS.PlainSkeletal.Load("Spot_DS_noTex_Skel.vert", "Spot_ADS_noTex.frag");
+    slSpotADS.TexturedSkeletal.Load("Spot_DS_Tex_Skel.vert", "Spot_ADS_Tex.frag");
+}
+
+void GLShader :: Unload()
+{
+    slNoLighting.Plain.Unload();
+    slNoLighting.Textured.Unload();
+    slNoLighting.PlainSkeletal.Unload();
+    slNoLighting.TexturedSkeletal.Unload();
+
+    slGlobalA.Plain.Unload();
+    slGlobalA.Textured.Unload();
+    slGlobalA.PlainSkeletal.Unload();
+    slGlobalA.TexturedSkeletal.Unload();
+
+    slInfiniteA.Plain.Unload();
+    slInfiniteA.Textured.Unload();
+    slInfiniteA.PlainSkeletal.Unload();
+    slInfiniteA.TexturedSkeletal.Unload();
+
+    slInfiniteDS.Plain.Unload();
+    slInfiniteDS.Textured.Unload();
+    slInfiniteDS.PlainSkeletal.Unload();
+    slInfiniteDS.TexturedSkeletal.Unload();
+
+    slInfiniteADS.Plain.Unload();
+    slInfiniteADS.Textured.Unload();
+    slInfiniteADS.PlainSkeletal.Unload();
+    slInfiniteADS.TexturedSkeletal.Unload();
+
+    slPointA.Plain.Unload();
+    slPointA.Textured.Unload();
+    slPointA.PlainSkeletal.Unload();
+    slPointA.TexturedSkeletal.Unload();
+
+    slPointDS.Plain.Unload();
+    slPointDS.Textured.Unload();
+    slPointDS.PlainSkeletal.Unload();
+    slPointDS.TexturedSkeletal.Unload();
+
+    slPointADS.Plain.Unload();
+    slPointADS.Textured.Unload();
+    slPointADS.PlainSkeletal.Unload();
+    slPointADS.TexturedSkeletal.Unload();
+
+    slSpotA.Plain.Unload();
+    slSpotA.Textured.Unload();
+    slSpotA.PlainSkeletal.Unload();
+    slSpotA.TexturedSkeletal.Unload();
+
+    slSpotDS.Plain.Unload();
+    slSpotDS.Textured.Unload();
+    slSpotDS.PlainSkeletal.Unload();
+    slSpotDS.TexturedSkeletal.Unload();
+
+    slSpotADS.Plain.Unload();
+    slSpotADS.Textured.Unload();
+    slSpotADS.PlainSkeletal.Unload();
+    slSpotADS.TexturedSkeletal.Unload();
 }
 
 void GLShader :: Initialize()
 {
     slNoLighting.Initialize();
-    slGlobalAmbient.Initialize();
-    slInfiniteAmbient.Initialize();
-    slInfiniteDiffuseSpecular.Initialize();
-    slPointAmbient.Initialize();
-    slPointDiffuseSpecular.Initialize();
-    slSpotAmbient.Initialize();
-    slSpotDiffuseSpecular.Initialize();
+    slGlobalA.Initialize();
+    slInfiniteA.Initialize();
+    slInfiniteDS.Initialize();
+    slInfiniteADS.Initialize();
+    slPointA.Initialize();
+    slPointDS.Initialize();
+    slPointADS.Initialize();
+    slSpotA.Initialize();
+    slSpotDS.Initialize();
+    slSpotADS.Initialize();
 }
 
 void GLShader :: Terminate()
 {
     slNoLighting.Terminate();
-    slGlobalAmbient.Terminate();
-    slInfiniteAmbient.Terminate();
-    slInfiniteDiffuseSpecular.Terminate();
-    slPointAmbient.Terminate();
-    slPointDiffuseSpecular.Terminate();
-    slSpotAmbient.Terminate();
-    slSpotDiffuseSpecular.Terminate();
+    slGlobalA.Terminate();
+    slInfiniteA.Terminate();
+    slInfiniteDS.Terminate();
+    slInfiniteADS.Terminate();
+    slPointA.Terminate();
+    slPointDS.Terminate();
+    slPointADS.Terminate();
+    slSpotA.Terminate();
+    slSpotDS.Terminate();
+    slSpotADS.Terminate();
 }
 
 void GLShader :: Invalidate()
 {
     slNoLighting.Invalidate();
-    slGlobalAmbient.Invalidate();
-    slInfiniteAmbient.Invalidate();
-    slInfiniteDiffuseSpecular.Invalidate();
-    slPointAmbient.Invalidate();
-    slPointDiffuseSpecular.Invalidate();
-    slSpotAmbient.Invalidate();
-    slSpotDiffuseSpecular.Invalidate();
+    slGlobalA.Invalidate();
+    slInfiniteA.Invalidate();
+    slInfiniteDS.Invalidate();
+    slInfiniteADS.Invalidate();
+    slPointA.Invalidate();
+    slPointDS.Invalidate();
+    slPointADS.Invalidate();
+    slSpotA.Invalidate();
+    slSpotDS.Invalidate();
+    slSpotADS.Invalidate();
 }
 
 bool GLShader :: Start()
@@ -332,34 +417,46 @@ bool GLShader :: Start()
             slShader = &slNoLighting;
             break;
         case xLight_GLOBAL:
-            slShader = &slGlobalAmbient;
+            slShader = &slGlobalA;
             break;
         case xLight_INFINITE:
             if (ambient && !diffuse && !specular)
-                slShader = &slInfiniteAmbient;
+                slShader = &slInfiniteA;
             else
             if (!ambient && diffuse && specular)
-                slShader = &slInfiniteDiffuseSpecular;
+                slShader = &slInfiniteDS;
+            else
+            if (ambient && diffuse && specular)
+                slShader = &slInfiniteADS;
             else
                 slShader = NULL;
             break;
         case xLight_POINT:
             if (ambient && !diffuse && !specular)
-                slShader = &slPointAmbient;
+                slShader = &slPointA;
             else
             if (!ambient && diffuse && specular)
-                slShader = &slPointDiffuseSpecular;
+                slShader = &slPointDS;
+            else
+            if (ambient && diffuse && specular)
+                slShader = &slPointADS;
             else
                 slShader = NULL;
             break;
         case xLight_SPOT:
             if (ambient && !diffuse && !specular)
-                slShader = &slSpotAmbient;
+                slShader = &slSpotA;
             else
             if (!ambient && diffuse && specular)
-                slShader = &slSpotDiffuseSpecular;
+                slShader = &slSpotDS;
+            else
+            if (ambient && diffuse && specular)
+                slShader = &slSpotADS;
             else
                 slShader = NULL;
+            break;
+        default:
+            slShader = NULL;
             break;
     }
     if (!slShader) return false;
@@ -377,7 +474,8 @@ bool GLShader :: Start()
 
     if (!currShader->program) return false;
 
-    glUseProgramObjectARB(ShaderProgram::currProgram = currShader->program);
+    if (ShaderProgram::currProgram != currShader->program)
+        glUseProgramObjectARB(ShaderProgram::currProgram = currShader->program);
     return true;
 }
 

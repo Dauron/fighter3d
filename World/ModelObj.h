@@ -4,7 +4,7 @@
 #include "Object3D.h"
 #include "../Math/xLight.h"
 #include "../Models/ModelMgr.h"
-#include "../Models/lib3dx/xBone.h"
+#include "../Models/lib3dx/xSkeleton.h"
 #include "../Models/lib3dx/xRenderGL.h"
 #include "../Physics/CollisionInfo.h"
 #include <algorithm>
@@ -57,8 +57,9 @@ public:
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physicalNotLocked = false, bool phantom = true);
     virtual void Finalize   ();
     virtual void Invalidate () {
-        renderer.InvalidateInstanceGraphics(modelInstanceGr);
-        renderer.InvalidateInstanceGraphics(modelInstancePh);
+        UpdatePointers();
+        renderer.InvalidateGraphics(*xModelGr, modelInstanceGr);
+        renderer.InvalidateGraphics(*xModelPh,modelInstancePh);
         smap.texId = 0;
     }
     /********* LIFETIME : END *********/
@@ -97,10 +98,25 @@ public:
         UpdatePointers();
         renderer.RenderShadowMap(*xModelGr, modelInstanceGr, smap, FOV);
     }
-    void       RenderShadowVolume(xLight &light, xFieldOfView &FOV)
+    void RenderShadowVolume(xLight &light, xFieldOfView &FOV)
+    {
+        //UpdatePointers();
+        renderer.RenderShadowVolume(*xModelGr, modelInstanceGr, light, FOV);
+    }
+    void RenderDepth(xFieldOfView &FOV, bool transparent)
     {
         UpdatePointers();
-        renderer.RenderShadowVolume(*xModelGr, modelInstanceGr, light, FOV);
+        renderer.RenderDepth(*xModelGr, modelInstanceGr, transparent, FOV);
+    }
+    void RenderAmbient(const xLightVector &lights, xFieldOfView &FOV, bool transparent)
+    {
+        //UpdatePointers();
+        renderer.RenderAmbient(*xModelGr, modelInstanceGr, lights, transparent, FOV);
+    }
+    void RenderDiffuse(xLight &light, xFieldOfView &FOV, bool transparent)
+    {
+        //UpdatePointers();
+        renderer.RenderDiffuse(*xModelGr, modelInstanceGr, light, transparent, FOV);
     }
     void InvalidateShadowRenderData()
     {
@@ -129,7 +145,11 @@ public:
     virtual void CalculateSkeleton();
 
 protected:
-    void RenderObject(bool transparent, const xFieldOfView &FOV);
+    void RenderObject(bool transparent, const xFieldOfView &FOV)
+    {
+        UpdatePointers();
+        renderer.RenderModel(*xModelGr, modelInstanceGr, transparent, FOV);
+    }
 
 protected:
     HModel     hModelGraphics;

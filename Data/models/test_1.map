@@ -1,0 +1,44 @@
+# LIGHTS
+
+# yellow
+[light]
+type	POINT
+att_const	0.9
+att_linear	0.005
+att_square	0.0005
+color	1	0.7	0
+softness	0.3
+position	0	0	10
+
+# OBJECTS
+
+[model]
+fastm	crate_fst.3dx
+model	crate.3dx
+position	-3.75	-3.75	0.75
+velocity	5	0	0
+physical	0
+locked	0
+phantom	0
+mass	50
+shadows 1
+
+[model]
+fastm	crate_fst.3dx
+model	crate.3dx
+position	-1	-4	1
+physical	0
+locked	0
+phantom	0
+mass	50
+shadows 1
+
+[model]
+fastm	crate_fst.3dx
+model	crate.3dx
+position	4	-4	1
+physical	0
+locked	0
+phantom	0
+mass	50
+shadows 1

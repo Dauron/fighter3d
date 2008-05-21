@@ -70,7 +70,7 @@ class GLButton
         else
             glColor4fv( Background.col );
 
-        GLUtils::Rectangle(X, Y, X2, Y2);
+        glRectf(X, Y, X2, Y2);
 
         if (mOver)
             glColor4f( 0.f, 0.f, 0.f, 1.f );
@@ -79,7 +79,7 @@ class GLButton
         pFont->PrintF(X+3.f, Y+3.f, 0.f, Text);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        GLUtils::Rectangle(X, Y, X2, Y2);
+        glRectf(X, Y, X2, Y2);
     }
 };
 

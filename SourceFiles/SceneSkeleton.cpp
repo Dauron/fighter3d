@@ -25,6 +25,12 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
     m_Buttons[emCreateBone].push_back(GLButton("Create", 170, 2, 65, 15, IC_BE_Create, true));
     m_Buttons[emCreateBone].push_back(GLButton("Move",   240, 2, 45, 15, IC_BE_Move,   true));
     m_Buttons[emCreateBone].push_back(GLButton("Delete", 290, 2, 65, 15, IC_BE_Delete));
+    m_Buttons[emCreateBone].push_back(GLButton("Create constr", 360, 2, 130, 15, IC_BE_CreateConstr));
+    m_Buttons[emCreateBone].push_back(GLButton("Delete constr", 495, 2, 130, 15, IC_BE_DeleteConstr, true));
+
+    m_Buttons[emCreateConstraint_Type].push_back(GLButton("Max",   205, 2, 35, 15, IC_BE_CreateConstrMax));
+    m_Buttons[emCreateConstraint_Type].push_back(GLButton("Min",   245, 2, 35, 15, IC_BE_CreateConstrMin));
+    m_Buttons[emCreateConstraint_Type].push_back(GLButton("Const", 285, 2, 55, 15, IC_BE_CreateConstrEql));
 
     m_Buttons[emSelectAnimation].push_back(GLButton("New",  110, 2, 35, 15, IC_BE_Create));
     m_Buttons[emSelectAnimation].push_back(GLButton("Load", 150, 2, 45, 15, IC_BE_Select));
@@ -89,31 +95,9 @@ bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned i
         m_Cameras.Perspective.SetCamera(-5.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
         m_Cameras.Current = &m_Cameras.Front;
     }
-    return InitGL();
-}
-
-bool SceneSkeleton::InitGL()
-{
-    glClearColor( 0.5f, 0.5f, 0.5f, 0.f );  // Background color
-    glClearDepth(100.0f);                   // Draw distance ???
-    glDepthFunc(GL_LEQUAL);                 // Depth testing function
-
-    glEnable(GL_CULL_FACE);                 // Do not draw hidden faces
-    glCullFace (GL_BACK);                   // Hide back faces
-    glFrontFace(GL_CCW);                    // Front faces are drawn in counter-clockwise direction
-
-    glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
-    glDisable (GL_POINT_SMOOTH);
-    //glEnable (GL_LINE_SMOOTH);
-    //glEnable (GL_POLYGON_SMOOTH);           // produces errors on many cards... use FSAA!
-
-    glHint(GL_POINT_SMOOTH_HINT, GL_FASTEST /*GL_NICEST*/);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Nice perspective calculations
-
     return true;
 }
+
 
 void SceneSkeleton::InitInputMgr()
 {
@@ -202,7 +186,29 @@ void SceneSkeleton::Terminate()
 /************************** RENDER *************************************/
 bool SceneSkeleton::Render()
 {
+    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Nice perspective calculations
+
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE); // GL_TRUE=two, GL_FALSE=one
+    glDepthFunc(GL_LEQUAL);                 // Depth testing function
+
+    glEnable(GL_CULL_FACE);                 // Do not draw hidden faces
+    glCullFace (GL_BACK);                   // Hide back faces
+    glFrontFace(GL_CCW);                    // Front faces are drawn in counter-clockwise direction
+
+    glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
+    glDisable (GL_POINT_SMOOTH);
+    glDisable (GL_LINE_SMOOTH);
+    glDisable (GL_POLYGON_SMOOTH);          // produces errors on many cards... use FSAA!
+    glDisable(GL_LIGHT0); glDisable(GL_LIGHT1); glDisable(GL_LIGHT2); glDisable(GL_LIGHT3);
+    glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
+
     // Clear surface
+    glClearColor( 0.5f, 0.5f, 0.5f, 0.f );  // Background color
+    glClearDepth( 100.0f );                 // Draw distance
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT/* | GL_STENCIL_BUFFER_BIT*/);
 
     glEnable(GL_DEPTH_TEST);
@@ -221,6 +227,7 @@ bool SceneSkeleton::Render()
     }
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
     // lights at viewer position
     GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
@@ -239,24 +246,31 @@ bool SceneSkeleton::Render()
     GLShader::SetLightType(xLight_INFINITE);
     GLShader::EnableTexturing(xState_Enable);
 
-    Camera_Aim_GL(*m_Cameras.Current);
-
     xFieldOfView FOV; FOV.Empty = true;
+    m_Cameras.Current->LookAtMatrix(FOV.ViewTransform);
+    glLoadMatrixf(&FOV.ViewTransform.x0); //Camera_Aim_GL(*m_Cameras.Current);
+    //FOV.update();
+
     xModel         &model         = (m_EditGraphical) ? *m_Model.GetModelGr() : *m_Model.GetModelPh();
     xModelInstance &modelInstance = (m_EditGraphical) ? m_Model.modelInstanceGr : m_Model.modelInstancePh;
     xRender        &render        = m_Model.renderer;
 
     render.RenderModel(model, modelInstance, false, FOV);
     render.RenderModel(model, modelInstance, true, FOV);
+    GLShader::Suspend();
 
     GLShader::EnableTexturing(xState_Disable);
     GLShader::SetLightType(xLight_NONE);
+    GLShader::Start();
 
     if (m_EditMode == emSelectVertex)
         render.RenderVertices(model, modelInstance, xRender::smNone, selectedElemID, &selectedVert);
     if (m_EditMode == emSelectBone || m_EditMode == emCreateBone ||
+        m_EditMode == emCreateConstraint_Node || m_EditMode == emCreateConstraint_Length ||
         m_EditMode == emInputWght  || (m_EditMode == emAnimateBones && showBonesOnAnim))
-        render.RenderSkeleton(model, modelInstance, false, selectedBone ? selectedBone->id : xWORD_MAX);
+        render.RenderSkeleton(model, modelInstance, selectedBone ? selectedBone->id : xWORD_MAX);
+
+    GLShader::Suspend();
 
     glFlush();
 
@@ -316,6 +330,21 @@ bool SceneSkeleton::Render()
 
     if (m_EditMode == emCreateBone)
         pFont->PrintF(5.f, 5.f, 0.f, "Skeleton |");
+    else if (m_EditMode == emCreateConstraint_Type)
+        pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints |");
+    else if (m_EditMode == emCreateConstraint_Node)
+    {
+        if (frameParams[0] == -1)
+            pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select first node");
+        else
+        if (frameParams[1] == -1)
+            pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select second node");
+    }
+    else if (m_EditMode == emCreateConstraint_Length)
+    {
+        pFont->PrintF(5.f, 25, 0.f, "Length: (%2.2f) %s", constrLen, command.c_str());
+        pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | Input length of the constraint");
+    }
     else if (m_EditMode == emSelectElement)
         pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Click: Select Element");
     else if (m_EditMode == emSelectVertex)
@@ -416,15 +445,15 @@ void SceneSkeleton::RenderProgressBar()
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glColor3f(0.4f, 0.4f, 1.f);
-        GLUtils::Rectangle(x1, y2, x2, y1);
+        glRectf(x1, y2, x2, y1);
 
         glColor3f(0.f, 0.7f, 0.f);
-        GLUtils::Rectangle(x2, y2, x3, y1);
+        glRectf(x2, y2, x3, y1);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         glColor3f(0.f, 0.f, 0.f);
-        GLUtils::Rectangle(x1, y2, x3, y1);
+        glRectf(x1, y2, x3, y1);
 
     }
 
@@ -448,8 +477,12 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
     xModelInstance &modelInstance = (m_EditGraphical) ? m_Model.modelInstanceGr : m_Model.modelInstancePh;
     xRender        &render        = m_Model.renderer;
 
-    if (m_EditMode == emCreateBone || m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        render.RenderSkeleton(model, modelInstance, true);
+    if (m_EditMode == emCreateBone || m_EditMode == emCreateConstraint_Node ||
+        m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
+        if (currentAction == IC_BE_DeleteConstr)
+            render.RenderSkeletonSelection(model, modelInstance, true);
+        else
+            render.RenderSkeletonSelection(model, modelInstance, false);
     else
     if (m_EditMode == emSelectElement)
         render.RenderVertices(model, modelInstance, xRender::smElement);
@@ -459,8 +492,12 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 }
 unsigned int SceneSkeleton::CountSelectable()
 {
-    if (m_EditMode == emCreateBone || m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        return m_Model.GetModelGr()->spine.boneC;
+    if (m_EditMode == emCreateBone || m_EditMode == emCreateConstraint_Node ||
+        m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
+        if (currentAction == IC_BE_DeleteConstr)
+            return m_Model.GetModelGr()->spine.constraintsC;
+        else
+            return m_Model.GetModelGr()->spine.boneC;
     else
     if (m_EditMode == emSelectElement)
         if (m_EditGraphical)
@@ -502,6 +539,7 @@ xIKNode *SceneSkeleton::SelectBone(int X, int Y)
     delete sel;
     return NULL;
 }
+
 xWORD SceneSkeleton::SelectElement(int X, int Y)
 {
     std::vector<xDWORD> *sel = SelectCommon(X, Y);

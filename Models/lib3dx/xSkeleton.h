@@ -2,12 +2,16 @@
 #define __incl_lib3dx_xBone_h
 
 #include "../../Math/xMath.h"
+#include "../../Math/xVerletConstraint.h"
 #include "xIKNode.h"
 
 struct xSkeleton
 {
     xIKNode *boneP;
     xBYTE    boneC;
+
+    xIVConstraint **constraintsP;
+    xBYTE           constraintsC;
 
     void      Clear();
     xSkeleton Clone() const;

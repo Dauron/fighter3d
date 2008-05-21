@@ -5,108 +5,88 @@
 #include <vector>
 
 struct xIVConstraint {
+    enum xIVConstraint_Type
+    {
+        Constraint_LengthEql,
+        Constraint_LengthMin,
+        Constraint_LengthMax,
+        Constraint_Plane
+    } Type;
+
+    virtual ~xIVConstraint() {}
     virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass) = 0;
+    virtual void CloneTo(xIVConstraint *&dst) const = 0;
+    virtual void Save( FILE *file )
+    {
+        fwrite(&this->Type, sizeof(xIVConstraint_Type), 1, file);
+    }
+    static xIVConstraint *LoadType( FILE *file );
+    virtual xIVConstraint *Load( FILE *file ) = 0;
 };
 
 struct xVConstraintLengthEql : xIVConstraint
 {
+    xVConstraintLengthEql() { Type = Constraint_LengthEql; }
+    virtual ~xVConstraintLengthEql() {}
+
     xWORD  particleA, particleB;
     xFLOAT restLength, restLengthSqr;
 
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass)
-    {
-        xVector3 &p1 = pos[particleA];
-        xVector3 &p2 = pos[particleB];
-        xVector3 delta  = p1-p2;
-        xFLOAT deltaLengthSqr = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-        if (abs(restLengthSqr - deltaLengthSqr) < EPSILON2) return false;
-        delta *= restLengthSqr/(deltaLengthSqr+restLengthSqr)-0.5f;
-        //delta *= -1.f + restLength / sqrt(deltaLengthSqr);
+    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass);
 
-        xFLOAT w1 = invmass[particleA];
-        xFLOAT w2 = invmass[particleB];
-        if (w1 == 0.f && w2 == 0.f) return false;
-        w1 /= (w1+w2);
-        w2 = 1.f - w1;
+    virtual void CloneTo(xIVConstraint *&dst) const;
 
-        p1 += w1*delta;
-        p2 -= w2*delta;
-
-        return true;
-    }
+    virtual void Save( FILE *file );
+    virtual xIVConstraint *Load( FILE *file );
 };
 
 struct xVConstraintLengthMin : xIVConstraint
 {
+    xVConstraintLengthMin() { Type = Constraint_LengthMin; }
+    virtual ~xVConstraintLengthMin() {}
+
     xWORD  particleA, particleB;
     xFLOAT minLength, minLengthSqr;
 
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass)
-    {
-        xVector3 &p1 = pos[particleA];
-        xVector3 &p2 = pos[particleB];
-        xVector3 delta  = p1-p2;
-        xFLOAT deltaLengthSqr = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-        if (minLengthSqr - deltaLengthSqr > -EPSILON2) return false;
-        delta *= minLengthSqr/(deltaLengthSqr+minLengthSqr)-0.5f;
+    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass);
 
-        xFLOAT w1 = invmass[particleA];
-        xFLOAT w2 = invmass[particleB];
-        if (w1 == 0.f && w2 == 0.f) return false;
-        w1 /= (w1+w2);
-        w2 = 1.f - w1;
+    virtual void CloneTo(xIVConstraint *&dst) const;
 
-        p1 += w1*delta;
-        p2 -= (1.f-w1)*delta;
-
-        return true;
-    }
+    virtual void Save( FILE *file );
+    virtual xIVConstraint *Load( FILE *file );
 };
 
 struct xVConstraintLengthMax : xIVConstraint
 {
+    xVConstraintLengthMax() { Type = Constraint_LengthMax; }
+    virtual ~xVConstraintLengthMax() {}
+
     xWORD  particleA, particleB;
     xFLOAT maxLength, maxLengthSqr;
 
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass)
-    {
-        xVector3 &p1 = pos[particleA];
-        xVector3 &p2 = pos[particleB];
-        xVector3 delta  = p1-p2;
-        xFLOAT deltaLengthSqr = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-        if (deltaLengthSqr - maxLengthSqr < EPSILON2) return false;
-        delta *= maxLengthSqr/(deltaLengthSqr+maxLengthSqr)-0.5f;
+    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass);
 
-        xFLOAT w1 = invmass[particleA];
-        xFLOAT w2 = invmass[particleB];
-        if (w1 == 0.f && w2 == 0.f) return false;
-        w1 /= (w1+w2);
-        w2 = 1.f - w1;
+    virtual void CloneTo(xIVConstraint *&dst) const;
 
-        p1 += w1*delta;
-        p2 -= (1.f-w1)*delta;
-
-        invmass[particleA] = 0.f;
-        invmass[particleB] = 0.f;
-
-        return true;
-    }
+    virtual void Save( FILE *file );
+    virtual xIVConstraint *Load( FILE *file );
 };
 
 struct xVConstraintCollision : xIVConstraint
 {
+    xVConstraintCollision() { Type = Constraint_Plane; }
+    virtual ~xVConstraintCollision() {}
+
     xVector3 planeN;
     xFLOAT   planeD;
     xWORD    particle;
 
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass)
-    {
-        xVector3 &p = pos[particle];
-        xFLOAT dist = xVector3::DotProduct(planeN, p) + planeD;
-        if (dist > -EPSILON2) return false;
-        p -= planeN * dist;
-        return true;
-    }
+    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass);
+
+    virtual void CloneTo(xIVConstraint *&dst) const;
+
+    virtual void Save( FILE *file );
+    virtual xIVConstraint *Load( FILE *file );
 };
 
 class xVerletSolver
@@ -116,7 +96,7 @@ public:
     xWORD     m_numConstraints;
     xBYTE     m_numPasses;
 
-    xIVConstraint *m_constraints;
+    xIVConstraint **m_constraints;
 
 
     xVector3 *m_pos;    // current positions
@@ -148,7 +128,7 @@ public:
         m_numParticles   = particleC;
         m_numConstraints = 0;
         m_numPasses      = 1;
-        m_constraints = NULL;
+        m_constraints    = NULL;
 
         m_pos    = new xVector3[particleC];
         m_posOld = new xVector3[particleC];
@@ -188,10 +168,6 @@ public:
     {
         for (xBYTE pass_n = m_numPasses; pass_n; --pass_n)
         {
-            xIVConstraint *constr = m_constraints;
-            for (xWORD i = m_numConstraints; i; --i, ++constr)
-                constr->Satisfy(m_pos, m_weight);
-
             VecConstrCollision::iterator iter = collisionConstraints.begin(), end = collisionConstraints.end();
             for (; iter != end; ++iter)
                 iter->Satisfy(m_pos, m_weight);
@@ -199,6 +175,10 @@ public:
             VecConstrLength::iterator iterL = lengthConstraints.begin(), endL = lengthConstraints.end();
             for (; iterL != endL; ++iterL)
                 iterL->Satisfy(m_pos, m_weight);
+
+            xIVConstraint **constr = m_constraints;
+            for (xWORD i = m_numConstraints; i; --i, ++constr)
+                (*constr)->Satisfy(m_pos, m_weight);
         }
     }
 

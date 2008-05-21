@@ -31,6 +31,9 @@ void xLight::update()
 {
     if (modified)
     {
+        ambient.init(color.vector3 * softness, 1.f);
+        diffuse.init(color.vector3 - ambient.vector3, 1.f);
+
         if (type == xLight_INFINITE) { radius = -1.f; return; }
         radius = staticCalculateRadius(0.1f, xVector3::Create(attenuationConst, attenuationLinear, attenuationSquare));
         boundingPoints[0].init(position.x - radius, position.y - radius, position.z - radius);
@@ -54,4 +57,22 @@ bool xLight :: elementReceivesLight(const xVector3 &bsCenter, float bsRadius) co
     xFLOAT   dist   = (bsCenter - position).lengthSqr();
     xFLOAT  rdist   = radius + bsRadius;
     return dist < rdist*rdist;
+}
+
+bool xLight :: elementReceivesDiffuseLight(const xFieldOfView &FOV, xVector3 boundingPoints[8]) const
+{
+    if (type == xLight_INFINITE)
+        return xVector3::DotProduct (FOV.Planes[0].vector3, -position) > 0;
+
+    if (xVector3::DotProduct (FOV.Planes[0].vector3, FOV.Corners3D[4] - position) > 0)
+        return true;
+
+    /*
+    float distSqr = ( FOV.Corners3D[4] - position ).lengthSqr();
+    bool culled = true;
+    for (int i = 0; culled && i < 8; ++i)
+        culled = distSqr > ( FOV.Corners3D[4] - boundingPoints[i] ).lengthSqr();
+    return !culled;
+    */
+    return true;
 }

@@ -1,8 +1,12 @@
 #include "GLWindow.h"
+#include "../Application.h"
+#include "../../Utils/Debug.h"
 
 #ifdef WIN32
 
 #pragma warning(disable : 4996) // deprecated
+
+#include "../../GLExtensions/wglext.h"
 
 bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen)
 {
@@ -110,7 +114,6 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
         return false;
     }
 
-    PIXELFORMATDESCRIPTOR pfd;
     ZeroMemory(&pfd, sizeof(pfd));
     pfd.nSize      = sizeof(PIXELFORMATDESCRIPTOR);
     pfd.nVersion   = 1;                                // Version Number
@@ -124,13 +127,13 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
     pfd.cStencilBits = 8;                              // Use Stencil Buffer
     pfd.iLayerType = PFD_MAIN_PLANE;                   // Main Drawing Layer
 
-    unsigned int PixelFormat;
-    if(!(PixelFormat = ChoosePixelFormat(hDC, &pfd)))
-    {
-        this->Terminate();
-        MessageBox(hWnd, "Can't find a suitable PixelFormat.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
-        return false;
-    }
+    if (queryForMultisample || !multisampleAviable)
+        if(!(PixelFormat = ChoosePixelFormat(hDC, &pfd)))
+        {
+            this->Terminate();
+            MessageBox(hWnd, "Can't find a suitable PixelFormat.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
+            return false;
+        }
 
     if(!SetPixelFormat(hDC, PixelFormat, &pfd))
     {
@@ -152,8 +155,49 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
         MessageBox(hWnd, "Failed to make current the OpenGL rendering context.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
         return false;
     }
+    CheckForGLError("wglMakeCurrent");
 
     terminated = false;
+
+    if (queryForMultisample)
+    {
+        PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB =
+            (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
+        multisampleAviable = false;
+        if (wglChoosePixelFormatARB)
+        {
+            multisampleAviable = true;
+            int iAttributes[] = { WGL_DRAW_TO_WINDOW_ARB,GL_TRUE,
+                WGL_SUPPORT_OPENGL_ARB,GL_TRUE,
+                WGL_ACCELERATION_ARB,WGL_FULL_ACCELERATION_ARB,
+                WGL_COLOR_BITS_ARB,24,
+                WGL_ALPHA_BITS_ARB,8,
+                WGL_DEPTH_BITS_ARB,24,
+                WGL_STENCIL_BITS_ARB,8,
+                WGL_DOUBLE_BUFFER_ARB,GL_TRUE,
+                WGL_SAMPLE_BUFFERS_ARB,GL_TRUE,
+                WGL_SAMPLES_ARB, 4 ,                        // Check For 4x Multisampling
+                0,0};
+            float fAttributes[] = {0,0};
+            unsigned int NumFormats;
+
+            // First We Check To See If We Can Get A Pixel Format For 4 Samples
+            if(!wglChoosePixelFormatARB(hDC, iAttributes, fAttributes, 1, &PixelFormat, &NumFormats) || NumFormats == 0)
+            {
+                iAttributes[19] = 2;
+                if(!wglChoosePixelFormatARB(hDC, iAttributes, fAttributes, 1, &PixelFormat, &NumFormats) || NumFormats == 0)
+                {
+                    iAttributes[17] = GL_FALSE;
+                    iAttributes[19] = 0;
+                    if(!wglChoosePixelFormatARB(hDC, iAttributes, fAttributes, 1, &PixelFormat, &NumFormats) || NumFormats == 0)
+                        multisampleAviable = false;
+                }
+            }
+        }
+        queryForMultisample = false;
+        if (multisampleAviable)
+            return Initialize(title, width, height, fullscreen);
+    }
 
     ShowWindow(hWnd, SW_SHOW);
     SetForegroundWindow(hWnd);
@@ -173,6 +217,8 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
 
 void GLWindow::Terminate()
 {
+    g_Application.Invalidate();
+
     if (hRC)                                             // Do We Have A Rendering Context?
     {
         if (!wglMakeCurrent(NULL,NULL))                  // Are We Able To Release The DC And RC Contexts?

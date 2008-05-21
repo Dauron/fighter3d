@@ -1,0 +1,21 @@
+# LIGHTS
+
+# yellow
+[light]
+type	INFINITE
+color	0.7	0.4	0
+softness	0.6
+direction	0.5	-1	-1
+
+# OBJECTS
+
+[skeletized]
+fastm	human2_fst.3dx
+model	human2.3dx
+rotation	0	0	-90
+position	0	1	1
+physical	0
+phantom	0
+mass	70
+shadows 0
+camera_controled

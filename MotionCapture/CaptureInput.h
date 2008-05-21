@@ -2,7 +2,7 @@
 #define __incl_MotionCapture_CaptureInput_h
 
 #include "../Utils/Singleton.h"
-#include "../Models/lib3dx/xBone.h"
+#include "../Models/lib3dx/xSkeleton.h"
 
 #define g_CaptureInput CaptureInput::GetSingleton()
 

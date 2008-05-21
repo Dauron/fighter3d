@@ -29,5 +29,5 @@ bool GL_init_ARB_vertex_buffer_object(void)
   error |= aLoadExtension(PFNGLGETBUFFERPARAMETERIVARBPROC, glGetBufferParameterivARB);
   error |= aLoadExtension(PFNGLGETBUFFERPOINTERVARBPROC, glGetBufferPointervARB);
 
-  return error == 0 && GL_ExtensionExists("GL_ARB_vertex_buffer_object");
+  return error == 0 && GLExtensions::Exists("GL_ARB_vertex_buffer_object");
 }

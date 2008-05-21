@@ -1,6 +1,7 @@
 #ifndef WIN32
 
 #include "GLWindow.h"
+#include "../Application.h"
 #include <cstdio>
 #include <cstring>
 
@@ -141,6 +142,8 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
 
 void GLWindow::Terminate()
 {
+    g_Application.Invalidate();
+
     if (glctx)
     {
         if (!glXMakeCurrent(hDC, None, NULL))

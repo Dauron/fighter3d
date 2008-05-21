@@ -3,7 +3,7 @@
 
 int   Config::Initialize         = false;
 bool  Config::EnableLighting     = true;
-bool  Config::EnableFullLighting = false;
+bool  Config::EnableFullLighting = true;
 bool  Config::EnableShadows      = true;
 bool  Config::DisplayShadowVolumes = false;
 bool  Config::EnableShaders      = true;
@@ -24,14 +24,17 @@ void _Performance :: Reset()
 {
     memset (this, 0, sizeof(_Performance));
     FPSmin = 1000.f;
+    _timeCounter = 500.f; // force init snaps at first frame
 }
 
 void _Performance :: NextFrame(float ticks)
 {
-    if (ticks != 0.f)
-        FPS = 1.f / (ticks * 0.001f);
+    if (ticks == 0.f)
+        ticks = 1.f;
 
+    FPS = 1000.f / ticks;
     _timeCounter += ticks;
+
     if (_timeCounter > 500.f)
     {
         _timeCounter -= 500.f;
@@ -39,21 +42,35 @@ void _Performance :: NextFrame(float ticks)
         snapCollisionDeterminationMS = CollisionDeterminationMS_max;
         CollisionDataFillMS_max      = 0.f;
         CollisionDeterminationMS_max = 0.f;
-        FPSsnap = FPS;
+        if (FPSmeanCount > 0.f)
+            FPSsnap = FPSmeanAccum / FPSmeanCount;
+        else
+            FPSsnap = FPS;
+        FPSmeanAccum = 0.f;
+        FPSmeanCount = 0;
+        FPSmin = 1000.f;
+        FPSmax = 0.f;
     }
 
     CulledElements         = 0;
+    CulledDiffuseElements  = 0;
     CollidedPreTreeLevels  = 0;
     CollidedTreeLevels     = 0;
     CollidedTriangleBounds = 0;
     CollidedTriangles      = 0;
+
+    memset(&Shadows, 0, sizeof(_Shadows));
 
     CollisionDataFillMS_max      = CollisionDataFillMS > CollisionDataFillMS_max ? CollisionDataFillMS : CollisionDataFillMS_max;
     CollisionDeterminationMS_max = CollisionDeterminationMS > CollisionDeterminationMS_max ? CollisionDeterminationMS : CollisionDeterminationMS_max;
     CollisionDataFillMS      = 0.f;
     CollisionDeterminationMS = 0.f;
 
-    FPSmax = FPS > FPSmax ? FPS : FPSmax;
-    if (FPS > 0.f)
-        FPSmin = FPS < FPSmin ? FPS : FPSmin;
+    FPSmeanAccum += ticks*FPS;
+    FPSmeanCount += ticks;
+
+    if (FPS > FPSmax)
+        FPSmax = FPS;
+    if (FPS > 0.f && FPS < FPSmin)
+        FPSmin = FPS;
 }

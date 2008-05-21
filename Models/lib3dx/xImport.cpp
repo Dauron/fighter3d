@@ -3,9 +3,12 @@
 #include <cassert>
 #include <fstream>
 #include <vector>
-#include "xBone.h"
+#include "xSkeleton.h"
 #include "xUtils.h"
 
+#ifdef WIN32
+
+#pragma warning(disable : 4996) // deprecated
 #include "../lib3ds/camera.h"
 #include "../lib3ds/mesh.h"
 #include "../lib3ds/node.h"
@@ -14,8 +17,16 @@
 #include "../lib3ds/vector.h"
 #include "../lib3ds/light.h"
 
-#ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
+#else
+
+#include <lib3ds/camera.h>
+#include <lib3ds/mesh.h>
+#include <lib3ds/node.h>
+#include <lib3ds/material.h>
+#include <lib3ds/matrix.h>
+#include <lib3ds/vector.h>
+#include <lib3ds/light.h>
+
 #endif
 
 xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *node, xWORD &currId)
@@ -68,7 +79,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
         {
             elem->facesC = mesh->faces;
             elem->verticesC = mesh->points;
-            elem->skeletized = xmodel->spine.boneC != NULL;
+            elem->skeletized = xmodel->spine.boneC != 0;
 
             assert(!mesh->texels || mesh->points == mesh->texels);
 

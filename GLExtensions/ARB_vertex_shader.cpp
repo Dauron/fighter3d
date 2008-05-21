@@ -26,5 +26,5 @@ bool GL_init_ARB_vertex_shader(void)
     error |= aLoadExtension(PFNGLENABLEVERTEXATTRIBARRAYARBPROC,glEnableVertexAttribArrayARB);
     error |= aLoadExtension(PFNGLENABLEVERTEXATTRIBARRAYARBPROC,glDisableVertexAttribArrayARB);
 
-    return error == 0 && GL_ExtensionExists("GL_ARB_vertex_shader");
+    return error == 0 && GLExtensions::Exists("GL_ARB_vertex_shader");
 }

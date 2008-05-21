@@ -195,7 +195,7 @@ xVector3 xModel_GetBounds(xModelInstance &instance)
     return res;
 }
 
-#include "xBone.h"
+#include "xSkeleton.h"
 #include <vector>
 #include <algorithm>
 

@@ -48,8 +48,11 @@ void ModelObj :: Finalize ()
         glDeleteTextures(1, &tid);
         smap.texId = 0;
     }
-    renderer.FreeInstanceGraphics(modelInstanceGr);
-    renderer.FreeInstanceGraphics(modelInstancePh);
+    UpdatePointers();
+    Model3dx *mdlGr = g_ModelMgr.GetModel(hModelGraphics);
+    Model3dx *mdlPh = g_ModelMgr.GetModel(hModelPhysical);
+    renderer.FreeGraphics(*xModelGr, modelInstanceGr, mdlGr->m_References == 1);
+    renderer.FreeGraphics(*xModelPh, modelInstancePh, mdlPh->m_References == 1);
     if (collisionInfo)
     {
         CollisionInfo_Free(GetModelPh()->kidsP, collisionInfo);
@@ -75,8 +78,9 @@ void ModelObj :: FreeInstanceData()
 void ModelObj :: VerticesChanged(bool free)
 {
     if (free) {
-        renderer.FreeInstanceGraphics(modelInstanceGr);
-        renderer.FreeInstanceGraphics(modelInstancePh);
+        UpdatePointers();
+        renderer.FreeGraphics(*xModelGr, modelInstanceGr);
+        renderer.FreeGraphics(*xModelPh, modelInstancePh);
         FreeInstanceData();
 
         modelInstanceGr.elementInstanceC = xModelGr->elementC;
@@ -133,13 +137,6 @@ void ModelObj :: CalculateSkeleton()
 
 
 
-
-void ModelObj:: RenderObject(bool transparent, const xFieldOfView &FOV)
-{
-    UpdatePointers();
-    modelInstancePh.location = modelInstanceGr.location = mLocationMatrix;
-    renderer.RenderModel(*xModelGr, modelInstanceGr, transparent, FOV);
-}
 
 void ModelObj:: PreUpdate()
 {

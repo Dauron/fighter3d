@@ -1,4 +1,5 @@
 #include "SceneConsole.h"
+#include "SceneGame.h"
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
@@ -291,6 +292,13 @@ bool SceneConsole::ProcessCmd(std::string cmd)
             AppendConsole("\nThe lights are OFF.\n");
         return true;
     }
+    if (cmd.substr(0, 4) == "tls ")
+    {
+        unsigned int id = (unsigned int)atoi(cmd.substr(4).c_str());
+        if (id >= 0 && id < ((SceneGame*)prevScene)->world.lights.size())
+            ((SceneGame*)prevScene)->world.lights[id].turned_on = !((SceneGame*)prevScene)->world.lights[id].turned_on;
+        return true;
+    }
     if (cmd == "tshadow" || cmd == "toggle_shadows")
     {
         if (Config::EnableShadows = !Config::EnableShadows)
@@ -434,13 +442,16 @@ bool SceneConsole::Render()
 
     glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
     pFont->PrintF(0.0f, (float)cHeight-lineHeight, 0.0f,
-        "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u FPS: %2u L0: %5u L1: %5u L2: %5u L3: %5u, T1: %2.2f, T2: %2.2f",
-        (int)Performance.FPSmin, (int)Performance.FPSsnap, (int)Performance.FPSmax, (int)Performance.FPS,
+        "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u L0: %5u L1: %5u L2: %5u L3: %5u, T1: %2.2f, T2: %2.2f",
+        (int)Performance.FPSmin, (int)Performance.FPSsnap, (int)Performance.FPSmax,
         Performance.CollidedPreTreeLevels, Performance.CollidedTreeLevels,
         Performance.CollidedTriangleBounds, Performance.CollidedTriangles,
         Performance.snapCollisionDataFillMS, Performance.snapCollisionDeterminationMS);
     pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
-        "   Num culled elements: %3u", (int)Performance.CulledElements);
+        "   Num culled elements: %3u diffuse: %u shadows: %u culled: %u zP: %u zF: %u zFs: %u zFf: %u zFb: %u",
+        (int)Performance.CulledElements, Performance.CulledDiffuseElements,
+        Performance.Shadows.shadows, Performance.Shadows.culled, Performance.Shadows.zPass, Performance.Shadows.zFail,
+        Performance.Shadows.zFailS, Performance.Shadows.zFailF, Performance.Shadows.zFailB);
 
     glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
     glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing

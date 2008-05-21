@@ -20,9 +20,12 @@ struct GLExtensions
     static bool Exists_ARB_VertexBufferObject;
     static bool Exists_EXT_StencilWrap;
     static bool Exists_EXT_StencilTwoSide;
-};
+    static bool Exists_ARB_Multisample;
 
-bool GL_ExtensionExists(const char *extensionName);
-bool GL_Init_Extensions(void);
+    static bool Init();
+    static bool Exists(const char *extensionName);
+
+    static void SetVSync(bool enable);
+};
 
 #endif

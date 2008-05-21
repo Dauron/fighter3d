@@ -21,10 +21,7 @@ class Object3D
 
         void Render(bool transparent, const xFieldOfView &FOV)
         {
-            glPushMatrix();
-            glMultMatrixf(&mLocationMatrix.x0);
             RenderObject(transparent, FOV);
-            glPopMatrix();
         }
 
         Object3D ();

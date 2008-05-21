@@ -225,10 +225,11 @@ bool       xFaceTransparent(const xElement *elem, int faceIdx)
     xMaterial *mat = xFaceGetMaterial(elem, faceIdx);
     return mat && mat->transparency > 0.f;
 }
-bool       xFaceTransparentOr2Sided(const xElement *elem, int faceIdx)
+void       xFaceTransparentOr2Sided(const xElement *elem, int faceIdx, bool &outTransp, bool &outTwoSide)
 {
     xMaterial *mat = xFaceGetMaterial(elem, faceIdx);
-    return mat && (mat->transparency > 0.f || mat->two_sided);
+    outTransp  = mat && mat->transparency > 0.f;
+    outTwoSide = mat && mat->two_sided;
 }
 
 
@@ -255,8 +256,13 @@ void xElement :: FillShadowEdges ()
 
     xWORD cnt = 0;
     for (int i = 0; i < this->facesC; ++i, ++iterF1, iterUsed1 += 3)
+    {
+        bool transp1;
+        bool twoSide1;
+        xFaceTransparentOr2Sided(this, i, transp1, twoSide1);
+        if (transp1) continue;
         for (int e1 = 0; e1 < 3; ++e1)
-            if (!iterUsed1[e1] && !xFaceTransparentOr2Sided(this, i))
+            if (!iterUsed1[e1])
             {
                 ++cnt;
                 iterE->vert1 = (*iterF1)[e1];
@@ -272,8 +278,13 @@ void xElement :: FillShadowEdges ()
                 bool found = false;
 
                 for (int j = i+1; j < this->facesC && !found; ++j, ++iterF2, iterUsed2+=3)
+                {
+                    bool transp2;
+                    bool twoSide2;
+                    xFaceTransparentOr2Sided(this, i, transp2, twoSide2);
+                    if (transp2) continue;
                     for (int e2 = 0; e2 < 3 && !found; ++e2)
-                        if (!iterUsed2[e2] && !xFaceTransparentOr2Sided(this, i))
+                        if (!iterUsed2[e2] && !(twoSide1 ^ twoSide2))
                         {
                             xWORD v1 = (*iterF2)[e2];
                             xWORD v2 = (*iterF2)[(e2+1)%3];
@@ -291,12 +302,14 @@ void xElement :: FillShadowEdges ()
                                 --edgesC;
                             }
                         }
+                }
                 if (iterE->face2 == xWORD_MAX)
                 {
                     iterE->face2 = xWORD_MAX;
                 }
                 ++iterE;
             }
+    }
     xEdge *tmp = this->edgesP;
     this->edgesC = cnt;
     this->edgesP = new xEdge[cnt];

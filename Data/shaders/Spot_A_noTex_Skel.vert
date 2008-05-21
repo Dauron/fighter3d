@@ -1,5 +1,6 @@
 #version 110
 
+varying vec3  lightDir;
 varying float dist;
 
 attribute vec4 boneIdxWghts;
@@ -59,7 +60,9 @@ void main()
 	
 	//// Lighting
 	vec3 vertex = vec3(gl_ModelViewMatrix * position);
-    dist = length(gl_LightSource[0].position.xyz-vertex);
+    vec3 aux = gl_LightSource[0].position.xyz-vertex;
+    lightDir = normalize(aux);
+    dist = length(aux);
 	
    	gl_BackColor = gl_FrontColor = gl_Color;
    	gl_Position = gl_ModelViewProjectionMatrix * position;

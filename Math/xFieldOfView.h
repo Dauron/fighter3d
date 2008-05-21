@@ -17,10 +17,12 @@ public:
     xFLOAT  FrontClip;
     xFLOAT  BackClip;
 
+    xVector3 EyePosition;
     xMatrix  ViewTransform;
-    xVector3 Corners3D[4];
+    xVector3 Corners3D[5];
+    xPlane   Planes[5];
 
-    void updateCorners3D()
+    void update()
     {
         Corners3D[0].z = FrontClip;
         Corners3D[0].y = -Corners3D[0].z * (xFLOAT)tan( Angle * 0.5f );
@@ -28,12 +30,20 @@ public:
         Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, FrontClip);
         Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, FrontClip);
         Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, FrontClip);
+        Corners3D[4].zero();
 
         xMatrix mtxViewToWorld = xMatrix::Invert(ViewTransform);
         Corners3D[0] = mtxViewToWorld.preTransformP(Corners3D[0]);
         Corners3D[1] = mtxViewToWorld.preTransformP(Corners3D[1]);
         Corners3D[2] = mtxViewToWorld.preTransformP(Corners3D[2]);
         Corners3D[3] = mtxViewToWorld.preTransformP(Corners3D[3]);
+        Corners3D[4] = mtxViewToWorld.preTransformP(Corners3D[4]);
+
+        Planes[0].planeFromPoints(Corners3D[1], Corners3D[0], Corners3D[3]);
+        Planes[1].planeFromPoints(Corners3D[4], Corners3D[0], Corners3D[3]);
+        Planes[2].planeFromPoints(Corners3D[4], Corners3D[3], Corners3D[2]);
+        Planes[3].planeFromPoints(Corners3D[4], Corners3D[2], Corners3D[1]);
+        Planes[4].planeFromPoints(Corners3D[4], Corners3D[1], Corners3D[0]);
     }
 
     void init( xFLOAT angle, xFLOAT aspect, xFLOAT frontClip, xFLOAT backClip )
@@ -175,6 +185,23 @@ public:
             culled = iterD->y * BottomPlane.x + iterD->z * BottomPlane.z > 0;
         if (culled) return false;
 
+        // None of the planes could cull this box
+        return true;
+    }
+    bool CheckPoints(const xVector4 *points, xWORD count) const
+    {
+        if (Empty) return true;
+        if (!count) return false;
+
+        for (int i = 0; i < 5; ++i)
+        {
+            const xPlane   &plane = Planes[i];
+            const xVector4 *iter  = points;
+            bool  culled = true;
+            for (int j = count; j && culled; --j, ++iter)
+                culled = xPlane::DotProduct(*iter, plane) < 0.f;
+            if (culled) return false;
+        }
         // None of the planes could cull this box
         return true;
     }

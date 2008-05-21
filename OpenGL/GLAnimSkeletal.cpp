@@ -2,7 +2,7 @@
 
 #include "../GLExtensions/ARB_vertex_buffer_object.h"
 #include "../Models/lib3dx/xUtils.h"
-#include "../Models/lib3dx/xBone.h"
+#include "../Models/lib3dx/xSkeleton.h"
 
 int aBoneIdxWghts = -1;
 
@@ -52,9 +52,6 @@ void GLAnimSkeletal::SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xV
 
         if (element)
         {
-//            if (aBoneIdxWghts > -1)
-//                if (aBoneIdxWghts != currSkeletalShader->aBoneIdxWghts)
-//                    glDisableVertexAttribArrayARB(aBoneIdxWghts);
             glEnableVertexAttribArrayARB(currSkeletalShader->aBoneIdxWghts);
             aBoneIdxWghts = currSkeletalShader->aBoneIdxWghts;
             xDWORD stride = element->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
@@ -76,24 +73,20 @@ void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance 
 {
     if (m_notForceCPU) {
         xDWORD stride = element->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
-        //glEnableVertexAttribArrayARB(currSkeletalShader->aBoneIdxWghts);
         if (VBO) {
-            //glVertexAttribPointerARB (currSkeletalShader->aBoneIdxWghts, 4, GL_FLOAT, GL_FALSE, stride, (void *)(3*sizeof(xFLOAT)));
-            glBindBufferARB ( GL_ARRAY_BUFFER_ARB, instance->gpuMain.vertexB );
+            glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.gpuMain.vertexB );
             glVertexPointer (3, GL_FLOAT, stride, 0);
             if (State::RenderingShadows) glTexCoordPointer (3, GL_FLOAT, stride, 0);
 
             /************************* LOAD NORMALS ****************************/
-            if ((GLShader::NeedNormals()) && instance->gpuMain.normalB) {
-                glBindBufferARB ( GL_ARRAY_BUFFER_ARB, instance->gpuMain.normalB );
+            if ((GLShader::NeedNormals()) && element->renderData.gpuMain.normalB) {
+                glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.gpuMain.normalB );
                 glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
                 glEnableClientState(GL_NORMAL_ARRAY);
+                glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.gpuMain.vertexB );
             }
-            glBindBufferARB ( GL_ARRAY_BUFFER_ARB, instance->gpuMain.vertexB );
         }
         else {
-            //glVertexAttribPointerARB (currSkeletalShader->aBoneIdxWghts, 4, GL_FLOAT, GL_FALSE,
-            //    stride, element->renderData.verticesSP->bone);
             glVertexPointer (3, GL_FLOAT, stride, element->renderData.verticesP);
             if (State::RenderingShadows) glTexCoordPointer (3, GL_FLOAT, stride, element->renderData.verticesP);
 

@@ -36,6 +36,18 @@ bool SceneSkeleton::Update(float deltaTime)
         if (m_EditMode == emSelectElement || m_EditMode == emCreateBone || m_EditMode == emSelectAnimation)
             m_EditMode = emMain;
         else
+        if (m_EditMode == emCreateConstraint_Type)
+            m_EditMode = emCreateBone;
+        else
+        if (m_EditMode == emCreateConstraint_Node)
+            m_EditMode = emCreateConstraint_Type;
+        else
+        if (m_EditMode == emCreateConstraint_Length)
+        {
+            frameParams[1] = -1;
+            m_EditMode = emCreateConstraint_Node;
+        }
+        else
         if (m_EditMode == emSelectVertex)
         {
             m_EditMode = emSelectElement;
@@ -91,6 +103,11 @@ bool SceneSkeleton::Update(float deltaTime)
         m_EditGraphical = !m_EditGraphical;
         m_Model.CopySpineToPhysical();
         m_Buttons[emMain][3].Down = !m_EditGraphical;
+    }
+    if (m_EditMode == emCreateConstraint_Length)
+    {
+        GetConstraintParams();
+        return true;
     }
     if (m_EditMode == emInputWght)
     {
@@ -184,7 +201,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
     {
         if (button.Action == IC_BE_ModeSkeletize) {
             m_EditMode = emCreateBone;
-            UpdateButton(m_Buttons[emAnimateBones][0]);
+            UpdateButton(m_Buttons[emCreateBone][0]);
             selectedBone = m_Model.GetModelGr()->spine.boneP;
             m_Model.GetModelGr()->spine.ResetQ();
             m_Model.CalculateSkeleton();
@@ -217,11 +234,27 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         if (button.Action == IC_BE_Delete && selectedBone)
         {
             m_Model.CopySpineToPhysical();
-            m_Model.GetModelGr()->BoneDelete(selectedBone->id);
-            if (m_Model.GetModelPh()->spine.boneP != m_Model.GetModelGr()->spine.boneP)
-                m_Model.GetModelPh()->BoneDelete(selectedBone->id);
+            xBYTE boneId = selectedBone->id;
             selectedBone = NULL;
+            m_Model.GetModelGr()->BoneDelete(boneId);
+            if (m_Model.GetModelPh()->spine.boneP != m_Model.GetModelGr()->spine.boneP)
+                m_Model.GetModelPh()->BoneDelete(boneId);
             m_Model.VerticesChanged(true);
+        }
+        if (button.Action == IC_BE_CreateConstr)
+            m_EditMode = emCreateConstraint_Type;
+        return true;
+    }
+    if (m_EditMode == emCreateConstraint_Type)
+    {
+        if (button.Action == IC_BE_CreateConstrMax ||
+            button.Action == IC_BE_CreateConstrMin ||
+            button.Action == IC_BE_CreateConstrEql)
+        {
+            frameParams[0] = -1;
+            frameParams[1] = -1;
+            constrType = button.Action;
+            m_EditMode = emCreateConstraint_Node;
         }
         return true;
     }
@@ -486,10 +519,62 @@ void SceneSkeleton::MouseLUp(int X, int Y)
             m_Model.CalculateSkeleton();
         }
         else
+        if (currentAction == IC_BE_DeleteConstr)
+        {
+            std::vector<xDWORD> *sel = SelectCommon(X, Y);
+            if (sel)
+            {
+                if (sel->size())
+                {
+                    int selectedConstr = sel->back();
+                    xSkeleton &spine = m_Model.GetModelGr()->spine;
+                    if (spine.constraintsC == 1)
+                    {
+                        spine.constraintsC = 0;
+                        delete *spine.constraintsP;
+                        delete[] spine.constraintsP;
+                        spine.constraintsP = NULL;
+                    }
+                    else
+                    {
+                        xIVConstraint** tmp = new xIVConstraint*[spine.constraintsC-1];
+                        memcpy (tmp, spine.constraintsP, selectedConstr*sizeof(xIVConstraint*));
+                        memcpy (tmp+selectedConstr, spine.constraintsP+selectedConstr+1, (spine.constraintsC-selectedConstr-1)*sizeof(xIVConstraint*));
+                        delete spine.constraintsP[selectedConstr];
+                        delete[] spine.constraintsP;
+                        spine.constraintsP = tmp;
+                        --spine.constraintsC;
+                    }
+                    m_Model.CopySpineToPhysical();
+                }
+                delete sel;
+            }
+        }
+        else
         if (currentAction != IC_BE_Move) // select bone
         {
             selectedBone = SelectBone(X,Y);
             if (!selectedBone) selectedBone = m_Model.GetModelGr()->spine.boneP;
+        }
+    }
+    else
+    if (m_EditMode == emCreateConstraint_Node)
+    {
+        xIKNode *bone = SelectBone(X,Y);
+        if (!bone) bone = m_Model.GetModelGr()->spine.boneP;
+        if (frameParams[0] == -1)
+            frameParams[0] = bone->id;
+        else
+        if (frameParams[0] != bone->id)
+        {
+            frameParams[1] = bone->id;
+
+            xIKNode *bone1 = m_Model.GetModelGr()->spine.boneP + frameParams[0];
+
+            constrLen = (bone1->pointE - bone->pointE).length();
+            m_EditMode = emCreateConstraint_Length;
+            command.clear();
+            g_InputMgr.Buffer.clear();
         }
     }
     else
@@ -682,6 +767,9 @@ void SceneSkeleton::MouseMove(int X, int Y)
                     engine.lengthConstraints.push_back(constraint);
                 }
             }
+            engine.m_numConstraints = spine.constraintsC;
+            engine.m_constraints = spine.constraintsP;
+
             engine.m_weight[0] = 0.f;
             engine.m_weight[selectedBone->id] = 0.f;
             engine.m_pos[selectedBone->id] = Get3dPos(X, Y, engine.m_pos[selectedBone->id]);
@@ -689,6 +777,9 @@ void SceneSkeleton::MouseMove(int X, int Y)
 
             CalcQuats(spine.boneP, engine.m_pos, 0, xMatrix::Identity());
             m_Model.CalculateSkeleton();                                     // refresh model in GPU
+
+            engine.m_constraints    = NULL;
+            engine.m_numConstraints = 0;
         }
         else if (spine.boneP) // anim-translate root bone (matrix)
         {
@@ -760,6 +851,75 @@ xVector3 SceneSkeleton::Get3dPos(int X, int Y, xVector3 planeP)
         return rayPos - rayDir * (dist / a);
     }
     return xVector3();
+}
+
+/************************* CONSTRAINTS ************************************/
+void SceneSkeleton::GetConstraintParams()
+{
+    InputMgr &im = g_InputMgr;
+    if (im.GetInputStateAndClear(IC_Accept))
+    {
+        m_EditMode = emCreateBone;
+
+        float len = 0.f;
+        if (command.length())
+            len = atof (command.c_str());
+        if (len <= 0.f)
+            len = constrLen;
+
+        xIVConstraint *constr;
+        if (constrType == IC_BE_CreateConstrEql)
+        {
+            xVConstraintLengthEql *res = new xVConstraintLengthEql();
+            res->particleA     = frameParams[0];
+            res->particleB     = frameParams[1];
+            res->restLength    = len;
+            res->restLengthSqr = len*len;
+            constr = res;
+        }
+        else
+        if (constrType == IC_BE_CreateConstrMin)
+        {
+            xVConstraintLengthMin *res = new xVConstraintLengthMin();
+            res->particleA    = frameParams[0];
+            res->particleB    = frameParams[1];
+            res->minLength    = len;
+            res->minLengthSqr = len*len;
+            constr = res;
+        }
+        else
+        if (constrType == IC_BE_CreateConstrMax)
+        {
+            xVConstraintLengthMax *res = new xVConstraintLengthMax();
+            res->particleA    = frameParams[0];
+            res->particleB    = frameParams[1];
+            res->maxLength    = len;
+            res->maxLengthSqr = len*len;
+            constr = res;
+        }
+        else
+            return;
+
+        xSkeleton &spine = m_Model.GetModelGr()->spine;
+        if (!spine.constraintsP)
+        {
+            spine.constraintsC = 1;
+            spine.constraintsP = new xIVConstraint*[1];
+            spine.constraintsP[0] = constr;
+        }
+        else
+        {
+            xIVConstraint** tmp = new xIVConstraint*[spine.constraintsC+1];
+            memcpy (tmp, spine.constraintsP, (spine.constraintsC)*sizeof(xIVConstraint*));
+            tmp[spine.constraintsC] = constr;
+            delete[] spine.constraintsP;
+            spine.constraintsP = tmp;
+            ++spine.constraintsC;
+        }
+        m_Model.CopySpineToPhysical();
+    }
+    else
+        GetCommand();
 }
 
 /************************* SKININIG ************************************/

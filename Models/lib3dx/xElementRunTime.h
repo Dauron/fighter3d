@@ -26,6 +26,26 @@ union xGPUPointers
     }
 };
 
+union xGPUShadowPointers
+{
+    struct {
+        xDWORD vertexB;
+        xDWORD indexB;
+    };
+    struct {
+        xDWORD listIDPass;
+        xDWORD listIDFail;
+        xDWORD listIDFailS;
+        xDWORD listIDFailF;
+        xDWORD listIDFailB;
+    };
+
+    void Invalidate()
+    {
+        memset(this, 0, sizeof(xGPUShadowPointers));
+    }
+};
+
 struct xShadowData
 {
     enum xShadowDataLevel
@@ -35,14 +55,15 @@ struct xShadowData
         ZFAIL_PASS
     };
 
-    xGPUPointers gpuLightPointers;
-    xGPUPointers gpuShadowPointers;
+    xGPUPointers       gpuLightPointers;
+    xGPUShadowPointers gpuShadowPointers;
 
     xBYTE            lightId;
     xShadowDataLevel zDataLevel;
 
     xVector4 *verticesP;
     xWORD    *indexP;
+    size_t    indexSize;
     xWORD     sideC;
     xWORD     frontC;
     xWORD     backC;
@@ -64,15 +85,17 @@ struct xShadowData
 
 typedef std::vector<xShadowData> xShadowDataVector;
 
+struct xGPURender {
+    typedef enum {
+        NONE = 0,
+        VBO  = 1,
+        LIST = 2
+    } Mode;
+};
+
 struct xElementInstance
 {
-    typedef enum {
-        xRenderMode_NULL = 0,
-        xRenderMode_VBO  = 1,
-        xRenderMode_LIST = 2
-    } xRenderMode;
-
-    xRenderMode mode;
+    xGPURender::Mode  mode;
 
     xGPUPointers      gpuMain;
     xShadowDataVector gpuShadows;
@@ -104,6 +127,9 @@ struct xRenderData
     xFace             *facesP;
 
     xVector3          *faceNormalsP;
+
+    xGPURender::Mode   mode;
+    xGPUPointers       gpuMain;
 };
 
 #endif

@@ -22,7 +22,7 @@ xShadowData & xElementInstance :: GetShadowData(xLight &light, xShadowData::xSha
 
 void xElementInstance :: Zero()
 {
-    mode = xRenderMode_NULL;
+    mode = xGPURender::NONE;
 
     memset (&gpuMain, 0, sizeof(xGPUPointers));
     gpuShadows.clear();
