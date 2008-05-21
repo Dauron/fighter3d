@@ -32,14 +32,14 @@ public:
     //xVector3       cp, com, cno, cro;
 
 public:
-    ModelObj () : Object3D() {}
+    ModelObj () : Object3D(), forceNotStatic(false) {}
     ModelObj (GLfloat x, GLfloat y, GLfloat z)
-      : Object3D(x,y,z) {}
+      : Object3D(x,y,z), forceNotStatic(false) {}
     ModelObj (GLfloat x, GLfloat y, GLfloat z,
          GLfloat rotX, GLfloat rotY, GLfloat rotZ)
-      : Object3D(x,y,z, rotX,rotY,rotZ) {}
+      : Object3D(x,y,z, rotX,rotY,rotZ), forceNotStatic(false) {}
 
-    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL);
+    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physical = false, bool phantom = true);
     virtual void Finalize ();
 
     xRender    * GetRenderer()   {
@@ -57,6 +57,7 @@ public:
     void   CollisionInfo_ReFill ();
 
 protected:
+    bool           forceNotStatic;
     xRenderGL      renderer;
 
     CollisionInfo *collisionInfo;

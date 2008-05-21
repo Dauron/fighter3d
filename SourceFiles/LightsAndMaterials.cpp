@@ -54,7 +54,7 @@ void setLights()
         glEnable(GL_LIGHT0);
 
         // light 1
-        GLfloat light_position1[]   = { 10.0f, -5.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
+        GLfloat light_position1[]   = { 10.0f, -5.0f, 5.0f, 1.0f }; // w=0 - directional, w=1 - positional
         GLfloat light_amb_color1[]  = { 0.1f, 0.0f, 0.0f, 1.0f };
         GLfloat light_dif_color1[]  = { 1.0f, 0.0f, 0.0f, 1.0f };
         GLfloat light_spec_color1[] = { 1.0f, 0.0f, 0.0f, 1.0f };

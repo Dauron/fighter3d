@@ -14,8 +14,9 @@ public:
          GLfloat rotX, GLfloat rotY, GLfloat rotZ)
       : ModelObj(x,y,z, rotX,rotY,rotZ) {}
 
-    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL)
+    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physical = false, bool phantom = true)
     {
+        forceNotStatic = true;
         ModelObj::Initialize(gr_filename, ph_filename);
         resilience = 0.2f;
     }

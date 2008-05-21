@@ -4,6 +4,8 @@
 #include "xRender.h"
 #include "../../GLExtensions/aGL_Extensions.h"
 
+#include "../../Utils/Debug.h"
+
 class xRenderGL : public xRender
 {
   public:
@@ -17,6 +19,12 @@ class xRenderGL : public xRender
 
 
     xRenderGL() : UseVBO(agl_VBOLoaded), UseList(true) {};
+
+    virtual void Initialize(bool isStatic, HModel hGrModel, HModel hPhModel = HModel())
+    {
+        xRender::Initialize(isStatic, hGrModel, hPhModel);
+        UseVBO = agl_VBOLoaded && !isStatic;
+    }
 
     virtual void CalculateSkeleton()
     {

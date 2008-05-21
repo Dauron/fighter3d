@@ -45,7 +45,7 @@ public:
     xRender () : xModelToRender(NULL), xModelGraphics(NULL), xModelPhysical(NULL) {}
     virtual ~xRender() {}
 
-    virtual void Initialize(HModel hGrModel, HModel hPhModel = HModel())
+    virtual void Initialize(bool isStatic, HModel hGrModel, HModel hPhModel = HModel())
     {
         hModelGraphics = hGrModel;
         Model3dx *mdl = g_ModelMgr.GetModel(hGrModel);

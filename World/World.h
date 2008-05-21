@@ -51,6 +51,8 @@ public:
     void Initialize();
     void Finalize();
 
+    void Load(char *mapFileName);
+
    ~World( void )
    {
         Finalize();

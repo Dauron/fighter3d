@@ -548,27 +548,26 @@ void xRenderGL :: RenderModelLST(xElement *elem)
 
     if (g_SelectionRendering || !UseList || !elem->renderData.listID)
     {
-        if (g_SelectionRendering) {
+        if (g_SelectionRendering || !UseList) {
             glPushMatrix();
             glMultMatrixf(&elem->matrix.matrix[0][0]);
         }
-        else
-    if (UseList) {
-        elem->renderData.listID = glGenLists(1);
+        else {
             elem->renderData.mode = xRENDERMODE_LIST;
-            glNewList(elem->renderData.listID, GL_COMPILE);
+            glNewList(elem->renderData.listID = glGenLists(1), GL_COMPILE);
         }
-        {
-            if (elem->skeletized) {
-                if (elem->textured && !g_SelectionRendering) {
-                    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                    glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.verticesTSP->tx));
-                }
-                g_AnimSkeletal.BeginAnimation();
-                g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ);
-                g_AnimSkeletal.SetElement(elem);
+
+        if (elem->skeletized) {
+            if (elem->textured && !g_SelectionRendering) {
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.verticesTSP->tx));
             }
-            else
+            g_AnimSkeletal.BeginAnimation();
+            g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ);
+            g_AnimSkeletal.SetElement(elem);
+        }
+        else
+        {
             if (elem->textured) {
                 glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), elem->renderData.verticesTP);
 
@@ -585,51 +584,30 @@ void xRenderGL :: RenderModelLST(xElement *elem)
                 glNormalPointer (GL_FLOAT, sizeof(xVector3), elem->renderData.normalP);
                 glEnableClientState(GL_NORMAL_ARRAY);
             }
-
-            xFaceList *faceL = elem->faceListP;
-            for(int i=0; i<elem->faceListC; ++i, ++faceL)
-            {
-                if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
-                    SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
-                glDrawElements (GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
-                /*
-                if (faceL->smooth)
-                {
-                    if (!g_SelectionRendering && !normArrayEnabled) glEnableClientState(GL_NORMAL_ARRAY);
-                    normArrayEnabled = true;
-                    glDrawElements      (GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
-                }
-                else
-                {
-                    if (!g_SelectionRendering && normArrayEnabled) glDisableClientState(GL_NORMAL_ARRAY);
-                    normArrayEnabled = false;
-
-                    xWORD3   *iter   = elem->renderData.facesP + faceL->indexOffset;
-                    xVector3 *normal = faceL->normalP;
-                    for (int j=faceL->indexCount; j; --j, ++iter, ++normal)
-                    {
-                        glNormal3fv (normal->xyz);
-                        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, iter);
-                    }
-                }
-                */
-            }
-            if (!g_SelectionRendering)
-            {
-                glDisableClientState(GL_NORMAL_ARRAY);
-                if (elem->textured) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-            }
-            if (elem->skeletized)
-                g_AnimSkeletal.EndAnimation();
         }
-        if (g_SelectionRendering)
+
+        xFaceList *faceL = elem->faceListP;
+        for(int i=elem->faceListC; i; --i, ++faceL)
+        {
+            if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
+                SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
+            glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
+        }
+        if (!g_SelectionRendering)
+        {
+            glDisableClientState(GL_NORMAL_ARRAY);
+            if (elem->textured) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }
+        if (elem->skeletized)
+            g_AnimSkeletal.EndAnimation();
+
+        if (g_SelectionRendering || !UseList)
             glPopMatrix();
         else
-    if (UseList)
             glEndList();
     }
 
-    if (!g_SelectionRendering && elem->renderData.listID)
+    if (!g_SelectionRendering && UseList && elem->renderData.listID)
     {
         glPushMatrix();
         {
@@ -692,28 +670,6 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
         if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
             SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
         glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
-/*
-        if (faceL->smooth)
-        {
-            if (!g_SelectionRendering && !lastSmooth) glEnableClientState(GL_NORMAL_ARRAY);
-            lastSmooth = true;
-            glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
-        }
-        else
-        {
-            if (!g_SelectionRendering && lastSmooth) glDisableClientState(GL_NORMAL_ARRAY);
-            lastSmooth = false;
-
-            xDWORD offset = 3*sizeof(xWORD)*faceL->indexOffset;
-            xDWORD end    = offset + 3*sizeof(xWORD)*faceL->indexCount;
-            xVector3 *normal   = faceL->normalP;
-            for (; offset != end; offset += 3*sizeof(xWORD), ++normal)
-            {
-                glNormal3fv (normal->xyz);
-                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, (void*)offset);
-            }
-        }
-*/
     }
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB ( GL_ARRAY_BUFFER_ARB, 0 );

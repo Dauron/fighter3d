@@ -6,24 +6,26 @@ float time2;
 float time1b = 0.f;
 float time2b = 0.f;
 
-void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename)
+void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bool physical, bool phantom)
 {
     assert(!renderer.IsValid());
-    if (ph_filename)
-        renderer.Initialize(g_ModelMgr.GetModel(gr_filename), g_ModelMgr.GetModel(ph_filename));
-    else
-        renderer.Initialize(g_ModelMgr.GetModel(gr_filename));
+
     collisionInfo = NULL;
-    xRender *rend = GetRenderer();
-    centerOfTheMass = xCenterOfTheModelMass(rend->xModelPhysical, rend->bonesM);
     mLocationMatrixPrev = mLocationMatrix;
     transVelocity.zero();
     rotatVelocity.zeroQ();
     mass       = 1.f;
     resilience = 0.5f;
-    physical   = false;
-    phantom    = true;
     gravityAccumulator = 1.f;
+    this->phantom = phantom;
+    this->physical = physical;
+
+    if (ph_filename)
+        renderer.Initialize(!physical && !forceNotStatic, g_ModelMgr.GetModel(gr_filename), g_ModelMgr.GetModel(ph_filename));
+    else
+        renderer.Initialize(!physical && !forceNotStatic, g_ModelMgr.GetModel(gr_filename));
+    xRender *rend = GetRenderer();
+    centerOfTheMass = xCenterOfTheModelMass(rend->xModelPhysical, rend->bonesM);
 }
 
 void ModelObj:: Finalize ()

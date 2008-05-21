@@ -1,4 +1,6 @@
 #include "World.h"
+#include <fstream>
+#include "../Utils/Filesystem.h"
 
 ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 {
@@ -47,10 +49,11 @@ void World:: Update(float deltaTime)
         for ( i = begin ; i != end ; ++i )
             if (! (*i)->phantom)
                 for ( j = i + 1; j != end; ++j )
-                    if (!(*j)->phantom && cd_MeshToMesh.Collide(*i, *j))
-                    {
-                        // process collision
-                    }
+                    if ((*i)->physical || (*j)->physical)
+                        if (!(*j)->phantom && cd_MeshToMesh.Collide(*i, *j))
+                        {
+                            // process collision
+                        }
 
         for ( i = begin ; i != end ; ++i )
             (*i)->PreUpdate();
@@ -77,66 +80,48 @@ void World:: Initialize()
 
     if (!g_Test)
     {
-        model = new ModelObj(0.0f, 0.0f, -0.21f);
-        model->Initialize("Data/models/arena.3dx", "Data/models/arena_fst.3dx");
-        model->phantom  = false;
-        model->physical = false;
-        model->mass     = 100000000.f;
-        model->resilience = 0.f;
-        objects.push_back(model);
+        Load("Data/models/dojo/dojo.map");
 
         model = new ModelObj(-4.0f, -2.0f, 0.0f);
-        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx");
-        model->phantom = false;
-        model->physical = true;
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
 
         model = new ModelObj(-2.0f, -5.0f, 0.0f);
-        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx");
-        model->phantom = false;
-        model->physical = true;
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
 
         model = new ModelObj(2.f, 0.f, 0.0f, 0.0f, 0.0f, 45.0f);
-        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx");
-        model->phantom = false;
-        model->physical = true;
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
 
-        model = new ModelObj(10.0f, -2.0f, 0.2f);
+        model = new ModelObj(10.0f, -2.0f, 0.0f);
         model->Initialize("Data/models/1barbells.3dx");
         objects.push_back(model);
 
-        model = new ModelObj(10.0f, 0.0f, 0.80f);
+        model = new ModelObj(10.0f, 0.0f, 0.6f);
         model->Initialize("Data/models/2stend.3dx");
         objects.push_back(model);
 
         model = new ModelObj(5.0f, -10.0f, 5.0f);
-        model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx");
-        model->phantom = false;
-        model->physical = true;
+        model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
         model->mass     = 60.f;
         objects.push_back(model);
 
         modelA = new SkeletizedObj(-0.3f, -3.2f, 0.0f, 0.0f, 0.0f, 170.0f);
-        modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
-        modelA->phantom = false;
-        modelA->physical = false;
+        modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx", false, false);
         modelA->mass     = 70.f;
         modelA->AddAnimation("Data/models/anims/human/yoko-geri2.ska", 4000, 5300);
         modelA->AddAnimation("Data/models/anims/human/garda.ska");
         objects.push_back(modelA);
 
         modelA = new SkeletizedObj(-0.5f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
-        modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
-        modelA->phantom = false;
-        modelA->physical = false;
+        modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx", false, false);
         modelA->mass     = 70.f;
         modelA->AddAnimation("Data/models/anims/human/garda.ska", 0, 4700);
         modelA->AddAnimation("Data/models/anims/human/skulony.ska", 4700);
@@ -153,16 +138,12 @@ void World:: Initialize()
         objects.push_back(modelA);
 */
         modelA = new SkeletizedObj(5.f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
-        modelA->Initialize("Data/models/human3.3dx", "Data/models/human3_fst.3dx");
-        modelA->phantom  = false;
-        modelA->physical = false;
+        modelA->Initialize("Data/models/human3.3dx", "Data/models/human3_fst.3dx", false, false);
         modelA->mass     = 70.f;
         objects.push_back(modelA);
 
         model = new ModelObj(1.0f, 5.0f, 0.0f);
-        model->Initialize("Data/models/wolf.3dx");
-        model->phantom = false;
-        model->physical = false;
+        model->Initialize("Data/models/wolf.3dx", "Data/models/wolf.3dx", false, false);
         model->mass     = 65.f;
         objects.push_back(model);
     }
@@ -170,26 +151,20 @@ void World:: Initialize()
     if (g_Test == 1)
     {
         model = new ModelObj(-3.75f, -3.75f, 0.75f, 0.f, 0.f, 0.f);
-        model->Initialize("Data/models/crate.3dx");
-        model->phantom = false;
-        model->physical = false;
+        model->Initialize("Data/models/crate.3dx", false, false);
         model->transVelocity.x = 5.0f;
         model->mass     = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
 
         model = new ModelObj(-1.0f, -4.0f, 1.0f);
-        model->Initialize("Data/models/crate.3dx");
-        model->phantom = false;
-        model->physical = false;
+        model->Initialize("Data/models/crate.3dx", false, false);
         model->mass     = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
 
         model = new ModelObj(4.0f, -4.0f, 1.0f);
-        model->Initialize("Data/models/crate.3dx");
-        model->phantom = false;
-        model->physical = false;
+        model->Initialize("Data/models/crate.3dx", false, false);
         model->mass     = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
@@ -209,4 +184,83 @@ void World:: Finalize()
         delete *i;
     }
     objects.clear();
+}
+
+bool StartsWith(const char *buff, const char *string)
+{
+    if (!string || !buff) return false;
+
+    for(; *string && *buff; ++string, ++buff)
+        if (tolower(*string) != tolower(*buff))
+            return false;
+    return !*string;
+}
+
+void World:: Load(char *mapFileName)
+{
+    std::ifstream in;
+
+    in.open(mapFileName);
+    if (in.is_open())
+    {
+        std::string dir = Filesystem::GetParentDir(mapFileName);
+        char buffer[255];
+        ModelObj *model = NULL;
+
+        while (in.good())
+        {
+            in.getline(buffer, 255);
+            if (buffer[0] == '#') continue;
+
+            if (StartsWith(buffer, "model"))
+            {
+                if (model != NULL)
+                    objects.push_back(model);
+                model = new ModelObj();
+
+                std::string modelFile = Filesystem::GetFullPath(dir + "/" + (buffer+6));
+                model->Initialize(modelFile.c_str());
+                continue;
+            }
+            if (StartsWith(buffer, "position"))
+            {
+                float x,y,z;
+                sscanf(buffer, "position\t%f\t%f\t%f", &x,&y,&z);
+                model->Translate(x, y, z);
+                continue;
+            }
+            if (StartsWith(buffer, "rotation"))
+            {
+                float x,y,z;
+                sscanf(buffer, "rotation\t%f\t%f\t%f", &x,&y,&z);
+                model->Rotate(x, y, z);
+                continue;
+            }
+            if (StartsWith(buffer, "physical"))
+            {
+                int b;
+                sscanf(buffer, "physical\t%d", &b);
+                model->physical = b;
+                continue;
+            }
+            if (StartsWith(buffer, "phantom"))
+            {
+                int b;
+                sscanf(buffer, "phantom\t%d", &b);
+                model->phantom = b;
+                continue;
+            }
+            if (StartsWith(buffer, "mass"))
+            {
+                float mass;
+                sscanf(buffer, "mass\t%f", &mass);
+                model->mass = mass;
+                continue;
+            }
+        }
+        if (model != NULL)
+            objects.push_back(model);
+
+        in.close();
+    }
 }

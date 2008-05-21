@@ -51,6 +51,8 @@ void Model3dx :: Unload( void )
                     mat->texture.htex = 0;
                 }
         model->texturesInited = false;
+        delete[] model;
+        model = NULL;
     }
 
     if (m_Name) { delete[] m_Name; m_Name = NULL; }
@@ -87,5 +89,6 @@ void Model3dx :: FreeElementRenderData(xElement *elem, bool listOnly)
     elem->renderData.vertexB = 0;
     elem->renderData.normalB = 0;
     elem->renderData.indexB = 0;
+    elem->renderData.listID = 0;
     elem->renderData.mode = xRENDERMODE_NULL;
 }
