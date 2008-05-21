@@ -213,6 +213,8 @@ bool SceneConsole::ProcessCmd(std::string cmd)
     opengl_extensions   | ext           | list available OpenGL extensions\n\
     ------------------------------------------------------------------------\n\
     toggle_lights       | tls           | turns the lighting on and off\n\
+    toggle_shadows      | tshadow       | toggles shadow rendering\n\
+    toggle_shadow_vol   | tshadowv      | toggles shadow volume rendering\n\
     reinitialize        | init          | reinitialize objects, etc.\n\
     toggle_shader       | tshd          | toggles custom shader\n\
     toggle_polygon_mode | tpm           | toggle polygon mode\n\
@@ -287,6 +289,22 @@ bool SceneConsole::ProcessCmd(std::string cmd)
             AppendConsole("\nThe lights are ON.\n");
         else
             AppendConsole("\nThe lights are OFF.\n");
+        return true;
+    }
+    if (cmd == "tshadow" || cmd == "toggle_shadows")
+    {
+        if (Config::EnableShadows = !Config::EnableShadows)
+            AppendConsole("\nThe shadows are ON.\n");
+        else
+            AppendConsole("\nThe shadows are OFF.\n");
+        return true;
+    }
+    if (cmd == "tshadowv" || cmd == "toggle_shadow_vol")
+    {
+        if (Config::DisplayShadowVolumes = !Config::DisplayShadowVolumes)
+            AppendConsole("\nThe shadow volumes are ON.\n");
+        else
+            AppendConsole("\nThe shadow volumes are OFF.\n");
         return true;
     }
     if (cmd == "status")

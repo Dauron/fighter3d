@@ -87,7 +87,7 @@ void World:: Initialize()
     //lights.push_back(light);
     // SKY
     light.color.init(0.4f, 0.4f, 0.4f, 1.f);
-    light.position.init(0.f, 0.f, 100.f);
+    light.position.init(-20.f, 20.f, 100.f);
     light.type = xLight_INFINITE;
     light.attenuationLinear = 0.f;
     light.attenuationSquare = 0.f;
@@ -114,15 +114,17 @@ void World:: Initialize()
         model->mass     = 50.f;
         model->castsShadows = true;
         objects.push_back(model);
-/*
+
         model = new ModelObj(10.0f, -2.0f, 0.0f);
         model->Initialize("Data/models/1barbells.3dx");
+        model->castsShadows = true;
         objects.push_back(model);
 
         model = new ModelObj(10.0f, 0.0f, 0.6f);
         model->Initialize("Data/models/2stend.3dx");
+        model->castsShadows = true;
         objects.push_back(model);
-*/
+
         model = new ModelObj(0.0f, -10.0f, 5.0f);
         model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
         model->mass     = 60.f;
@@ -134,7 +136,7 @@ void World:: Initialize()
         modelA->mass     = 70.f;
         modelA->AddAnimation("Data/models/anims/human/yoko-geri2.ska", 4000, 5300);
         modelA->AddAnimation("Data/models/anims/human/garda.ska");
-        modelA->castsShadows = false;
+        modelA->castsShadows = true;
         objects.push_back(modelA);
 
         modelA = new SkeletizedObj(-0.5f, -1.5f, -0.21f, 0.0f, 0.0f, 0.0f);
@@ -143,7 +145,7 @@ void World:: Initialize()
         modelA->AddAnimation("Data/models/anims/human/garda.ska", 0, 4700);
         modelA->AddAnimation("Data/models/anims/human/skulony.ska", 4700);
         modelA->AddAnimation("Data/models/anims/human/kiwa_sie.ska", 4700);
-        modelA->castsShadows = false;
+        modelA->castsShadows = true;
         objects.push_back(modelA);
 /*
         modelA = new SkeletizedObj(4.5f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);

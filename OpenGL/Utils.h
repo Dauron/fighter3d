@@ -19,10 +19,11 @@ public:
 };
 
 void xglPerspective ( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar );
+void xglPerspective ( GLdouble fovY, GLdouble aspect, GLdouble zNear );
 
 inline void xglPerspective ( const xFieldOfView &FOV )
 {
-    xglPerspective( FOV.Angle, FOV.Aspect, FOV.FrontClip, FOV.BackClip );
+    xglPerspective( FOV.Angle, FOV.Aspect, FOV.FrontClip/*, FOV.BackClip*/ );
 }
 
 inline void Camera_Aim_GL(Camera &camera)

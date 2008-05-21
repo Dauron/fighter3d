@@ -222,6 +222,10 @@ struct xFile {
 // Other methods
 xMaterial *xMaterialByName(const xFile *file, char *materialName);
 xMaterial *xMaterialById  (const xFile *file,  xWORD materialId);
+
+xMaterial *xFaceGetMaterial(const xElement *elem, int faceIdx);
+bool       xFaceTransparent(const xElement *elem, int faceIdx);
+
 xElement  *xElementById   (const xFile* model, xWORD elementId = -1);
 xWORD      xElementCount  (const xFile* model);
 

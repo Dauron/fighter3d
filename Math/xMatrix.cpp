@@ -77,7 +77,7 @@ xVector3 xMatrix::postTransformP(const xVector3& point) const
     res.y = x1*point.x + y1*point.y + z1*point.z + w1;
     res.z = x2*point.x + y2*point.y + z2*point.z + w2;
     xFLOAT w = x3*point.x + y3*point.y + z3*point.z + w3;
-    if (w != 1.f)
+    if (w != 0.f && w != 1.f)
         res *= 1.f/w;
     return res;
 }
@@ -88,7 +88,7 @@ xVector3 xMatrix::preTransformP(const xVector3& point) const
     res.y = y0*point.x + y1*point.y + y2*point.z + y3;
     res.z = z0*point.x + z1*point.y + z2*point.z + z3;
     xFLOAT w = w0*point.x + w1*point.y + w2*point.z + w3;
-    if (w != 1.f)
+    if (w != 0.f && w != 1.f)
         res *= 1.f/w;
     return res;
 }
@@ -101,7 +101,7 @@ xVector3 xMatrix::postTransformV(const xVector3& vec) const
     res.y = x1*vec.x + y1*vec.y + z1*vec.z;
     res.z = x2*vec.x + y2*vec.y + z2*vec.z;
     xFLOAT w = x3*vec.x + y3*vec.y + z3*vec.z;
-    if (w != 1.f)
+    if (w != 0.f && w != 1.f)
         res *= 1.f/w;
     return res;
 }
@@ -112,7 +112,7 @@ xVector3 xMatrix::preTransformV(const xVector3& vec) const
     res.y = y0*vec.x + y1*vec.y + y2*vec.z;
     res.z = z0*vec.x + z1*vec.y + z2*vec.z;
     xFLOAT w = w0*vec.x + w1*vec.y + w2*vec.z;
-    if (w != 1.f)
+    if (w != 0.f && w != 1.f)
         res *= 1.f/w;
     return res;
 }
@@ -192,23 +192,33 @@ xMatrix &xMatrix::invert()
 
 xMatrix xMatrixFromQuaternion(xVector4 q)
 {
+    float xx = q.x * q.x;
+    float xy = q.x * q.y;
+    float xz = q.x * q.z;
+    float xw = q.x * q.w;
+    float yy = q.y * q.y;
+    float yz = q.y * q.z;
+    float yw = q.y * q.w;
+    float zz = q.z * q.z;
+    float zw = q.z * q.w;
+
     xMatrix res;
-    res.x0 = 1.0f - 2.0f * (q.y*q.y + q.z*q.z);
-    res.y0 = 2.0f * (q.z*q.y - q.w*q.z);
-    res.z0 = 2.0f * (q.w*q.y + q.x*q.z);
-    res.w0 = 0.0f;
-    res.x1 = 2.0f * (q.x*q.y + q.w*q.z);
-    res.y1 = 1.0f - 2.0f * (q.x*q.x + q.z*q.z);
-    res.z1 = 2.0f * (q.y*q.z - q.w*q.x);
-    res.w1 = 0.0f;
-    res.x2 = 2.0f * (q.x*q.z - q.w*q.y);
-    res.y2 = 2.0f * (q.y*q.z + q.w*q.x);
-    res.z2 = 1.0f - 2.0f * (q.x*q.x + q.y*q.y);
-    res.w2 = 0.0f;
-    res.x3 = 0.0f;
-    res.y3 = 0.0f;
-    res.z3 = 0.0f;
-    res.w3 = 1.0f;
+    res.row0.init(
+             1.f - 2.f * (yy + zz),
+                   2.f * (xy - zw),
+                   2.f * (xz + yw),
+                   0.f);
+    res.row1.init(
+                   2.f * (xy + zw),
+             1.f - 2.f * (xx + zz),
+                   2.f * (yz - xw),
+                   0.f);
+    res.row2.init(
+                   2.f * (xz - yw),
+                   2.f * (yz + xw),
+             1.f - 2.f * (xx + yy),
+                   0.f);
+    res.row3.init(0.f, 0.f, 0.f, 1.f);
     return res;
 }
 

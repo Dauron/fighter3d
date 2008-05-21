@@ -86,13 +86,13 @@ xVector4 xQuaternion::exp(const xVector4 &q)
     ret.w = cosa;
     if(a > 0)
     {
-    ret.x = sina * q.x / a;
-    ret.y = sina * q.y / a;
-    ret.z = sina * q.z / a;
+        ret.x = sina * q.x / a;
+        ret.y = sina * q.y / a;
+        ret.z = sina * q.z / a;
     }
     else
     {
-    ret.x = ret.y = ret.z = 0;
+        ret.x = ret.y = ret.z = 0;
     }
     return ret;
 }
@@ -105,13 +105,13 @@ xVector4 xQuaternion::log(const xVector4 &q)
     ret.w = 0;
     if (sina > 0)
     {
-    ret.x = a*q.x/sina;
-    ret.y = a*q.y/sina;
-    ret.z = a*q.z/sina;
+        ret.x = a*q.x/sina;
+        ret.y = a*q.y/sina;
+        ret.z = a*q.z/sina;
     }
     else
     {
-    ret.x=ret.y=ret.z=0;
+        ret.x=ret.y=ret.z=0;
     }
     return ret;
 }
@@ -148,12 +148,12 @@ xVector4 xQuaternion::slerp(const xVector4 &q1,const xVector4 &q2,float t)
 
     if (dot <= 0.99f)
     {
-    float angle = static_cast<float>(acos(dot));
-    float sina,sinat,sinaomt;
-    sina = static_cast<float>(sin(angle));
-    sinat = static_cast<float>(sin(angle*t));
-    sinaomt = static_cast<float>(sin(angle*(1-t)));
-    return (q1*sinaomt+q3*sinat)/sina;
+        float angle = static_cast<float>(acos(dot));
+        float sina,sinat,sinaomt;
+        sina = static_cast<float>(sin(angle));
+        sinat = static_cast<float>(sin(angle*t));
+        sinaomt = static_cast<float>(sin(angle*(1-t)));
+        return (q1*sinaomt+q3*sinat)/sina;
     }
     /*
     if the angle is small, use linear interpolation
@@ -170,12 +170,12 @@ xVector4 xQuaternion::slerpNoInvert(const xVector4 &q1,const xVector4 &q2,float 
 
     if (dot >= -0.99f && dot <= 0.99f)
     {
-    float angle = static_cast<float>(acos(dot));
-    float sina,sinat,sinaomt;
-    sina = static_cast<float>(sin(angle));
-    sinat = static_cast<float>(sin(angle*t));
-    sinaomt = static_cast<float>(sin(angle*(1-t)));
-    return (q1*sinaomt+q2*sinat)/sina;
+        float angle = static_cast<float>(acos(dot));
+        float sina,sinat,sinaomt;
+        sina = static_cast<float>(sin(angle));
+        sinat = static_cast<float>(sin(angle*t));
+        sinaomt = static_cast<float>(sin(angle*(1-t)));
+        return (q1*sinaomt+q2*sinat)/sina;
     }
     /*
     if the angle is small, use linear interpolation

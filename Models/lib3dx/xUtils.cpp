@@ -85,6 +85,52 @@ xSkinnedData xElement_GetSkinnedElement(const xElement *elem, const xMatrix *bon
     return dst;
 }
 
+xSkinnedDataShd xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bones)
+{
+    xWORD     count  = elem->verticesC;
+    xBYTE    *srcV   = (xBYTE *) elem->verticesP;
+    xVector3 *srcN   = elem->renderData.normalP;
+    xDWORD stride = elem->skeletized
+        ? (elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
+        : (elem->textured ? sizeof(xVertexTex)     : sizeof(xVertex));
+
+    xSkinnedDataShd dst;
+    dst.verticesP = new xVector4[count << 1];
+    xVector4 *itrV = dst.verticesP;
+
+    if (elem->skeletized)
+    {
+        dst.normalsP  = new xVector3[count];
+        xVector3 *itrN = dst.normalsP;
+        for (int i = count; i > 0; --i, ++itrV, ++itrN, srcV += stride, ++srcN)
+        {
+            xVertexSkel *vert = (xVertexSkel *)srcV;
+
+            xVector4 vec;  vec.init(* (xVector3 *)vert->pos, 1.f);
+            xMatrix  bone;
+
+            itrV->init(0.f, 0.f, 0.f, 0.f);
+            itrN->init(0.f, 0.f, 0.f);
+            for (int b=0; b<4; ++b)
+            {
+                int   i = (int) floor(vert->bone[b]);
+                float w = (vert->bone[b] - i)*10;
+                bone = bones[i] * w;
+                *itrV  += bone * vec;
+                *itrN  += bone.postTransformV(*srcN);
+            }
+        }
+    }
+    else
+    {
+        dst.normalsP = NULL;
+        for (int i = count; i > 0; --i, ++itrV, srcV += stride)
+            itrV->init(*(xVector3 *)srcV, 1.f);
+        //memcpy(dst.normalsP, elem->renderData.normalP, sizeof(xVector3)*count);
+    }
+    return dst;
+}
+
 xVector3 * xElement_GetSkinnedVertices(const xElement *elem, const xMatrix *bones, xMatrix transformation,
                                        xVector3 *&dst, bool fromRenderData)
 {

@@ -151,7 +151,7 @@ xVector4 *     xAnimation::GetTransformations()
             {
                 if (pCurr->w > 0.99f)
                 {
-                    *pRes = *pCurr * progress;
+                    pRes->init(pCurr->vector3 * progress, complement + pCurr->w * progress);
                     continue;
                 }
                 *pRes = xQuaternion::interpolate(*pCurr, progress);
@@ -161,7 +161,7 @@ xVector4 *     xAnimation::GetTransformations()
             {
                 if (pNext->w > 0.99f)
                 {
-                    *pRes = *pNext * complement;
+                    pRes->init(pNext->vector3 * complement, progress + pNext->w * complement);
                     continue;
                 }
                 *pRes = xQuaternion::interpolate(*pNext, complement);
@@ -184,7 +184,7 @@ xVector4 *     xAnimation::GetTransformations()
             {
                 if (pCurr->w > 0.99f)
                 {
-                    *pRes = *pCurr * progress;
+                    pRes->init(pCurr->vector3 * progress, complement + pCurr->w * progress);
                     continue;
                 }
                 *pRes = xQuaternion::interpolate(*pCurr, progress);

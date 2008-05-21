@@ -98,6 +98,7 @@ void Application::Terminate()
 int Application::Run()
 {
     float preRenderTick, prevTick, curTick = GetTick();
+    preRenderTick = curTick;
     Performance.Reset();
 
     while (!m_window->Terminated())

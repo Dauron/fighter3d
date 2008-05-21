@@ -1108,7 +1108,12 @@ xDWORD xRenderGL :: CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight)
 void   xRenderGL :: RenderShadowVolume(xLight &light, xFieldOfView *FOV)
 {
     assert(xModelToRender);
-
+/*
+    xFile * xModelToRenderOld = xModelToRender;
+    xModelToRender = xModelPhysical;
+    if (xModelToRenderOld != xModelPhysical)
+        SetRenderMode(xRender::rmPhysical);
+*/
     if (!bonesC && spineP)
         CalculateSkeleton();
     if (!instanceDataTRP)
@@ -1127,6 +1132,10 @@ void   xRenderGL :: RenderShadowVolume(xLight &light, xFieldOfView *FOV)
     glDisableClientState(GL_VERTEX_ARRAY);
 
     glPopMatrix();
+/*
+    if (xModelToRenderOld != xModelPhysical)
+        SetRenderMode(xRender::rmGraphical);
+*/
 }
 void xRenderGL :: RenderShadowVolumeElem(xElement *elem, xLight &light)
 {
@@ -1134,6 +1143,7 @@ void xRenderGL :: RenderShadowVolumeElem(xElement *elem, xLight &light)
         RenderShadowVolumeElem(selem, light);
 
     if (!elem->renderData.verticesC) return;
+    if (!elem->edgesC) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
 
@@ -1151,41 +1161,41 @@ void xRenderGL :: RenderShadowVolumeZPass(xElement *elem, xLight &light)
     glPushMatrix();
     glMultMatrixf(&elem->matrix.x0);
 
-    xVector4 *verticesPextr = NULL;
-    bool     *facingFlag    = NULL;
-    xMatrix  mtxWorldToObject;
-    mtxWorldToObject = (elem->matrix * location).invert();
-    xVector3 lightPos = mtxWorldToObject.preTransformP(light.position);
-    xShadows_ExtrudePoints(elem, light.type == xLight_INFINITE, lightPos, verticesPextr);
-    xShadows_GetBackFaces (elem, verticesPextr, facingFlag);
+    bool    *facingFlag    = NULL;
+    xMatrix  mtxWorldToObject = (elem->matrix * location).invert();
+    xVector3 lightPos;
+    if (light.type != xLight_INFINITE)
+        lightPos = mtxWorldToObject.preTransformP(light.position);
+    else
+        lightPos = mtxWorldToObject.preTransformV(light.position);
+
+    xSkinnedDataShd extrPoints = xElement_GetSkinnedElementForShadow(elem, bonesM);
+    xShadows_ExtrudePoints(elem, light.type == xLight_INFINITE, lightPos, extrPoints);
+    xShadows_GetBackFaces (elem, extrPoints, facingFlag);
     xShadows_GetSilhouette(elem, facingFlag, instance->shadowQuadsP, instance->shadowBackCP, instance->shadowEdgesC);
 
-    if (elem->skeletized) {
-        g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
-        g_AnimSkeletal.SetVertices(sizeof(xVector4), (float *)verticesPextr, elem->verticesC << 1);
-    }
-    else
-        glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), verticesPextr);
+    glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), extrPoints.verticesP);
 
     /************************* RENDER FACES ****************************/
 
     glCullFace(GL_FRONT);
     glStencilOp(GL_KEEP, GL_KEEP, GL_INCR); // GL_INCR_WRAP_EXT
+    glColor4f(1.f, 0.f, 0.f, 0.4f);
 
     // Extruded quads
     glDrawElements ( GL_QUADS, 4*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowQuadsP);
 
     glCullFace(GL_BACK);
     glStencilOp(GL_KEEP, GL_KEEP, GL_DECR); // GL_DECR_WRAP_EXT
+    glColor4f(0.f, 1.f, 0.f, 0.4f);
 
     // Extruded quads
     glDrawElements ( GL_QUADS, 4*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowQuadsP);
 
     delete[] facingFlag;
-    delete[] verticesPextr;
-
-    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+    delete[] extrPoints.verticesP;
+    if (extrPoints.normalsP)
+        delete[] extrPoints.normalsP;
 
     glPopMatrix();
 }
@@ -1196,28 +1206,27 @@ void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
     glPushMatrix();
     glMultMatrixf(&elem->matrix.x0);
 
-    xVector4 *verticesPextr = NULL;
     bool     *facingFlag    = NULL;
-    xMatrix  mtxWorldToObject;
-    mtxWorldToObject = (elem->matrix * location).invert();
-    xVector3 lightPos = mtxWorldToObject.preTransformP(light.position);
-    xShadows_ExtrudePoints(elem, light.type == xLight_INFINITE, lightPos, verticesPextr);
-    xShadows_GetBackFaces (elem, verticesPextr, facingFlag);
-    xShadows_GetSilhouette(elem, facingFlag, instance->shadowQuadsP, instance->shadowBackCP, instance->shadowEdgesC);
-    bool useBackCapOptimization = false;//(lightPos - instance->bsCenter).lengthSqr() > instance->bsRadius*instance->bsRadius;
-
-    if (elem->skeletized) {
-        g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
-        g_AnimSkeletal.SetVertices(sizeof(xVector4), (float *)verticesPextr, elem->verticesC << 1);
-    }
+    xMatrix  mtxWorldToObject = (elem->matrix * location).invert();
+    xVector3 lightPos;
+    if (light.type != xLight_INFINITE)
+        lightPos = mtxWorldToObject.preTransformP(light.position);
     else
-        glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), verticesPextr);
+        lightPos = mtxWorldToObject.preTransformV(light.position);
+
+    xSkinnedDataShd extrPoints = xElement_GetSkinnedElementForShadow(elem, bonesM);
+    xShadows_ExtrudePoints(elem, light.type == xLight_INFINITE, lightPos, extrPoints);
+    xShadows_GetBackFaces (elem, extrPoints, facingFlag);
+    xShadows_GetSilhouette(elem, facingFlag, instance->shadowQuadsP, instance->shadowBackCP, instance->shadowEdgesC);
+    bool useBackCapOptimization = (lightPos - instance->bsCenter).lengthSqr() > instance->bsRadius*instance->bsRadius;
+
+    glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), extrPoints.verticesP);
 
     /************************* RENDER FACES ****************************/
 
     glCullFace(GL_BACK);
     glStencilOp(GL_KEEP, GL_INCR, GL_KEEP); // GL_INCR_WRAP_EXT
+    glColor4f(1.f, 0.f, 0.f, 0.4f);
 
     // Extruded quads
     glDrawElements ( GL_QUADS, 4*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowQuadsP);
@@ -1225,7 +1234,7 @@ void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
     bool   *faceFlag = facingFlag;
     int     end = elem->facesC;
     for (int i = 0; i < end; ++i, ++faceFlag)
-        if(*faceFlag)
+        if(*faceFlag && !xFaceTransparent(elem, i))
             glDrawElements ( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, elem->facesP+i);
     // Back cap
     if (light.type != xLight_INFINITE)
@@ -1237,11 +1246,14 @@ void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
             glBegin(GL_TRIANGLES);
             {
                 for (int i = 0; i < end; ++i, ++faceFlag)
-                    if(!*faceFlag)
+                    if(!*faceFlag && !xFaceTransparent(elem, i))
                     {
-                        glIndexs(elem->verticesC + elem->facesP[i][0]);
-                        glIndexs(elem->verticesC + elem->facesP[i][1]);
-                        glIndexs(elem->verticesC + elem->facesP[i][2]);
+                        xVector4 *v1 = extrPoints.verticesP + elem->verticesC + elem->facesP[i][0];
+                        xVector4 *v2 = extrPoints.verticesP + elem->verticesC + elem->facesP[i][1];
+                        xVector4 *v3 = extrPoints.verticesP + elem->verticesC + elem->facesP[i][2];
+                        glVertex4fv(v1->xyzw);
+                        glVertex4fv(v2->xyzw);
+                        glVertex4fv(v3->xyzw);
                         //glDrawElements ( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, elem->facesP+i);
                     }
             }
@@ -1250,13 +1262,14 @@ void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
 
     glCullFace(GL_FRONT);
     glStencilOp(GL_KEEP, GL_DECR, GL_KEEP); // GL_DECR_WRAP_EXT
+    glColor4f(0.f, 1.f, 0.f, 0.4f);
 
     // Extruded quads
     glDrawElements ( GL_QUADS, 4*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowQuadsP);
     // Front cap
     faceFlag = facingFlag;
     for (int i = 0; i < end; ++i, ++faceFlag)
-        if(*faceFlag)
+        if(*faceFlag && !xFaceTransparent(elem, i))
             glDrawElements ( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, elem->facesP+i);
     // Back cap
     if (light.type != xLight_INFINITE)
@@ -1268,11 +1281,14 @@ void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
             glBegin(GL_TRIANGLES);
             {
                 for (int i = 0; i < end; ++i, ++faceFlag)
-                    if(!*faceFlag)
+                    if(!*faceFlag && !xFaceTransparent(elem, i))
                     {
-                        glIndexs(elem->verticesC + elem->facesP[i][0]);
-                        glIndexs(elem->verticesC + elem->facesP[i][1]);
-                        glIndexs(elem->verticesC + elem->facesP[i][2]);
+                        xVector4 *v1 = extrPoints.verticesP + elem->verticesC + elem->facesP[i][0];
+                        xVector4 *v2 = extrPoints.verticesP + elem->verticesC + elem->facesP[i][1];
+                        xVector4 *v3 = extrPoints.verticesP + elem->verticesC + elem->facesP[i][2];
+                        glVertex4fv(v1->xyzw);
+                        glVertex4fv(v2->xyzw);
+                        glVertex4fv(v3->xyzw);
                         //glDrawElements ( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, elem->facesP+i);
                     }
             }
@@ -1280,9 +1296,9 @@ void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
         }
 
     delete[] facingFlag;
-    delete[] verticesPextr;
-
-    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+    delete[] extrPoints.verticesP;
+    if (extrPoints.normalsP)
+        delete[] extrPoints.normalsP;
 
     glPopMatrix();
 }

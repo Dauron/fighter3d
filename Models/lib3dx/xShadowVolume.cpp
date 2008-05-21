@@ -1,41 +1,42 @@
+#include "xUtils.h"
 #include "xShadowVolume.h"
 
-void xShadows_ExtrudePoints (const xElement *elem, bool infiniteL, const xVector3 &lightPos, xVector4 *&verticesP)
+void xShadows_ExtrudePoints (const xElement *elem, bool infiniteL, const xVector3 &lightPos, xSkinnedDataShd &extrPoints)
 {
-    if (verticesP == NULL)
-        verticesP = new xVector4[elem->verticesC << 1];
+    xVector4 *src  = extrPoints.verticesP;
+    xVector4 *dest = extrPoints.verticesP + elem->verticesC;
 
-    size_t stride = elem->skeletized
-        ? (elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
-        : (elem->textured ? sizeof(xVertexTex)     : sizeof(xVertex));
-    xVector4 *dest = verticesP;
-
-    xBYTE *src = (xBYTE *) elem->verticesP;
-    for (int i = elem->verticesC; i; --i, src += stride, ++dest)
-        dest->init(*(xVector3 *)src, 1.f);
-
-    src = (xBYTE *) elem->verticesP;
-    for (int i = elem->verticesC; i; --i, src += stride, ++dest)
-    {
+    for (int i = elem->verticesC; i; --i, ++src, ++dest)
         if (infiniteL)
             dest->init(-lightPos, 0.f);
         else
-            dest->init(*(xVector3 *)src - lightPos, 0.f);
-    }
+            dest->init(src->vector3 - lightPos, 0.f);
 }
 
-void xShadows_GetBackFaces (const xElement *elem, const xVector4 *extrVerticesP, bool *&backFaces)
+void xShadows_GetBackFaces (const xElement *elem, const xSkinnedDataShd &extrPoints, bool *&backFaces)
 {
     if (backFaces == NULL)
         backFaces = new bool[elem->facesC];
 
     bool     *dest = backFaces;
     xWORD3   *face = elem->facesP;
-    xVector3 *faceNormal = elem->renderData.faceNormalsP;
+    xVector4 *extrVerticesP = extrPoints.verticesP + elem->verticesC;
 
-    extrVerticesP += elem->verticesC;
-    for (int i = elem->facesC; i; --i, ++face, ++faceNormal, ++dest)
-        *dest = xVector3::DotProduct((extrVerticesP + *face[0])->vector3, *faceNormal) > 0;
+    if (elem->skeletized)
+    {
+        xVector3 faceNormal;
+        for (int i = elem->facesC; i; --i, ++face, ++dest)
+        {
+            faceNormal = extrPoints.normalsP[(*face)[0]] + extrPoints.normalsP[(*face)[1]] + extrPoints.normalsP[(*face)[2]];
+            *dest = xVector3::DotProduct((extrVerticesP + *face[0])->vector3, faceNormal) > 0;
+        }
+    }
+    else
+    {
+        xVector3 *faceNormal = elem->renderData.faceNormalsP;
+        for (int i = elem->facesC; i; --i, ++face, ++faceNormal, ++dest)
+            *dest = xVector3::DotProduct((extrVerticesP + (*face)[0])->vector3, *faceNormal) > 0;
+    }
 }
 
 void xShadows_GetSilhouette(const xElement *elem, const bool *facingFlag, xWORD4 *&sideQadsP, xWORD3 *&backCapP, xWORD &edgesC)
@@ -71,8 +72,8 @@ void xShadows_GetSilhouette(const xElement *elem, const bool *facingFlag, xWORD4
                 (*sideDest)[3] = elem->verticesC + edgeIter->vert1;
             }
             (*backDest)[0] = backFirst;
-            (*backDest)[1] = (*sideDest)[2];
-            (*backDest)[2] = (*sideDest)[3];
+            (*backDest)[1] = (*sideDest)[3];
+            (*backDest)[2] = (*sideDest)[2];
             ++sideDest;
             ++backDest;
             ++edgesC;

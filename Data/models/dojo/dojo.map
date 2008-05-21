@@ -19,7 +19,6 @@ model	ceiling_lower.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
-shadows 1
 #
 model	roof_upper.3dx
 position	-0.03	-0.117	15.15
@@ -37,6 +36,7 @@ model	wall_entrance.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
+shadows 1
 #
 # North
 #
@@ -146,6 +146,7 @@ model	wall_long.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
+shadows 1
 #
 model	pillar.3dx
 position	0.0	0.0	-0.21
@@ -180,6 +181,7 @@ position	0.05	0.2	-0.21
 rotation	0	0	180
 physical	0
 phantom	0
+shadows 1
 #
 model	pillar.3dx
 position	0.05	-0.22	-0.21
