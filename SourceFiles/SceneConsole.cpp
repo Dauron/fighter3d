@@ -75,7 +75,7 @@ void SceneConsole::AppendConsole(std::string text)
 {
     history += text;
 
-    const char *start = text.data();
+    const char *start = text.c_str();
     const char *end;
 
     while ((end = strchr(start, '\n')))
@@ -330,13 +330,13 @@ test  = ";
     }
     if (cmd.substr(0, 5) == "test ")
     {
-        Config::TestCase = atoi(cmd.substr(5).data());
+        Config::TestCase = atoi(cmd.substr(5).c_str());
         Config::Initialize = true;
         return true;
     }
     if (cmd.substr(0, 6) == "speed ")
     {
-        Config::Speed = atof(cmd.substr(6).data());
+        Config::Speed = atof(cmd.substr(6).c_str());
         return true;
     }
     if (cmd == "tshd" || cmd == "toggle_shader")
@@ -370,7 +370,7 @@ test  = ";
     }
     if (cmd.substr(0, 4) == "log ")
     {
-        DEB__log(true, cmd.substr(4).data());
+        DEB__log(true, cmd.substr(4).c_str());
         return true;
     }
     if (cmd == "tail" || cmd == "log_tail")
@@ -450,8 +450,8 @@ bool SceneConsole::Render()
     glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
     glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing
 
-    pFont->Print(0.0f, cHeight-3*lineHeight, 0.0f, cHeight-3*lineHeight, scroll_v, history.data());
-    pFont->Print(currCmd.data());
+    pFont->Print(0.0f, cHeight-3*lineHeight, 0.0f, cHeight-3*lineHeight, scroll_v, history.c_str());
+    pFont->Print(currCmd.c_str());
     if (carretVisible && scroll_v >= histLines -1-pageSize)
         pFont->Print("_");
 

@@ -380,7 +380,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
                 m_AnimationName = Filesystem::ChangeFileExt(m_AnimationName, "ska");
                 std::string filePath = m_CurrentDirectory + "/";
                 filePath += m_AnimationName;
-                currentAnimation->Save(filePath.data());
+                currentAnimation->Save(filePath.c_str());
                 m_EditMode = emEditAnimation;
             }
         }
@@ -411,7 +411,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             std::string filePath = m_CurrentDirectory + "/";
             filePath += m_AnimationName;
             currentAnimation = new xAnimation();
-            currentAnimation->Load(filePath.data());
+            currentAnimation->Load(filePath.c_str());
             xRender *renderer = m_Model.GetRenderer();
             currentAnimation->SaveToSkeleton(renderer->spineP);
             renderer->CalculateSkeleton();
@@ -729,7 +729,7 @@ void SceneSkeleton::GetInputWeight()
     {
         int wght = 100;
         if (command.length())
-            wght = atoi (command.data());
+            wght = atoi (command.c_str());
 
         if (wght > 0) {
             int sum = boneWghts[0] + boneWghts[1] + boneWghts[2];
@@ -804,7 +804,7 @@ void SceneSkeleton::GetFrameParams()
     {
         int wght = frameParams[param];
         if (command.length())
-            wght = atoi (command.data());
+            wght = atoi (command.c_str());
         frameParams[param] = wght;
         ++param;
         if (param > 1)
@@ -842,7 +842,7 @@ void SceneSkeleton::FillDirectoryBtns(bool files, const char *mask)
     {
         top -= 20;
         if (top < 45) { top = Height-40; left += Width/3; }
-        m_Directories.push_back(GLButton(dirs[i].data(), left, top, width, 15, IC_BE_Move));
+        m_Directories.push_back(GLButton(dirs[i].c_str(), left, top, width, 15, IC_BE_Move));
     }
     if (files)
     {
@@ -851,7 +851,7 @@ void SceneSkeleton::FillDirectoryBtns(bool files, const char *mask)
         {
             top -= 20;
             if (top < 45) { top = Height-40; left += Width/3; }
-            m_Directories.push_back(GLButton(dirs[i].data(), left, top, width, 15, IC_BE_Select));
+            m_Directories.push_back(GLButton(dirs[i].c_str(), left, top, width, 15, IC_BE_Select));
             GLButton &btn = m_Directories.back();
             btn.Background.r = btn.Background.g = btn.Background.b = 0.35f;
         }

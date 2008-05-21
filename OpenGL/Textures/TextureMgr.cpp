@@ -1,10 +1,11 @@
 #include "TextureMgr.h"
+#include "../../Utils/Filesystem.h"
 
 HTexture TextureMgr :: GetTexture( const char* name )
 {
     // insert/find
     NameIndexInsertRc rc =
-        m_NameIndex.insert( std::make_pair( name, HTexture() ) );
+        m_NameIndex.insert( std::make_pair( Filesystem::GetFullPath(name), HTexture() ) );
     if ( rc.second )
     {
         // this is a new insertion

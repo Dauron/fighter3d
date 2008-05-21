@@ -9,7 +9,7 @@ bool Texture :: Load( const std::string& name, bool mipmap )
     assert (m_GLTexture == 0);
 
     ImageRec *image;
-    const char *fname = name.data();
+    const char *fname = name.c_str();
     if (strcasecmp(fname + name.size() - 4, ".bmp"))
         image = LoadTGA( fname );
     else

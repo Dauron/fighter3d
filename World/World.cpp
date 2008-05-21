@@ -93,6 +93,8 @@ void World:: Initialize()
     light.attenuationSquare = 0.f;
     lights.push_back(light);
 
+    g_CaptureInput.Finalize();
+
     if (!Config::TestCase)
     {
         Load("Data/models/dojo/dojo.map");
@@ -147,16 +149,21 @@ void World:: Initialize()
         modelA->AddAnimation("Data/models/anims/human/kiwa_sie.ska", 4700);
         modelA->castsShadows = true;
         objects.push_back(modelA);
-/*
+
         modelA = new SkeletizedObj(4.5f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
         modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
         modelA->phantom = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
-        //modelA->AddAnimation("Data/models/anims/human/idzie.ska");
-        //modelA->AddAnimation("Data/models/anims/human/garda.ska");
+
+        bool captureOK = g_CaptureInput.Initialize(modelA->GetRenderer()->xModelGraphics->spineP);
+        modelA->ControlType = (captureOK)
+            ? SkeletizedObj::Control_CaptureInput
+            : SkeletizedObj::Control_AI;
         objects.push_back(modelA);
-*//*
+
+
+/*
         modelA = new SkeletizedObj(5.f, -1.5f, -0.21f, 0.0f, 0.0f, 0.0f);
         modelA->Initialize("Data/models/human3.3dx", "Data/models/human3_fst.3dx", false, false);
         modelA->mass     = 70.f;
@@ -216,11 +223,11 @@ bool StartsWith(const char *buff, const char *string)
     return !*string;
 }
 
-void World:: Load(char *mapFileName)
+void World:: Load(const char *mapFileName)
 {
     std::ifstream in;
 
-    in.open(mapFileName);
+    in.open(Filesystem::GetFullPath(mapFileName).c_str());
     if (in.is_open())
     {
         std::string dir = Filesystem::GetParentDir(mapFileName);

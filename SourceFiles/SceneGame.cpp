@@ -429,11 +429,11 @@ bool SceneGame::Render()
                     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
                     //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
 
-                    if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
+                    //if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
                     for ( i = begin+1 ; i != end ; ++i )
                         if ((*i)->castsShadows)
                             (*i)->RenderShadowVolume(*light, &FOV);
-                    if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
+                    //if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
                     glPopAttrib();
                 }
             }

@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "../OpenGL/Fonts/FontMgr.h"
 #include "Input/InputMgr.h"
+#include "../MotionCapture/CaptureInput.h"
 #include "../OpenGL/Textures/TextureMgr.h"
 #include "../OpenGL/GLAnimSkeletal.h"
 #include "../Models/ModelMgr.h"
@@ -45,6 +46,9 @@ bool Application::Invalidate()
 {
     if (!InputMgr::GetSingletonPtr())
         new InputMgr();
+
+    if (!CaptureInput::GetSingletonPtr())
+        new CaptureInput();
 
     if (!FontMgr::GetSingletonPtr())
         new FontMgr();
@@ -91,6 +95,8 @@ void Application::Terminate()
         delete TextureMgr::GetSingletonPtr();
     if (InputMgr::GetSingletonPtr())
         delete InputMgr::GetSingletonPtr();
+    if (CaptureInput::GetSingletonPtr())
+        delete CaptureInput::GetSingletonPtr();
     if (GLAnimSkeletal::GetSingletonPtr())
         delete GLAnimSkeletal::GetSingletonPtr();
 }

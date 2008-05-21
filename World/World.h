@@ -50,7 +50,7 @@ public:
         return objectIDs == NULL ? NULL : objects[objectIDs->back()];
     }
 
-    void Load       (char *mapFileName);
+    void Load       (const char *mapFileName);
     void Initialize ();
     void Update     (float deltaTime);
     void Finalize   ();

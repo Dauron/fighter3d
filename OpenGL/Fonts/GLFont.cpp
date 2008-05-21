@@ -68,7 +68,7 @@ void GLFont::Init()
                         CLIP_DEFAULT_PRECIS,        // Clipping Precision
                         ANTIALIASED_QUALITY,        // Output Quality
                         FF_DONTCARE|DEFAULT_PITCH,  // Family And Pitch
-                        m_Name.data());             // Font Name
+                        m_Name.c_str());             // Font Name
 
     oldfont = (HFONT)SelectObject(hDC, font);       // Selects The Font We Want
 

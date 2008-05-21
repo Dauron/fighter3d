@@ -295,7 +295,7 @@ xVector4 *     xAnimation::Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT 
 
     return bones;
 }
-void         xAnimation::Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xVector4 *&bones)
+void           xAnimation::Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xVector4 *&bones)
 {
     if (!bones) bones = new xVector4[boneC];
     xVector4 *pRes = bones;

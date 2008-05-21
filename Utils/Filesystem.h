@@ -71,9 +71,31 @@ static int one (const struct dirent *unused)
 
 class Filesystem
 {
-  public:
+public:
+
+    static std::string WorkingDirectory;
 
     typedef std::vector<std::string> VectorString;
+
+    static std::string GetSystemWorkingDirectory()
+    {
+        char buff[255];
+#ifdef WIN32
+        _getcwd(buff, 255);
+#else
+        getcwd(buff, 255);
+#endif
+        return buff;
+    }
+
+    static void SetSystemWorkingDirectory(const std::string &path)
+    {
+#ifdef WIN32
+        _chdir(path.c_str());
+#else
+        chdir(path.c_str());
+#endif
+    }
 
     static std::string  GetParentDir(const std::string &path)
     {
@@ -86,13 +108,16 @@ class Filesystem
         if (path[1] != ':' && path[0] != '/')
         {
             std::string p = "/" + path;
+/*
             char buff[255];
 #ifdef WIN32
             _getcwd(buff, 255);
 #else
             getcwd(buff, 255);
 #endif
-            return buff + p;
+  $          return buff + p;
+*/
+            return WorkingDirectory + p;
         }
         return path;
     }
@@ -134,7 +159,7 @@ class Filesystem
         p += '*';
 
         WIN32_FIND_DATA f;
-        HANDLE h = FindFirstFile(p.data(), &f);
+        HANDLE h = FindFirstFile(p.c_str(), &f);
         if(h != INVALID_HANDLE_VALUE)
         {
             do
@@ -145,11 +170,11 @@ class Filesystem
             FindClose(h);
         }
         else
-            LOG("Directory open error %d - %s", GetLastError(), path.data());
+            LOG("Directory open error %d - %s", GetLastError(), path.c_str());
 #else
         dirent **eps;
         dirent **dirp;
-        int n = scandir (p.data(), &eps, one, alphasort);
+        int n = scandir (p.c_str(), &eps, one, alphasort);
         if (n >= 0)
         {
             dirp = eps;
@@ -167,7 +192,7 @@ class Filesystem
            delete[] eps;
         }
         else
-            LOG("Directory open error: %s - %s", strerror(errno), path.data());
+            LOG("Directory open error: %s - %s", strerror(errno), path.c_str());
 #endif
 
         return vec;
@@ -185,7 +210,7 @@ class Filesystem
         else      p += '*';
 
         WIN32_FIND_DATA f;
-        HANDLE h = FindFirstFile(p.data(), &f);
+        HANDLE h = FindFirstFile(p.c_str(), &f);
         if(h != INVALID_HANDLE_VALUE)
         {
             do
@@ -195,11 +220,11 @@ class Filesystem
             FindClose(h);
         }
         else
-            LOG("Directory open error: %d - %s", GetLastError(), path.data());
+            LOG("Directory open error: %d - %s", GetLastError(), path.c_str());
 #else
         dirent **eps;
         dirent **dirp;
-        int n = scandir (p.data(), &eps, one, alphasort);
+        int n = scandir (p.c_str(), &eps, one, alphasort);
         if (n >= 0)
         {
             dirp = eps;
@@ -210,7 +235,7 @@ class Filesystem
                 {
                     std::string candidate( p + (*dirp)->d_name );
                     if ( LinuxFileInfo::isRegularFile(candidate) && LinuxFileInfo::canRead(candidate) &&
-                         MatchWildcards(mask, candidate.data()) )
+                         MatchWildcards(mask, candidate.c_str()) )
                         vec.push_back( (*dirp)->d_name );
                 }
                 delete *dirp;
@@ -218,7 +243,7 @@ class Filesystem
            delete[] eps;
         }
         else
-            LOG("Directory open error: %s - %s", strerror(errno), path.data());
+            LOG("Directory open error: %s - %s", strerror(errno), path.c_str());
 #endif
         return vec;
     }

@@ -56,7 +56,7 @@ protected:
         glColor4ubv(Color);
 
         if (g_FontMgr.IsHandleValid(Font))
-            g_FontMgr.GetFont(Font)->Print3d(Text.data());
+            g_FontMgr.GetFont(Font)->Print3d(Text.c_str());
         else
             assert(false);
     }

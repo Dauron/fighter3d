@@ -1,15 +1,16 @@
 #include "xAnimationMgr.h"
+#include "../../Utils/Filesystem.h"
 
 HAnimation xAnimationMgr :: GetAnimation    ( const char* name )
 {
     // insert/find
     NameIndexInsertRc rc =
-        m_NameIndex.insert( std::make_pair( name, HAnimation() ) );
+        m_NameIndex.insert( std::make_pair( Filesystem::GetFullPath(name), HAnimation() ) );
     if ( rc.second )
     {
         // this is a new insertion
         xAnimationH* ani = m_HandleMgr.Acquire( rc.first->second );
-        if ( !ani->Load( rc.first->first.data() ) )
+        if ( !ani->Load( rc.first->first.c_str() ) )
         {
             m_HandleMgr.Release( rc.first->second );
             m_NameIndex.erase( rc.first );

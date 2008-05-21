@@ -3,7 +3,7 @@
 
 int   Config::Initialize        = false;
 bool  Config::EnableLighting    = true;
-bool  Config::EnableShadows     = true;
+bool  Config::EnableShadows     = false;
 bool  Config::DisplayShadowVolumes = false;
 bool  Config::EnableShaders     = true;
 int   Config::PolygonMode       = 0x1B02;

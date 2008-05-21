@@ -73,7 +73,7 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
     xSkeletonReset(renderer->spineP);
     renderer->CalculateSkeleton();
 
-    m_CurrentDirectory = Filesystem::GetFullPath(Filesystem::GetParentDir( gr_modelName ));
+    m_CurrentDirectory = Filesystem::GetFullPath("Data/models");
 }
 bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned int height)
 {
@@ -81,8 +81,8 @@ bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned i
     InitInputMgr();
     g_InputMgr.mouseWheel = 0;
     if (!modifyButton) {
-        modifyButton = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_BE_Modifier)).data());
-        acceptButton = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_Accept)).data());
+        modifyButton = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_BE_Modifier)).c_str());
+        acceptButton = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_Accept)).c_str());
     }
     if (!m_Cameras.Current)
     {
@@ -334,20 +334,20 @@ bool SceneSkeleton::Render()
     else if (m_EditMode == emFrameParams) {
         pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
         if (param == 0)
-            pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: (%d) %s", frameParams[0], command.data());
+            pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: (%d) %s", frameParams[0], command.c_str());
         else
         {
             pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: %d", frameParams[0]);
-            pFont->PrintF(5.f, Height - 60.f, 0.f, "Duration: (%d) %s", frameParams[1], command.data());
+            pFont->PrintF(5.f, Height - 60.f, 0.f, "Duration: (%d) %s", frameParams[1], command.c_str());
         }
     }
     else if (m_EditMode == emSaveAnimation)
     {
         pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
         if (m_AnimationName.size())
-            pFont->PrintF(5.f, 25, 0.f, "Filename: (%s) %s", m_AnimationName.data(), command.data());
+            pFont->PrintF(5.f, 25, 0.f, "Filename: (%s) %s", m_AnimationName.c_str(), command.c_str());
         else
-            pFont->PrintF(5.f, 25, 0.f, "Filename: %s", command.data());
+            pFont->PrintF(5.f, 25, 0.f, "Filename: %s", command.c_str());
     }
 
     std::vector<GLButton>::iterator begin = m_Buttons[m_EditMode].begin();
@@ -371,7 +371,7 @@ bool SceneSkeleton::Render()
             pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : %d", boneIds[i], boneWghts[i]);
         }
         if (m_EditMode == emInputWght)
-            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : (%d) %s", selectedBone->id, 100 - sum, command.data());
+            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : (%d) %s", selectedBone->id, 100 - sum, command.c_str());
     }
 
     glFlush();
