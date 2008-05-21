@@ -1,4 +1,4 @@
-
+#include "ARB_vertex_shader.h"
 
 // Functions pointers for ARB_vertex_shader Extension:
 
@@ -13,7 +13,7 @@ PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glEnableVertexAttribArrayARB   = NULL;
 PFNGLENABLEVERTEXATTRIBARRAYARBPROC  glDisableVertexAttribArrayARB  = NULL;
 
 
-bool init_ARB_vertex_shader(void)
+bool GL_init_ARB_vertex_shader(void)
 {
   int error = 0;
 

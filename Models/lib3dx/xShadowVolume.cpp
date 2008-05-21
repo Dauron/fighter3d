@@ -1,95 +1,213 @@
 #include "xUtils.h"
 #include "xShadowVolume.h"
 
-void xShadows_ExtrudePoints (const xElement *elem, bool infiniteL, const xVector3 &lightPos, xSkinnedDataShd &extrPoints)
+void xShadows_ExtrudePoints (const xElement *elem, bool infiniteL, const xVector3 &lightPos,
+                             xRenderShadowData &shadowData)
 {
-    xVector4 *src  = extrPoints.verticesP;
-    xVector4 *dest = extrPoints.verticesP + elem->verticesC;
+    xVector4 *dest = shadowData.verticesP + elem->verticesC;
 
+    if (infiniteL)
+    {
+        dest->init(-lightPos, 0.f);
+        return;
+    }
+
+    xVector4 *src  = shadowData.verticesP;
     for (int i = elem->verticesC; i; --i, ++src, ++dest)
-        if (infiniteL)
-            dest->init(-lightPos, 0.f);
-        else
-            dest->init(src->vector3 - lightPos, 0.f);
+        dest->init(src->vector3 - lightPos, 0.f);
 }
 
-void xShadows_GetBackFaces (const xElement *elem, const xSkinnedDataShd &extrPoints, bool *&backFaces)
+void xShadows_GetBackFaces (const xElement *elem, bool infiniteL,
+                            const xRenderShadowData &shadowData, bool *&backFaces)
 {
     if (backFaces == NULL)
         backFaces = new bool[elem->facesC];
 
     bool     *dest = backFaces;
-    xWORD3   *face = elem->facesP;
-    xVector4 *extrVerticesP = extrPoints.verticesP + elem->verticesC;
+    xFace    *face = elem->facesP;
+    xVector4 *extrVerticesP = shadowData.verticesP + elem->verticesC;
 
-    if (elem->skeletized)
+    if (infiniteL)
     {
-        xVector3 faceNormal;
-        for (int i = elem->facesC; i; --i, ++face, ++dest)
+        xVector3 lightDir = extrVerticesP->vector3;
+        if (elem->skeletized)
         {
-            faceNormal = extrPoints.normalsP[(*face)[0]] + extrPoints.normalsP[(*face)[1]] + extrPoints.normalsP[(*face)[2]];
-            *dest = xVector3::DotProduct((extrVerticesP + *face[0])->vector3, faceNormal) > 0;
+            xVector3 faceNormal;
+            for (int i = elem->facesC; i; --i, ++face, ++dest)
+            {
+                faceNormal = shadowData.normalsP[(*face)[0]] + shadowData.normalsP[(*face)[1]] + shadowData.normalsP[(*face)[2]];
+                *dest = xVector3::DotProduct(lightDir, faceNormal) > 0;
+            }
+        }
+        else
+        {
+            xVector3 *faceNormal = elem->renderData.faceNormalsP;
+            for (int i = elem->facesC; i; --i, ++face, ++faceNormal, ++dest)
+                *dest = xVector3::DotProduct(lightDir, *faceNormal) > 0;
         }
     }
     else
     {
-        xVector3 *faceNormal = elem->renderData.faceNormalsP;
-        for (int i = elem->facesC; i; --i, ++face, ++faceNormal, ++dest)
-            *dest = xVector3::DotProduct((extrVerticesP + (*face)[0])->vector3, *faceNormal) > 0;
+        if (elem->skeletized)
+        {
+            xVector3 faceNormal;
+            for (int i = elem->facesC; i; --i, ++face, ++dest)
+            {
+                faceNormal = shadowData.normalsP[(*face)[0]] + shadowData.normalsP[(*face)[1]] + shadowData.normalsP[(*face)[2]];
+                *dest = xVector3::DotProduct((extrVerticesP + *face[0])->vector3, faceNormal) > 0;
+            }
+        }
+        else
+        {
+            xVector3 *faceNormal = elem->renderData.faceNormalsP;
+            for (int i = elem->facesC; i; --i, ++face, ++faceNormal, ++dest)
+                *dest = xVector3::DotProduct((extrVerticesP + (*face)[0])->vector3, *faceNormal) > 0;
+        }
     }
 }
 
-void xShadows_GetSilhouette(const xElement *elem, const bool *facingFlag, xWORD4 *&sideQadsP, xWORD3 *&backCapP, xWORD &edgesC)
+void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeBackCap,
+                            const bool *facingFlag, xRenderShadowData &shadowData)
 {
-    if (sideQadsP) delete[] sideQadsP;
-    sideQadsP = new xWORD4[elem->edgesC];
-    if (backCapP) delete[] backCapP;
-    backCapP = new xWORD3[elem->edgesC];
-    edgesC = 0;
+    shadowData.sideC = 0;
+    shadowData.frontC = 0;
+    shadowData.backC = 0;
+    if (shadowData.indexP) delete[] shadowData.indexP;
+
+    xWORD3 *frontCapP = new xWORD3[elem->facesC];
+    xWORD3 *frontDest = frontCapP;
 
     xEdge  *edgeIter = elem->edgesP;
     xEdge  *edgeEnd  = edgeIter + elem->edgesC;
-    xWORD4 *sideDest = sideQadsP;
-    xWORD3 *backDest = backCapP;
 
-    xWORD  backFirst = elem->verticesC + edgeIter->vert1;
+    if (!infiniteL)
+    {
+        xWORD  backFirst = elem->verticesC + edgeIter->vert1;
 
-    for (; edgeIter != edgeEnd; ++edgeIter)
-        if (facingFlag[edgeIter->face1] ^ (edgeIter->face2 != xWORD_MAX && facingFlag[edgeIter->face2]))
+        xWORD4 *sideQadsP = new xWORD4[elem->edgesC];
+        xWORD3 *backCapP;
+        if (optimizeBackCap)
+            backCapP = new xWORD3[elem->edgesC];
+        else
+            backCapP = new xWORD3[elem->facesC];
+
+        xWORD4 *sideDest  = sideQadsP;
+        xWORD3 *backDest  = backCapP;
+
+        for (; edgeIter != edgeEnd; ++edgeIter)
+            if (facingFlag[edgeIter->face1] ^ (edgeIter->face2 != xWORD_MAX && facingFlag[edgeIter->face2]))
+            {
+                if (facingFlag[edgeIter->face1])
+                {
+                    (*sideDest)[0] = edgeIter->vert2;
+                    (*sideDest)[1] = edgeIter->vert1;
+                    (*sideDest)[2] = elem->verticesC + edgeIter->vert1;
+                    (*sideDest)[3] = elem->verticesC + edgeIter->vert2;
+                }
+                else
+                {
+                    (*sideDest)[0] = edgeIter->vert1;
+                    (*sideDest)[1] = edgeIter->vert2;
+                    (*sideDest)[2] = elem->verticesC + edgeIter->vert2;
+                    (*sideDest)[3] = elem->verticesC + edgeIter->vert1;
+                }
+                if (optimizeBackCap)
+                {
+                    (*backDest)[0] = backFirst;
+                    (*backDest)[1] = (*sideDest)[3];
+                    (*backDest)[2] = (*sideDest)[2];
+                    ++shadowData.backC;
+                    ++backDest;
+                }
+                ++sideDest;
+                ++shadowData.sideC;
+            }
+
+        xFaceList *faceList = elem->faceListP;
+        for (int i=elem->faceListC; i; --i, ++faceList)
         {
-            if (facingFlag[edgeIter->face1])
+            if (!faceList->materialP || faceList->materialP->transparency == 0.f)
             {
-                (*sideDest)[0] = edgeIter->vert2;
-                (*sideDest)[1] = edgeIter->vert1;
-                (*sideDest)[2] = elem->verticesC + edgeIter->vert1;
-                (*sideDest)[3] = elem->verticesC + edgeIter->vert2;
+                xWORD3     *face     = elem->facesP + faceList->indexOffset;
+                const bool *faceFlag = facingFlag + faceList->indexOffset;
+                for (int j = faceList->indexCount; j; --j, ++face, ++faceFlag)
+                    if (*faceFlag)
+                    {
+                        (*frontDest)[0] = (*face)[0];
+                        (*frontDest)[1] = (*face)[1];
+                        (*frontDest)[2] = (*face)[2];
+                        ++shadowData.frontC;
+                        ++frontDest;
+                    }
+                    else
+                    if(!optimizeBackCap)
+                    {
+                        (*backDest)[0] = elem->verticesC + (*face)[0];
+                        (*backDest)[1] = elem->verticesC + (*face)[1];
+                        (*backDest)[2] = elem->verticesC + (*face)[2];
+                        ++shadowData.backC;
+                        ++backDest;
+                    }
             }
-            else
-            {
-                (*sideDest)[0] = edgeIter->vert1;
-                (*sideDest)[1] = edgeIter->vert2;
-                (*sideDest)[2] = elem->verticesC + edgeIter->vert2;
-                (*sideDest)[3] = elem->verticesC + edgeIter->vert1;
-            }
-            (*backDest)[0] = backFirst;
-            (*backDest)[1] = (*sideDest)[3];
-            (*backDest)[2] = (*sideDest)[2];
-            ++sideDest;
-            ++backDest;
-            ++edgesC;
         }
 
-    if (edgesC < elem->edgesC)
+        shadowData.indexP = new xWORD[4*shadowData.sideC + 3*shadowData.frontC + 3*shadowData.backC];
+        memcpy(shadowData.indexP, sideQadsP, shadowData.sideC*sizeof(xWORD4));
+        delete[] sideQadsP;
+        memcpy(shadowData.indexP + shadowData.sideC*4, frontCapP, shadowData.frontC*sizeof(xWORD3));
+        delete[] frontCapP;
+        memcpy(shadowData.indexP + shadowData.sideC*4 + shadowData.frontC*3,
+               backCapP, shadowData.backC*sizeof(xWORD3));
+        delete[] backCapP;
+    }
+    else
     {
-        sideDest = sideQadsP;
-        sideQadsP = new xWORD4[edgesC];
-        memcpy(sideQadsP, sideDest, edgesC*sizeof(xWORD4));
-        delete[] sideDest;
+        xWORD3 *sideTrisP = new xWORD3[elem->edgesC];
+        xWORD3 *sideDest = sideTrisP;
 
-        backDest = backCapP;
-        backCapP = new xWORD3[edgesC];
-        memcpy(backCapP, backDest, edgesC*sizeof(xWORD3));
-        delete[] backDest;
+        for (; edgeIter != edgeEnd; ++edgeIter)
+            if (facingFlag[edgeIter->face1] ^ (edgeIter->face2 != xWORD_MAX && facingFlag[edgeIter->face2]))
+            {
+                if (facingFlag[edgeIter->face1])
+                {
+                    (*sideDest)[0] = edgeIter->vert2;
+                    (*sideDest)[1] = edgeIter->vert1;
+                    (*sideDest)[2] = elem->verticesC;
+                }
+                else
+                {
+                    (*sideDest)[0] = edgeIter->vert1;
+                    (*sideDest)[1] = edgeIter->vert2;
+                    (*sideDest)[2] = elem->verticesC;
+                }
+                ++sideDest;
+                ++shadowData.sideC;
+            }
+
+        xFaceList *faceList = elem->faceListP;
+        for (int i=elem->faceListC; i; --i, ++faceList)
+        {
+            if (!faceList->materialP || faceList->materialP->transparency == 0.f)
+            {
+                xWORD3     *face     = elem->facesP + faceList->indexOffset;
+                const bool *faceFlag = facingFlag + faceList->indexOffset;
+                for (int j = faceList->indexCount; j; --j, ++face, ++faceFlag)
+                    if (*faceFlag)
+                    {
+                        (*frontDest)[0] = (*face)[0];
+                        (*frontDest)[1] = (*face)[1];
+                        (*frontDest)[2] = (*face)[2];
+                        ++shadowData.frontC;
+                        ++frontDest;
+                    }
+            }
+        }
+
+        shadowData.indexP = new xWORD[3*shadowData.sideC + 3*shadowData.frontC];
+        memcpy(shadowData.indexP, sideTrisP, shadowData.sideC*sizeof(xWORD3));
+        delete[] sideTrisP;
+        memcpy(shadowData.indexP + shadowData.sideC*3, frontCapP, shadowData.frontC*sizeof(xWORD3));
+        delete[] frontCapP;
     }
 }
 

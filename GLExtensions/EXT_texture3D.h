@@ -1,4 +1,6 @@
-bool init_EXT_texture3D(void);
+#include "GLExtensions.h"
+
+bool GL_init_EXT_texture3D(void);
 
 #ifdef WIN32
 
@@ -32,7 +34,7 @@ typedef GLvoid (APIENTRY * PFNGLCOPYTEXSUBIMAGE3DPROC)(GLenum target, GLint leve
                                                        GLint y, GLsizei width, GLsizei height);
 
 
-#endif
+#endif /* GL_EXT_texture3D */
 
 extern PFNGLTEXIMAGE3DEXTPROC glTexImage3D;
 extern PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D;

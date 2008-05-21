@@ -29,7 +29,7 @@ float RigidBody :: CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVect
 
 void RigidBody :: CalculateCollisions(ModelObj *model)
 {
-    if (!model->physical) return;
+    if (model->locked) return;
 
     model->penetrationCorrection.zero();
     if (!model->CollidedModels.empty())
@@ -96,7 +96,7 @@ void RigidBody :: CalculateCollisions(ModelObj *model)
 
 void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
 {
-    if (!model->physical)
+    if (model->locked)
     {
         model->CollidedModels.clear();
         return;

@@ -1,4 +1,4 @@
-
+#include "ARB_shader_objects.h"
 
 // Functions pointers for ARB_shader_objects Extension:
 
@@ -44,7 +44,7 @@ PFNGLGETUNIFORMFVARBPROC                    glGetUniformfvARB           = NULL;
 PFNGLGETUNIFORMIVARBPROC                    glGetUniformivARB           = NULL;
 PFNGLGETSHADERSOURCEARBPROC                 glGetShaderSourceARB        = NULL;
 
-bool init_ARB_shader_objects(void)
+bool GL_init_ARB_shader_objects(void)
 {
   int error = 0;
 

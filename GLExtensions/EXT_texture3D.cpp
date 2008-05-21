@@ -1,4 +1,4 @@
-// GL_EXT_texture3D
+#include "EXT_texture3D.h"
 
 #ifdef WIN32
 PFNGLTEXIMAGE3DEXTPROC glTexImage3D = NULL;
@@ -6,7 +6,7 @@ PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D = NULL;
 PFNGLCOPYTEXSUBIMAGE3DPROC glCopyTexSubImage3D = NULL;
 #endif
 
-bool init_EXT_texture3D(void)
+bool GL_init_EXT_texture3D(void)
 {
   int error = 0;
 

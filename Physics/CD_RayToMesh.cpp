@@ -147,7 +147,7 @@ bool CD_RayToMesh::CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,
 
             for (int i1 = ch->facesC; i1; --i1)
             {
-                xWORD3 **face1 = ch->facesP + ch->facesC - i1;
+                xFace **face1 = ch->facesP + ch->facesC - i1;
                 xVector3 *a1 = ci->verticesP + (**face1)[0];
                 xVector3 *a2 = ci->verticesP + (**face1)[1];
                 xVector3 *a3 = ci->verticesP + (**face1)[2];
@@ -207,7 +207,7 @@ bool CD_RayToMesh::Collide(ModelObj *model,
     notCollided = true;
 
     bool res = false;
-    for (xElement *elem = r->xModelPhysical->firstP; elem; elem = elem->nextP)
+    for (xElement *elem = r->xModelPhysical->kidsP; elem; elem = elem->nextP)
         res |= CollideElements(++ci, elem);
 
     colPoint = collisionPoint;

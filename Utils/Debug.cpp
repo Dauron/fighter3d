@@ -3,6 +3,7 @@
 #include <cassert>
 #include <ctime>
 #include "../AppFramework/System.h"
+#include "Filesystem.h"
 #include <GL/gl.h>
 
 #ifdef WIN32
@@ -16,7 +17,7 @@ FILE *log;
 void DEB__log(bool withtime, const char *fmt, ...)
 {
     if (!log)
-        log = fopen("log.txt", "a+");
+        log = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
     assert(log);
     if (!log)
         return;
@@ -46,7 +47,7 @@ void DEB__log(bool withtime, const char *fmt, ...)
 char *DEB__log_read()
 {
     if (!log)
-        log = fopen("log.txt", "a+");
+        log = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
     assert(log);
     if (!log)
         return NULL;
@@ -65,7 +66,7 @@ char *DEB__log_read()
 char *DEB__log_tail()
 {
     if (!log)
-        log = fopen("log.txt", "a+");
+        log = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
     assert(log);
     if (!log)
         return NULL;
@@ -89,7 +90,7 @@ void DEB__log_clear()
         fclose(log);
         log = NULL;
     }
-    remove("log.txt");
+    remove(Filesystem::GetFullPath("log.txt").c_str());
 }
 
 bool DEB_CheckForGLError(char *file, int line)

@@ -25,7 +25,7 @@ class Application : public Singleton<Application>
     Scene&    CurrentScene() { return *m_scene; }
     bool      SetCurrentScene(Scene* scene, bool destroyPrev = true);
 
-    Application() : m_scene(NULL), m_title(NULL), m_OpenGL(true)
+    Application() : m_scene(NULL), m_title(NULL), m_OpenGL(true), OnApplicationInvalidate(NULL), OnApplicationTerminate(NULL)
     {
         if (m_OpenGL)
             m_window = new GLWindow();
@@ -36,6 +36,9 @@ class Application : public Singleton<Application>
 
     bool OpenGL()  { return m_OpenGL; }
     bool DirectX() { return !m_OpenGL; }
+
+    void (*OnApplicationInvalidate)(Application* sender);
+    void (*OnApplicationTerminate) (Application* sender);
 
   private:
      // copy constructor

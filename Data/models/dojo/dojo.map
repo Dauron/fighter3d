@@ -1,9 +1,4 @@
 #
-model	../night.3ds
-position	0.0	0.0	0.0
-physical	0
-phantom	0
-#
 model	floor0_F.3dx
 position	0.0	0.0	-0.21
 physical	0

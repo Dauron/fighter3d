@@ -1,6 +1,6 @@
-#ifdef WIN32
+#include "ARB_multitexture.h"
 
-GLboolean use_ARB_multitexture = GL_FALSE;
+#ifdef WIN32
 
 // Functions pointers for ARB_multitexture Extension:
 
@@ -41,7 +41,7 @@ PFNGLMULTITEXCOORD4SVARBPROC glMultiTexCoord4svARB = NULL;
 
 #endif
 
-bool init_ARB_multitexture(void)
+bool GL_init_ARB_multitexture(void)
 {
   int error = 0;
 

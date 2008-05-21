@@ -2,8 +2,7 @@
 #define __incl_lib3dx_xRenderGL_h
 
 #include "xRender.h"
-#include "../../GLExtensions/aGL_Extensions.h"
-
+#include "../../GLExtensions/ARB_vertex_buffer_object.h"
 #include "../../Utils/Debug.h"
 
 class xRenderGL : public xRender
@@ -17,18 +16,16 @@ class xRenderGL : public xRender
     virtual void RenderFaces    ( xWORD                 selectedElement,
                                   std::vector<xDWORD>  * facesToRender );
 
-    virtual void   RenderShadow   ( const xShadowMap &shadowMap, const xFieldOfView *FOV );
-            void   RenderShadowMap( bool transparent );
-    virtual xDWORD CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight);
+    virtual void   RenderShadowVolume    ( xLight &light, xFieldOfView *FOV );
+    virtual void   RenderShadowMap       ( const xShadowMap &shadowMap, const xFieldOfView *FOV );
+    virtual xDWORD CreateShadowMapTexture( xWORD width, xMatrix &mtxBlockerToLight );
 
-    virtual void RenderShadowVolume(xLight &light, xFieldOfView *FOV);
-
-    xRenderGL() : UseVBO(agl_VBOLoaded), UseList(true) {};
+    xRenderGL() : UseVBO(GLExtensions::Exists_ARB_VertexBufferObject), UseList(true) {};
 
     virtual void Initialize(bool isStatic, HModel hGrModel, HModel hPhModel = HModel())
     {
         xRender::Initialize(isStatic, hGrModel, hPhModel);
-        UseVBO = agl_VBOLoaded && !isStatic;
+        UseVBO = GLExtensions::Exists_ARB_VertexBufferObject && !isStatic;
     }
 
     virtual void Invalidate()
@@ -42,9 +39,9 @@ class xRenderGL : public xRender
             cnt = instanceDataGrC;
             for (iter = instanceDataGrP; cnt; --cnt, ++iter)
             {
-                iter->vertexB = 0;
-                iter->normalB = 0;
-                iter->indexB = 0;
+                iter->gpuMain.vertexB = 0;
+                iter->gpuMain.normalB = 0;
+                iter->gpuMain.indexB = 0;
                 iter->mode = xElementInstance::xRenderMode_NULL;
             }
         }
@@ -53,9 +50,9 @@ class xRenderGL : public xRender
             cnt = instanceDataPhC;
             for (iter = instanceDataPhP; cnt; --cnt, ++iter)
             {
-                iter->vertexB = 0;
-                iter->normalB = 0;
-                iter->indexB = 0;
+                iter->gpuMain.vertexB = 0;
+                iter->gpuMain.normalB = 0;
+                iter->gpuMain.indexB = 0;
                 iter->mode = xElementInstance::xRenderMode_NULL;
             }
         }
@@ -93,10 +90,10 @@ class xRenderGL : public xRender
             for (int i = instanceDataC; i; --i, ++iter)
                 if (iter->mode == xElementInstance::xRenderMode_LIST)
                 {
-                    if (iter->listID)       glDeleteLists(iter->listID, 1);
-                    if (iter->listIDTransp) glDeleteLists(iter->listIDTransp, 1);
-                    iter->listID = 0;
-                    iter->listIDTransp = 0;
+                    if (iter->gpuMain.listID)       glDeleteLists(iter->gpuMain.listID, 1);
+                    if (iter->gpuMain.listIDTransp) glDeleteLists(iter->gpuMain.listIDTransp, 1);
+                    iter->gpuMain.listID = 0;
+                    iter->gpuMain.listIDTransp = 0;
                     iter->mode = xElementInstance::xRenderMode_NULL;
                 }
         }
@@ -109,15 +106,15 @@ class xRenderGL : public xRender
             for (int i = instanceDataC; i; --i, ++iter)
                 if (iter->mode == xElementInstance::xRenderMode_VBO)
                 {
-                    GLuint p = iter->vertexB;
+                    GLuint p = iter->gpuMain.vertexB;
                     if (p) glDeleteBuffersARB(1, &p);
-                    p = iter->normalB;
+                    p = iter->gpuMain.normalB;
                     if (p) glDeleteBuffersARB(1, &p);
-                    p = iter->indexB;
+                    p = iter->gpuMain.indexB;
                     if (p) glDeleteBuffersARB(1, &p);
-                    iter->vertexB = 0;
-                    iter->normalB = 0;
-                    iter->indexB = 0;
+                    iter->gpuMain.vertexB = 0;
+                    iter->gpuMain.normalB = 0;
+                    iter->gpuMain.indexB = 0;
                     iter->mode = xElementInstance::xRenderMode_NULL;
                 }
         }
@@ -187,11 +184,12 @@ class xRenderGL : public xRender
     void RenderModelVBO( xElement * elem, bool transparent );
     void RenderModelLST( xElement * elem, bool transparent );
 
-    void RenderShadowLST( xElement *elem );
-    void RenderShadowVBO( xElement *elem );
+    void RenderShadowMapTexture( bool transparent );
+    void RenderShadowMapLST    ( xElement *elem );
+    void RenderShadowMapVBO    ( xElement *elem );
 
-    void RenderShadowMapLST( xElement *elem, bool transparent );
-    void RenderShadowMapVBO( xElement *elem, bool transparent );
+    void RenderShadowMapTextureLST( xElement *elem, bool transparent );
+    void RenderShadowMapTextureVBO( xElement *elem, bool transparent );
 
     void RenderShadowVolumeElem(xElement *elem, xLight &light);
     void RenderShadowVolumeZPass(xElement *elem, xLight &light);

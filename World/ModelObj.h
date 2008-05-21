@@ -4,7 +4,7 @@
 #include "Object3D.h"
 #include "../Math/xLight.h"
 #include "../Models/ModelMgr.h"
-#include "../Models/lib3dx/xSkeleton.h"
+#include "../Models/lib3dx/xBone.h"
 #include "../Models/lib3dx/xRenderGL.h"
 #include "../Physics/CollisionInfo.h"
 #include <algorithm>
@@ -16,6 +16,7 @@ class ModelObj : public Object3D
 public:
     bool           castsShadows;
     bool           phantom;    // no collisions
+    bool           locked;     // may not be moved?
     bool           physical;   // affected by gravity?
     float          mass;       // weight of an object
     float          resilience; // how much energy will the object retain during collisions
@@ -51,7 +52,7 @@ public:
 
     /******** LIFETIME : BEGIN ********/
 public:
-    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physical = false, bool phantom = true);
+    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physicalNotLocked = false, bool phantom = true);
     virtual void Finalize   ();
     virtual void Invalidate () { renderer.Invalidate(); smap.texId = 0; }
     /********* LIFETIME : END *********/
@@ -82,13 +83,13 @@ public:
     {
         xMatrix blocker;
         GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, Config::ShadowMapSize);
-        smap.texId = GetRenderer()->CreateShadowMap(Config::ShadowMapSize, blocker);
+        smap.texId = GetRenderer()->CreateShadowMapTexture(Config::ShadowMapSize, blocker);
     }
     xShadowMap GetShadowMap ()                { return smap; }
-    void       RenderShadow (xShadowMap smap, const xFieldOfView *FOV)
+    void       RenderShadowMap (xShadowMap smap, const xFieldOfView *FOV)
     {
         GetRenderer()->SetLocation(mLocationMatrix);
-        GetRenderer()->RenderShadow(smap, FOV);
+        GetRenderer()->RenderShadowMap(smap, FOV);
     }
 
     void       RenderShadowVolume(xLight &light, xFieldOfView *FOV)

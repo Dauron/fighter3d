@@ -1,4 +1,4 @@
-GLboolean use_ARB_vertex_buffer_object = GL_FALSE;
+#include "ARB_vertex_buffer_object.h"
 
 // Functions pointers for ARB_vertex_buffer_object Extension:
 PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
@@ -13,7 +13,7 @@ PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
 PFNGLGETBUFFERPARAMETERIVARBPROC glGetBufferParameterivARB = NULL;
 PFNGLGETBUFFERPOINTERVARBPROC glGetBufferPointervARB = NULL;
 
-bool init_ARB_vertex_buffer_object(void)
+bool GL_init_ARB_vertex_buffer_object(void)
 {
   int error = 0;
 

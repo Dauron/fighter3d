@@ -4,7 +4,8 @@
 #include <cassert>
 #include "../AppFramework/System.h"
 #include <GL/gl.h>
-#include "../GLExtensions/aGL_Extensions.h"
+#include "../GLExtensions/ARB_vertex_shader.h"
+#include "../GLExtensions/ARB_fragment_shader.h"
 #include "../Math/xMath.h"
 #include "../Utils/Debug.h"
 

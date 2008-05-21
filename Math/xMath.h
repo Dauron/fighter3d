@@ -5,6 +5,10 @@
 #include <cassert>
 #include <cmath>
 
+#ifndef FILE_CURRENT
+#define FILE_CURRENT 1
+#endif
+
 const float  PI   = 3.1415926535f;
 const double PI_d = 3.1415926535897932384626433832795;
 static inline float DegToRad(float a) { return a*0.01745329252f;}
@@ -25,6 +29,14 @@ static inline float Sign(float f)
     if (f < 0.f) return -1.f;
     return 0.f;
 }
+
+#ifndef max
+#define max(a,b)            (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
 
 typedef unsigned char  xBYTE;
 typedef unsigned short xWORD;

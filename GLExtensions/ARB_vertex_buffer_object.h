@@ -1,4 +1,6 @@
-bool init_ARB_vertex_buffer_object(void);
+#include "GLExtensions.h"
+
+bool GL_init_ARB_vertex_buffer_object(void);
 
 #ifndef GL_ARB_vertex_buffer_object
 #define GL_ARB_vertex_buffer_object

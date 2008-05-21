@@ -1,7 +1,7 @@
 #include "ModelObj.h"
 #include "../Physics/RigidBody.h"
 
-void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bool physical, bool phantom)
+void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bool physicalNotLocked, bool phantom)
 {
     collisionInfo = NULL;
     mLocationMatrixPrev = mLocationMatrix;
@@ -11,7 +11,8 @@ void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bo
     resilience         = 0.2f;
     gravityAccumulator = 1.f;
     this->phantom = phantom;
-    this->physical = physical;
+    this->physical = physicalNotLocked;
+    this->locked   = !physicalNotLocked;
     smap.texId = 0;
 
     if (ph_filename)
@@ -26,7 +27,7 @@ void ModelObj:: Finalize ()
 {
     if (collisionInfo)
     {
-        CollisionInfo_Free(GetRenderer()->xModelPhysical->firstP, collisionInfo);
+        CollisionInfo_Free(GetRenderer()->xModelPhysical->kidsP, collisionInfo);
         delete[] collisionInfo;
         collisionInfo = NULL;
     }
@@ -60,7 +61,7 @@ xCollisionHierarchyBoundsRoot *ModelObj::GetCollisionInfo()
     collisionInfoC = rend->xModelPhysical->elementC;
     collisionInfo  = new xCollisionHierarchyBoundsRoot[collisionInfoC];
 
-    for (xElement *elem = rend->xModelPhysical->firstP; elem; elem = elem->nextP)
+    for (xElement *elem = rend->xModelPhysical->kidsP; elem; elem = elem->nextP)
         CollisionInfo_Fill(rend, elem, collisionInfo, true);
 
     Performance.CollisionDataFillMS += GetTick() - delta;
@@ -75,7 +76,7 @@ void ModelObj::CollisionInfo_ReFill()
     {
         float   delta  = GetTick();
         xRender *rend  = GetRenderer();
-        for (xElement *elem = rend->xModelPhysical->firstP; elem; elem = elem->nextP)
+        for (xElement *elem = rend->xModelPhysical->kidsP; elem; elem = elem->nextP)
             CollisionInfo_Fill(rend, elem, collisionInfo, false);
         Performance.CollisionDataFillMS += GetTick() - delta;
     }
@@ -92,7 +93,7 @@ void ModelObj::CollisionInfo_Fill(xRender *rend, xElement *elem, xCollisionHiera
     if (firstTime)
     {
         if (!elem->collisionData.kidsP)
-            xElement_GetCollisionHierarchy(rend->xModelPhysical, elem);
+            elem->collisionData.Fill(rend->xModelPhysical, elem);
         eci.kids = NULL;
     }
     // Fill collision bounding boxes

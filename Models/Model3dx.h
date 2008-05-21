@@ -8,7 +8,7 @@ struct Model3dx : public HandleDst
 {
 public:
     char      *m_Name;  // for reconstruction
-    xFile     *model;
+    xModel     *model;
 
     Model3dx() : m_Name(NULL), model(NULL) {}
 

@@ -1,12 +1,12 @@
-#ifndef __incl_MotionCapture_CaptureInput_h
-#define __incl_MotionCapture_CaptureInput_h
+#ifndef __incl_MotionCapture_NetworkInput_h
+#define __incl_MotionCapture_NetworkInput_h
 
 #include "../Utils/Singleton.h"
 #include "../Models/lib3dx/xBone.h"
 
-#define g_CaptureInput CaptureInput::GetSingleton()
+#define g_NetworkInput NetworkInput::GetSingleton()
 
-class CaptureInput : public Singleton<CaptureInput>
+class NetworkInput : public Singleton<NetworkInput>
 {
 private:
     xWORD  boneC;
@@ -17,7 +17,6 @@ public:
     {
         this->spineP = spineP;
         this->boneC  = (spineP) ? spineP->CountAllKids()+1 : 0;
-
         return true;
     }
     void Finalize()
@@ -40,13 +39,13 @@ public:
         return trans;
     }
 
-    CaptureInput() {}
-   ~CaptureInput() {}
+    NetworkInput() {}
+   ~NetworkInput() {}
 
 private:
      // disable copy constructor & assignment operator
-    CaptureInput(const CaptureInput&) {}
-    CaptureInput& operator=(const CaptureInput&) { return *this; }
+    NetworkInput(const CaptureInput&) {}
+    NetworkInput& operator=(const CaptureInput&) { return *this; }
 };
 
 #endif

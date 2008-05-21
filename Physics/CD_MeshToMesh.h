@@ -50,8 +50,8 @@ public:
         collidedModel1 = collidedModel2 = NULL;
 
         bool res = false;
-        for (xElement *elem1 = r1->xModelPhysical->firstP; elem1; elem1 = elem1->nextP)
-            res |= Collide1(++ci1, ci2, elem1, r2->xModelPhysical->firstP);
+        for (xElement *elem1 = r1->xModelPhysical->kidsP; elem1; elem1 = elem1->nextP)
+            res |= Collide1(++ci1, ci2, elem1, r2->xModelPhysical->kidsP);
 
         Performance.CollisionDeterminationMS += GetTick() - delta;
         return res;

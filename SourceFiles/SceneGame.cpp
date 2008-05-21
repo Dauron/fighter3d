@@ -8,6 +8,9 @@
 #include "../Math/Cameras/CameraHuman.h"
 #include "../OpenGL/GLAnimSkeletal.h"
 
+#include "../GLExtensions/EXT_stencil_wrap.h"
+#include "../GLExtensions/EXT_stencil_two_side.h"
+
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
 #define MULT_ROT    80.0f
@@ -370,12 +373,24 @@ bool SceneGame::Render()
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glClear(GL_STENCIL_BUFFER_BIT);
                     glEnable(GL_STENCIL_TEST);          // write to stencil buffer
+
+                    if (GLExtensions::Exists_EXT_StencilTwoSide)
+                    {
+                        glDisable(GL_CULL_FACE);
+                        glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+
+                        glActiveStencilFaceEXT(GL_BACK);
+                        glStencilMask(0xff);
+                        glStencilFunc(GL_ALWAYS, 0, 0xff);
+                        glActiveStencilFaceEXT(GL_FRONT);
+                    }
+                    else
+                        glEnable(GL_CULL_FACE);
                     glStencilMask(0xff);                // allow writing to the first byte of buffer
                     glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
                     glEnable   (GL_DEPTH_TEST);
                     glDepthMask(0);                     // do not write to z-buffer
                     glDepthFunc(GL_LESS);
-                    glEnable(GL_CULL_FACE);             // enable face culling
                     glColorMask(0, 0, 0, 0);            // do not write to frame buffer
 
                     for ( i = begin+1 ; i != end ; ++i )
@@ -418,7 +433,7 @@ bool SceneGame::Render()
                 {
                     glPushAttrib(GL_ALL_ATTRIB_BITS);
                     glEnable(GL_CULL_FACE);             // enable face culling
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                     glDisable(GL_STENCIL_TEST);
                     glEnable(GL_DEPTH_TEST);
                     glDepthMask(1);                     // do not write to z-buffer
@@ -429,11 +444,11 @@ bool SceneGame::Render()
                     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
                     //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
 
-                    //if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
+                    if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
                     for ( i = begin+1 ; i != end ; ++i )
                         if ((*i)->castsShadows)
                             (*i)->RenderShadowVolume(*light, &FOV);
-                    //if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
+                    if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
                     glPopAttrib();
                 }
             }

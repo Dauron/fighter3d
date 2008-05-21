@@ -106,19 +106,7 @@ public:
     static std::string  GetFullPath(const std::string &path)
     {
         if (path[1] != ':' && path[0] != '/')
-        {
-            std::string p = "/" + path;
-/*
-            char buff[255];
-#ifdef WIN32
-            _getcwd(buff, 255);
-#else
-            getcwd(buff, 255);
-#endif
-  $          return buff + p;
-*/
-            return WorkingDirectory + p;
-        }
+            return WorkingDirectory + "/" + path;
         return path;
     }
 

@@ -3,13 +3,7 @@
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
-#include "../OpenGL/Textures/TextureMgr.h"
-
-#include "../OpenGL/GLAnimSkeletal.h"
-#include "../Models/lib3dx/xRender.h"
-
-#include "LightsAndMaterials.h"
-#include <algorithm>
+#include "../Utils/Filesystem.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
@@ -96,6 +90,7 @@ bool SceneSkeleton::Update(float deltaTime)
         m_EditGraphical = !m_EditGraphical;
         xRender *renderer = m_Model.GetRenderer();
         renderer->SetRenderMode((m_EditGraphical) ? xRender::rmGraphical : xRender::rmPhysical);
+        renderer->CopySpineToPhysical();
         m_Buttons[emMain][3].Down = !m_EditGraphical;
     }
     if (m_EditMode == emInputWght)
@@ -194,7 +189,9 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             m_EditMode = emCreateBone;
             UpdateButton(m_Buttons[emAnimateBones][0]);
             xRender *renderer = m_Model.GetRenderer();
-            xSkeletonReset(selectedBone = renderer->spineP);
+            if (renderer->spineP)
+                renderer->spineP->ResetQ();
+            selectedBone = renderer->spineP;
             renderer->CalculateSkeleton();
         }
         else
@@ -209,14 +206,15 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             m_EditGraphical = !m_EditGraphical;
             xRender *renderer = m_Model.GetRenderer();
             renderer->SetRenderMode((m_EditGraphical) ? xRender::rmGraphical : xRender::rmPhysical);
+            renderer->CopySpineToPhysical();
             button.Down = !m_EditGraphical;
         }
         else
         if (button.Action == IC_BE_Save)
         {
-            xFileSave(m_Model.GetRenderer()->xModelGraphics);
+            m_Model.GetRenderer()->xModelGraphics->Save();
             m_Model.GetRenderer()->CopySpineToPhysical();
-            xFileSave(m_Model.GetRenderer()->xModelPhysical);
+            m_Model.GetRenderer()->xModelPhysical->Save();
         }
 
         return true;
@@ -226,9 +224,10 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         if (button.Action == IC_BE_Delete && selectedBone)
         {
             xRender *renderer = m_Model.GetRenderer();
-            xBoneDelete(renderer->xModelGraphics, selectedBone);
             renderer->CopySpineToPhysical();
-            xBoneDelete(renderer->xModelPhysical, selectedBone);
+            renderer->xModelGraphics->BoneDelete(selectedBone);
+            if (renderer->xModelPhysical->spineP != renderer->xModelGraphics->spineP)
+                renderer->xModelPhysical->BoneDelete(selectedBone);
             selectedBone = NULL;
             renderer->VerticesChanged();
             renderer->CalculateSkeleton();
@@ -241,7 +240,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         {
             currentAnimation  = new xAnimation();
             xRender *renderer = m_Model.GetRenderer();
-            currentAnimation->Reset(xBoneChildCount(renderer->spineP)+1);
+            currentAnimation->Reset(renderer->spineP->CountAllKids()+1);
             currentAnimation->SaveToSkeleton(renderer->spineP);
             renderer->CalculateSkeleton();
             m_Buttons[emEditAnimation][5].Down = false;
@@ -334,7 +333,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         else
         if (button.Action == IC_BE_Delete && selectedBone)
         {
-            selectedBone->quaternion.zeroQuaternion();
+            selectedBone->quaternion.zeroQ();
             m_Model.GetRenderer()->CalculateSkeleton();
         }
         else
@@ -489,8 +488,8 @@ void SceneSkeleton::MouseLUp(int X, int Y)
 
             if (renderer->spineP == NULL)                             // if no spine
             {
-                xSkeletonAdd(renderer->xModelGraphics);               //   add skeleton to model
-                xSkeletonAdd(renderer->xModelPhysical);               //   add skeleton to model
+                renderer->xModelGraphics->SkeletonAdd();              //   add skeleton to model
+                renderer->xModelPhysical->SkeletonAdd();              //   add skeleton to model
                 renderer->spineP = renderer->xModelGraphics->spineP;
                 renderer->spineP->ending = hitPos;                    //   set root position
                 selectedBone = renderer->spineP;                      //   select root
@@ -498,7 +497,8 @@ void SceneSkeleton::MouseLUp(int X, int Y)
             else
             {
                 if (!selectedBone) selectedBone = renderer->spineP;
-                selectedBone = xBoneAdd(renderer->xModelGraphics, selectedBone, hitPos); // add bone to skeleton
+                selectedBone = renderer->xModelGraphics->BoneAdd(selectedBone, hitPos); // add bone to skeleton
+                renderer->CopySpineToPhysical();
             }
             renderer->CalculateSkeleton();
         }
@@ -515,9 +515,9 @@ void SceneSkeleton::MouseLUp(int X, int Y)
         selectedElemID = (int) SelectElement(X,Y);
         if (selectedElemID != xWORD_MAX) { // MAXUINT
             if (m_EditGraphical)
-                selectedElement = xElementById(renderer->xModelGraphics, selectedElemID);
+                selectedElement = renderer->xModelGraphics->kidsP->ById(selectedElemID);
             else
-                selectedElement = xElementById(renderer->xModelPhysical, selectedElemID);
+                selectedElement = renderer->xModelPhysical->kidsP->ById(selectedElemID);
             m_EditMode = emSelectVertex;
             selectedVert.clear();
         }
@@ -623,7 +623,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
     {
         if (selectedBone && selectedBone != renderer->spineP) // anim-rotate bone (matrix)
         {
-            xBone *parent = xBoneParentById(renderer->spineP, selectedBone->id);// get parent of the selected
+            xBone *parent = renderer->spineP->ParentById(selectedBone->id);// get parent of the selected
             if (!parent) parent = renderer->spineP;
 
             selectedBone->quaternion = lastBoneQuaternion;

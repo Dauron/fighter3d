@@ -2,7 +2,7 @@
 #define __incl_lib3dx_xRender_h
 
 #include "../ModelMgr.h"
-#include "xSkeleton.h"
+#include "xBone.h"
 #include "../../Math/xFieldOfView.h"
 #include "../../Math/xLight.h"
 #include "xUtils.h"
@@ -18,7 +18,7 @@ class xRender
 protected:
     HModel     hModelGraphics;
     HModel     hModelPhysical;
-    xFile    * xModelToRender;
+    xModel    * xModelToRender;
 
     xDWORD             shadowMapTexId;
 
@@ -91,18 +91,19 @@ public:
         instanceC = instanceDataTRC;
     }
 
-    xFile    * xModelGraphics;
-    xFile    * xModelPhysical;
+    xModel    * xModelGraphics;
+    xModel    * xModelPhysical;
 
     xBone    * spineP; // common spine of the model
     xMatrix  * bonesM;
     xVector4 * bonesQ;
-    xWORD      bonesC;
+    xBYTE      bonesC;
     const xFieldOfView *FOV;
 
-    virtual void RenderModel( bool transparent, const xFieldOfView *FOV ) = 0;
-    virtual void RenderShadow(const xShadowMap &shadowMap, const xFieldOfView *FOV) = 0;
-    virtual void RenderShadowVolume(xLight &light, xFieldOfView *FOV) = 0;
+    virtual void RenderModel              ( bool transparent, const xFieldOfView *FOV ) = 0;
+    virtual void RenderShadowVolume       ( xLight &light, xFieldOfView *FOV ) = 0;
+    virtual void RenderShadowMap          ( const xShadowMap &shadowMap, const xFieldOfView *FOV ) = 0;
+    virtual xDWORD CreateShadowMapTexture ( xWORD width, xMatrix &mtxBlockerToLight ) = 0;
 
     virtual void RenderSkeleton( bool selectionRendering, xWORD selBoneId = xWORD_MAX ) = 0;
 
@@ -134,32 +135,32 @@ public:
         xModelPhysical = xModelGraphics = xModelToRender = NULL;
     }
 
+    void CopySpine(const xBone *src, xBone *&dst)
+    {
+        if (src != dst)
+        {
+            if (dst) dst->Free();
+            dst = src ? src->Clone() : NULL;
+        }
+    }
+
     void CopySpineToPhysical()
     {
-        if (xModelGraphics != xModelPhysical)
-        {
-            xBoneFree(xModelPhysical->spineP);
-            xBoneCopy(xModelGraphics->spineP, xModelPhysical->spineP);
-        }
+        CopySpine(xModelGraphics->spineP, xModelPhysical->spineP);
     }
     void CopySpineToGraphics()
     {
-        if (xModelGraphics != xModelPhysical)
-        {
-            xBoneFree(xModelGraphics->spineP);
-            xBoneCopy(xModelPhysical->spineP, xModelGraphics->spineP);
-            spineP = xModelGraphics->spineP;
-        }
+        CopySpine(xModelPhysical->spineP, xModelGraphics->spineP);
     }
 
     virtual void VerticesChanged()
     {
         PrepareInstanceData(instanceDataGrP, instanceDataGrC = xModelGraphics->elementC);
-        xFile_GetBounds(xModelGraphics, bonesM, instanceDataGrP);
+        xModel_GetBounds(xModelGraphics, bonesM, instanceDataGrP);
         if (hModelGraphics != hModelPhysical)
         {
             PrepareInstanceData(instanceDataPhP, instanceDataPhC = xModelPhysical->elementC);
-            xFile_GetBounds(xModelPhysical, bonesM, instanceDataPhP);
+            xModel_GetBounds(xModelPhysical, bonesM, instanceDataPhP);
         }
         else
         {
@@ -171,7 +172,7 @@ public:
     virtual void CalculateSkeleton()
     {
         if (!spineP) return;
-        if (xBoneChildCount(spineP)+1 != bonesC)
+        if (spineP->CountAllKids()+1 != bonesC)
         {
             if (bonesM) { delete[] bonesM; bonesM = NULL; }
             if (bonesQ) { delete[] bonesQ; bonesQ = NULL; }
@@ -182,11 +183,11 @@ public:
         xBoneCalculateQuats    (spineP, bonesQ, bonesC);
 
         PrepareInstanceData(instanceDataGrP, instanceDataGrC = xModelGraphics->elementC);
-        xFile_GetBounds(xModelGraphics, bonesM, instanceDataGrP);
+        xModel_GetBounds(xModelGraphics, bonesM, instanceDataGrP);
         if (hModelGraphics != hModelPhysical)
         {
             PrepareInstanceData(instanceDataPhP, instanceDataPhC = xModelPhysical->elementC);
-            xFile_GetBounds(xModelPhysical, bonesM, instanceDataPhP);
+            xModel_GetBounds(xModelPhysical, bonesM, instanceDataPhP);
         }
         else
         {
@@ -194,8 +195,6 @@ public:
             instanceDataPhP = instanceDataGrP;
         }
     }
-
-    virtual xDWORD CreateShadowMap   (xWORD width, xMatrix &mtxBlockerToLight) = 0;
 };
 
 #endif

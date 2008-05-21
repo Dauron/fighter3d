@@ -1,12 +1,4 @@
 #include "Application.h"
-#include "Scene.h"
-#include "../OpenGL/Fonts/FontMgr.h"
-#include "Input/InputMgr.h"
-#include "../MotionCapture/CaptureInput.h"
-#include "../OpenGL/Textures/TextureMgr.h"
-#include "../OpenGL/GLAnimSkeletal.h"
-#include "../Models/ModelMgr.h"
-#include "../Models/lib3dx/xAnimationMgr.h"
 
 bool Application::Initialize(char *title, unsigned int width, unsigned int height,
                              bool fullscreen, Scene* scene)
@@ -20,7 +12,6 @@ bool Application::Initialize(char *title, unsigned int width, unsigned int heigh
         throw "The scene cannot be null";
 
     bool error = m_window->Initialize(title, width, height, fullscreen);
-    error |= init_ARB_extensions();
     error |= Invalidate();
     error |= m_scene->Initialize(0, 0, width, height);
     return error;
@@ -44,36 +35,8 @@ bool Application::SetCurrentScene(Scene* scene, bool destroyPrev)
 
 bool Application::Invalidate()
 {
-    if (!InputMgr::GetSingletonPtr())
-        new InputMgr();
-
-    if (!CaptureInput::GetSingletonPtr())
-        new CaptureInput();
-
-    if (!FontMgr::GetSingletonPtr())
-        new FontMgr();
-    else
-        g_FontMgr.InvalidateItems();
-
-    if (!TextureMgr::GetSingletonPtr())
-        new TextureMgr();
-    else
-        g_TextureMgr.InvalidateItems();
-
-    if (!GLAnimSkeletal::GetSingletonPtr())
-        new GLAnimSkeletal();
-    else
-        g_AnimSkeletal.ReinitializeGL();
-
-    if (!xAnimationMgr::GetSingletonPtr())
-        new xAnimationMgr();
-    else
-        g_AnimationMgr.InvalidateItems();
-
-    if (!ModelMgr::GetSingletonPtr())
-        new ModelMgr();
-    else
-        g_ModelMgr.InvalidateItems();
+    if (OnApplicationInvalidate)
+        OnApplicationInvalidate(this);
 
     m_scene->Invalidate();
 
@@ -85,20 +48,9 @@ void Application::Terminate()
     m_scene->Terminate();
     delete m_scene;
     m_window->Terminate();
-    if (ModelMgr::GetSingletonPtr())
-        delete ModelMgr::GetSingletonPtr();
-    if (xAnimationMgr::GetSingletonPtr())
-        delete xAnimationMgr::GetSingletonPtr();
-    if (FontMgr::GetSingletonPtr())
-        delete FontMgr::GetSingletonPtr();
-    if (TextureMgr::GetSingletonPtr())
-        delete TextureMgr::GetSingletonPtr();
-    if (InputMgr::GetSingletonPtr())
-        delete InputMgr::GetSingletonPtr();
-    if (CaptureInput::GetSingletonPtr())
-        delete CaptureInput::GetSingletonPtr();
-    if (GLAnimSkeletal::GetSingletonPtr())
-        delete GLAnimSkeletal::GetSingletonPtr();
+
+    if (OnApplicationTerminate)
+        OnApplicationTerminate(this);
 }
 
 int Application::Run()

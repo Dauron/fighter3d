@@ -1,4 +1,7 @@
-bool init_ARB_vertex_shader(void);
+#include "GLExtensions.h"
+#include "ARB_shader_objects.h"
+
+bool GL_init_ARB_vertex_shader(void);
 
 #ifndef GL_ARB_vertex_shader
 #define GL_ARB_vertex_shader                        1

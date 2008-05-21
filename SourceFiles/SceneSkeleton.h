@@ -6,14 +6,11 @@
 #include "../OpenGL/ISelectionProvider.h"
 
 #include "../OpenGL/Fonts/FontMgr.h"
-#include "../World/ModelObj.h"
 #include "../Math/Cameras/CameraHuman.h"
-#include "../Models/lib3dx/xSkeleton.h"
+#include "../World/ModelObj.h"
 
-#include "../AppFramework/Input/InputCodes.h"
 #include "../OpenGL/GLButton.h"
 #include "../Models/lib3dx/xAnimation.h"
-#include "../Utils/Filesystem.h"
 
 class SceneSkeleton : public Scene, public ISelectionProvider
 {

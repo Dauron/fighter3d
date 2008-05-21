@@ -8,7 +8,7 @@ bool  Config::DisplayShadowVolumes = false;
 bool  Config::EnableShaders     = true;
 int   Config::PolygonMode       = 0x1B02;
 
-int   Config::TestCase          = 0;
+int   Config::TestCase          = 2;
 float Config::Speed             = 1.f;
 int   Config::ShadowMapSize     = 512;
 

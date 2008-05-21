@@ -3,7 +3,7 @@
 #include <cassert>
 #include <fstream>
 #include <vector>
-#include "xSkeleton.h"
+#include "xBone.h"
 #include "xUtils.h"
 
 #include "../lib3ds/camera.h"
@@ -18,7 +18,7 @@
 #pragma warning(disable : 4996) // deprecated
 #endif
 
-xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node, xWORD &currId)
+xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *node, xWORD &currId)
 {
     xElement *elem = new xElement();
     elem->id = currId;
@@ -68,7 +68,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
         {
             elem->facesC = mesh->faces;
             elem->verticesC = mesh->points;
-            elem->skeletized = file->spineP != NULL;
+            elem->skeletized = xmodel->spineP != NULL;
 
             assert(!mesh->texels || mesh->points == mesh->texels);
 
@@ -87,15 +87,15 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
 
             xVertex     *xvert   = elem->verticesP;
             xVertexTex  *xvertT  = elem->verticesTP;
-            Lib3dsPoint *firstP = mesh->pointL;
-            Lib3dsPoint *lastP  = firstP + mesh->points;
+            Lib3dsPoint *kidsP = mesh->pointL;
+            Lib3dsPoint *lastP  = kidsP + mesh->points;
             Lib3dsTexel *firstT = mesh->texelL;
-            for(; firstP != lastP; ++firstP)
+            for(; kidsP != lastP; ++kidsP)
             {
                 if (elem->textured) {
-                    xvertT->x = firstP->pos[0];
-                    xvertT->y = firstP->pos[1];
-                    xvertT->z = firstP->pos[2];
+                    xvertT->x = kidsP->pos[0];
+                    xvertT->y = kidsP->pos[1];
+                    xvertT->z = kidsP->pos[2];
                     if (firstT) {
                         xvertT->tx = (*firstT)[0];
                         xvertT->ty = (*firstT)[1];
@@ -105,9 +105,9 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                 }
                 else
                 {
-                    xvert->x = firstP->pos[0];
-                    xvert->y = firstP->pos[1];
-                    xvert->z = firstP->pos[2];
+                    xvert->x = kidsP->pos[0];
+                    xvert->y = kidsP->pos[1];
+                    xvert->z = kidsP->pos[2];
                     ++xvert;
                 }
             }
@@ -116,7 +116,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
             Lib3dsFace *lastF  = firstF + mesh->faces;
             xMaterial  *lastM  = NULL;
             std::vector<std::vector<std::vector<xWORD> > > faces; // material=>smoothing=>faces
-            faces.resize(file->materialC+1);
+            faces.resize(xmodel->materialC+1);
 
             xWORD mid = 0, faceListC = 0;
             for(; firstF != lastF; ++firstF)
@@ -124,7 +124,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                 if (firstF->material[0]) {
                     if (!lastM || strcmp(firstF->material, lastM->name))
                     {
-                        lastM = xMaterialByName(file,firstF->material);
+                        lastM = xmodel->materialP->ByName(firstF->material);
                         bool transparent = lastM->transparency > 0.f;
                         elem->renderData.transparent |= transparent;
                         elem->renderData.opaque      |= !transparent;
@@ -134,7 +134,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                 else
                 {
                     mid = 0;
-                    file->opaque = elem->renderData.opaque = true;
+                    elem->renderData.opaque = true;
                 }
 
                 xDWORD smooth = firstF->smoothing;
@@ -156,13 +156,14 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                 faces[mid][smGrp].push_back((xWORD)smooth);
                 faces[mid][smGrp].push_back((xWORD)(smooth >> 16));
             }
+
             elem->faceListC  = faceListC;
             elem->faceListP  = new xFaceList[faceListC];
             xFaceList *faceL = elem->faceListP;
-            elem->facesP     = new xWORD3[elem->facesC];
+            elem->facesP     = new xFace[elem->facesC];
             elem->smoothP    = new xDWORD[elem->facesC];
 
-            xWORD3 *faceP   = elem->facesP;
+            xFace  *faceP   = elem->facesP;
             xDWORD *smoothP = elem->smoothP;
             xWORD   offset  = 0;
             for (mid=0; mid<faces.size(); ++mid)
@@ -172,7 +173,10 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                         faceL->indexOffset = offset;
                         faceL->smooth      = group;
                         faceL->materialId  = mid;
-                        faceL->materialP   = xMaterialById(file, mid);
+                        if (xmodel->materialP)
+                            faceL->materialP = xmodel->materialP->ById(mid);
+                        else
+                            faceL->materialP = NULL;
 
                         std::vector<xWORD>::iterator iter = faces[mid][group].begin();
                         std::vector<xWORD>::iterator end  = faces[mid][group].end();
@@ -188,39 +192,40 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                         faceL->indexCount = offset - faceL->indexOffset;
                         ++faceL;
                     }
-            xElementFillEdges(elem);
-            xElementCalculateSmoothVertices(elem);
+            elem->FillShadowEdges();
+            elem->CalculateSmoothVertices();
         }
     }
 
-    file->saveCollisionData = true;
-    xElement_GetCollisionHierarchy(file, elem);
+    elem->collisionData.Fill(xmodel, elem);
 
     xElement *laste = NULL;
     for (Lib3dsNode *snode = node->childs; snode != NULL; snode = snode->next)
     {
         if (laste)
-            laste = laste->nextP = xImportElementFrom3ds(model,file,snode, ++currId);
+            laste = laste->nextP = xImportElementFrom3ds(model,xmodel,snode, ++currId);
         else
-            laste = elem->kidsP = xImportElementFrom3ds(model,file,snode, ++currId);
+            laste = elem->kidsP = xImportElementFrom3ds(model,xmodel,snode, ++currId);
         ++(elem->kidsC);
     }
 
     return elem;
 }
 
-xFile *xImportFileFrom3ds(Lib3dsFile *model)
+xModel *xImportFileFrom3ds(Lib3dsFile *model)
 {
-    xFile *file = new xFile();
+    xModel *xmodel = new xModel();
 
-    file->materialP = 0;
-    file->materialC = 0;
-    file->texturesInited = false;
-    file->transparent = false;
-    file->opaque = false;
-    file->spineP = 0;
-    file->saveCollisionData = true;
-    file->fileName = 0;
+    xmodel->materialP = 0;
+    xmodel->materialC = 0;
+    xmodel->texturesInited = false;
+    xmodel->transparent = false;
+    xmodel->opaque = false;
+    xmodel->spineP = 0;
+    xmodel->saveCollisionData = true;
+    xmodel->fileName = 0;
+    xmodel->saveCollisionData = true;
+
     xMaterial *lastm = NULL;
     xWORD matId = 0;
 
@@ -229,7 +234,7 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
         if (lastm)
             lastm = lastm->nextP = new xMaterial();
         else
-            lastm = file->materialP = new xMaterial();
+            lastm = xmodel->materialP = new xMaterial();
 
         memcpy(lastm->ambient.col, mat->ambient, sizeof(Lib3dsRgba));
         memcpy(lastm->diffuse.col, mat->diffuse, sizeof(Lib3dsRgba));
@@ -248,30 +253,30 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
         lastm->wire_size = mat->wire_size;
         lastm->texture.name = mat->texture1_map.name[0] ? strdup(mat->texture1_map.name) : NULL;
         bool transparent = lastm->transparency > 0.f;
-        file->transparent |= transparent;
-        file->opaque      |= !transparent;
-        ++(file->materialC);
+        xmodel->transparent |= transparent;
+        xmodel->opaque      |= !transparent;
+        ++(xmodel->materialC);
     }
 
-    file->firstP = new xElement();
-    memset(file->firstP, 0, sizeof(xElement));
+    xmodel->kidsP = NULL;
+    xmodel->kidsC = 0;
 
-    xWORD currId = 0;
+    xWORD currId = -1;
     xElement *laste = NULL;
     for (Lib3dsNode *node = model->nodes; node != NULL; node = node->next)
     {
         if (laste)
-            laste = laste->nextP = xImportElementFrom3ds(model,file,node, ++currId);
+            laste = laste->nextP  = xImportElementFrom3ds(model,xmodel,node, ++currId);
         else
-            laste = file->firstP->kidsP = xImportElementFrom3ds(model,file,node, ++currId);
-        ++(file->firstP->kidsC);
+            laste = xmodel->kidsP = xImportElementFrom3ds(model,xmodel,node, ++currId);
+        ++(xmodel->kidsC);
     }
-    file->elementC = xElementCount(file);
+    xmodel->elementC = xmodel->kidsP->CountAll();
 
-    return file;
+    return xmodel;
 }
 
-xFile *xLoadFrom3dmFile(const char *fileName)
+xModel *xLoadFrom3dmFile(const char *fileName)
 {
     int v1,v2,v3,r,g,b,a,t, noVerts;
     char buffer[1000];
@@ -284,14 +289,15 @@ xFile *xLoadFrom3dmFile(const char *fileName)
         return NULL;
     }
 
-    xFile *model = new xFile();
+    xModel *model = new xModel();
     model->texturesInited = false;
     model->saveCollisionData = true;
     model->fileName = 0;
     model->materialC = 0;
     model->materialP = 0;
     model->spineP = 0;
-    xElement *elem = model->firstP = new xElement();
+    model->kidsC = 1;
+    xElement *elem = model->kidsP = new xElement();
 
     memset(&(elem->renderData), 0, sizeof(elem->renderData));
     elem->color.a = elem->color.r = elem->color.g = elem->color.b = 1.0;
@@ -351,7 +357,7 @@ xFile *xLoadFrom3dmFile(const char *fileName)
     if (file.good() && noVerts > 0)
     {
         int prevVerts = noVerts;
-        xSkeletonAdd(model);
+        model->SkeletonAdd();
 
         do
         {
@@ -360,8 +366,8 @@ xFile *xLoadFrom3dmFile(const char *fileName)
                 if (buffer[0] == '#') continue;
 
                 sscanf(buffer, "%d\t%d", &a, &t);
-                xBone *parent = xBoneById(model->spineP, a);
-                xBone *bone   = xBoneById(model->spineP, t);
+                xBone *parent = model->spineP->ById(a);
+                xBone *bone   = model->spineP->ById(t);
 
                 if (parent && !bone) {
                     ++parent->kidsC;
@@ -373,7 +379,7 @@ xFile *xLoadFrom3dmFile(const char *fileName)
                             bone = bone->nextP;
                         bone = bone->nextP = new xBone();
                     }
-                    xBoneReset(bone);
+                    bone->Zero();
                     bone->id = t;
                 }
                 break;
@@ -388,7 +394,7 @@ xFile *xLoadFrom3dmFile(const char *fileName)
             {
                 if (buffer[0] == '#') continue;
 
-                xBone *bone = xBoneById(model->spineP, prevVerts-noVerts);
+                xBone *bone = model->spineP->ById(prevVerts-noVerts);
                 sscanf(buffer, "%f\t%f\t%f",
                     &bone->ending.x, &bone->ending.y, &bone->ending.z);
                 break;
@@ -460,10 +466,10 @@ xFile *xLoadFrom3dmFile(const char *fileName)
         }
         while (++iter != end);
 
-        xElementFillEdges(elem);
-        xElementCalculateSmoothVertices(elem);
+        elem->FillShadowEdges();
+        elem->CalculateSmoothVertices();
     }
-    model->elementC = xElementCount(model);
+    model->elementC = model->kidsP->CountAll();
 
     file.close();
     return model;

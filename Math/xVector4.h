@@ -114,12 +114,6 @@ union xVector4 {
         return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;
     }
 
-    // Set xMatrix to the identity matrix
-    xVector4 &zeroQuaternion() {
-        memset(this, 0, sizeof(xVector4)-sizeof(w)); w = 1.0;
-        return *this;
-    }
-
     xVector4 &planeFromPoints(const xVector3 &p0, const xVector3 &p1, const xVector3 &p2)
     {
         this->vector3 = xVector3::CrossProduct( p1-p0, p2-p0 ).normalize();

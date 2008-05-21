@@ -1,5 +1,6 @@
-bool init_ARB_shader_objects(void);
+#include "GLExtensions.h"
 
+bool GL_init_ARB_shader_objects(void);
 
 #ifndef GL_ARB_shader_objects
 #define GL_ARB_shader_objects                       1

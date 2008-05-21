@@ -93,7 +93,7 @@ xVector4 *     xAnimation::GetTransformations()
     if (!this->frameCurrent)
     {
         for (int i = this->boneC; i; --i, ++pRes )
-            pRes->zeroQuaternion();
+            pRes->zeroQ();
         return bones;
     }
 
@@ -167,7 +167,7 @@ xVector4 *     xAnimation::GetTransformations()
                 *pRes = xQuaternion::interpolate(*pNext, complement);
                 continue;
             }
-            pRes->zeroQuaternion();
+            pRes->zeroQ();
         }
     }
     else
@@ -190,7 +190,7 @@ xVector4 *     xAnimation::GetTransformations()
                 *pRes = xQuaternion::interpolate(*pCurr, progress);
                 continue;
             }
-            pRes->zeroQuaternion();
+            pRes->zeroQ();
         }
     }
 
@@ -206,7 +206,7 @@ xVector4 *     xAnimation::Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT 
     if (!pCurr)
     {
         for (int i = boneC; i; --i, ++pRes )
-            pRes->zeroQuaternion();
+            pRes->zeroQ();
         return bones;
     }
 
@@ -266,7 +266,7 @@ xVector4 *     xAnimation::Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT 
                 *pRes = xQuaternion::interpolate(*pNext, complement);
                 continue;
             }
-            pRes->zeroQuaternion();
+            pRes->zeroQ();
         }
     }
     else
@@ -289,7 +289,7 @@ xVector4 *     xAnimation::Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT 
                 *pRes = xQuaternion::interpolate(*pCurr, progress);
                 continue;
             }
-            pRes->zeroQuaternion();
+            pRes->zeroQ();
         }
     }
 
@@ -303,7 +303,7 @@ void           xAnimation::Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC
     if (!pCurr)
     {
         for (int i = boneC; i; --i, ++pRes )
-            pRes->zeroQuaternion();
+            pRes->zeroQ();
         return;
     }
 
@@ -338,7 +338,7 @@ xKeyFrame *    xAnimation::InsertKeyFrame()
         kfNew->next     = NULL;
         kfNew->prev     = NULL;
         kfNew->boneP    = new xVector4[boneC];
-        for (int i=0; i<boneC; ++i) kfNew->boneP[i].zeroQuaternion();
+        for (int i=0; i<boneC; ++i) kfNew->boneP[i].zeroQ();
 
         frameCurrent = frameP = kfNew;
         progress = 0;
@@ -360,7 +360,7 @@ xKeyFrame *    xAnimation::InsertKeyFrame()
         if (kfNew->next)
             for (int i=0; i<boneC; ++i) kfNew->boneP[i] = kfNew->next->boneP[i];
         else
-            for (int i=0; i<boneC; ++i) kfNew->boneP[i].zeroQuaternion();
+            for (int i=0; i<boneC; ++i) kfNew->boneP[i].zeroQ();
 
         kfNew->next = frameCurrent->next;
         kfNew->prev = frameCurrent;
@@ -474,6 +474,7 @@ bool           xAnimation::Load(const char *fileName)
         if (i) {
             this->name = new char[i];
             fread(this->name,        sizeof(char), i, file);
+            delete[] this->name;
         }
         this->name = strdup(fileName); // overwrite name with path
 

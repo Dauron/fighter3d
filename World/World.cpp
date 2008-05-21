@@ -44,7 +44,7 @@ void World:: Update(float deltaTime)
         for ( i = begin ; i != end ; ++i )
             if (! (*i)->phantom)
                 for ( j = i + 1; j != end; ++j )
-                    if ((*i)->physical || (*j)->physical)
+                    if (!(*i)->locked || !(*j)->locked)
                         if (!(*j)->phantom && cd_MeshToMesh.Collide(*i, *j))
                         {
                             // process collision
@@ -65,38 +65,43 @@ void World:: Initialize()
     ModelObj *model;
     SkeletizedObj *modelA;
 
-    lights.clear();
-    xLight light;
-    light.modified = true;
-    light.turned_on = true;
-    light.attenuationConst  = 1.f;
-    light.attenuationLinear = 0.004f;
-    light.attenuationSquare = 0.0008f;
-    light.spotDirection.init(0.f,0.f,-1.f);
-    light.spotCutOff = 45.f;
-    light.spotAttenuation = 1.f;
-    // YELLOW
-    light.color.init(0.7f, 0.4f, 0.f, 1.f);
-    light.position.init(0.f, 0.f, 10.f);
-    light.type = xLight_POINT;
-    lights.push_back(light);
-    // RED
-    light.color.init(0.8f, 0.f, 0.f, 1.f);
-    light.position.init(10.f, -5.f, 5.f);
-    light.type = xLight_SPOT;
-    //lights.push_back(light);
-    // SKY
-    light.color.init(0.4f, 0.4f, 0.4f, 1.f);
-    light.position.init(-20.f, 20.f, 100.f);
-    light.type = xLight_INFINITE;
-    light.attenuationLinear = 0.f;
-    light.attenuationSquare = 0.f;
-    lights.push_back(light);
-
     g_CaptureInput.Finalize();
+
+    model = new ModelObj();
+    model->Initialize("Data/models/night.3dx");
+    model->physical = 0;
+    model->phantom = 0;
+    objects.push_back(model);
 
     if (!Config::TestCase)
     {
+        xLight light;
+        light.modified = true;
+        light.turned_on = true;
+        light.attenuationConst  = 1.f;
+        light.attenuationLinear = 0.004f;
+        light.attenuationSquare = 0.0008f;
+        light.spotDirection.init(0.f,0.f,-1.f);
+        light.spotCutOff = 45.f;
+        light.spotAttenuation = 1.f;
+        // YELLOW
+        light.color.init(0.7f, 0.4f, 0.f, 1.f);
+        light.position.init(0.f, 0.f, 10.f);
+        light.type = xLight_POINT;
+        lights.push_back(light);
+        // RED
+        light.color.init(0.8f, 0.f, 0.f, 1.f);
+        light.position.init(10.f, -5.f, 5.f);
+        light.type = xLight_SPOT;
+        //lights.push_back(light);
+        // SKY
+        light.color.init(0.4f, 0.4f, 0.4f, 1.f);
+        light.position.init(-20.f, 20.f, 100.f);
+        light.type = xLight_INFINITE;
+        light.attenuationLinear = 0.f;
+        light.attenuationSquare = 0.f;
+        lights.push_back(light);
+
         Load("Data/models/dojo/dojo.map");
 
         model = new ModelObj(-4.0f, -2.0f, 1.0f);
@@ -117,21 +122,21 @@ void World:: Initialize()
         model->castsShadows = true;
         objects.push_back(model);
 
-        model = new ModelObj(10.0f, -2.0f, 0.0f);
+        model = new ModelObj(10.0f, -2.0f, -0.2f);
         model->Initialize("Data/models/1barbells.3dx");
         model->castsShadows = true;
         objects.push_back(model);
 
-        model = new ModelObj(10.0f, 0.0f, 0.6f);
+        model = new ModelObj(10.0f, 0.0f, -0.2f);
         model->Initialize("Data/models/2stend.3dx");
         model->castsShadows = true;
         objects.push_back(model);
 
-        model = new ModelObj(0.0f, -10.0f, 5.0f);
-        model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
-        model->mass     = 60.f;
-        model->castsShadows = true;
-        objects.push_back(model);
+        //model = new ModelObj(0.0f, -10.0f, 5.0f);
+        //model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
+        //model->mass     = 60.f;
+        //model->castsShadows = true;
+        //objects.push_back(model);
 
         modelA = new SkeletizedObj(-0.3f, -3.2f, -0.21f, 0.0f, 0.0f, 170.0f);
         modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx", false, false);
@@ -150,51 +155,95 @@ void World:: Initialize()
         modelA->castsShadows = true;
         objects.push_back(modelA);
 
-        modelA = new SkeletizedObj(4.5f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
+        modelA = new SkeletizedObj(4.5f, -1.5f, -0.2f, 0.0f, 0.0f, 0.0f);
         modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
         modelA->phantom = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
-
         bool captureOK = g_CaptureInput.Initialize(modelA->GetRenderer()->xModelGraphics->spineP);
         modelA->ControlType = (captureOK)
             ? SkeletizedObj::Control_CaptureInput
             : SkeletizedObj::Control_AI;
         objects.push_back(modelA);
 
+        //modelA = new SkeletizedObj(5.f, -1.5f, -0.21f, 0.0f, 0.0f, 0.0f);
+        //modelA->Initialize("Data/models/human3.3dx", "Data/models/human3_fst.3dx", false, false);
+        //modelA->mass     = 70.f;
+        //objects.push_back(modelA);
 
-/*
-        modelA = new SkeletizedObj(5.f, -1.5f, -0.21f, 0.0f, 0.0f, 0.0f);
-        modelA->Initialize("Data/models/human3.3dx", "Data/models/human3_fst.3dx", false, false);
-        modelA->mass     = 70.f;
-        objects.push_back(modelA);
-
-        model = new ModelObj(1.0f, 5.0f, -0.21f);
-        model->Initialize("Data/models/wolf.3dx", "Data/models/wolf.3dx", false, false);
-        model->mass     = 65.f;
-        objects.push_back(model);*/
+        //model = new ModelObj(1.0f, 5.0f, -0.21f);
+        //model->Initialize("Data/models/wolf.3dx", "Data/models/wolf.3dx", false, false);
+        //model->mass     = 65.f;
+        //objects.push_back(model);*/
     }
     else
     if (Config::TestCase == 1)
     {
+        xLight light;
+        light.modified = true;
+        light.turned_on = true;
+        light.attenuationConst  = 1.f;
+        light.attenuationLinear = 0.004f;
+        light.attenuationSquare = 0.0008f;
+        light.spotDirection.init(0.f,0.f,-1.f);
+        light.spotCutOff = 45.f;
+        light.spotAttenuation = 1.f;
+        // YELLOW
+        light.color.init(0.7f, 0.4f, 0.f, 1.f);
+        light.position.init(0.5f, 1.f, 1.f);
+        light.type = xLight_INFINITE;
+        lights.push_back(light);
+
         model = new ModelObj(-3.75f, -3.75f, 0.75f, 0.f, 0.f, 0.f);
-        model->Initialize("Data/models/crate.3dx", false, false);
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", false, false);
         model->transVelocity.x = 5.0f;
-        model->mass     = 50.f;
+        model->locked     = false;
+        model->mass       = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
 
         model = new ModelObj(-1.0f, -4.0f, 1.0f);
-        model->Initialize("Data/models/crate.3dx", false, false);
-        model->mass     = 50.f;
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", false, false);
+        model->locked     = false;
+        model->mass       = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
 
         model = new ModelObj(4.0f, -4.0f, 1.0f);
-        model->Initialize("Data/models/crate.3dx", false, false);
-        model->mass     = 50.f;
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", false, false);
+        model->locked     = false;
+        model->mass       = 50.f;
         model->resilience = 0.2f;
         objects.push_back(model);
+    }
+    else
+    if (Config::TestCase == 2)
+    {
+        xLight light;
+        light.modified = true;
+        light.turned_on = true;
+        light.attenuationConst  = 1.f;
+        light.attenuationLinear = 0.004f;
+        light.attenuationSquare = 0.0008f;
+        light.spotDirection.init(0.f,0.f,-1.f);
+        light.spotCutOff = 45.f;
+        light.spotAttenuation = 1.f;
+        // YELLOW
+        light.color.init(0.7f, 0.4f, 0.f, 1.f);
+        light.position.init(0.5f, 1.f, 1.f);
+        light.type = xLight_INFINITE;
+        lights.push_back(light);
+
+        modelA = new SkeletizedObj(0.f, 1.f, 1.f, 0.0f, 0.0f, -90.0f);
+        modelA->Initialize("Data/models/human2.3dx", "Data/models/human2_fst.3dx");
+        modelA->phantom  = false;
+        modelA->physical = false;
+        modelA->mass     = 70.f;
+        bool captureOK = g_CaptureInput.Initialize(modelA->GetRenderer()->xModelGraphics->spineP);
+        modelA->ControlType = (captureOK)
+            ? SkeletizedObj::Control_CaptureInput
+            : SkeletizedObj::Control_AI;
+        objects.push_back(modelA);
     }
 
     m_Valid = true;
@@ -211,6 +260,7 @@ void World:: Finalize()
         delete *i;
     }
     objects.clear();
+    lights.clear();
 }
 
 bool StartsWith(const char *buff, const char *string)
@@ -268,6 +318,13 @@ void World:: Load(const char *mapFileName)
                 int b;
                 sscanf(buffer, "physical\t%d", &b);
                 model->physical = b;
+                continue;
+            }
+            if (StartsWith(buffer, "locked"))
+            {
+                int b;
+                sscanf(buffer, "locked\t%d", &b);
+                model->locked = b;
                 continue;
             }
             if (StartsWith(buffer, "phantom"))

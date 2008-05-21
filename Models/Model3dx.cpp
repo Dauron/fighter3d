@@ -12,7 +12,7 @@ bool Model3dx :: Load ( const char *name )
 
     int size = strlen(name);
     if (!strcasecmp(name + size - 4, ".3dx"))
-        model = xFileLoad(name);
+        model = xModel::Load(name);
     else
     {
         if (!strcasecmp(name + size - 4, ".3dm"))
@@ -31,10 +31,9 @@ bool Model3dx :: Load ( const char *name )
             char *fname = strdup (name);
             fname[size-1] = 'x';
             model->fileName = fname;
-            xFileSave(model);
+            model->Save();
         }
     }
-
     return model;
 }
 

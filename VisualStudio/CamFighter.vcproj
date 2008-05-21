@@ -181,14 +181,6 @@
 			Name="Source Files"
 			>
 			<File
-				RelativePath="..\Source Files\LightsAndMaterials.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Source Files\LightsAndMaterials.h"
-				>
-			</File>
-			<File
 				RelativePath="..\Source Files\main.cpp"
 				>
 			</File>
@@ -268,11 +260,47 @@
 					>
 				</File>
 				<File
+					RelativePath="..\Models\lib3dx\xBone.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xBone.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xElement.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xElement.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xElementCalc.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xElementData.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xElementData.h"
+					>
+				</File>
+				<File
 					RelativePath="..\Models\lib3dx\xImport.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\Models\lib3dx\xImport.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xMaterial.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xMaterial.h"
 					>
 				</File>
 				<File
@@ -300,6 +328,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\Models\lib3dx\xRenderGLShadow.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\Models\lib3dx\xShadowVolume.cpp"
 					>
 				</File>
@@ -308,19 +340,15 @@
 					>
 				</File>
 				<File
-					RelativePath="..\Models\lib3dx\xSkeleton.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\Models\lib3dx\xSkeleton.h"
-					>
-				</File>
-				<File
 					RelativePath="..\Models\lib3dx\xUtils.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\Models\lib3dx\xUtils.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xVertex.h"
 					>
 				</File>
 			</Filter>
@@ -739,6 +767,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\World\SkeletizedObj.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\World\SkeletizedObj.h"
 				>
 			</File>
@@ -767,35 +799,75 @@
 			Name="GLExtensions"
 			>
 			<File
-				RelativePath="..\GLExtensions\aGL_Extensions.cpp"
+				RelativePath="..\GLExtensions\ARB_fragment_shader.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\GLExtensions\aGL_Extensions.h"
+				RelativePath="..\GLExtensions\ARB_fragment_shader.h"
 				>
 			</File>
 			<File
-				RelativePath="..\GLExtensions\aGLExt_ARB_fragment_shader.h"
+				RelativePath="..\GLExtensions\ARB_multitexture.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\GLExtensions\aGLExt_ARB_multitexture.h"
+				RelativePath="..\GLExtensions\ARB_multitexture.h"
 				>
 			</File>
 			<File
-				RelativePath="..\GLExtensions\aGLExt_ARB_shader_objects.h"
+				RelativePath="..\GLExtensions\ARB_shader_objects.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\GLExtensions\aGLExt_ARB_vertex_buffer_object.h"
+				RelativePath="..\GLExtensions\ARB_shader_objects.h"
 				>
 			</File>
 			<File
-				RelativePath="..\GLExtensions\aGLExt_ARB_vertex_shader.h"
+				RelativePath="..\GLExtensions\ARB_vertex_buffer_object.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\GLExtensions\aGLExt_EXT_texture3D.h"
+				RelativePath="..\GLExtensions\ARB_vertex_buffer_object.h"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\ARB_vertex_shader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\ARB_vertex_shader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\EXT_stencil_two_side.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\EXT_stencil_two_side.h"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\EXT_stencil_wrap.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\EXT_stencil_wrap.h"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\EXT_texture3D.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\EXT_texture3D.h"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\GLExtensions.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\GLExtensions\GLExtensions.h"
 				>
 			</File>
 		</Filter>
@@ -946,6 +1018,14 @@
 			>
 			<File
 				RelativePath="..\MotionCapture\CaptureInput.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Multiplayer"
+			>
+			<File
+				RelativePath="..\Multiplayer\NetworkInput.h"
 				>
 			</File>
 		</Filter>

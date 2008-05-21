@@ -1,14 +1,7 @@
 #include "SceneSkeleton.h"
-#include "SceneConsole.h"
 
-#include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
-
-#include "../OpenGL/GLAnimSkeletal.h"
-#include "../Models/lib3dx/xRender.h"
-
-#include "LightsAndMaterials.h"
-#include <algorithm>
+#include "../Utils/Filesystem.h"
 
 SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName)
         : m_EditMode(emMain), m_PrevScene(prevScene), m_EditGraphical(true),
@@ -61,16 +54,16 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
     xRender *renderer = m_Model.GetRenderer();
     if (!renderer->xModelPhysical->spineP && renderer->xModelGraphics->spineP)
     {
-        xSkeletonAdd(renderer->xModelPhysical); //   add skeleton to model
+        renderer->xModelPhysical->SkeletonAdd(); //   add skeleton to model
         renderer->CopySpineToPhysical();
     }
     else
     if (!renderer->xModelGraphics->spineP && renderer->xModelPhysical->spineP)
     {
-        xSkeletonAdd(renderer->xModelGraphics); //   add skeleton to model
+        renderer->xModelGraphics->SkeletonAdd(); //   add skeleton to model
         renderer->CopySpineToGraphics();
     }
-    xSkeletonReset(renderer->spineP);
+    renderer->spineP->ResetQ();
     renderer->CalculateSkeleton();
 
     m_CurrentDirectory = Filesystem::GetFullPath("Data/models");
@@ -227,7 +220,24 @@ bool SceneSkeleton::Render()
     }
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    setLights(); // lights at viewer position
+    // lights at viewer position
+    GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+    GLfloat light_position[]   = { 0.0f, 1.0f, 1.0f, 0.0f };
+    GLfloat light_amb_color[]  = { 0.09f, 0.07f, 0.0f, 1.0f };
+    GLfloat light_dif_color[]  = { 0.9f, 0.7f, 0.0f, 1.0f };
+    GLfloat light_spec_color[] = { 0.9f, 0.7f, 0.0f, 1.0f };
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glLightfv(GL_LIGHT0, GL_AMBIENT,  light_amb_color);  // environment
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_dif_color);  // direct light
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_spec_color); // light on mirrors/metal
+    glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION,  1.0f);
+    glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.f);
+    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.f);
+    glEnable(GL_LIGHT0);
+    GLShader::EnableLighting(0);
+    GLShader::EnableLighting(1);
+
     Camera_Aim_GL(*m_Cameras.Current);
 
     xRender *renderer = m_Model.GetRenderer();
@@ -441,13 +451,17 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 unsigned int SceneSkeleton::CountSelectable()
 {
     if (m_EditMode == emCreateBone || m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        return xBoneChildCount(m_Model.GetRenderer()->spineP) + 1;
+    {
+        if (m_Model.GetRenderer()->spineP)
+            return m_Model.GetRenderer()->spineP->CountAllKids() + 1;
+        return 0;
+    }
     else
     if (m_EditMode == emSelectElement)
         if (m_EditGraphical)
-            return xElementCount(m_Model.GetRenderer()->xModelGraphics);
+            return m_Model.GetRenderer()->xModelGraphics->elementC;
         else
-            return xElementCount(m_Model.GetRenderer()->xModelPhysical);
+            return m_Model.GetRenderer()->xModelPhysical->elementC;
     else
     if (m_EditMode == emSelectVertex)
         return selectedElement->verticesC;
@@ -478,7 +492,7 @@ xBone *SceneSkeleton::SelectBone(int X, int Y)
     if (sel && sel->size()) {
         GLuint id = sel->back();
         delete sel;
-        return xBoneById(m_Model.GetRenderer()->spineP, id);
+        return m_Model.GetRenderer()->spineP->ById(id);
     }
     delete sel;
     return NULL;
