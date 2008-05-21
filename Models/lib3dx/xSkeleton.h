@@ -10,14 +10,20 @@ struct xSkeleton
     xIKNode *boneP;
     xBYTE    boneC;
 
-    xIVConstraint **constraintsP;
-    xBYTE           constraintsC;
+    xVConstraintLengthEql *boneConstrP;
+    xIVConstraint        **constraintsP;
+    xBYTE                  constraintsC;
 
     void      Clear();
     xSkeleton Clone() const;
     void      ResetQ();
 
+    void      CalcQuats(const xVector3 *pos, xBYTE boneId, xMatrix parentMtxInv);
+    void      FillBoneConstraints();
     xIKNode  *BoneAdd(xBYTE parentId, xVector3 ending);
+
+    void QuatsToArray  (xVector4 *qarray) const;
+    void QuatsFromArray(const xVector4 *qarray);
 
     void Load( FILE *file );
     void Save( FILE *file ) const;

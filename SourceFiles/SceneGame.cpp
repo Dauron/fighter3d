@@ -31,7 +31,7 @@ bool SceneGame::Initialize(int left, int top, unsigned int width, unsigned int h
 
     FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
 
-    if (!world.IsValid())
+    if (!world.objects.size())
         world.Initialize();
     return InitGL();
 }
@@ -47,8 +47,6 @@ bool SceneGame::InitGL()
 
     glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
     glEnable (GL_POINT_SMOOTH);
-    //glEnable (GL_LINE_SMOOTH);
-    //glEnable (GL_POLYGON_SMOOTH);         // produces errors on many cards... use FSAA!
 
     glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -68,13 +66,7 @@ bool SceneGame::InitGL()
 
 bool SceneGame::Invalidate()
 {
-    xLightVector::iterator light, begin = world.lights.begin(), end = world.lights.end();
-    for (light=begin; light!=end; ++light)
-        light->modified = true;
-
-    World::objectVec::iterator model, beginM = world.objects.begin(), endM = world.objects.end();
-    for (model=beginM; model!=endM; ++model)
-        (*model)->Invalidate();
+    world.Invalidate();
 
     return true;
 }
@@ -312,7 +304,7 @@ bool SceneGame::Render()
     glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
 
     // Render the contents of the world
-    World::objectVec::iterator i,j,   begin = world.objects.begin(), end = world.objects.end();
+    World::xObjectVector::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
     xLightVector::iterator light, beginL = world.lights.begin(), endL = world.lights.end();
 
     //////////////////// WORLD - BEGIN
@@ -347,10 +339,12 @@ bool SceneGame::Render()
         if (Config::EnableFullLighting)
         {
             /////// Render the SKY
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             glDisable(GL_STENCIL_TEST);
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
-            (*begin)->Render(false, FOV);
+            if (world.skyBox)
+                world.skyBox->Render(false, FOV);
 
             ////// RENDER Z-ONLY PASS
             glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
@@ -362,7 +356,7 @@ bool SceneGame::Render()
             glColorMask(0,0,0,0);
             GLShader::SetLightType(xLight_NONE);
             GLShader::EnableTexturing(xState_Off);
-            for ( i = begin+1 ; i != end ; ++i )
+            for ( i = begin ; i != end ; ++i )
                 (*i)->RenderDepth(FOV, false);
 
             ////// RENDER GLOBAL AMBIENT PASS
@@ -376,7 +370,7 @@ bool SceneGame::Render()
             glColorMask(1,1,1,1);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false);
             glDisable(GL_LIGHT0);
-            for ( i = begin+1 ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
+            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
 
             ////// RENDER SHADOWS AND LIGHTS
             for (light=beginL; light!=endL; ++light)
@@ -421,7 +415,7 @@ bool SceneGame::Render()
                         GLShader::EnableTexturing(xState_Disable);
                         GLShader::SetLightType(xLight_NONE);
                         GLShader::Suspend();
-                        for ( i = begin+1 ; i != end ; ++i )
+                        for ( i = begin ; i != end ; ++i )
                             if ((*i)->castsShadows)
                                 (*i)->RenderShadowVolume(*light, FOV);
                     }
@@ -442,7 +436,7 @@ bool SceneGame::Render()
                     GLShader::EnableTexturing(xState_Enable);
                     SetLight(*light, false, true, true);
                     glEnable(GL_LIGHT0);
-                    for ( i = begin+1 ; i != end ; ++i ) (*i)->RenderDiffuse(*light, FOV, false);
+                    for ( i = begin ; i != end ; ++i ) (*i)->RenderDiffuse(*light, FOV, false);
 
                     ////// DISPLAY SHADOW VOLUMES PASS
                     if (Config::DisplayShadowVolumes)
@@ -457,7 +451,7 @@ bool SceneGame::Render()
                         GLShader::SetLightType(xLight_NONE);
                         GLShader::Suspend();
                         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-                        for ( i = begin+1 ; i != end ; ++i )
+                        for ( i = begin ; i != end ; ++i )
                             if ((*i)->castsShadows)
                                 (*i)->RenderShadowVolume(*light, FOV);
                         glPopAttrib();
@@ -476,7 +470,14 @@ bool SceneGame::Render()
             GLShader::EnableTexturing(xState_Enable);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
             glDisable(GL_LIGHT0);
-            for ( i = begin+1 ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
+            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
+            GLShader::Suspend();
+
+            GLShader::EnableTexturing(xState_Disable);
+            GLShader::SetLightType(xLight_NONE);
+            GLShader::Start();
+            for ( i = begin ; i != end ; ++i )
+                (*i)->renderer.RenderSkeleton(*(*i)->GetModelGr(), (*i)->modelInstanceGr, xWORD_MAX);
             GLShader::Suspend();
         }
         else
@@ -491,7 +492,7 @@ bool SceneGame::Render()
             glColorMask(1,1,1,1);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false);
             glDisable(GL_LIGHT0);
-            for ( i = begin+1 ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
+            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
 
             ////// RENDER SHADOWS AND LIGHTS
             glDepthMask(0);
@@ -521,7 +522,7 @@ bool SceneGame::Render()
                 GLShader::EnableTexturing(xState_Disable);
                 GLShader::SetLightType(xLight_NONE);
                 GLShader::Suspend();
-                for ( i = begin+1 ; i != end ; ++i )
+                for ( i = begin ; i != end ; ++i )
                     if ((*i)->castsShadows)
                         (*i)->RenderShadowVolume(dayLight, FOV);
             }
@@ -542,7 +543,7 @@ bool SceneGame::Render()
             GLShader::EnableTexturing(xState_Enable);
             SetLight(*light, false, true, true);
             glEnable(GL_LIGHT0);
-            for ( i = begin+1 ; i != end ; ++i ) (*i)->RenderDiffuse(dayLight, FOV, false);
+            for ( i = begin ; i != end ; ++i ) (*i)->RenderDiffuse(dayLight, FOV, false);
 
             dayLight.modified = false;
 
@@ -556,7 +557,7 @@ bool SceneGame::Render()
             GLShader::EnableTexturing(xState_Enable);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
             glDisable(GL_LIGHT0);
-            for ( i = begin+1 ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
+            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
             GLShader::Suspend();
         }
     else
@@ -570,12 +571,12 @@ bool SceneGame::Render()
         glColorMask(1, 1, 1, 1);
         GLShader::EnableTexturing(xState_Enable);
         GLShader::SetLightType(xLight_NONE);
-        for ( i = begin+1 ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
+        for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
 
         ////// RENDER TRANSPARENT PASS
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        for ( i = begin+1 ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
+        for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
     }
 
     glPopAttrib();

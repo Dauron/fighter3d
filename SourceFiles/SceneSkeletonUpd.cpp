@@ -657,28 +657,6 @@ void SceneSkeleton::MouseRUp(int X, int Y)
         selectedVert.clear();
 }
 
-void CalcQuats(xIKNode *bones, const xVector3 *pos, xBYTE boneId, xMatrix parentMtxInv)
-{
-    xIKNode &bone = bones[boneId];
-    xVector3 endN = parentMtxInv.postTransformP(pos[boneId]);
-
-    if (boneId)
-    {
-        bone.quaternion = xQuaternion::getRotation(bone.pointE, endN, bone.pointB);
-        xVector4 quat;
-        quat.init(-bone.quaternion.vector3, bone.quaternion.w);
-
-        parentMtxInv.preMultiply(xMatrixFromQuaternion(quat).preTranslate(bone.pointB).postTranslate(-bone.pointB));
-    }
-    else
-    {
-        bone.quaternion.init(endN - bone.pointE, 1.f);
-        parentMtxInv = xMatrixTranslateT(bone.quaternion.vector3.xyz);
-    }
-
-    for (int i = 0; i < bone.joinsEC; ++i)
-        CalcQuats(bones, pos, bone.joinsEP[i], parentMtxInv);
-}
 
 void SceneSkeleton::MouseMove(int X, int Y)
 {
@@ -691,7 +669,8 @@ void SceneSkeleton::MouseMove(int X, int Y)
         mouseLIsDown && currentAction == IC_BE_Move)
     {
         selectedBone->pointE = Get3dPos(X, Y, selectedBone->pointE);
-        xIKNode *nodes = m_Model.GetModelGr()->spine.boneP;
+        xSkeleton &spine = m_Model.GetModelGr()->spine;
+        xIKNode *nodes = spine.boneP;
         xBYTE   *join  = selectedBone->joinsEP;
         for (xBYTE i = selectedBone->joinsEC; i; --i, ++join)
         {
@@ -700,6 +679,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
             node.curLengthSq = node.maxLengthSq = node.minLengthSq = (node.pointE-node.pointB).lengthSqr();
         }
         m_Model.CalculateSkeleton();                           // refresh model in GPU
+        spine.FillBoneConstraints();
     }
     else
     if (m_EditMode == emSelectVertex)
@@ -755,18 +735,8 @@ void SceneSkeleton::MouseMove(int X, int Y)
             xVector3 *pos = engine.m_pos, *posOld = engine.m_posOld;
             xMatrix  *mtx = m_Model.modelInstanceGr.bonesM;
             for (int i = spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++mtx)
-            {
                 *pos = *posOld = mtx->postTransformP(bone->pointE);
-                if (bone->joinsBC)
-                {
-                    xVConstraintLengthEql constraint;
-                    constraint.particleA = bone->id;
-                    constraint.particleB = bone->joinsBP[0];
-                    constraint.restLengthSqr = bone->curLengthSq;
-                    constraint.restLength = sqrt(bone->curLengthSq);
-                    engine.lengthConstraints.push_back(constraint);
-                }
-            }
+            engine.m_constraintsLenEql = spine.boneConstrP;
             engine.m_numConstraints = spine.constraintsC;
             engine.m_constraints = spine.constraintsP;
 
@@ -775,7 +745,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
             engine.m_pos[selectedBone->id] = Get3dPos(X, Y, engine.m_pos[selectedBone->id]);
             engine.SatisfyConstraints();
 
-            CalcQuats(spine.boneP, engine.m_pos, 0, xMatrix::Identity());
+            spine.CalcQuats(engine.m_pos, 0, xMatrix::Identity());
             m_Model.CalculateSkeleton();                                     // refresh model in GPU
 
             engine.m_constraints    = NULL;

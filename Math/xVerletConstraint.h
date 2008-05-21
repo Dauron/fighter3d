@@ -89,6 +89,8 @@ struct xVConstraintCollision : xIVConstraint
     virtual xIVConstraint *Load( FILE *file );
 };
 
+typedef std::vector<xVConstraintCollision> xVConstraintCollisionVector;
+
 class xVerletSolver
 {
 public:
@@ -96,8 +98,8 @@ public:
     xWORD     m_numConstraints;
     xBYTE     m_numPasses;
 
-    xIVConstraint **m_constraints;
-
+    xVConstraintLengthEql *m_constraintsLenEql;
+    xIVConstraint        **m_constraints;
 
     xVector3 *m_pos;    // current positions
     xVector3 *m_posOld; // previous positions
@@ -107,20 +109,18 @@ public:
     xFLOAT    m_fTimeStep;
 
 public:
-    typedef std::vector<xVConstraintCollision> VecConstrCollision;
-    typedef std::vector<xVConstraintLengthEql> VecConstrLength;
-
-    VecConstrCollision collisionConstraints;
-    VecConstrLength    lengthConstraints;
+    xVConstraintCollisionVector *collisionConstraints;
 
     xVerletSolver()
     {
         m_numParticles = 0;
         m_constraints = NULL;
+        m_constraintsLenEql = NULL;
         m_pos = NULL;
         m_posOld = NULL;
         m_a = NULL;
         m_weight = NULL;
+        collisionConstraints = NULL;
     }
 
     void Init(xWORD particleC)
@@ -129,6 +129,7 @@ public:
         m_numConstraints = 0;
         m_numPasses      = 1;
         m_constraints    = NULL;
+        m_constraintsLenEql = NULL;
 
         m_pos    = new xVector3[particleC];
         m_posOld = new xVector3[particleC];
@@ -140,21 +141,14 @@ public:
 
         m_vGravity.zero();
         m_fTimeStep = 0;
-        collisionConstraints.clear();
-        lengthConstraints.clear();
     }
 
     void Free()
     {
         m_numParticles   = 0;
-        if (m_constraints) delete[] m_constraints;
         if (m_pos) delete[] m_pos;
         if (m_posOld) delete[] m_posOld;
-        if (m_a) delete[] m_a;
         if (m_weight) delete[] m_weight;
-
-        collisionConstraints.clear();
-        lengthConstraints.clear();
     }
 
     void TimeStep()
@@ -168,21 +162,27 @@ public:
     {
         for (xBYTE pass_n = m_numPasses; pass_n; --pass_n)
         {
-            VecConstrCollision::iterator iter = collisionConstraints.begin(), end = collisionConstraints.end();
-            for (; iter != end; ++iter)
-                iter->Satisfy(m_pos, m_weight);
+            if (collisionConstraints)
+            {
+                xVConstraintCollisionVector::iterator iter = collisionConstraints->begin(),
+                                                      end = collisionConstraints->end();
+                for (; iter != end; ++iter)
+                    iter->Satisfy(m_pos, m_weight);
+            }
 
-            VecConstrLength::iterator iterL = lengthConstraints.begin(), endL = lengthConstraints.end();
-            for (; iterL != endL; ++iterL)
-                iterL->Satisfy(m_pos, m_weight);
+            if (m_constraintsLenEql)
+            {
+                xVConstraintLengthEql * iterL = m_constraintsLenEql;
+                xVConstraintLengthEql * endL = m_constraintsLenEql + m_numParticles-1;
+                for (; iterL != endL; ++iterL)
+                    iterL->Satisfy(m_pos, m_weight);
+            }
 
             xIVConstraint **constr = m_constraints;
             for (xWORD i = m_numConstraints; i; --i, ++constr)
                 (*constr)->Satisfy(m_pos, m_weight);
         }
     }
-
-private:
     void AccumulateForces()
     {
         xVector3 *a = m_a;
@@ -195,8 +195,12 @@ private:
         xVector3 *a  = m_a;
         xFLOAT    timeStepSqr = m_fTimeStep*m_fTimeStep;
 
-        for (xWORD i = m_numParticles; i; --i, ++pC, ++pO, ++a)
-            *pO = 2 * *pC - *pO + *a * timeStepSqr;
+        if (m_a)
+            for (xWORD i = m_numParticles; i; --i, ++pC, ++pO, ++a)
+                *pO = 2 * *pC - *pO + *a * timeStepSqr;
+        else
+            for (xWORD i = m_numParticles; i; --i, ++pC, ++pO, ++a)
+                *pO = 2 * *pC - *pO;
 
         xVector3 *swp = m_pos;
         m_pos = m_posOld;

@@ -1,5 +1,6 @@
 [general]
 import	dojo/dojo.map
+skybox	night.3dx
 
 # LIGHTS
 

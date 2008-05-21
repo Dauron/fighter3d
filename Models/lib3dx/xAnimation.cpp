@@ -7,9 +7,7 @@
 
 void xKeyFrame::LoadFromSkeleton(const xSkeleton &spine)
 {
-    xIKNode *node = spine.boneP;
-    for (int i = spine.boneC; i; --i, ++node)
-        boneP[node->id] = node->quaternion;
+    spine.QuatsToArray(boneP);
 }
 
 xAnimationInfo xAnimation::GetInfo()
@@ -38,18 +36,10 @@ xAnimationInfo xAnimation::GetInfo()
     return info;
 }
 
-void           xAnimation::SaveToSkeleton(xSkeleton &spine, xVector4 *transf)
-{
-    xIKNode *node = spine.boneP;
-    for (int i = spine.boneC; i; --i, ++node)
-        node->quaternion = transf[node->id];
-}
 void           xAnimation::SaveToSkeleton(xSkeleton &spine)
 {
     xVector4 *transf   = GetTransformations();
-    xIKNode  *node = spine.boneP;
-    for (int i = spine.boneC; i; --i, ++node)
-        node->quaternion = transf[node->id];
+    spine.QuatsFromArray(transf);
     delete[] transf;
 }
 void           xAnimation::UpdatePosition()
@@ -323,6 +313,40 @@ void           xAnimation::Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC
             continue;
         }
         *pRes = xQuaternion::product(*pCurr, *pNext);
+    }
+    return;
+}
+void           xAnimation::Average(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xFLOAT progress, xVector4 *&bones)
+{
+    if (!bones) bones = new xVector4[boneC];
+    xVector4 *pRes = bones;
+
+    float complement = progress;
+    progress = 1.f - progress;
+
+    if (!pCurr)
+    {
+        for (int i = boneC; i; --i, ++pRes )
+            pRes->zeroQ();
+        return;
+    }
+
+    if (!pNext)
+    {
+        for (int i = boneC; i; --i, ++pCurr, ++pRes )
+            *pRes = *pCurr * progress;
+        return;
+    }
+
+    for (int i = boneC; i; --i, ++pCurr, ++pNext, ++pRes )
+    {
+        if (i == boneC) // root
+        {
+            *pRes = *pCurr * progress + *pNext * complement;
+            pRes->w = 1.f;
+            continue;
+        }
+        *pRes = xQuaternion::slerp(*pCurr, *pNext, complement);
     }
     return;
 }

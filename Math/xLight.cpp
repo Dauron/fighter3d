@@ -61,12 +61,13 @@ bool xLight :: elementReceivesLight(const xVector3 &bsCenter, float bsRadius) co
 
 bool xLight :: elementReceivesDiffuseLight(const xFieldOfView &FOV, xVector3 boundingPoints[8]) const
 {
+    /*
     if (type == xLight_INFINITE)
         return xVector3::DotProduct (FOV.Planes[0].vector3, -position) > 0;
 
     if (xVector3::DotProduct (FOV.Planes[0].vector3, FOV.Corners3D[4] - position) > 0)
         return true;
-
+    */
     /*
     float distSqr = ( FOV.Corners3D[4] - position ).lengthSqr();
     bool culled = true;

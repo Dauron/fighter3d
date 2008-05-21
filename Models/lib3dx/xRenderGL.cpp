@@ -191,6 +191,9 @@ void xRenderGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWOR
         glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
         glEnable(GL_COLOR_MATERIAL);
 
+        glPushMatrix();
+        glMultMatrixf(&instance.location.x0);
+
         g_AnimSkeletal.BeginAnimation();
         g_AnimSkeletal.SetBones(instance.bonesC, instance.bonesM, instance.bonesQ, NULL, false);
 
@@ -202,6 +205,8 @@ void xRenderGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWOR
         g_AnimSkeletal.EndAnimation();
 
         RenderConstraint(model.spine, instance.bonesM);
+
+        glPopMatrix();
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -215,6 +220,9 @@ void xRenderGL :: RenderSkeletonSelection ( xModel &model, xModelInstance &insta
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
 
+        glPushMatrix();
+        glMultMatrixf(&instance.location.x0);
+
         if (!selectConstraint)
         {
             g_AnimSkeletal.ForceSoftware(true);
@@ -226,6 +234,8 @@ void xRenderGL :: RenderSkeletonSelection ( xModel &model, xModelInstance &insta
         }
         else
             RenderConstraintSelection(model.spine, instance.bonesM);
+
+        glPopMatrix();
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);

@@ -1,4 +1,5 @@
 #include "SkeletizedObj.h"
+#include "../Physics/VerletBody.h"
 
 void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filename,
                                   bool physicalNotLocked, bool phantom)
@@ -28,9 +29,14 @@ void SkeletizedObj :: AddAnimation(const char *fileName, xDWORD startTime, xDWOR
     actions.actions.rbegin()->endTime = endTime;
 }
 
+void SkeletizedObj:: PreUpdate()
+{
+    VerletBody::CalculateCollisions(this);
+}
+
 void SkeletizedObj :: Update(float deltaTime)
 {
-    ModelObj::Update(deltaTime);
+    VerletBody::CalculateMovement(this, deltaTime);
     CollidedModels.clear();
 
     xVector4 *bones = NULL, *bones2 = NULL;
@@ -58,11 +64,21 @@ void SkeletizedObj :: Update(float deltaTime)
         else
             bones = bones2;
 
+    if (verletQuaternions && bones && verletWeight > 0.f)
+        xAnimation::Average(verletQuaternions, bones, modelInstanceGr.bonesC, 1.f-verletWeight, bones);
+
     if (bones)
     {
-        xAnimation::SaveToSkeleton(GetModelGr()->spine, bones);
+        GetModelGr()->spine.QuatsFromArray(bones);
         delete[] bones;
 
+        CalculateSkeleton();
+        CollisionInfo_ReFill();
+    }
+    else
+    if (verletQuaternions)
+    {
+        GetModelGr()->spine.QuatsFromArray(verletQuaternions);
         CalculateSkeleton();
         CollisionInfo_ReFill();
     }

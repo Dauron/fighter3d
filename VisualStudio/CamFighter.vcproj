@@ -1146,6 +1146,14 @@
 				RelativePath="..\Physics\RigidBody.h"
 				>
 			</File>
+			<File
+				RelativePath="..\Physics\VerletBody.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Physics\VerletBody.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Math"

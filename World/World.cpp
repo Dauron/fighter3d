@@ -4,8 +4,6 @@
 
 ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 {
-    assert(m_Valid);
-
     xVector3 rayEnd = rayPos + rayDir.normalize() * 1000.0f;
 
     ModelObj *res = NULL;
@@ -13,7 +11,7 @@ ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
     float     colDist = 0.f, minDist = 0.f;
     bool      collided = false;
 
-    objectVec::iterator i, j, begin = objects.begin(), end = objects.end();
+    xObjectVector::iterator i, j, begin = objects.begin(), end = objects.end();
     for ( i = begin ; i != end ; ++i ) {
         if (cd_RayToMesh.Collide(*i, rayPos, rayEnd, colPoint, colDist)) {
             if (!collided || minDist > colDist) {
@@ -29,8 +27,6 @@ ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 
 void World:: Update(float deltaTime)
 {
-    assert(m_Valid);
-
     if (deltaTime > 0.05f) deltaTime = 0.05f;
     deltaTime *= Config::Speed;
 
@@ -40,7 +36,7 @@ void World:: Update(float deltaTime)
         deltaTime -= delta;
         if (deltaTime < 0.f) { delta += deltaTime; }
 
-        objectVec::iterator i, j, begin = objects.begin(), end = objects.end();
+        xObjectVector::iterator i, j, begin = objects.begin(), end = objects.end();
         for ( i = begin ; i != end ; ++i )
             if (! (*i)->phantom)
                 for ( j = i + 1; j != end; ++j )
@@ -60,30 +56,22 @@ void World:: Update(float deltaTime)
 
 void World:: Initialize()
 {
-    assert(!m_Valid);
-
-    ModelObj *model;
-    SkeletizedObj *modelA;
-
     g_CaptureInput.Finalize();
-
-    model = new ModelObj();
-    model->Initialize("Data/models/night.3dx");
-    model->physical = 0;
-    model->phantom = 0;
-    objects.push_back(model);
-
-    std::string filename = "Data/models/test_" + itos( Config::TestCase ) + ".map";
+    std::string filename = "Data/models/level_" + itos( Config::TestCase ) + ".map";
     Load(filename.c_str());
-
-    m_Valid = true;
 }
 
 
 void World:: Finalize()
 {
-    m_Valid = false;
-    objectVec::iterator i, begin = objects.begin(), end = objects.end();
+    if (skyBox)
+    {
+        skyBox->Finalize();
+        delete skyBox;
+        skyBox = NULL;
+    }
+
+    xObjectVector::iterator i, begin = objects.begin(), end = objects.end();
     for ( i = begin ; i != end ; ++i )
     {
         (*i)->Finalize();
@@ -183,6 +171,13 @@ void World:: Load(const char *mapFileName)
                     Load(Filesystem::GetFullPath(dir + "/" + (buffer+7)).c_str());
                     continue;
                 }
+                if (StartsWith(buffer, "skybox"))
+                {
+                    std::string modelFile = Filesystem::GetFullPath(dir + "/" + (buffer+7));
+                    skyBox = new ModelObj();
+                    skyBox->Initialize(modelFile.c_str());
+                    continue;
+                }
             }
             if (mode == LoadMode_Model)
             {
@@ -279,6 +274,7 @@ void World:: Load(const char *mapFileName)
 
                 if (StartsWith(buffer, "camera_controled"))
                 {
+                    g_CaptureInput.Finalize();
                     bool captureOK = g_CaptureInput.Initialize(model->GetModelGr()->spine);
                     ((SkeletizedObj*)model)->ControlType = (captureOK)
                         ? SkeletizedObj::Control_CaptureInput

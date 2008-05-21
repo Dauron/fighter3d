@@ -222,7 +222,7 @@ bool SceneConsole::ProcessCmd(std::string cmd)
     zero_fps_counters   | clrfps        | clears min & max fps counters\n\
     ------------------------------------------------------------------------\n\
     status              | status        | show execution status\n\
-    test 0-1            | test 0-1      | load given test scene\n\
+    level {int}         | level {int}   | load 'level_{int}.map' scene\n\
     speed {float}       | speed {float} | enter clock speed multiplier\n\
     ------------------------------------------------------------------------\n\
     log message         | log message   | adds given message to the log file\n\
@@ -336,9 +336,9 @@ test  = ";
         Config::Initialize = true;
         return true;
     }
-    if (cmd.substr(0, 5) == "test ")
+    if (cmd.substr(0, 6) == "level ")
     {
-        Config::TestCase = atoi(cmd.substr(5).c_str());
+        Config::TestCase = atoi(cmd.substr(6).c_str());
         Config::Initialize = true;
         return true;
     }

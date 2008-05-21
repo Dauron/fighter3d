@@ -73,9 +73,9 @@ struct xAnimation
     bool       Save(const char *fileName);
     bool       Load(const char *fileName);
 
-    static void       SaveToSkeleton(xSkeleton &spine, xVector4 *transf);
     static xVector4 * Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT progress, xWORD boneC);
     static void       Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xVector4 *&bones);
+    static void       Average(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xFLOAT progress, xVector4 *&bones);
 };
 
 #endif

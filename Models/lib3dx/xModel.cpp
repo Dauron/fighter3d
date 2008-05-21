@@ -185,6 +185,8 @@ void   xModel :: BoneDelete(xBYTE boneId)
         xElement *last = this->kidsP;
         for (; last; last = last->nextP)
             _xBoneDelete_CorrectElementIds(last, boneId, parent.id, lastId);
+
+        spine.FillBoneConstraints();
     }
 }
 
@@ -222,6 +224,8 @@ xModel *xModel :: Load(const char *fileName, bool createCollisionInfo)
     if (file)
     {
         xModel *xmodel = new xModel();
+        memset(xmodel, 0, sizeof(xModel));
+
         xmodel->fileName = strdup(fileName);
         if (xmodel)
         {

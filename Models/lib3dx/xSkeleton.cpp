@@ -2,6 +2,23 @@
 #include "xModel.h"
 
 /* xSkeleton */
+
+void xSkeleton :: QuatsToArray  (xVector4 *qarray) const
+{
+    xIKNode *node = boneP;
+    xVector4 *quat = qarray;
+    for (int i = boneC; i; --i, ++node, ++quat)
+        *quat = node->quaternion;
+}
+
+void xSkeleton :: QuatsFromArray(const xVector4 *qarray)
+{
+    xIKNode *node = boneP;
+    const xVector4 *quat = qarray;
+    for (int i = boneC; i; --i, ++node, ++quat)
+        node->quaternion = *quat;
+}
+
 void xSkeleton :: Clear()
 {
     if (boneP)
@@ -12,6 +29,11 @@ void xSkeleton :: Clear()
         delete[] boneP;
         boneP = NULL;
     }
+    if (boneConstrP)
+    {
+        delete[] boneConstrP;
+        boneConstrP = NULL;
+    }
     if (constraintsP)
     {
         xIVConstraint **constr = constraintsP;
@@ -19,6 +41,52 @@ void xSkeleton :: Clear()
             delete *constr;
         delete[] constraintsP;
         constraintsP = NULL;
+    }
+}
+
+void xSkeleton :: CalcQuats(const xVector3 *pos, xBYTE boneId, xMatrix parentMtxInv)
+{
+    xIKNode &bone = boneP[boneId];
+    xVector3 endN = parentMtxInv.postTransformP(pos[boneId]);
+
+    if (boneId)
+    {
+        bone.quaternion = xQuaternion::getRotation(bone.pointE, endN, bone.pointB);
+        xVector4 quat;
+        quat.init(-bone.quaternion.vector3, bone.quaternion.w);
+        parentMtxInv.preMultiply(xMatrixFromQuaternion(quat).preTranslate(bone.pointB).postTranslate(-bone.pointB));
+    }
+    else
+    {
+        bone.quaternion.init(endN - bone.pointE, 1.f);
+        parentMtxInv.preMultiply(xMatrixTranslate(-bone.quaternion.x, -bone.quaternion.y, -bone.quaternion.z));
+    }
+
+    for (int i = 0; i < bone.joinsEC; ++i)
+        CalcQuats(pos, bone.joinsEP[i], parentMtxInv);
+}
+
+void xSkeleton :: FillBoneConstraints()
+{
+    if (boneConstrP)
+    {
+        delete[] boneConstrP;
+        boneConstrP = NULL;
+    }
+    if (boneC)
+    {
+        boneConstrP = new xVConstraintLengthEql[boneC-1];
+        xVConstraintLengthEql *constrIter = boneConstrP;
+
+        xIKNode *bone = boneP+1;
+        for (int i = boneC-1; i; --i, ++bone, ++constrIter)
+        {
+            xVConstraintLengthEql &constraint = *constrIter;
+            constraint.particleA = bone->id;
+            constraint.particleB = bone->joinsBP[0];
+            constraint.restLengthSqr = bone->curLengthSq;
+            constraint.restLength = sqrt(bone->curLengthSq);
+        }
     }
 }
 
@@ -39,6 +107,8 @@ xSkeleton xSkeleton :: Clone() const
     }
     else
         res.boneP = NULL;
+
+    res.FillBoneConstraints();
 
     if (this->constraintsP)
     {
@@ -83,6 +153,9 @@ xIKNode * xSkeleton :: BoneAdd(xBYTE parentId, xVector3 ending)
     newBone.pointB = parent.pointE;
     newBone.destination = newBone.pointE = ending;
     newBone.curLengthSq = newBone.maxLengthSq = newBone.minLengthSq = (ending-newBone.pointB).lengthSqr();
+
+    FillBoneConstraints();
+
     return &newBone;
 }
 
@@ -93,6 +166,8 @@ void xSkeleton :: Load( FILE *file )
     xIKNode *node = boneP;
     for (int i = boneC; i; --i, ++node)
         node->Load(file);
+
+    FillBoneConstraints();
 
     fread(&constraintsC, sizeof(xBYTE), 1, file);
     constraintsP = new xIVConstraint*[constraintsC];

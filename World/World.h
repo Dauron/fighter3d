@@ -9,22 +9,21 @@
 class World : public ISelectionProvider
 {
 public:
-    typedef std::vector<ModelObj*> objectVec;
-    objectVec    objects;
-    xLightVector lights;
+    typedef std::vector<ModelObj*> xObjectVector;
+
+    xObjectVector objects;
+    xLightVector  lights;
+
+    ModelObj *skyBox;
 
 private:
     CD_MeshToMesh cd_MeshToMesh;
     CD_RayToMesh  cd_RayToMesh;
 
-    bool m_Valid;
-
     virtual void RenderSelect(const xFieldOfView *FOV)
     {
-        assert(m_Valid);
-
         int objectID = -1;
-        objectVec::iterator i, begin = objects.begin(), end = objects.end();
+        xObjectVector::iterator i, begin = objects.begin(), end = objects.end();
         for ( i = begin ; i != end ; ++i ) {
             glLoadName(++objectID);
             ModelObj &mdl = **i;
@@ -38,9 +37,7 @@ private:
 
 public:
 
-    bool IsValid() { return m_Valid; }
-
-    World( void ) : m_Valid(false) {}
+    World( void ) : skyBox(NULL) {}
 
     ModelObj *CollideWithRay(xVector3 rayPos, xVector3 rayDir);
     ModelObj *Select(const xFieldOfView *FOV, int X, int Y)
@@ -49,11 +46,22 @@ public:
         return objectIDs == NULL ? NULL : objects[objectIDs->back()];
     }
 
-    void Load       (const char *mapFileName);
     void Initialize ();
     void Update     (float deltaTime);
     void Finalize   ();
 
+    void Invalidate()
+    {
+        xLightVector::iterator light, begin = lights.begin(), end = lights.end();
+        for (light=begin; light!=end; ++light)
+            light->modified = true;
+
+        xObjectVector::iterator model, beginM = objects.begin(), endM = objects.end();
+        for (model=beginM; model!=endM; ++model)
+            (*model)->Invalidate();
+    }
+
+    void Load       (const char *mapFileName);
 
     ~World( void )
     {

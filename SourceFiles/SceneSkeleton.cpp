@@ -479,7 +479,7 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 
     if (m_EditMode == emCreateBone || m_EditMode == emCreateConstraint_Node ||
         m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        if (currentAction == IC_BE_DeleteConstr)
+        if (m_EditMode == emCreateBone && currentAction == IC_BE_DeleteConstr)
             render.RenderSkeletonSelection(model, modelInstance, true);
         else
             render.RenderSkeletonSelection(model, modelInstance, false);
@@ -494,7 +494,7 @@ unsigned int SceneSkeleton::CountSelectable()
 {
     if (m_EditMode == emCreateBone || m_EditMode == emCreateConstraint_Node ||
         m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        if (currentAction == IC_BE_DeleteConstr)
+        if (m_EditMode == emCreateBone && currentAction == IC_BE_DeleteConstr)
             return m_Model.GetModelGr()->spine.constraintsC;
         else
             return m_Model.GetModelGr()->spine.boneC;

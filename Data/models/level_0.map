@@ -1,0 +1,42 @@
+[general]
+skybox	night.3dx
+
+# LIGHTS
+
+# yellow
+[light]
+type	POINT
+att_const	0.9
+att_linear	0.005
+att_square	0.0005
+color	1	0.7	0
+softness	0.3
+position	0	0	10
+
+# OBJECTS
+
+[skeletized]
+skip fastm	human2_fst.3dx
+model	human2_fst.3dx
+rotation	0	0	170
+position	-0.3	-3.1	-0.2
+physical	0
+locked      0
+phantom	0
+mass	70
+shadows 0
+animation	anims/human/yoko-geri2.ska	4000	5300
+animation	anims/human/garda.ska	0	0
+
+[skeletized]
+skip fastm	human2_fst.3dx
+model	human2_fst.3dx
+position	-0.5	-1.5	-0.2
+physical	0
+locked      0
+phantom	0
+mass	70
+shadows 0
+animation	anims/human/garda.ska	0	4700
+animation	anims/human/skulony.ska	4700	4700
+animation	anims/human/kiwa_sie.ska	4700	4700
