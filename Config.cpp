@@ -1,12 +1,13 @@
 #include "Config.h"
 #include <cstring>
 
-int   Config::Initialize        = false;
-bool  Config::EnableLighting    = true;
-bool  Config::EnableShadows     = true;
+int   Config::Initialize         = false;
+bool  Config::EnableLighting     = true;
+bool  Config::EnableFullLighting = false;
+bool  Config::EnableShadows      = true;
 bool  Config::DisplayShadowVolumes = false;
-bool  Config::EnableShaders     = true;
-int   Config::PolygonMode       = 0x1B02;
+bool  Config::EnableShaders      = true;
+int   Config::PolygonMode        = 0x1B02;
 
 int   Config::TestCase          = 0;
 float Config::Speed             = 1.f;

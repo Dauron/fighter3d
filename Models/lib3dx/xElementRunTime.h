@@ -14,17 +14,32 @@ union xGPUPointers
         xDWORD indexB;
     };
     struct {
-        xDWORD listID;       // Compiled Render List
-        xDWORD listIDTransp; // Compiled Render List for transparent faces
+        xDWORD listID;          // Compiled Render List
+        xDWORD listIDTex;       // Compiled Render List
+        xDWORD listIDTransp;    // Compiled Render List for transparent faces
+        xDWORD listIDTexTransp; // Compiled Render List
     };
+
+    void Invalidate()
+    {
+        memset(this, 0, sizeof(xGPUPointers));
+    }
 };
 
 struct xShadowData
 {
-    xGPUPointers gpuPointers;
+    enum xShadowDataLevel
+    {
+        LIGHT_ONLY,
+        ZPASS_ONLY,
+        ZFAIL_PASS
+    };
 
-    xBYTE     lightId;
-    bool      zPassOnly;
+    xGPUPointers gpuLightPointers;
+    xGPUPointers gpuShadowPointers;
+
+    xBYTE            lightId;
+    xShadowDataLevel zDataLevel;
 
     xVector4 *verticesP;
     xWORD    *indexP;
@@ -70,7 +85,8 @@ struct xElementInstance
     xVector4 *verticesP; // skinned
     xVector3 *normalsP;  // skinned
 
-    xShadowData &GetShadowData(xLight &light, bool zPassOnly);
+    xShadowData &GetShadowData(xLight &light, xShadowData::xShadowDataLevel zLevel);
+    void         Zero();
     void         Clear();
     void         InvalidateVertexData();
 };

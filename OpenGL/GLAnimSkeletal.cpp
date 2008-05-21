@@ -25,7 +25,7 @@ void GLAnimSkeletal::EndAnimation()
     {
         if (aBoneIdxWghts > -1)
             glDisableVertexAttribArrayARB(aBoneIdxWghts);
-        GLShader::Suspend();
+        //GLShader::Suspend();
     }
     if (sft_vertices)
     {
@@ -98,7 +98,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance 
             if (State::RenderingShadows) glTexCoordPointer (3, GL_FLOAT, stride, element->renderData.verticesP);
 
             /************************* LOAD NORMALS ****************************/
-            if (!State::RenderingSelection && element->renderData.normalP) {
+            if (element->renderData.normalP) {
                 glNormalPointer ( GL_FLOAT, sizeof(xVector3), element->renderData.normalP );
                 glEnableClientState(GL_NORMAL_ARRAY);
             }

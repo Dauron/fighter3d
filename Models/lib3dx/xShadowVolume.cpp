@@ -78,7 +78,7 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
     if (shadowData.indexP) delete[] shadowData.indexP;
 
     xWORD3 *frontCapP = NULL;
-    if (!shadowData.zPassOnly)
+    if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
         frontCapP = new xWORD3[elem->facesC];
     xWORD3 *frontDest = frontCapP;
 
@@ -99,7 +99,7 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
         xWORD4 *sideDest  = sideQadsP;
         xWORD3 *backCapP  = NULL;
 
-        if (!shadowData.zPassOnly)
+        if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
             if (optimizeBackCap)
                 backCapP = new xWORD3[elem->edgesC];
             else
@@ -123,7 +123,7 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
                     (*sideDest)[2] = elem->verticesC + edgeIter->vert2;
                     (*sideDest)[3] = elem->verticesC + edgeIter->vert1;
                 }
-                if (optimizeBackCap && !shadowData.zPassOnly)
+                if (optimizeBackCap && shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
                 {
                     (*backDest)[0] = backFirst;
                     (*backDest)[1] = (*sideDest)[3];
@@ -135,7 +135,7 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
                 ++shadowData.sideC;
             }
 
-        if (!shadowData.zPassOnly)
+        if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
         {
             xFaceList *faceList = elem->faceListP;
             for (int i=elem->faceListC; i; --i, ++faceList)
@@ -208,7 +208,7 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
                 ++shadowData.sideC;
             }
 
-        if (!shadowData.zPassOnly)
+        if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
         {
             xFaceList *faceList = elem->faceListP;
             for (int i=elem->faceListC; i; --i, ++faceList)

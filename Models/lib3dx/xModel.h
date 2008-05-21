@@ -45,6 +45,7 @@ struct xModelInstance {
     xBYTE              elementInstanceC;
 
     void Zero();
+    void ZeroElements();
     void Clear();
     void ClearSkeleton();
 };

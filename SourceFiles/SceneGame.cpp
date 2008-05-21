@@ -215,7 +215,7 @@ bool SceneGame::Update(float deltaTime)
         ModelObj *obj = world.Select(&FOV, g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
         {
-            g_Application.SetCurrentScene(new SceneSkeleton(this,
+            g_Application.SetCurrentScene(new SceneSkeleton(/*this*/ &g_Application.CurrentScene(),
                 obj->GetModelGr()->fileName, obj->GetModelPh()->fileName), false);
         }
 /*
@@ -284,11 +284,25 @@ bool SceneGame::Render()
     if (!g_FontMgr.IsHandleValid(m_Font2))
         m_Font2 = g_FontMgr.GetFont("Courier New", 15);
 
+    static xLight dayLight;
+
     if (Config::Initialize)
     {
         world.Finalize();
         world.Initialize();
         Config::Initialize = false;
+    }
+    if (dayLight.id == 0)
+    {
+        dayLight.create();
+        dayLight.modified = true;
+        dayLight.turned_on = true;
+        dayLight.color.init(0.9f, 0.9f, 1.f, 1.f);
+        dayLight.softness = 0.4f;
+        dayLight.position.init(-20.f, 20.f, 100.f);
+        dayLight.type = xLight_INFINITE;
+        dayLight.attenuationLinear = 0.f;
+        dayLight.attenuationSquare = 0.f;
     }
 
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
@@ -317,181 +331,313 @@ bool SceneGame::Render()
     glDisable(GL_DEPTH_TEST);
     GLShader::SetLightType(xLight_NONE);
     GLShader::EnableTexturing(xState_Enable);
-    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+    if (Config::EnableFullLighting)
+        glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+    else
+        glClearColor( 0.8f, 0.8f, 1.0f, 0.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    /////// Render the SKY
-    (*begin)->Render(false, FOV);
-
     if (Config::EnableLighting)
-    {
-        ////// RENDER GLOBAL AMBIENT PASS
-
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-        glEnable   (GL_DEPTH_TEST);
-        glDepthMask(1);
-        glDepthFunc(GL_LESS);
-        glEnable   (GL_CULL_FACE);
-        glCullFace (GL_BACK);
-        glColorMask(1, 1, 1, 1);
-        GLShader::EnableTexturing(xState_Enable);
-        GLShader::SetLightType(xLight_GLOBAL, true, false, false);
-        glDisable(GL_LIGHT0);
-        GLfloat light_global_amb_color[]  = { 0.1f, 0.1f, 0.1f, 1.0f };
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
-        for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
-        glPopAttrib();
-
-        ////// RENDER SHADOWS AND LIGHTS
-
-        FOV.updateCorners3D();
-        for (light=beginL; light!=endL; ++light)
+        if (Config::EnableFullLighting)
         {
-            light->update();
-            if (light->turned_on && light->isVisible(&FOV))
+            /////// Render the SKY
+            (*begin)->Render(false, FOV);
+
+            ////// RENDER GLOBAL AMBIENT PASS
+
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+            glEnable   (GL_DEPTH_TEST);
+            glDepthMask(1);
+            glDepthFunc(GL_LESS);
+            glEnable   (GL_CULL_FACE);
+            glCullFace (GL_BACK);
+            glColorMask(1, 1, 1, 1);
+            GLShader::EnableTexturing(xState_Enable);
+            GLShader::SetLightType(xLight_GLOBAL, true, false, false);
+            glDisable(GL_LIGHT0);
+            GLfloat light_global_amb_color[]  = { 0.1f, 0.1f, 0.1f, 1.0f };
+            glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+            for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
+            glPopAttrib();
+
+            ////// RENDER SHADOWS AND LIGHTS
+
+            FOV.updateCorners3D();
+            for (light=beginL; light!=endL; ++light)
             {
-                ////// AMBIENT PASS
-                glPushAttrib(GL_ALL_ATTRIB_BITS);
-                glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-                glEnable   (GL_DEPTH_TEST);
-                glDepthMask(0);                     // do not write to z-buffer
-                glDepthFunc(GL_LEQUAL);
-                glEnable(GL_CULL_FACE);             // enable face culling
-                glCullFace(GL_BACK);
-                glColorMask(1,1,1,1);
-                glEnable(GL_BLEND);                 // add light contribution to frame buffer
-                glBlendFunc(GL_ONE, GL_ONE);
-                GLShader::EnableTexturing(xState_Enable);
-                SetLight(*light, true, false, false);
-                glEnable(GL_LIGHT0);                // light0 should be set to have the
-                                                    // characteristics of the light
-                                                    // we want to use for this pass
-                for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
-                glPopAttrib();
-
-                if (light->type != xLight_INFINITE && light->radius > 0.f)
+                light->update();
+                if (light->turned_on && light->isVisible(&FOV))
                 {
-                    //int x, y, width, height;
-                    // set scissor region optimization
-                    //getScreenBoundingRectangle(vector4to3(curLight.m_position),
-                    //    curLight.m_radius, camera, view,
-                    //    vars.m_winWidth, vars.m_winHeight,
-                    //    x, y, width, height);
-
-                    //glEnable(GL_SCISSOR_TEST);
-                    //glScissor(x, y, width, height);
-                }
-
-                ////// SHADOW DETERMINATION PASS
-                if (Config::EnableShadows)
-                {
+                    ////// AMBIENT PASS
                     glPushAttrib(GL_ALL_ATTRIB_BITS);
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                    glClear(GL_STENCIL_BUFFER_BIT);
-                    glEnable(GL_STENCIL_TEST);          // write to stencil buffer
-
-                    if (GLExtensions::Exists_EXT_StencilTwoSide)
-                    {
-                        glDisable(GL_CULL_FACE);
-                        glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
-
-                        glActiveStencilFaceEXT(GL_BACK);
-                        glStencilMask(0xff);
-                        glStencilFunc(GL_ALWAYS, 0, 0xff);
-                        glActiveStencilFaceEXT(GL_FRONT);
-                    }
-                    else
-                        glEnable(GL_CULL_FACE);
-                    glStencilMask(0xff);                // allow writing to the first byte of buffer
-                    glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
+                    glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
                     glEnable   (GL_DEPTH_TEST);
                     glDepthMask(0);                     // do not write to z-buffer
-                    glDepthFunc(GL_LESS);
-                    glColorMask(0, 0, 0, 0);            // do not write to frame buffer
-                    GLShader::EnableTexturing(xState_Disable);
-                    GLShader::SetLightType(xLight_NONE);
-                    GLShader::EnableShaders(xState_Disable);
-
-                    for ( i = begin+1 ; i != end ; ++i )
-                        if ((*i)->castsShadows)
-                            (*i)->RenderShadowVolume(*light, FOV);
-
-                    GLShader::EnableShaders(xState_Enable);
-
+                    glDepthFunc(GL_LEQUAL);
+                    glEnable(GL_CULL_FACE);             // enable face culling
+                    glCullFace(GL_BACK);
+                    glColorMask(1,1,1,1);
+                    glEnable(GL_BLEND);                 // add light contribution to frame buffer
+                    glBlendFunc(GL_ONE, GL_ONE);
+                    GLShader::EnableTexturing(xState_Enable);
+                    SetLight(*light, true, false, false);
+                    glEnable(GL_LIGHT0);                // light0 should be set to have the
+                                                        // characteristics of the light
+                                                        // we want to use for this pass
+                    for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
                     glPopAttrib();
-                }
 
-                ////// ILLUMINATION PASS
-                glPushAttrib(GL_ALL_ATTRIB_BITS);
-                glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-                if (Config::EnableShadows)
-                {
-                    glEnable(GL_STENCIL_TEST);          // read from stencil buffer
-                    glStencilMask(0);                   // do not write to stencil buffer
-                    glStencilFunc(GL_EQUAL, 0, 0xff);   // set stencil test function
+                    if (light->type != xLight_INFINITE && light->radius > 0.f)
+                    {
+                        //int x, y, width, height;
+                        // set scissor region optimization
+                        //getScreenBoundingRectangle(vector4to3(curLight.m_position),
+                        //    curLight.m_radius, camera, view,
+                        //    vars.m_winWidth, vars.m_winHeight,
+                        //    x, y, width, height);
+
+                        //glEnable(GL_SCISSOR_TEST);
+                        //glScissor(x, y, width, height);
+                    }
+
+                    ////// SHADOW DETERMINATION PASS
+                    if (Config::EnableShadows)
+                    {
+                        glPushAttrib(GL_ALL_ATTRIB_BITS);
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                        glClear(GL_STENCIL_BUFFER_BIT);
+                        glEnable(GL_STENCIL_TEST);          // write to stencil buffer
+
+                        if (GLExtensions::Exists_EXT_StencilTwoSide)
+                        {
+                            glDisable(GL_CULL_FACE);
+                            glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+
+                            glActiveStencilFaceEXT(GL_BACK);
+                            glStencilMask(0xff);
+                            glStencilFunc(GL_ALWAYS, 0, 0xff);
+                            glActiveStencilFaceEXT(GL_FRONT);
+                        }
+                        else
+                            glEnable(GL_CULL_FACE);
+                        glStencilMask(0xff);                // allow writing to the first byte of buffer
+                        glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
+                        glEnable   (GL_DEPTH_TEST);
+                        glDepthMask(0);                     // do not write to z-buffer
+                        glDepthFunc(GL_LESS);
+                        glColorMask(0, 0, 0, 0);            // do not write to frame buffer
+                        GLShader::EnableTexturing(xState_Disable);
+                        GLShader::SetLightType(xLight_NONE);
+                        GLShader::EnableShaders(xState_Disable);
+
+                        for ( i = begin+1 ; i != end ; ++i )
+                            if ((*i)->castsShadows)
+                                (*i)->RenderShadowVolume(*light, FOV);
+
+                        GLShader::EnableShaders(xState_Enable);
+
+                        glPopAttrib();
+                    }
+
+                    ////// ILLUMINATION PASS
+                    glPushAttrib(GL_ALL_ATTRIB_BITS);
+                    glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+                    if (Config::EnableShadows)
+                    {
+                        glEnable(GL_STENCIL_TEST);          // read from stencil buffer
+                        glStencilMask(0);                   // do not write to stencil buffer
+                        glStencilFunc(GL_EQUAL, 0, 0xff);   // set stencil test function
+                    }
+                    glEnable   (GL_DEPTH_TEST);
+                    glDepthMask(0);                     // do not write to z-buffer
+                    glDepthFunc(GL_LEQUAL);
+                    glEnable(GL_CULL_FACE);             // enable face culling
+                    glCullFace(GL_BACK);
+                    glColorMask(1,1,1,1);
+                    glEnable(GL_BLEND);                 // add light contribution to frame buffer
+                    glBlendFunc(GL_ONE, GL_ONE);
+                    GLShader::EnableTexturing(xState_Enable);
+                    SetLight(*light, false, true, true);
+                    glEnable(GL_LIGHT0);                // light0 should be set to have the
+                                                        // characteristics of the light
+                                                        // we want to use for this pass
+                    for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
+                    glPopAttrib();
+
+                    ////// DISPLAY SHADOW VOLUMES PASS
+                    if (Config::DisplayShadowVolumes)
+                    {
+                        glPushAttrib(GL_ALL_ATTRIB_BITS);
+                        glEnable(GL_CULL_FACE);             // enable face culling
+                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                        glDisable(GL_STENCIL_TEST);
+                        glEnable(GL_DEPTH_TEST);
+                        glDepthMask(1);                     // do not write to z-buffer
+                        glColorMask(1, 1, 1, 1);            // do not write to frame buffer
+                        glEnable(GL_BLEND);
+                        GLShader::EnableTexturing(xState_Disable);
+                        GLShader::SetLightType(xLight_NONE);
+                        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+                        //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
+
+                        for ( i = begin+1 ; i != end ; ++i )
+                            if ((*i)->castsShadows)
+                                (*i)->RenderShadowVolume(*light, FOV);
+                        glPopAttrib();
+                    }
                 }
+                light->modified = false;
+            }
+
+            ////// RENDER TRANSPARENT PASS
+
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+            glEnable   (GL_DEPTH_TEST);
+            glDepthMask(1);
+            glDepthFunc(GL_LESS);
+            glEnable   (GL_CULL_FACE);
+            glCullFace (GL_BACK);
+            glColorMask(1, 1, 1, 1);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            GLShader::EnableTexturing(xState_Enable);
+            GLShader::SetLightType(xLight_GLOBAL, false, true, true); // 3 * true
+            glDisable(GL_LIGHT0);
+            glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+            for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(true, FOV);
+            glPopAttrib();
+        }
+        else
+        {
+            ////// RENDER GLOBAL AMBIENT PASS
+
+//            glPushAttrib(GL_ALL_ATTRIB_BITS);
+//            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+//            glEnable   (GL_DEPTH_TEST);
+//            glDepthMask(1);
+//            glDepthFunc(GL_LESS);
+//            glEnable   (GL_CULL_FACE);
+//            glCullFace (GL_BACK);
+//            glColorMask(1, 1, 1, 1);
+//            GLShader::EnableTexturing(xState_Enable);
+//            GLShader::SetLightType(xLight_GLOBAL, true, false, false);
+//            glDisable(GL_LIGHT0);
+//            GLfloat light_global_amb_color[]  = { 0.1f, 0.1f, 0.1f, 1.0f };
+//            glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+//            for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
+//            glPopAttrib();
+
+            ////// RENDER SHADOWS AND LIGHTS
+
+            FOV.updateCorners3D();
+            dayLight.update();
+
+            ////// AMBIENT PASS
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+            glEnable   (GL_DEPTH_TEST);
+            glDepthMask(1);                     // do not write to z-buffer
+            glDepthFunc(GL_LESS);
+            glEnable(GL_CULL_FACE);             // enable face culling
+            glCullFace(GL_BACK);
+            glColorMask(1,1,1,1);
+            GLShader::EnableTexturing(xState_Enable);
+            SetLight(dayLight, true, false, false);
+            glEnable(GL_LIGHT0);                // light0 should be set to have the
+                                                // characteristics of the light
+                                                // we want to use for this pass
+            for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
+            glPopAttrib();
+
+            ////// SHADOW DETERMINATION PASS
+            if (Config::EnableShadows)
+            {
+                glPushAttrib(GL_ALL_ATTRIB_BITS);
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                glClear(GL_STENCIL_BUFFER_BIT);
+                glEnable(GL_STENCIL_TEST);          // write to stencil buffer
+
+                if (GLExtensions::Exists_EXT_StencilTwoSide)
+                {
+                    glDisable(GL_CULL_FACE);
+                    glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+
+                    glActiveStencilFaceEXT(GL_BACK);
+                    glStencilMask(0xff);
+                    glStencilFunc(GL_ALWAYS, 0, 0xff);
+                    glActiveStencilFaceEXT(GL_FRONT);
+                }
+                else
+                    glEnable(GL_CULL_FACE);
+                glStencilMask(0xff);                // allow writing to the first byte of buffer
+                glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
                 glEnable   (GL_DEPTH_TEST);
                 glDepthMask(0);                     // do not write to z-buffer
-                glDepthFunc(GL_LEQUAL);
-                glEnable(GL_CULL_FACE);             // enable face culling
-                glCullFace(GL_BACK);
-                glColorMask(1,1,1,1);
-                glEnable(GL_BLEND);                 // add light contribution to frame buffer
-                glBlendFunc(GL_ONE, GL_ONE);
-                GLShader::EnableTexturing(xState_Enable);
-                SetLight(*light, false, true, true);
-                glEnable(GL_LIGHT0);                // light0 should be set to have the
-                                                    // characteristics of the light
-                                                    // we want to use for this pass
-                for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
+                glDepthFunc(GL_LESS);
+                glColorMask(0, 0, 0, 0);            // do not write to frame buffer
+                GLShader::EnableTexturing(xState_Disable);
+                GLShader::SetLightType(xLight_NONE);
+                GLShader::EnableShaders(xState_Disable);
+
+                for ( i = begin+1 ; i != end ; ++i )
+                    if ((*i)->castsShadows)
+                        (*i)->RenderShadowVolume(dayLight, FOV);
+
+                GLShader::EnableShaders(xState_Enable);
+
                 glPopAttrib();
-
-                ////// DISPLAY SHADOW VOLUMES PASS
-                if (Config::DisplayShadowVolumes)
-                {
-                    glPushAttrib(GL_ALL_ATTRIB_BITS);
-                    glEnable(GL_CULL_FACE);             // enable face culling
-                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                    glDisable(GL_STENCIL_TEST);
-                    glEnable(GL_DEPTH_TEST);
-                    glDepthMask(1);                     // do not write to z-buffer
-                    glColorMask(1, 1, 1, 1);            // do not write to frame buffer
-                    glEnable(GL_BLEND);
-                    GLShader::EnableTexturing(xState_Disable);
-                    GLShader::SetLightType(xLight_NONE);
-                    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-                    //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
-
-                    for ( i = begin+1 ; i != end ; ++i )
-                        if ((*i)->castsShadows)
-                            (*i)->RenderShadowVolume(*light, FOV);
-                    glPopAttrib();
-                }
             }
-            light->modified = false;
+
+            ////// ILLUMINATION PASS
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+            if (Config::EnableShadows)
+            {
+                glEnable(GL_STENCIL_TEST);          // read from stencil buffer
+                glStencilMask(0);                   // do not write to stencil buffer
+                glStencilFunc(GL_EQUAL, 0, 0xff);   // set stencil test function
+            }
+            glEnable   (GL_DEPTH_TEST);
+            glDepthMask(0);                     // do not write to z-buffer
+            glDepthFunc(GL_LEQUAL);
+            glEnable(GL_CULL_FACE);             // enable face culling
+            glCullFace(GL_BACK);
+            glColorMask(1,1,1,1);
+            glEnable(GL_BLEND);                 // add light contribution to frame buffer
+            glBlendFunc(GL_ONE, GL_ONE);
+            GLShader::EnableTexturing(xState_Enable);
+            SetLight(dayLight, false, true, true);
+            glEnable(GL_LIGHT0);                // light0 should be set to have the
+                                                // characteristics of the light
+                                                // we want to use for this pass
+            for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, FOV);
+            glPopAttrib();
+
+            dayLight.modified = false;
+
+            ////// RENDER TRANSPARENT PASS
+
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+            glEnable   (GL_DEPTH_TEST);
+            glDepthMask(1);
+            glDepthFunc(GL_LESS);
+            glEnable   (GL_CULL_FACE);
+            glCullFace (GL_BACK);
+            glColorMask(1, 1, 1, 1);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            GLShader::EnableTexturing(xState_Enable);
+            SetLight(dayLight, true, false, false);
+            //GLShader::SetLightType(xLight_GLOBAL, false, true, true); // 3 * true
+            //glDisable(GL_LIGHT0);
+            glEnable(GL_LIGHT0);
+            //glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+            for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(true, FOV);
+            glPopAttrib();
         }
-
-        ////// RENDER TRANSPARENT PASS
-
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-        glEnable   (GL_DEPTH_TEST);
-        glDepthMask(1);
-        glDepthFunc(GL_LESS);
-        glEnable   (GL_CULL_FACE);
-        glCullFace (GL_BACK);
-        glColorMask(1, 1, 1, 1);
-        glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
-        GLShader::EnableTexturing(xState_Enable);
-        GLShader::SetLightType(xLight_GLOBAL, false, true, true); // 3 * true
-        glDisable(GL_LIGHT0);
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
-        for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(true, FOV);
-        glPopAttrib();
-    }
     else
     {
         ////// RENDER OPAQUE PASS

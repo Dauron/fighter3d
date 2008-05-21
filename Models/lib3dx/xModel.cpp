@@ -336,6 +336,16 @@ void xModelInstance :: Zero()
     elementInstanceP = NULL;
 }
 
+void xModelInstance :: ZeroElements()
+{
+    if (elementInstanceP)
+    {
+        xElementInstance *iter = elementInstanceP;
+        for (int i = elementInstanceC; i; --i, ++iter)
+            iter->Zero();
+    }
+}
+
 void xModelInstance :: ClearSkeleton()
 {
     if (bonesM)   delete[] bonesM; bonesM = NULL;

@@ -571,6 +571,30 @@ void SceneSkeleton::MouseRUp(int X, int Y)
     if (m_EditMode == emSelectVertex)
         selectedVert.clear();
 }
+
+void CalcQuats(xIKNode *bones, const xVector3 *pos, xBYTE boneId, xMatrix parentMtxInv)
+{
+    xIKNode &bone = bones[boneId];
+    xVector3 endN = parentMtxInv.postTransformP(pos[boneId]);
+
+    if (boneId)
+    {
+        bone.quaternion = xQuaternion::getRotation(bone.pointE, endN, bone.pointB);
+        xVector4 quat;
+        quat.init(-bone.quaternion.vector3, bone.quaternion.w);
+
+        parentMtxInv.preMultiply(xMatrixFromQuaternion(quat).preTranslate(bone.pointB).postTranslate(-bone.pointB));
+    }
+    else
+    {
+        bone.quaternion.init(endN - bone.pointE, 1.f);
+        parentMtxInv = xMatrixTranslateT(bone.quaternion.vector3.xyz);
+    }
+
+    for (int i = 0; i < bone.joinsEC; ++i)
+        CalcQuats(bones, pos, bone.joinsEP[i], parentMtxInv);
+}
+
 void SceneSkeleton::MouseMove(int X, int Y)
 {
     std::vector<GLButton>::iterator begin = m_Buttons[m_EditMode].begin();
@@ -611,18 +635,17 @@ void SceneSkeleton::MouseMove(int X, int Y)
     else
     if (m_EditMode == emAnimateBones && mouseLIsDown && currentAction == IC_BE_Move)
     {
-        if (selectedBone && selectedBone != m_Model.GetModelGr()->spine.boneP) // anim-rotate bone (matrix)
+        xSkeleton &spine = m_Model.GetModelGr()->spine;
+        if (selectedBone && selectedBone != spine.boneP) // anim-rotate bone (matrix)
         {
-            selectedBone->quaternion = lastBoneQuaternion;
+            //selectedBone->quaternion = lastBoneQuaternion;
             m_Model.CalculateSkeleton();
 
-            xMatrix  skel   = m_Model.modelInstanceGr.bonesM[selectedBone->id]; // get current bone matrix
-            xVector3 root   = skel.postTransformP(selectedBone->pointB); // get parent skeletized position
-            xVector3 ending = skel.postTransformP(selectedBone->pointE); // get ending skeletized position
-            xVector3 rootC  = CastPoint(root, ending);                   // get root on the current ending plane
+            //xMatrix  skel   = m_Model.modelInstanceGr.bonesM[selectedBone->id]; // get current bone matrix
+            //xVector3 root   = skel.postTransformP(selectedBone->pointB); // get parent skeletized position
+            //xVector3 ending = skel.postTransformP(selectedBone->pointE); // get ending skeletized position
+            //xVector3 rootC  = CastPoint(root, ending);                   // get root on the current ending plane
 
-            selectedBone->destination = Get3dPos(X, Y, ending);
-            selectedBone->forcesValid = true;
             //xVector3 hitPos = Get3dPos(X, Y, ending) - rootC; // get hit position relative to root, on the current ending plane
             //ending -= rootC;                                  // get ending relative to root
 
@@ -636,14 +659,40 @@ void SceneSkeleton::MouseMove(int X, int Y)
                 selectedBone->quaternion,
                 xVector4::Create(axis.x*sinH, axis.y*sinH, axis.z*sinH, cos(angleH)) );
             */
-            IKEngine ikEngine;
-            xSkeleton &spine = m_Model.GetModelGr()->spine;
-            ikEngine.Calculate(spine.boneP, spine.boneC, m_Model.modelInstanceGr.bonesM);
+            //IKEngine ikEngine;
+            //ikEngine.Calculate(spine.boneP, spine.boneC, m_Model.modelInstanceGr.bonesM);
+
+            engine.Free();
+            engine.Init(spine.boneC);
+            engine.m_numPasses = 10;
+
+            xIKNode *bone = spine.boneP;
+            xVector3 *pos = engine.m_pos, *posOld = engine.m_posOld;
+            xMatrix  *mtx = m_Model.modelInstanceGr.bonesM;
+            for (int i = spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++mtx)
+            {
+                *pos = *posOld = mtx->postTransformP(bone->pointE);
+                if (bone->joinsBC)
+                {
+                    xVConstraintLengthEql constraint;
+                    constraint.particleA = bone->id;
+                    constraint.particleB = bone->joinsBP[0];
+                    constraint.restLengthSqr = bone->curLengthSq;
+                    constraint.restLength = sqrt(bone->curLengthSq);
+                    engine.lengthConstraints.push_back(constraint);
+                }
+            }
+            engine.m_weight[0] = 0.f;
+            engine.m_weight[selectedBone->id] = 0.f;
+            engine.m_pos[selectedBone->id] = Get3dPos(X, Y, engine.m_pos[selectedBone->id]);
+            engine.SatisfyConstraints();
+
+            CalcQuats(spine.boneP, engine.m_pos, 0, xMatrix::Identity());
             m_Model.CalculateSkeleton();                                     // refresh model in GPU
         }
-        else if (m_Model.GetModelGr()->spine.boneP) // anim-translate root bone (matrix)
+        else if (spine.boneP) // anim-translate root bone (matrix)
         {
-            selectedBone = m_Model.GetModelGr()->spine.boneP;
+            selectedBone = spine.boneP;
             xVector3 pos = Get3dPos(X, Y, selectedBone->pointE);
             pos -= selectedBone->pointE;
             selectedBone->quaternion.init(pos, 1);

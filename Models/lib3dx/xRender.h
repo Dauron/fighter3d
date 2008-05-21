@@ -16,7 +16,7 @@ struct xShadowMap
 class xRender
 {
 public:
-    enum SelectionMode { smNone, smElement, smVertex };
+    enum SelectionMode { smNone, smElement, smVertex, smModel };
 
     virtual void RenderModel    ( xModel &model, xModelInstance &instance,
                                   bool transparent, const xFieldOfView &FOV ) = 0;

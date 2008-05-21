@@ -1,23 +1,39 @@
 #include "xElementRunTime.h"
 
-xShadowData & xElementInstance :: GetShadowData(xLight &light, bool zPassOnly)
+xShadowData & xElementInstance :: GetShadowData(xLight &light, xShadowData::xShadowDataLevel zLevel)
 {
     xShadowDataVector::iterator iter = gpuShadows.begin(), iterE = gpuShadows.end();
     for (; iter != iterE; ++iter)
         if (iter->lightId == light.id)
         {
-            if (light.modified || (iter->zPassOnly && !zPassOnly))
+            if (light.modified || iter->zDataLevel < zLevel)
                 iter->FreeData();
-            iter->zPassOnly = zPassOnly;
+            iter->zDataLevel = zLevel;
             return *iter;
         }
 
     xShadowData newData;
     memset(&newData, 0, sizeof(xShadowData));
     newData.lightId = light.id;
-    newData.zPassOnly = zPassOnly;
+    newData.zDataLevel = zLevel;
     gpuShadows.push_back(newData);
     return *gpuShadows.rbegin();
+}
+
+void xElementInstance :: Zero()
+{
+    mode = xRenderMode_NULL;
+
+    memset (&gpuMain, 0, sizeof(xGPUPointers));
+    gpuShadows.clear();
+
+    memset (&bbBox, 0, sizeof(xBox));
+    bsCenter.zero();
+    bsRadius = 0;
+
+    verticesC = 0;
+    verticesP = NULL;
+    normalsP  = NULL;
 }
 
 void xElementInstance :: Clear()

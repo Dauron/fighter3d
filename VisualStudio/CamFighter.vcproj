@@ -1162,6 +1162,10 @@
 				RelativePath="..\Math\xVector4.h"
 				>
 			</File>
+			<File
+				RelativePath="..\Math\xVerletConstraint.h"
+				>
+			</File>
 			<Filter
 				Name="Cameras"
 				>

@@ -485,7 +485,7 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
     bool zPass = !xShadows_ViewportMaybeShadowed(elem, instance, modelInstance.location, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;
 
-    xShadowData &shadowData = instance.GetShadowData(light, zPass);
+    xShadowData &shadowData = instance.GetShadowData(light, zPass ? xShadowData::ZPASS_ONLY : xShadowData::ZFAIL_PASS);
     if (!shadowData.indexP)
     {
         xMatrix  mtxWorldToObject = (elem->matrix * modelInstance.location).invert();

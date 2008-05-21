@@ -5,6 +5,7 @@ struct Config
 {
     static int   Initialize;
     static bool  EnableLighting;
+    static bool  EnableFullLighting;
     static bool  EnableShadows;
     static bool  DisplayShadowVolumes;
     static bool  EnableShaders;

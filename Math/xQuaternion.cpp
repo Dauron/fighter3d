@@ -19,10 +19,14 @@ Jason Shankel
 xVector4 xQuaternion::getRotation(const xVector3 &srcP, const xVector3 &dstP, const xVector3 &center)
 {
     xVector4 quat;
-    xVector3 v1 = dstP-center;
-    xVector3 v2 = srcP-center;
-    xFLOAT hangle = acos(xVector3::DotProduct(v1, v2)) * 0.5f;
-    quat.vector3 = xVector3::CrossProduct(v1, v2) * sinf(hangle);
+    xVector3 v2 = (dstP-center).normalize();
+    xVector3 v1 = (srcP-center).normalize();
+    xFLOAT cosang = xVector3::DotProduct(v1, v2);
+    if (cosang > 1.f) cosang = 1.f;
+    else
+    if (cosang < -1.f) cosang = -1.f;
+    xFLOAT hangle = acos(cosang) * 0.5f;
+    quat.vector3 = xVector3::CrossProduct(v1, v2).normalize() * sinf(hangle);
     quat.w = cosf(hangle);
     return quat;
 }

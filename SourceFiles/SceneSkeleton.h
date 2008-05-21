@@ -11,6 +11,7 @@
 
 #include "../OpenGL/GLButton.h"
 #include "../Models/lib3dx/xAnimation.h"
+#include "../Math/xVerletConstraint.h"
 
 class SceneSkeleton : public Scene, public ISelectionProvider
 {
@@ -50,6 +51,8 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     ModelObj    m_Model;
     bool        m_EditGraphical;
     char      * modifyButton, * acceptButton;
+
+    xVerletSolver engine;
 
     std::vector<std::vector<GLButton> > m_Buttons;
     std::vector<GLButton>               m_Directories;

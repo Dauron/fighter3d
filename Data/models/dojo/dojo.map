@@ -228,10 +228,49 @@ phantom	0
 shadows 1
 #
 model	rack.3dx
-position	8.0	15.30	0.265
+position	6.0	12.0	0.265
 rotation	0	0	90
 physical	1
 phantom	0
 mass	50
 shadows 1
 #
+model	sword.3dx
+position	5.86	11.9	1.53
+rotation	0	0	90
+physical	1
+phantom	0
+mass	2
+shadows 1
+#
+model	sword.3dx
+position	5.86	11.9	1.83
+rotation	0	0	90
+physical	1
+phantom	0
+mass	2
+shadows 1
+#
+model	sword.3dx
+position	5.86	11.9	2.43
+rotation	0	0	90
+physical	1
+phantom	0
+mass	2
+shadows 1
+#
+model	rack_staff.3dx
+position	4.0	12.0	0.27
+rotation	0	0	90
+physical	1
+phantom	0
+mass	50
+shadows 1
+#
+model	rack_belt.3dx
+position	8.0	12.0	0.27
+rotation	0	0	90
+physical	1
+phantom	0
+mass	50
+shadows 1

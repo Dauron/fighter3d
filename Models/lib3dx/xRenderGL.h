@@ -8,6 +8,10 @@
 class xRenderGL : public xRender
 {
   public:
+    bool       UseVBO;
+    bool       UseList;
+
+
     virtual void RenderModel    ( xModel &model, xModelInstance &instance,
                                   bool transparent, const xFieldOfView &FOV );
     virtual void RenderSkeleton ( xModel &model, xModelInstance &instance,
@@ -36,10 +40,12 @@ class xRenderGL : public xRender
             xBYTE cnt = instance.elementInstanceC;
             for (xElementInstance *iter = instance.elementInstanceP; cnt; --cnt, ++iter)
             {
-                iter->gpuMain.vertexB = 0;
-                iter->gpuMain.normalB = 0;
-                iter->gpuMain.indexB = 0;
+                iter->gpuMain.Invalidate();
                 iter->mode = xElementInstance::xRenderMode_NULL;
+
+                xShadowDataVector::iterator iterS = iter->gpuShadows.begin(), iterE = iter->gpuShadows.end();
+                for (; iterS != iterE; ++iterS)
+                    iterS->gpuLightPointers.Invalidate();
             }
         }
     }
@@ -58,9 +64,6 @@ class xRenderGL : public xRender
     static void InitVBO (const xElement *elem, xElementInstance &instance);
 
   private:
-    bool       UseVBO;
-    bool       UseList;
-
     void FreeListRenderData(xElementInstance *instanceDataP, xBYTE instanceDataC)
     {
         if (instanceDataP)
@@ -70,10 +73,21 @@ class xRenderGL : public xRender
                 if (iter->mode == xElementInstance::xRenderMode_LIST)
                 {
                     if (iter->gpuMain.listID)       glDeleteLists(iter->gpuMain.listID, 1);
+                    if (iter->gpuMain.listIDTex)    glDeleteLists(iter->gpuMain.listIDTex, 1);
                     if (iter->gpuMain.listIDTransp) glDeleteLists(iter->gpuMain.listIDTransp, 1);
-                    iter->gpuMain.listID = 0;
-                    iter->gpuMain.listIDTransp = 0;
+                    if (iter->gpuMain.listIDTexTransp) glDeleteLists(iter->gpuMain.listIDTexTransp, 1);
+                    iter->gpuMain.Invalidate();
                     iter->mode = xElementInstance::xRenderMode_NULL;
+
+                    xShadowDataVector::iterator iterS = iter->gpuShadows.begin(), iterE = iter->gpuShadows.end();
+                    for (; iterS != iterE; ++iterS)
+                    {
+                        if (iterS->gpuLightPointers.listID)       glDeleteLists(iterS->gpuLightPointers.listID, 1);
+                        if (iterS->gpuLightPointers.listIDTex)    glDeleteLists(iterS->gpuLightPointers.listIDTex, 1);
+                        if (iterS->gpuLightPointers.listIDTransp) glDeleteLists(iterS->gpuLightPointers.listIDTransp, 1);
+                        if (iterS->gpuLightPointers.listIDTexTransp) glDeleteLists(iterS->gpuLightPointers.listIDTexTransp, 1);
+                        iterS->gpuLightPointers.Invalidate();
+                    }
                 }
         }
     }
@@ -91,9 +105,7 @@ class xRenderGL : public xRender
                     if (p) glDeleteBuffersARB(1, &p);
                     p = iter->gpuMain.indexB;
                     if (p) glDeleteBuffersARB(1, &p);
-                    iter->gpuMain.vertexB = 0;
-                    iter->gpuMain.normalB = 0;
-                    iter->gpuMain.indexB = 0;
+                    iter->gpuMain.Invalidate();
                     iter->mode = xElementInstance::xRenderMode_NULL;
                 }
         }

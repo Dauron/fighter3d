@@ -15,6 +15,8 @@ void ModelObj :: Initialize (const char *gr_filename, const char *ph_filename, b
     this->locked   = !physicalNotLocked;
     smap.texId = 0;
 
+    //renderer.UseVBO = forceNotStatic;
+
     modelInstanceGr.Zero();
     modelInstancePh.Zero();
     modelInstanceGr.location = mLocationMatrix;
@@ -79,12 +81,14 @@ void ModelObj :: VerticesChanged(bool free)
 
         modelInstanceGr.elementInstanceC = xModelGr->elementC;
         modelInstanceGr.elementInstanceP = new xElementInstance[xModelGr->elementC];
-        memset(modelInstanceGr.elementInstanceP, 0, modelInstanceGr.elementInstanceC * sizeof(xElementInstance));
+        modelInstanceGr.ZeroElements();
+        //memset(modelInstanceGr.elementInstanceP, 0, modelInstanceGr.elementInstanceC * sizeof(xElementInstance));
         if (hModelGraphics != hModelPhysical)
         {
             modelInstancePh.elementInstanceC = xModelPh->elementC;
             modelInstancePh.elementInstanceP = new xElementInstance[xModelPh->elementC];
-            memset(modelInstancePh.elementInstanceP, 0, modelInstancePh.elementInstanceC * sizeof(xElementInstance));
+            modelInstancePh.ZeroElements();
+            //memset(modelInstancePh.elementInstanceP, 0, modelInstancePh.elementInstanceC * sizeof(xElementInstance));
         }
         else
         {
