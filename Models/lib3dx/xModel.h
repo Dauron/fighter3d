@@ -32,4 +32,21 @@ struct xModel {
            void    Save();
 };
 
+struct xModelInstance {
+    xMatrix    location;
+    xVector3   center;
+
+    xBYTE      bonesC;
+    xMatrix  * bonesM;
+    xVector4 * bonesQ;
+    bool     * bonesMod;
+
+    xElementInstance  *elementInstanceP;
+    xBYTE              elementInstanceC;
+
+    void Zero();
+    void Clear();
+    void ClearSkeleton();
+};
+
 #endif

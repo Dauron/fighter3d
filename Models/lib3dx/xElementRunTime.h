@@ -27,7 +27,6 @@ struct xShadowData
     bool      zPassOnly;
 
     xVector4 *verticesP;
-    xVector3 *normalsP;
     xWORD    *indexP;
     xWORD     sideC;
     xWORD     frontC;
@@ -36,17 +35,15 @@ struct xShadowData
     void FreeData()
     {
         if (verticesP) delete[] verticesP;
-        if (normalsP)  delete[] normalsP;
         if (indexP)    delete[] indexP;
         verticesP = NULL;
-        normalsP  = NULL;
         indexP    = NULL;
     }
 
     void InvalidateData()
     {
-        if (indexP)    delete[] indexP;
-        indexP    = NULL;
+        if (indexP) delete[] indexP;
+        indexP = NULL;
     }
 };
 
@@ -69,9 +66,13 @@ struct xElementInstance
     xVector3 bsCenter;
     xFLOAT   bsRadius;
 
+    xWORD     verticesC;
+    xVector4 *verticesP; // skinned
+    xVector3 *normalsP;  // skinned
+
     xShadowData &GetShadowData(xLight &light, bool zPassOnly);
-    void         FreeShadowData();
-    void         InvalidateShadowData();
+    void         Clear();
+    void         InvalidateVertexData();
 };
 
 struct xRenderData

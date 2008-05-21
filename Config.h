@@ -43,11 +43,6 @@ public:
     float snapCollisionDataFillMS;
     float snapCollisionDeterminationMS;
 
-    float ShadowDataFill1;
-    float ShadowDataFill2;
-    float ShadowDataFill3;
-    float ShadowDataFill4;
-
     float FPS;
     float FPSmin;
     float FPSmax;

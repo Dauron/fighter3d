@@ -17,7 +17,7 @@ class CD_RayToMesh
     void RayCage(xBox &refBox, xBox &rayBox);
     bool CollideBox(xBox &box);
 
-    bool IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, xVector3 *crossing);
+    bool IntersectTriangles(xVector4 *a1, xVector4 *a2, xVector4 *a3, xVector3 *crossing);
     bool CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,
                           xCollisionData *pcd,
                           xCollisionHierarchyBounds *chb,

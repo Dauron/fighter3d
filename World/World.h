@@ -28,8 +28,8 @@ private:
         objectVec::iterator i, begin = objects.begin(), end = objects.end();
         for ( i = begin ; i != end ; ++i ) {
             glLoadName(++objectID);
-            (*i)->Render(false, FOV);
-            (*i)->Render(true,  FOV);
+            (*i)->Render(false, *FOV);
+            (*i)->Render(true,  *FOV);
         }
     }
     virtual unsigned int CountSelectable()

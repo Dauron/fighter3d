@@ -33,7 +33,6 @@ void SkeletizedObj :: Update(float deltaTime)
     ModelObj::Update(deltaTime);
     CollidedModels.clear();
 
-    xRender *renderer = GetRenderer();
     xVector4 *bones = NULL, *bones2 = NULL;
 
     if (actions.actions.size())
@@ -53,7 +52,7 @@ void SkeletizedObj :: Update(float deltaTime)
     if (bones2)
         if (bones)
         {
-            xAnimation::Combine(bones2, bones, renderer->bonesC , bones);
+            xAnimation::Combine(bones2, bones, modelInstanceGr.bonesC , bones);
             delete[] bones2;
         }
         else
@@ -61,13 +60,12 @@ void SkeletizedObj :: Update(float deltaTime)
 
     if (bones)
     {
-        xAnimation::SaveToSkeleton(renderer->spineP, bones);
+        xAnimation::SaveToSkeleton(GetModelGr()->spineP, bones);
         delete[] bones;
 
-        renderer->CalculateSkeleton();
+        CalculateSkeleton();
         CollisionInfo_ReFill();
-        centerOfTheMass = xCenterOfTheModelMass(renderer->xModelPhysical, renderer->bonesM);
     }
     else
-        renderer->spineP->ResetQ();
+        GetModelGr()->spineP->ResetQ();
 }

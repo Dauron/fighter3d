@@ -78,6 +78,9 @@ class GLShader
     static xState         shaderState;   // can we use gl shaders ?
     static xState         textureState;  // can we use textures ?
     static xState         skeletalState; // can we use skeleton ?
+    static bool ambient;
+    static bool diffuse;
+    static bool specular;
 
     static ShaderLighting slNoLighting;
     static ShaderLighting slGlobalAmbient;
@@ -94,26 +97,13 @@ class GLShader
 public:
     static ShaderProgram *currShader;
 
-    static bool ambient;
-    static bool diffuse;
-    static bool specular;
-
     static void Load();
     static void Initialize();
     static void Terminate();
     static void Invalidate();
 
     static bool Start();
-    static void Suspend()
-    {
-        //assert(program);
-        //assert(IsCurrent());
-        // Use The Fixed Function OpenGL
-        if (shaderState == xState_Disable) return;
-        shaderState = xState_Enable;
-        glUseProgramObjectARB(ShaderProgram::currProgram = 0);
-        currShader = NULL;
-    }
+    static void Suspend();
 
     static void EnableShaders(xState val)
     {
@@ -122,13 +112,23 @@ public:
         shaderState = val;
     }
 
-    static void SetLightType(xLightType type)
+    static bool NeedNormals()
+    {
+        return diffuse || specular;
+    }
+
+    static void SetLightType(xLightType type, bool ambient = true, bool diffuse = true, bool specular = true)
     {
         lightType = type;
         if (type == xLight_NONE)
             glDisable(GL_LIGHTING);
         else
+        {
             glEnable(GL_LIGHTING);
+            GLShader::ambient  = ambient;
+            GLShader::diffuse  = diffuse;
+            GLShader::specular = specular;
+        }
     }
 
     static xLightType GetLightType()

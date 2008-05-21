@@ -17,7 +17,7 @@ void xShadows_ExtrudePoints (const xElement *elem, bool infiniteL, const xVector
         dest->init(src->vector3 - lightPos, 0.f);
 }
 
-void xShadows_GetBackFaces (const xElement *elem, bool infiniteL,
+void xShadows_GetBackFaces (const xElement *elem, const xElementInstance &instance, bool infiniteL,
                             const xShadowData &shadowData, bool *&backFaces)
 {
     if (backFaces == NULL)
@@ -35,7 +35,7 @@ void xShadows_GetBackFaces (const xElement *elem, bool infiniteL,
             xVector3 faceNormal;
             for (int i = elem->facesC; i; --i, ++face, ++dest)
             {
-                faceNormal = shadowData.normalsP[(*face)[0]] + shadowData.normalsP[(*face)[1]] + shadowData.normalsP[(*face)[2]];
+                faceNormal = instance.normalsP[(*face)[0]] + instance.normalsP[(*face)[1]] + instance.normalsP[(*face)[2]];
                 *dest = xVector3::DotProduct(lightDir, faceNormal) > 0;
             }
         }
@@ -53,7 +53,7 @@ void xShadows_GetBackFaces (const xElement *elem, bool infiniteL,
             xVector3 faceNormal;
             for (int i = elem->facesC; i; --i, ++face, ++dest)
             {
-                faceNormal = shadowData.normalsP[(*face)[0]] + shadowData.normalsP[(*face)[1]] + shadowData.normalsP[(*face)[2]];
+                faceNormal = instance.normalsP[(*face)[0]] + instance.normalsP[(*face)[1]] + instance.normalsP[(*face)[2]];
                 *dest = xVector3::DotProduct((extrVerticesP + *face[0])->vector3, faceNormal) > 0;
             }
         }
@@ -241,8 +241,8 @@ void xShadows_GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeB
     }
 }
 
-bool xShadows_ViewportMaybeShadowed (const xElement *elem, xElementInstance *instance,
-                                     const xMatrix &location, const xFieldOfView *FOV, const xLight& light)
+bool xShadows_ViewportMaybeShadowed (const xElement *elem, xElementInstance &instance,
+                                     const xMatrix &location, const xFieldOfView &FOV, const xLight& light)
 {
     xPlane occlusionPyramid[6];
     int numPlanes = 5;
@@ -252,10 +252,10 @@ bool xShadows_ViewportMaybeShadowed (const xElement *elem, xElementInstance *ins
 
     // all operations are in object space
     xVector3 vieportCorners[4];
-    vieportCorners[0] = mtxWorldToObject.preTransformP(FOV->Corners3D[0]);
-    vieportCorners[1] = mtxWorldToObject.preTransformP(FOV->Corners3D[1]);
-    vieportCorners[2] = mtxWorldToObject.preTransformP(FOV->Corners3D[2]);
-    vieportCorners[3] = mtxWorldToObject.preTransformP(FOV->Corners3D[3]);
+    vieportCorners[0] = mtxWorldToObject.preTransformP(FOV.Corners3D[0]);
+    vieportCorners[1] = mtxWorldToObject.preTransformP(FOV.Corners3D[1]);
+    vieportCorners[2] = mtxWorldToObject.preTransformP(FOV.Corners3D[2]);
+    vieportCorners[3] = mtxWorldToObject.preTransformP(FOV.Corners3D[3]);
     xVector3 viewCenter = (vieportCorners[0] + vieportCorners[2]) * 0.5f;
 
     occlusionPyramid[0].planeFromPoints(vieportCorners[0], vieportCorners[2], vieportCorners[1]);
@@ -288,5 +288,5 @@ bool xShadows_ViewportMaybeShadowed (const xElement *elem, xElementInstance *ins
         for (int i = 0; i < 5; ++i)
             occlusionPyramid[i].invert();
 
-    return !instance->bbBox.culledBy(occlusionPyramid, numPlanes);
+    return !instance.bbBox.culledBy(occlusionPyramid, numPlanes);
 }

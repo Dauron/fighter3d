@@ -18,7 +18,7 @@ void main()
         //NdotHV = max(dot(n,normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 
         gl_FragColor =
-            ( gl_FrontLightProduct[0].diffuse * NdotL * gl_Color
+            ( gl_FrontLightProduct[0].diffuse * NdotL
                 * texture2D(tex,gl_TexCoord[0].st/gl_TexCoord[0].w)
               + gl_FrontLightProduct[0].specular * pow(NdotHV,gl_FrontMaterial.shininess)
             );

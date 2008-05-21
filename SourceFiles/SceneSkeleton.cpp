@@ -51,20 +51,21 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
 
     m_Model.Initialize(gr_modelName, ph_modelName);
 
-    xRender *renderer = m_Model.GetRenderer();
-    if (!renderer->xModelPhysical->spineP && renderer->xModelGraphics->spineP)
+    xModel *modelGr = m_Model.GetModelGr();
+    xModel *modelPh = m_Model.GetModelPh();
+    if (!modelPh->spineP && modelGr->spineP)
     {
-        renderer->xModelPhysical->SkeletonAdd(); //   add skeleton to model
-        renderer->CopySpineToPhysical();
+        modelPh->SkeletonAdd(); //   add skeleton to model
+        m_Model.CopySpineToPhysical();
     }
     else
-    if (!renderer->xModelGraphics->spineP && renderer->xModelPhysical->spineP)
+    if (!modelGr->spineP && modelPh->spineP)
     {
-        renderer->xModelGraphics->SkeletonAdd(); //   add skeleton to model
-        renderer->CopySpineToGraphics();
+        modelGr->SkeletonAdd(); //   add skeleton to model
+        m_Model.CopySpineToGraphics();
     }
-    renderer->spineP->ResetQ();
-    renderer->CalculateSkeleton();
+    modelGr->spineP->ResetQ();
+    m_Model.CalculateSkeleton();
 
     m_CurrentDirectory = Filesystem::GetFullPath("Data/models");
 }
@@ -240,18 +241,22 @@ bool SceneSkeleton::Render()
 
     Camera_Aim_GL(*m_Cameras.Current);
 
-    xRender *renderer = m_Model.GetRenderer();
-    renderer->RenderModel(false, NULL);
-    renderer->RenderModel(true, NULL);
+    xFieldOfView FOV; FOV.Empty = true;
+    xModel         &model         = (m_EditGraphical) ? *m_Model.GetModelGr() : *m_Model.GetModelPh();
+    xModelInstance &modelInstance = (m_EditGraphical) ? m_Model.modelInstanceGr : m_Model.modelInstancePh;
+    xRender        &render        = m_Model.renderer;
+
+    render.RenderModel(model, modelInstance, false, FOV);
+    render.RenderModel(model, modelInstance, true, FOV);
 
     GLShader::EnableTexturing(xState_Disable);
     GLShader::SetLightType(xLight_NONE);
 
     if (m_EditMode == emSelectVertex)
-        renderer->RenderVertices(xRender::smNone, selectedElemID, &selectedVert);
+        render.RenderVertices(model, modelInstance, xRender::smNone, selectedElemID, &selectedVert);
     if (m_EditMode == emSelectBone || m_EditMode == emCreateBone ||
         m_EditMode == emInputWght  || (m_EditMode == emAnimateBones && showBonesOnAnim))
-        renderer->RenderSkeleton(false, selectedBone ? selectedBone->id : xWORD_MAX);
+        render.RenderSkeleton(model, modelInstance, false, selectedBone ? selectedBone->id : xWORD_MAX);
 
     glFlush();
 
@@ -439,29 +444,33 @@ void SceneSkeleton::RenderProgressBar()
 /************************** SELECTIONS *************************************/
 void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 {
+    xModel         &model         = (m_EditGraphical) ? *m_Model.GetModelGr() : *m_Model.GetModelPh();
+    xModelInstance &modelInstance = (m_EditGraphical) ? m_Model.modelInstanceGr : m_Model.modelInstancePh;
+    xRender        &render        = m_Model.renderer;
+
     if (m_EditMode == emCreateBone || m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        m_Model.GetRenderer()->RenderSkeleton(true);
+        render.RenderSkeleton(model, modelInstance, true);
     else
     if (m_EditMode == emSelectElement)
-        m_Model.GetRenderer()->RenderVertices(xRender::smElement);
+        render.RenderVertices(model, modelInstance, xRender::smElement);
     else
     if (m_EditMode == emSelectVertex)
-        m_Model.GetRenderer()->RenderVertices(xRender::smVertex, selectedElemID);
+        render.RenderVertices(model, modelInstance, xRender::smVertex, selectedElemID);
 }
 unsigned int SceneSkeleton::CountSelectable()
 {
     if (m_EditMode == emCreateBone || m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
     {
-        if (m_Model.GetRenderer()->spineP)
-            return m_Model.GetRenderer()->spineP->CountAllKids() + 1;
+        if (m_Model.GetModelGr()->spineP)
+            return m_Model.GetModelGr()->spineP->CountAllKids() + 1;
         return 0;
     }
     else
     if (m_EditMode == emSelectElement)
         if (m_EditGraphical)
-            return m_Model.GetRenderer()->xModelGraphics->elementC;
+            return m_Model.GetModelGr()->elementC;
         else
-            return m_Model.GetRenderer()->xModelPhysical->elementC;
+            return m_Model.GetModelPh()->elementC;
     else
     if (m_EditMode == emSelectVertex)
         return selectedElement->verticesC;
@@ -492,7 +501,7 @@ xBone *SceneSkeleton::SelectBone(int X, int Y)
     if (sel && sel->size()) {
         GLuint id = sel->back();
         delete sel;
-        return m_Model.GetRenderer()->spineP->ById(id);
+        return m_Model.GetModelGr()->spineP->ById(id);
     }
     delete sel;
     return NULL;

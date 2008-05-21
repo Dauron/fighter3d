@@ -9,7 +9,7 @@ void main()
                                gl_LightSource[0].quadraticAttenuation * dist * dist);
 
     if (attenuation > 0.001)
-        gl_FragColor = attenuation * gl_FrontLightProduct[0].ambient * gl_Color;
+        gl_FragColor = attenuation * gl_FrontLightProduct[0].ambient;
     else
         gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 }

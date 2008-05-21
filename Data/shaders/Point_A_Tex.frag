@@ -11,7 +11,7 @@ void main()
                                gl_LightSource[0].quadraticAttenuation * dist * dist);
 
     if (attenuation > 0.001)
-        gl_FragColor = attenuation * gl_FrontLightProduct[0].ambient * gl_Color
+        gl_FragColor = attenuation * gl_FrontLightProduct[0].ambient
             * texture2D(tex,gl_TexCoord[0].st/gl_TexCoord[0].w);
     else
         gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);

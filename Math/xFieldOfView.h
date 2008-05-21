@@ -6,6 +6,8 @@
 struct xFieldOfView
 {
 public:
+    bool    Empty;
+
     xPlane  LeftPlane;
     xPlane  RightPlane;
     xPlane  TopPlane;
@@ -36,6 +38,7 @@ public:
 
     void init( xFLOAT angle, xFLOAT aspect, xFLOAT frontClip, xFLOAT backClip )
     {
+        Empty     = false;
         Angle     = angle;
         Aspect    = aspect;
         FrontClip = frontClip;
@@ -62,6 +65,8 @@ public:
 
     bool CheckSphere(const xVector3 &sphereCenter, xFLOAT sphereRadius) const
     {
+        if (Empty) return true;
+
         float dist;
 
         xVector3 viewPos;
@@ -108,6 +113,8 @@ public:
 
     bool CheckBox(const xVector3 boundingPoints[8]) const
     {
+        if (Empty) return true;
+
         xVector3 viewPos[8];
         const xVector3 *iterS;
         xVector3 *iterD;

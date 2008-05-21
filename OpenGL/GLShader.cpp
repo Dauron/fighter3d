@@ -320,6 +320,7 @@ bool GLShader :: Start()
     //assert(shaderState == xState_Disable || shaderState == xState_Enable || shaderState == xState_Off);
 
     if (shaderState == xState_Disable) return false;
+    if (!Config::EnableShaders) return false;
     //if (shaderState != xState_Enable || shaderState == xState_Off) return false;
     shaderState = xState_On;
 
@@ -378,4 +379,16 @@ bool GLShader :: Start()
 
     glUseProgramObjectARB(ShaderProgram::currProgram = currShader->program);
     return true;
+}
+
+void GLShader :: Suspend()
+{
+    //assert(program);
+    //assert(IsCurrent());
+    // Use The Fixed Function OpenGL
+    if (shaderState == xState_Disable) return;
+    shaderState = xState_Enable;
+    if (ShaderProgram::currProgram)
+        glUseProgramObjectARB(ShaderProgram::currProgram = 0);
+    currShader = NULL;
 }

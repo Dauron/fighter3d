@@ -78,26 +78,29 @@ void World:: Initialize()
         xLight light;
         light.modified = true;
         light.turned_on = true;
-        light.attenuationConst  = 1.f;
-        light.attenuationLinear = 0.0004f;
-        light.attenuationSquare = 0.00008f;
         light.spotDirection.init(0.f,0.f,-1.f);
         light.spotCutOff = 45.f;
         light.spotAttenuation = 1.f;
         // YELLOW
         light.create();
+        light.attenuationConst  = 0.9f;
+        light.attenuationLinear = 0.005f;
+        light.attenuationSquare = 0.0005f;
         light.color.init(1.0f, 0.7f, 0.f, 1.f);
-        light.softness = 0.6f;
+        light.softness = 0.3f;
         light.position.init(0.f, 0.f, 10.f);
         light.type = xLight_POINT;
         lights.push_back(light);
         // RED
         light.create();
-        light.color.init(0.8f, 0.f, 0.f, 1.f);
-        light.softness = 0.2f;
-        light.position.init(10.f, -5.f, 5.f);
+        light.attenuationConst  = 1.f;
+        light.attenuationLinear = 0.0004f;
+        light.attenuationSquare = 0.00008f;
+        light.color.init(0.7f, 0.f, 0.f, 1.f);
+        light.softness = 0.1f;
+        light.position.init(7.f, -5.f, 5.f);
         light.type = xLight_SPOT;
-        //lights.push_back(light);
+        lights.push_back(light);
         // SKY
         light.create();
         light.color.init(0.05f, 0.05f, 0.05f, 1.f);
@@ -166,7 +169,7 @@ void World:: Initialize()
         modelA->phantom = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
-        bool captureOK = g_CaptureInput.Initialize(modelA->GetRenderer()->xModelGraphics->spineP);
+        bool captureOK = g_CaptureInput.Initialize(modelA->GetModelGr()->spineP);
         modelA->ControlType = (captureOK)
             ? SkeletizedObj::Control_CaptureInput
             : SkeletizedObj::Control_AI;
@@ -247,7 +250,7 @@ void World:: Initialize()
         modelA->phantom  = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
-        bool captureOK = g_CaptureInput.Initialize(modelA->GetRenderer()->xModelGraphics->spineP);
+        bool captureOK = g_CaptureInput.Initialize(modelA->GetModelGr()->spineP);
         modelA->ControlType = (captureOK)
             ? SkeletizedObj::Control_CaptureInput
             : SkeletizedObj::Control_AI;

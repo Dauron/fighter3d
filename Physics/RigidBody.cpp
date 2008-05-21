@@ -14,7 +14,7 @@ float RigidBody :: CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVect
 
     for (; cc; --cc, ++ci)
     {
-        xVector3 *vec = ci->verticesP;
+        xVector4 *vec = ci->verticesP;
         xDWORD    vc  = ci->verticesC;
         for (; vc; --vc, ++vec)
         {
@@ -62,7 +62,7 @@ void RigidBody :: CalculateCollisions(ModelObj *model)
             ModelObj *model2 = model->CollidedModels[i].model2;
             float massScaleM = model2->mass;
             centM /= numCM /** normMSc*/;
-            xVector3 centerOfTheMassG = (xVector4::Create(model2->centerOfTheMass, 1.f) * model2->mLocationMatrix).vector3;
+            xVector3 centerOfTheMassG = (xVector4::Create(model2->modelInstancePh.center, 1.f) * model2->mLocationMatrix).vector3;
             xVector3 velo = model2->transVelocity +
                 xVector3::CrossProduct(xQuaternion::angularVelocity(model2->rotatVelocity), centerOfTheMassG-centM);
             //velo *= 1.f - model->CollidedModels[i].model2->resilience;
@@ -80,7 +80,7 @@ void RigidBody :: CalculateCollisions(ModelObj *model)
             model->collisionCent /= model->CollidedModels.size() * massScale;
             model->collisionVelo /= model->CollidedModels.size() * model->mass;
 
-            xVector3 centerOfTheMassG = (xVector4::Create(model->centerOfTheMass, 1.f)*model->mLocationMatrix).vector3;
+            xVector3 centerOfTheMassG = (xVector4::Create(model->modelInstancePh.center, 1.f)*model->mLocationMatrix).vector3;
             xVector3 vArm             = centerOfTheMassG - model->collisionCent;
 
             model->collisionNorm.normalize();
@@ -122,8 +122,8 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
         if (model->collisionNorm.length())
         {
             pcL = model->penetrationCorrection.length();
-            xVector3 centerOfTheMassG     = (xVector4::Create(model->centerOfTheMass, 1.f)*model->mLocationMatrix).vector3;
-            //xVector3 centerOfTheMassGprev = (xVector4::Create(model->centerOfTheMass, 1.f)*model->mLocationMatrixPrev).vector3;
+            xVector3 centerOfTheMassG = (xVector4::Create(model->modelInstancePh.center, 1.f)*model->mLocationMatrix).vector3;
+            //xVector3 centerOfTheMassGprev = (xVector4::Create(model->modelInstancePh.center, 1.f)*model->mLocationMatrixPrev).vector3;
             //float tvL = (centerOfTheMassG-centerOfTheMassGprev).length();
             //if (tvL-pcL > 0.f && tvL > EPSILON) model->transVelocity *= (tvL-pcL)/tvL;
             //else               model->transVelocity.zero();
@@ -180,7 +180,7 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
     if (xVector4::Normalize(model->rotatVelocity).vector3.length() > 0.01f)
     {
         xMatrix translation; translation.identity();
-        translation.row3.vector3 = -model->centerOfTheMass;
+        translation.row3.vector3 = -model->modelInstancePh.center;
         xMatrix rotation = translation * xMatrixFromQuaternion(xQuaternion::interpolateFull(model->rotatVelocity, deltaTime));
         translation.row3.vector3.invert();
         model->mLocationMatrix = rotation * translation * model->mLocationMatrix;
@@ -209,7 +209,11 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
         model->transVelocity.zero();
 
     if (needsRefill)
+    {
+        model->modelInstanceGr.location = model->modelInstancePh.location;
         model->CollisionInfo_ReFill();
+        model->InvalidateShadowRenderData();
+    }
 
     if (model->physical)
         model->transVelocity.z -= model->gravityAccumulator * deltaTime;

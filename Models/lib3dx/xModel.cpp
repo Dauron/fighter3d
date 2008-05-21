@@ -343,3 +343,36 @@ void   xModel :: Save()
         fclose(file);
     }
 }
+
+/* model instance */
+void xModelInstance :: Zero()
+{
+    bonesM = NULL;
+    bonesQ = NULL;
+    bonesC = 0;
+    bonesMod = NULL;
+    elementInstanceC = 0;
+    elementInstanceP = NULL;
+}
+
+void xModelInstance :: ClearSkeleton()
+{
+    if (bonesM)   delete[] bonesM; bonesM = NULL;
+    if (bonesQ)   delete[] bonesQ; bonesQ = NULL;
+    if (bonesMod) delete[] bonesMod; bonesMod = NULL;
+}
+
+void xModelInstance :: Clear()
+{
+    ClearSkeleton();
+
+    if (elementInstanceP)
+    {
+        xElementInstance *iter = elementInstanceP;
+        for (; elementInstanceC; --elementInstanceC, ++iter)
+            iter->Clear();
+
+        delete[] elementInstanceP;
+        elementInstanceP = NULL;
+    }
+}

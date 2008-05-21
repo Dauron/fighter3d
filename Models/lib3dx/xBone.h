@@ -30,8 +30,10 @@ struct xBone {
     static xBone *Load( FILE *file );
 };
 
+struct xModelInstance;
+
 xMatrix xBoneCalculateMatrix   (const xBone *spine, int boneId);
-void    xBoneCalculateMatrices (const xBone *spine, xMatrix  *&boneP, bool *&boneMod, xBYTE &boneC);
-void    xBoneCalculateQuats    (const xBone *spine, xVector4 *&boneP, xBYTE &boneC);
+void    xBoneCalculateMatrices (const xBone *spine, xModelInstance *instance);
+void    xBoneCalculateQuats    (const xBone *spine, xModelInstance *instance);
 
 #endif

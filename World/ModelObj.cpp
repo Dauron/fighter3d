@@ -1,13 +1,13 @@
 #include "ModelObj.h"
 #include "../Physics/RigidBody.h"
 
-void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bool physicalNotLocked, bool phantom)
+void ModelObj :: Initialize (const char *gr_filename, const char *ph_filename, bool physicalNotLocked, bool phantom)
 {
     collisionInfo = NULL;
     mLocationMatrixPrev = mLocationMatrix;
     transVelocity.zero();
     rotatVelocity.zeroQ();
-    mass               = physical ? 1.f : 100000000.f;
+    mass               = !locked ? 1.f : 100000000.f;
     resilience         = 0.2f;
     gravityAccumulator = 1.f;
     this->phantom = phantom;
@@ -15,29 +15,126 @@ void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bo
     this->locked   = !physicalNotLocked;
     smap.texId = 0;
 
+    modelInstanceGr.Zero();
+    modelInstancePh.Zero();
+    modelInstanceGr.location = mLocationMatrix;
+    modelInstancePh.location = mLocationMatrix;
+
+    hModelGraphics = g_ModelMgr.GetModel(gr_filename);
+    Model3dx *mdl  = g_ModelMgr.GetModel(hModelGraphics);
+    xModelGr = mdl->model;
     if (ph_filename)
-        renderer.Initialize(!forceNotStatic, g_ModelMgr.GetModel(gr_filename), g_ModelMgr.GetModel(ph_filename));
+    {
+        hModelPhysical = g_ModelMgr.GetModel(ph_filename);
+        xModelPh = g_ModelMgr.GetModel(hModelPhysical)->model;
+    }
     else
-        renderer.Initialize(!forceNotStatic, g_ModelMgr.GetModel(gr_filename));
-    xRender *rend = GetRenderer();
-    centerOfTheMass = xCenterOfTheModelMass(rend->xModelPhysical, rend->bonesM);
+    {
+        hModelPhysical = hModelGraphics;
+        xModelPh = xModelGr;
+        mdl->IncReferences();
+    }
+
+    VerticesChanged(true);
 }
 
-void ModelObj:: Finalize ()
+void ModelObj :: Finalize ()
 {
+    if (smap.texId)
+    {
+        GLuint tid = smap.texId;
+        glDeleteTextures(1, &tid);
+        smap.texId = 0;
+    }
+    renderer.FreeInstanceGraphics(modelInstanceGr);
+    renderer.FreeInstanceGraphics(modelInstancePh);
     if (collisionInfo)
     {
-        CollisionInfo_Free(GetRenderer()->xModelPhysical->kidsP, collisionInfo);
+        CollisionInfo_Free(GetModelPh()->kidsP, collisionInfo);
         delete[] collisionInfo;
         collisionInfo = NULL;
     }
-    renderer.Finalize();
+    FreeInstanceData();
+    g_ModelMgr.DeleteModel(hModelGraphics);
+    g_ModelMgr.DeleteModel(hModelPhysical);
 }
 
-void ModelObj:: RenderObject(bool transparent, const xFieldOfView *FOV)
+void ModelObj :: FreeInstanceData()
 {
-    GetRenderer()->SetLocation(mLocationMatrix);
-    GetRenderer()->RenderModel(transparent, FOV);
+    modelInstanceGr.Clear();
+    if (hModelGraphics == hModelPhysical)
+        modelInstancePh.elementInstanceP = NULL;
+    modelInstancePh.bonesM = NULL;
+    modelInstancePh.bonesQ = NULL;
+    modelInstancePh.bonesMod = NULL;
+    modelInstancePh.Clear();
+}
+
+void ModelObj :: VerticesChanged(bool free)
+{
+    if (free) {
+        renderer.FreeInstanceGraphics(modelInstanceGr);
+        renderer.FreeInstanceGraphics(modelInstancePh);
+        FreeInstanceData();
+
+        modelInstanceGr.elementInstanceC = xModelGr->elementC;
+        modelInstanceGr.elementInstanceP = new xElementInstance[xModelGr->elementC];
+        memset(modelInstanceGr.elementInstanceP, 0, modelInstanceGr.elementInstanceC * sizeof(xElementInstance));
+        if (hModelGraphics != hModelPhysical)
+        {
+            modelInstancePh.elementInstanceC = xModelPh->elementC;
+            modelInstancePh.elementInstanceP = new xElementInstance[xModelPh->elementC];
+            memset(modelInstancePh.elementInstanceP, 0, modelInstancePh.elementInstanceC * sizeof(xElementInstance));
+        }
+        else
+        {
+            modelInstancePh.elementInstanceC = modelInstanceGr.elementInstanceC;
+            modelInstancePh.elementInstanceP = modelInstanceGr.elementInstanceP;
+        }
+    }
+    else InvalidateShadowRenderData();
+
+    xBoneCalculateMatrices (xModelGr->spineP, &modelInstanceGr);
+    xBoneCalculateQuats    (xModelGr->spineP, &modelInstanceGr);
+    modelInstancePh.bonesM   = modelInstanceGr.bonesM;
+    modelInstancePh.bonesQ   = modelInstanceGr.bonesQ;
+    modelInstancePh.bonesMod = modelInstanceGr.bonesMod;
+    modelInstancePh.bonesC   = modelInstanceGr.bonesC;
+
+    xModel_SkinElementInstance(xModelGr, modelInstanceGr);
+    modelInstancePh.center = modelInstanceGr.center = xModel_GetBounds(modelInstanceGr);
+    if (hModelGraphics != hModelPhysical)
+    {
+        xModel_SkinElementInstance(xModelPh, modelInstancePh);
+        modelInstancePh.center = xModel_GetBounds(modelInstancePh);
+    }
+}
+
+void ModelObj :: CalculateSkeleton()
+{
+    if (!xModelGr->spineP) return;
+    if (xModelGr->spineP->CountAllKids()+1 != modelInstanceGr.bonesC)
+    {
+        modelInstanceGr.ClearSkeleton();
+        if (!modelInstanceGr.bonesC) // skeleton was added, so refresh VBO data
+        {
+            VerticesChanged(true);
+            return;
+        }
+    }
+    VerticesChanged(false);
+    renderer.InvalidateBonePositions(modelInstanceGr);
+    renderer.InvalidateBonePositions(modelInstancePh);
+}
+
+
+
+
+void ModelObj:: RenderObject(bool transparent, const xFieldOfView &FOV)
+{
+    UpdatePointers();
+    modelInstancePh.location = modelInstanceGr.location = mLocationMatrix;
+    renderer.RenderModel(*xModelGr, modelInstanceGr, transparent, FOV);
 }
 
 void ModelObj:: PreUpdate()
@@ -57,12 +154,12 @@ xCollisionHierarchyBoundsRoot *ModelObj::GetCollisionInfo()
     float delta = GetTick();
 
     idx.clear();
-    xRender *rend  = GetRenderer();
-    collisionInfoC = rend->xModelPhysical->elementC;
+    UpdatePointers();
+    collisionInfoC = xModelPh->elementC;
     collisionInfo  = new xCollisionHierarchyBoundsRoot[collisionInfoC];
 
-    for (xElement *elem = rend->xModelPhysical->kidsP; elem; elem = elem->nextP)
-        CollisionInfo_Fill(rend, elem, collisionInfo, true);
+    for (xElement *elem = xModelPh->kidsP; elem; elem = elem->nextP)
+        CollisionInfo_Fill(elem, collisionInfo, true);
 
     Performance.CollisionDataFillMS += GetTick() - delta;
 
@@ -75,33 +172,45 @@ void ModelObj::CollisionInfo_ReFill()
     if (collisionInfo)
     {
         float   delta  = GetTick();
-        xRender *rend  = GetRenderer();
-        for (xElement *elem = rend->xModelPhysical->kidsP; elem; elem = elem->nextP)
-            CollisionInfo_Fill(rend, elem, collisionInfo, false);
+        UpdatePointers();
+        for (xElement *elem = xModelPh->kidsP; elem; elem = elem->nextP)
+            CollisionInfo_Fill(elem, collisionInfo, false);
         Performance.CollisionDataFillMS += GetTick() - delta;
     }
 }
 
-void ModelObj::CollisionInfo_Fill(xRender *rend, xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime)
+void ModelObj::CollisionInfo_Fill(xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime)
 {
     xCollisionHierarchyBoundsRoot &eci = ci[elem->id];
-    if (firstTime) eci.verticesP = NULL;
-    xElement_GetSkinnedVertices(elem, rend->bonesM, mLocationMatrix, eci.verticesP, false);
-    eci.verticesC = elem->verticesC;
+    UpdatePointers();
 
     // Create Hierarchy, if not exists
     if (firstTime)
     {
         if (!elem->collisionData.kidsP)
-            elem->collisionData.Fill(rend->xModelPhysical, elem);
+            elem->collisionData.Fill(xModelPh, elem);
         eci.kids = NULL;
+        eci.verticesP = NULL;
     }
+
+    if (eci.verticesC != modelInstancePh.elementInstanceP[elem->id].verticesC)
+    {
+        eci.verticesC = modelInstancePh.elementInstanceP[elem->id].verticesC;
+        if (eci.verticesP) delete[] eci.verticesP;
+        eci.verticesP = new xVector4[eci.verticesC];
+    }
+
+    xVector4 *iterS = modelInstancePh.elementInstanceP[elem->id].verticesP, *iterD = eci.verticesP;
+    xMatrix   transf = elem->matrix * mLocationMatrix;
+    for (int i = eci.verticesC; i; --i, ++iterS, ++iterD)
+        iterD->init(transf.preTransformP(iterS->vector3), 1.f);
+
     // Fill collision bounding boxes
     xElement_CalcCollisionHierarchyBox(eci.verticesP, &elem->collisionData, &eci);
 
     // Fill CI for subelements
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
-        CollisionInfo_Fill(rend, celem, ci, firstTime);
+        CollisionInfo_Fill(celem, ci, firstTime);
 }
 
 void ModelObj::CollisionInfo_Free(xElement *elem, xCollisionHierarchyBoundsRoot *ci)
@@ -152,7 +261,7 @@ void ModelObj::CollisionInfo_Render(xElement *elem, xCollisionHierarchyBoundsRoo
 
 void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width)
 {
-    xVector3 centerOfTheMassG = (xVector4::Create(centerOfTheMass, 1.f)*mLocationMatrix).vector3;
+    xVector3 centerOfTheMassG = (xVector4::Create(modelInstancePh.center, 1.f)*modelInstancePh.location).vector3;
     xVector3 lFAxis = (light->position - centerOfTheMassG).normalize();
     xVector3 tmp;
     if (fabs(lFAxis.x) <= fabs(lFAxis.y))
@@ -178,10 +287,10 @@ void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     xCollisionHierarchyBoundsRoot* ci = GetCollisionInfo();
     for (int i=collisionInfoC; i; --i, ++ci)
     {
-        xVector3 *iter = ci->verticesP;
+        xVector4 *iter = ci->verticesP;
         for (int j=ci->verticesC; j; --j, ++iter)
         {
-            xVector3 v = lViewMatrix.preTransformP(*iter);
+            xVector4 v = lViewMatrix * *iter;
             v.z = 1.f / v.z;
             v.x *= v.z; v.y *= v.z;
 

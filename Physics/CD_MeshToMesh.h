@@ -15,10 +15,10 @@ class CD_MeshToMesh
     CollisionWithModel *collidedModel1;
     CollisionWithModel *collidedModel2;
 
-    int  CheckPlanes        (xVector3 *a1, xVector3 *a2, xVector3 *a3,
-                             xVector3 *b1, xVector3 *b2, xVector3 *b3);
-    bool IntersectTriangles (xVector3 *a1, xVector3 *a2, xVector3 *a3,
-                             xVector3 *b1, xVector3 *b2, xVector3 *b3, xVector3 *crossing);
+    int  CheckPlanes        (xVector4 *a1, xVector4 *a2, xVector4 *a3,
+                             xVector4 *b1, xVector4 *b2, xVector4 *b3);
+    bool IntersectTriangles (xVector4 *a1, xVector4 *a2, xVector4 *a3,
+                             xVector4 *b1, xVector4 *b2, xVector4 *b3, xVector3 *crossing);
 
     bool CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xCollisionHierarchyBoundsRoot *ci2,
                           xCollisionHierarchy *ch1,        xCollisionHierarchy *ch2,
@@ -41,17 +41,14 @@ public:
 
         float delta = GetTick();
 
-        xRender *r1 = model1->GetRenderer();
-        xRender *r2 = model2->GetRenderer();
-
         this->model1 = model1;
         this->model2 = model2;
 
         collidedModel1 = collidedModel2 = NULL;
 
         bool res = false;
-        for (xElement *elem1 = r1->xModelPhysical->kidsP; elem1; elem1 = elem1->nextP)
-            res |= Collide1(++ci1, ci2, elem1, r2->xModelPhysical->kidsP);
+        for (xElement *elem1 = model1->GetModelPh()->kidsP; elem1; elem1 = elem1->nextP)
+            res |= Collide1(++ci1, ci2, elem1, model2->GetModelPh()->kidsP);
 
         Performance.CollisionDeterminationMS += GetTick() - delta;
         return res;

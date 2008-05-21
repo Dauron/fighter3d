@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1250"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="8,00"
 	Name="CamFighter"
 	ProjectGUID="{EEDB48FF-1411-48BA-AA59-11165C3985A4}"
 	RootNamespace="CamFighter"

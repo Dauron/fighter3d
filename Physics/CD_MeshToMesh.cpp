@@ -1,7 +1,7 @@
 #include "CD_MeshToMesh.h"
 
-int  CD_MeshToMesh:: CheckPlanes(xVector3 *a1, xVector3 *a2, xVector3 *a3,
-                                 xVector3 *b1, xVector3 *b2, xVector3 *b3)
+int  CD_MeshToMesh:: CheckPlanes(xVector4 *a1, xVector4 *a2, xVector4 *a3,
+                                 xVector4 *b1, xVector4 *b2, xVector4 *b3)
 {
     // Calculate plane (with CrossProduct)
     float p1x = a2->x - a1->x, p1y = a2->y - a1->y, p1z = a2->z - a1->z;
@@ -35,13 +35,13 @@ int  CD_MeshToMesh:: CheckPlanes(xVector3 *a1, xVector3 *a2, xVector3 *a3,
     return 3;
 }
 
-bool CD_MeshToMesh:: IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3,
-                                        xVector3 *b1, xVector3 *b2, xVector3 *b3, xVector3 *crossing)
+bool CD_MeshToMesh:: IntersectTriangles(xVector4 *a1, xVector4 *a2, xVector4 *a3,
+                                        xVector4 *b1, xVector4 *b2, xVector4 *b3, xVector3 *crossing)
 {
     int r = CheckPlanes(a1, a2, a3, b1, b2, b3);
     if (!r) return false;
 
-    xVector3 *swp;
+    xVector4 *swp;
     if (r > 0)
     {
         if (r == 2) { swp = b1; b1 = b2; b2 = b3; b3 = swp; }
@@ -67,7 +67,7 @@ bool CD_MeshToMesh:: IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3
             return true;
 
         while (determinant(a1, b1, b2) < 0 || determinant(a1, b1, b3) < 0)
-        { xVector3 *swp = b1; b1 = b2; b2 = b3; b3 = swp; }
+        { xVector4 *swp = b1; b1 = b2; b2 = b3; b3 = swp; }
 
         if (determinant(a1, b2, b3) > 0) // Region R1
         {
@@ -329,9 +329,9 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                 for (int i1 = ch1->facesC; i1; --i1)
                 {
                     xFace **face1 = ch1->facesP + ch1->facesC - i1;
-                    xVector3 *a1 = ci1->verticesP + (**face1)[0];
-                    xVector3 *a2 = ci1->verticesP + (**face1)[1];
-                    xVector3 *a3 = ci1->verticesP + (**face1)[2];
+                    xVector4 *a1 = ci1->verticesP + (**face1)[0];
+                    xVector4 *a2 = ci1->verticesP + (**face1)[1];
+                    xVector4 *a3 = ci1->verticesP + (**face1)[2];
 
                     xBox faceB1;
                     faceB1.min.x = min(a1->x, min(a2->x, a3->x));
@@ -346,9 +346,9 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                         ++Performance.CollidedTriangleBounds;
 
                         xFace **face2 = ch2->facesP + ch2->facesC - i2;
-                        xVector3 *b1 = ci2->verticesP + (**face2)[0];
-                        xVector3 *b2 = ci2->verticesP + (**face2)[1];
-                        xVector3 *b3 = ci2->verticesP + (**face2)[2];
+                        xVector4 *b1 = ci2->verticesP + (**face2)[0];
+                        xVector4 *b2 = ci2->verticesP + (**face2)[1];
+                        xVector4 *b3 = ci2->verticesP + (**face2)[2];
                         // Exclude elements that can't collide
                         xBox faceB2;
                         faceB2.max.x = max(b1->x, max(b2->x, b3->x));
@@ -381,13 +381,13 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                             Collisions cf;
                             cf.face1 = *face1; cf.face2 = *face2;
                             cf.elem1 = elem1; cf.elem2 = elem2; cf.colPoint = colPoint;
-                            cf.face1v[0] = *a1; cf.face1v[1] = *a2; cf.face1v[2] = *a3;
-                            cf.face2v[0] = *b1; cf.face2v[1] = *b2; cf.face2v[2] = *b3;
+                            cf.face1v[0] = a1->vector3; cf.face1v[1] = a2->vector3; cf.face1v[2] = a3->vector3;
+                            cf.face2v[0] = b1->vector3; cf.face2v[1] = b2->vector3; cf.face2v[2] = b3->vector3;
                             collidedModel1->collisions.push_back(cf);
                             cf.face1 = *face2; cf.face2 = *face1;
                             cf.elem1 = elem2; cf.elem2 = elem1;
-                            cf.face1v[0] = *b1; cf.face1v[1] = *b2; cf.face1v[2] = *b3;
-                            cf.face2v[0] = *a1; cf.face2v[1] = *a2; cf.face2v[2] = *a3;
+                            cf.face1v[0] = b1->vector3; cf.face1v[1] = b2->vector3; cf.face1v[2] = b3->vector3;
+                            cf.face2v[0] = a1->vector3; cf.face2v[1] = a2->vector3; cf.face2v[2] = a3->vector3;
                             collidedModel2->collisions.push_back(cf);
                             res = true;
                         }

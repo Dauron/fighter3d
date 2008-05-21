@@ -1,44 +1,5 @@
 #include "xUtils.h"
 
-xVector3 * xElement_GetSkinnedVertices(const xElement *elem, const xMatrix *bones, bool fromRenderData)
-{
-    xWORD  count  = fromRenderData ? elem->renderData.verticesC : elem->verticesC;
-    xBYTE *src    = (xBYTE *) (fromRenderData ? elem->renderData.verticesP : elem->verticesP);
-    xDWORD stride = elem->skeletized
-        ? (elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
-        : (elem->textured ? sizeof(xVertexTex)     : sizeof(xVertex));
-
-    xVector3 *dst = new xVector3[count];
-    xVector3 *itr = dst;
-
-    if (elem->skeletized)
-        for (int i = count; i > 0; --i, ++itr, src += stride)
-        {
-            xVertexSkel *vert = (xVertexSkel *)src;
-
-            int   i1 = (int) floor(vert->b0);
-            float w1 = (vert->b0 - i1)*10;
-            int   i2 = (int) floor(vert->b1);
-            float w2 = (vert->b1 - i2)*10;
-            int   i3 = (int) floor(vert->b2);
-            float w3 = (vert->b2 - i3)*10;
-            int   i4 = (int) floor(vert->b3);
-            float w4 = (vert->b3 - i4)*10;
-
-            *itr  = bones[i1].postTransformP(*(xVector3 *)vert->pos) * w1;
-            if (w2 > 0.01) *itr += bones[i2].postTransformP(*(xVector3 *)vert->pos) * w2;
-            if (w3 > 0.01) *itr += bones[i3].postTransformP(*(xVector3 *)vert->pos) * w3;
-            if (w4 > 0.01) *itr += bones[i4].postTransformP(*(xVector3 *)vert->pos) * w4;
-        }
-    else
-        for (int i = count; i > 0; --i, ++itr, src += stride)
-        {
-            xVertex *vert = (xVertex *)src;
-            *itr = *(xVector3 *)vert->pos;
-        }
-    return dst;
-}
-
 xSkinnedData xElement_GetSkinnedElement(const xElement *elem, const xMatrix *bones)
 {
     xWORD     count  = elem->renderData.verticesC;
@@ -83,10 +44,10 @@ xSkinnedData xElement_GetSkinnedElement(const xElement *elem, const xMatrix *bon
     return dst;
 }
 
-void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bones, const bool *boneMods,
-                                         bool infiniteL, xShadowData &shadowData)
+void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, const bool *boneMods,
+                                   xElementInstance &instance)
 {
-    xWORD     count  = elem->verticesC;
+    xWORD     count  = instance.verticesC = elem->verticesC;
     xBYTE    *srcV   = (xBYTE *) elem->verticesP;
     xVector3 *srcN   = elem->renderData.normalP;
     xDWORD stride = elem->skeletized
@@ -95,14 +56,14 @@ void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bo
 
     if (elem->skeletized)
     {
-        bool old_refill = shadowData.verticesP;
+        bool old_refill = instance.verticesP;
         if (!old_refill)
         {
-            shadowData.verticesP = (infiniteL) ? new xVector4[count + 1] : new xVector4[count << 1];
-            shadowData.normalsP  = new xVector3[count];
+            instance.verticesP = new xVector4[count];
+            instance.normalsP  = new xVector3[count];
         }
-        xVector4 *itrV = shadowData.verticesP;
-        xVector3 *itrN = shadowData.normalsP;
+        xVector4 *itrV = instance.verticesP;
+        xVector3 *itrN = instance.normalsP;
         for (int i = count; i > 0; --i, ++itrV, ++itrN, srcV += stride, ++srcN)
         {
             xVertexSkel *vert = (xVertexSkel *)srcV;
@@ -140,11 +101,11 @@ void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bo
     }
     else
     {
-        if (!shadowData.verticesP)
+        if (!instance.verticesP)
         {
-            shadowData.verticesP = (infiniteL) ? new xVector4[count + 1] : new xVector4[count << 1];
-            shadowData.normalsP  = NULL;
-            xVector4 *itrV = shadowData.verticesP;
+            instance.verticesP = new xVector4[count];
+            instance.normalsP  = NULL;
+            xVector4 *itrV = instance.verticesP;
             for (int i = count; i > 0; --i, ++itrV, srcV += stride)
                 itrV->init(*(xVector3 *)srcV, 1.f);
             //memcpy(dst.normalsP, elem->renderData.normalP, sizeof(xVector3)*count);
@@ -152,186 +113,21 @@ void xElement_GetSkinnedElementForShadow(const xElement *elem, const xMatrix *bo
     }
 }
 
-xVector3 * xElement_GetSkinnedVertices(const xElement *elem, const xMatrix *bones, xMatrix transformation,
-                                       xVector3 *&dst, bool fromRenderData)
-{
-    xWORD  count  = fromRenderData ? elem->renderData.verticesC : elem->verticesC;
-    xBYTE *src    = (xBYTE *) (fromRenderData ? elem->renderData.verticesP : elem->verticesP);
-    xDWORD stride = elem->skeletized
-        ? (elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
-        : (elem->textured ? sizeof(xVertexTex)     : sizeof(xVertex));
-
-    if (!dst) dst = new xVector3[count];
-    xVector3 *itr = dst;
-
-    transformation *= elem->matrix;
-
-    if (elem->skeletized && bones)
-        for (int i = count; i > 0; --i, ++itr, src += stride)
-        {
-            xVertexSkel *vert = (xVertexSkel *)src;
-
-            int   i1 = (int) floor(vert->b0);
-            float w1 = (vert->b0 - i1)*10;
-            int   i2 = (int) floor(vert->b1);
-            float w2 = (vert->b1 - i2)*10;
-            int   i3 = (int) floor(vert->b2);
-            float w3 = (vert->b2 - i3)*10;
-            int   i4 = (int) floor(vert->b3);
-            float w4 = (vert->b3 - i4)*10;
-
-            *itr  = bones[i1].postTransformP(*(xVector3 *)vert->pos) * w1;
-            if (w2 > 0.01) *itr += bones[i2].postTransformP(*(xVector3 *)vert->pos) * w2;
-            if (w3 > 0.01) *itr += bones[i3].postTransformP(*(xVector3 *)vert->pos) * w3;
-            if (w4 > 0.01) *itr += bones[i4].postTransformP(*(xVector3 *)vert->pos) * w4;
-            *itr = transformation.preTransformP(*itr);
-        }
-    else
-        for (int i = count; i > 0; --i, ++itr, src += stride)
-        {
-            xVertex *vert = (xVertex *)src;
-            *itr = transformation.preTransformP(*(xVector3 *)vert->pos);
-        }
-    return dst;
-}
-
-void _xCenterOfTheModelMass(const xElement *elem, const xMatrix *bones, xVector3 &res, xDWORD &vcnt)
+void _xModel_SkinElementInstance(const xElement *elem, xElementInstance *instanceP,
+                                 const xMatrix *bones, const bool *boneMods)
 {
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
-        _xCenterOfTheModelMass(celem, bones, res, vcnt);
-    if (!elem->verticesC) return;
+        _xModel_SkinElementInstance(celem, instanceP, bones, boneMods);
 
-    vcnt += elem->verticesC;
-    if (elem->skeletized && bones)
-    {
-        xVector3 *verts = xElement_GetSkinnedVertices(elem, bones, false);
-        xVector3 *iter = verts;
-
-        for (int i=0; i < elem->verticesC; ++i, ++iter)
-            res += *iter;
-
-        delete[] verts;
-    }
-    else
-    {
-        int stride = 0;
-        if (!elem->skeletized)
-            stride = (elem->textured) ? sizeof(xVertexTex) : sizeof(xVertex);
-        else
-            stride = (elem->textured) ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
-
-        xBYTE *ptr = (xBYTE *)elem->verticesP;
-        for (int i=0; i<elem->verticesC; ++i, ptr += stride)
-            res += *((xVector3*)ptr);
-    }
+    _xElement_SkinElementInstance(elem, bones, boneMods, instanceP[elem->id]);
 }
-
-xVector3 xCenterOfTheModelMass(const xModel *file, const xMatrix *bones)
+void xModel_SkinElementInstance(const xModel *model, xModelInstance &instance)
 {
-    xVector3 res; res.zero();
-    xDWORD   vcnt = 0;
-    for (xElement *elem = file->kidsP; elem; elem = elem->nextP)
-        _xCenterOfTheModelMass(elem, bones, res, vcnt);
-    if (vcnt)
-        res /= (float)vcnt;
-    return res;
+    for (xElement *celem = model->kidsP; celem; celem = celem->nextP)
+        _xModel_SkinElementInstance(celem, instance.elementInstanceP, instance.bonesM, instance.bonesMod);
 }
 
-void   _xCenterOfTheModel(const xElement *elem, const xMatrix *bones,
-                            xVector3 &min, xVector3 &max, bool recursive = true)
-{
-    if (recursive)
-        for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
-            _xCenterOfTheModel(celem, bones, min, max);
-
-    if (!elem->renderData.verticesC) return;
-
-    if (elem->skeletized && bones)
-    {
-        xVector3 *verts = xElement_GetSkinnedVertices(elem, bones, false);
-        xVector3 *iter = verts;
-
-        for (int i=0; i < elem->verticesC; ++i, ++iter)
-        {
-            if (iter->x > max.x) max.x = iter->x;
-            else
-            if (iter->x < min.x) min.x = iter->x;
-            if (iter->y > max.y) max.y = iter->y;
-            else
-            if (iter->y < min.y) min.y = iter->y;
-            if (iter->z > max.z) max.z = iter->z;
-            else
-            if (iter->z < min.z) min.z = iter->z;
-        }
-
-        delete[] verts;
-    }
-    else
-    {
-        int stride = 0;
-        if (!elem->skeletized)
-            stride = (elem->textured) ? sizeof(xVertexTex) : sizeof(xVertex);
-        else
-            stride = (elem->textured) ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
-
-        xBYTE *ptr = (xBYTE *)elem->renderData.verticesP;
-        for (int i=0; i<elem->renderData.verticesC; ++i, ptr += stride)
-        {
-            xVector3 *iter = (xVector3*)ptr;
-            if (iter->x > max.x) max.x = iter->x;
-            if (iter->x < min.x) min.x = iter->x;
-            if (iter->y > max.y) max.y = iter->y;
-            if (iter->y < min.y) min.y = iter->y;
-            if (iter->z > max.z) max.z = iter->z;
-            if (iter->z < min.z) min.z = iter->z;
-        }
-    }
-}
-
-xVector3 xCenterOfTheElement(const xElement *elem, const xMatrix *bones)
-{
-    xVector3 minv; minv.init( 1000000000.f,  1000000000.f,  1000000000.f);
-    xVector3 maxv; maxv.init(-1000000000.f, -1000000000.f, -1000000000.f);
-    _xCenterOfTheModel(elem, bones, minv, maxv, false);
-    return (minv + maxv) / 2.f;
-}
-
-xVector3 xCenterOfTheModel(const xModel *file, const xMatrix *bones)
-{
-    xVector3 minv; minv.init( 1000000000.f,  1000000000.f,  1000000000.f);
-    xVector3 maxv; maxv.init(-1000000000.f, -1000000000.f, -1000000000.f);
-
-    for (xElement *elem = file->kidsP; elem; elem = elem->nextP)
-        _xCenterOfTheModel(elem, bones, minv, maxv);
-
-    return (minv + maxv) / 2.f;
-}
-
-xVector3 xCenterOfTheMass(const xVector4* vertices, xDWORD count, bool scale)
-{
-    xVector3 res; res.init(0.f,0.f,0.f);
-    if (!count) return res;
-
-    const xVector4 *iter = vertices;
-    for (int i=count; i; --i, ++iter)
-        res += iter->vector3;
-
-    if (scale)
-        return res / (float)count;
-    return res;
-}
-
-xVector3 xMeshMassCenter(const xBYTE *vertexP, const size_t stride, xDWORD vertexC)
-{
-    xVector3 res; res.zero();
-    if (!vertexC) return res;
-
-    for (; vertexC; --vertexC, vertexP += stride)
-        res += *(xVector3*)vertexP;
-    return res / (xFLOAT)vertexC;
-}
-
-xBox     xBoundingBox(const xBYTE *vertexP, const size_t stride, xDWORD vertexC)
+xBox     _xBoundingBox(const xVector4 *vertexP, xWORD vertexC)
 {
     xBox res;
     if (!vertexC)
@@ -341,45 +137,29 @@ xBox     xBoundingBox(const xBYTE *vertexP, const size_t stride, xDWORD vertexC)
         return res;
     }
 
-    res.min = *(xVector3*)vertexP;
-    res.max = *(xVector3*)vertexP;
+    res.min = vertexP->vector3;
+    res.max = vertexP->vector3;
     --vertexC;
 
-    for (; vertexC; --vertexC, vertexP += stride)
+    for (; vertexC; --vertexC, ++vertexP)
     {
-        if (((xVector3*)vertexP)->x > res.max.x) res.max.x = ((xVector3*)vertexP)->x;
+        if (vertexP->x > res.max.x) res.max.x = vertexP->x;
         else
-        if (((xVector3*)vertexP)->x < res.min.x) res.min.x = ((xVector3*)vertexP)->x;
-        if (((xVector3*)vertexP)->y > res.max.y) res.max.y = ((xVector3*)vertexP)->y;
+        if (vertexP->x < res.min.x) res.min.x = vertexP->x;
+        if (vertexP->y > res.max.y) res.max.y = vertexP->y;
         else
-        if (((xVector3*)vertexP)->y < res.min.y) res.min.y = ((xVector3*)vertexP)->y;
-        if (((xVector3*)vertexP)->z > res.max.z) res.max.z = ((xVector3*)vertexP)->z;
+        if (vertexP->y < res.min.y) res.min.y = vertexP->y;
+        if (vertexP->z > res.max.z) res.max.z = vertexP->z;
         else
-        if (((xVector3*)vertexP)->z < res.min.z) res.min.z = ((xVector3*)vertexP)->z;
+        if (vertexP->z < res.min.z) res.min.z = vertexP->z;
     }
 
     return res;
 }
 
-xFLOAT   xBoundingSphereRadius(const xBYTE *vertexP, const size_t stride, xDWORD vertexC, const xVector3 &sCenter)
+void     _xElementInstance_GetBounds(xElementInstance &instance)
 {
-    if (!vertexC) return 0.f;
-
-    xFLOAT r = 0.f;
-    for (; vertexC; --vertexC, vertexP += stride)
-        r = max (r, (*(xVector3*)vertexP - sCenter).lengthSqr());
-    return sqrtf(r);
-}
-
-void     xElement_GetBounds(const xElement &elem, const xMatrix *boneP, xElementInstance *instanceP, bool recursive = false)
-{
-    if (recursive)
-        for (xElement *celem = elem.kidsP; celem; celem = celem->nextP)
-            xElement_GetBounds(*celem, boneP, instanceP, true);
-
-    xElementInstance &instance = instanceP[elem.id];
-
-    if (!elem.verticesC)
+    if (!instance.verticesC)
     {
         instance.bbBox.min.zero();
         instance.bbBox.max.zero();
@@ -388,31 +168,31 @@ void     xElement_GetBounds(const xElement &elem, const xMatrix *boneP, xElement
         return;
     }
 
-    if (elem.skeletized && boneP)
-    {
-        xVector3 *verts   = xElement_GetSkinnedVertices(&elem, boneP, false);
-        instance.bbBox    = xBoundingBox((xBYTE*)verts, sizeof(xVector3), elem.verticesC);
-        instance.bsCenter = (instance.bbBox.min + instance.bbBox.max) * 0.5f;
-        instance.bsRadius = xBoundingSphereRadius((xBYTE*)verts, sizeof(xVector3), elem.verticesC, instance.bsCenter);
-        delete[] verts;
-    }
-    else
-    {
-        int stride;
-        if (!elem.skeletized)
-            stride = (elem.textured) ? sizeof(xVertexTex) : sizeof(xVertex);
-        else
-            stride = (elem.textured) ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
-        instance.bbBox = xBoundingBox((xBYTE*)elem.verticesP, stride, elem.verticesC);
-        instance.bsCenter = (instance.bbBox.min + instance.bbBox.max) * 0.5f;
-        instance.bsRadius = xBoundingSphereRadius((xBYTE*)elem.verticesP, stride, elem.verticesC, instance.bsCenter);
-    }
+    instance.bbBox    = _xBoundingBox(instance.verticesP, instance.verticesC);
+    instance.bsCenter = (instance.bbBox.min + instance.bbBox.max) * 0.5f;
+
+    xVector4 *iter = instance.verticesP;
+    xFLOAT r = 0.f;
+    for (xWORD i = instance.verticesC; i; --i, ++iter)
+        r = max (r, (iter->vector3 - instance.bsCenter).lengthSqr());
+    instance.bsRadius = sqrtf(r);
 }
 
-void     xModel_GetBounds(const xModel *model, const xMatrix *boneP, xElementInstance *instanceP)
+xVector3 xModel_GetBounds(xModelInstance &instance)
 {
-    for (xElement *celem = model->kidsP; celem; celem = celem->nextP)
-        xElement_GetBounds(*celem, boneP, instanceP, true);
+    xVector3 res; res.zero();
+    xDWORD   vcnt = 0;
+
+    xElementInstance *iter = instance.elementInstanceP;
+    for (xBYTE i = instance.elementInstanceC; i; --i, ++iter)
+    {
+        _xElementInstance_GetBounds(*iter);
+        vcnt += iter->verticesC;
+        res  += iter->bsCenter*iter->verticesC;
+    }
+
+    if (vcnt) res /= (float)vcnt;
+    return res;
 }
 
 #include "xBone.h"
@@ -431,7 +211,7 @@ void xElement_FreeCollisionHierarchyBounds(xCollisionData *pcData, xCollisionHie
     }
 }
 
-void xElement_CalcCollisionHierarchyBox(const xVector3* vertices,
+void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                                         xCollisionData *pcData, xCollisionHierarchyBounds *pBound)
 {
     xBox res;
@@ -471,7 +251,7 @@ void xElement_CalcCollisionHierarchyBox(const xVector3* vertices,
 
                 xBox tmp;
 #ifndef WIN32
-                const xVector3 *vert = vertices + *iterV;
+                const xVector4 *vert = vertices + *iterV;
                 ++iterV; --vCount;
                 tmp.max.x = vert->x; tmp.max.y = vert->y; tmp.max.z = vert->z;
                 tmp.min.x = vert->x; tmp.min.y = vert->y; tmp.min.z = vert->z;
@@ -488,14 +268,11 @@ void xElement_CalcCollisionHierarchyBox(const xVector3* vertices,
 #else
                 __asm // eax = tmp->?, ebx = iterV, ecx = vert, edx = vert->?
                 {
-                    // const xVector3 *vert = vertices + *iterV;
+                    // const xVector4 *vert = vertices + *iterV;
                     MOV ebx, iterV;
-                    MOV eax, 0
-                    MOV ax, word ptr [ebx];
-                    SHL eax, 2; // =*4B
-                    MOV ecx, eax;
-                    SHL eax, 1; // =*8B
-                    ADD ecx, eax; // sizeof (xVector3) = 8B+4B=12B
+                    MOV ecx, 0
+                    MOV cx, word ptr [ebx];
+                    SHL ecx, 4; // =*16B
                     ADD ecx, vertices;
                     // tmp.max.x = vert->x; tmp.max.y = vert->y; tmp.max.z = vert->z;
                     // tmp.min.x = vert->x; tmp.min.y = vert->y; tmp.min.z = vert->z;
@@ -518,12 +295,9 @@ void xElement_CalcCollisionHierarchyBox(const xVector3* vertices,
 
                         // vert = vertices + *iterV;
                         ADD ebx, 2;
-                        MOV eax, 0
-                        MOV ax, word ptr [ebx];
-                        SHL eax, 2; // =*4B
-                        MOV ecx, eax;
-                        SHL eax, 1; // =*8B
-                        ADD ecx, eax; // sizeof (xVector3) = 8B+4B=12B
+                        MOV ecx, 0
+                        MOV cx, word ptr [ebx];
+                        SHL ecx, 4; // =*16B
                         ADD ecx, vertices;
 
                         // if (vert->x > tmp.max.x) tmp.max.x = vert->x;
@@ -620,9 +394,9 @@ void xElement_CalcCollisionHierarchyBox(const xVector3* vertices,
                 xBox      iterB;
                 for (int j=hierarchy->facesC; j; --j, ++iterF)
                 {
-                    const xVector3 *v1 = vertices + (**iterF)[0];
-                    const xVector3 *v2 = vertices + (**iterF)[1];
-                    const xVector3 *v3 = vertices + (**iterF)[2];
+                    const xVector4 *v1 = vertices + (**iterF)[0];
+                    const xVector4 *v2 = vertices + (**iterF)[1];
+                    const xVector4 *v3 = vertices + (**iterF)[2];
 
                     iterB.min.x = min(v1->x, min(v2->x, v3->x));
                     iterB.min.y = min(v1->y, min(v2->y, v3->y));

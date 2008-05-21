@@ -426,15 +426,10 @@ bool SceneConsole::Render()
     // Draw backgroud
     glColor4f( 0.0f, 0.0f, 0.0f, 0.5f );
     glBegin(GL_QUADS);
-        glVertex2f(0.0f, cHeight-1.5f*lineHeight);
-        glVertex2f((GLfloat)Width, cHeight-1.5f*lineHeight);
-        glVertex2f((GLfloat)Width, (GLfloat)cHeight);
-        glVertex2f(0.0f, (GLfloat)cHeight);
-
         glVertex2f(0.0f, 0.0f);
         glVertex2f((GLfloat)Width, 0.0f);
-        glVertex2f((GLfloat)Width, cHeight-2*lineHeight);
-        glVertex2f(0.0f, cHeight-2*lineHeight);
+        glVertex2f((GLfloat)Width, (GLfloat)cHeight);
+        glVertex2f(0.0f, (GLfloat)cHeight);
     glEnd();
 
     glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -445,9 +440,7 @@ bool SceneConsole::Render()
         Performance.CollidedTriangleBounds, Performance.CollidedTriangles,
         Performance.snapCollisionDataFillMS, Performance.snapCollisionDeterminationMS);
     pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
-        "   Num culled elements: %3u, ST1: %2.2f, ST2: %2.2f, ST3: %2.2f, ST4: %2.2f",
-        (int)Performance.CulledElements, Performance.ShadowDataFill1, Performance.ShadowDataFill2,
-        Performance.ShadowDataFill3, Performance.ShadowDataFill4);
+        "   Num culled elements: %3u", (int)Performance.CulledElements);
 
     glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
     glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing

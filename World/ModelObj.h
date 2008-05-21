@@ -21,7 +21,6 @@ public:
     float          mass;       // weight of an object
     float          resilience; // how much energy will the object retain during collisions
 
-    xVector3       centerOfTheMass;
     xVector3       transVelocity;
     xVector4       rotatVelocity;
 
@@ -32,10 +31,13 @@ public:
     xVector3       penetrationCorrection;
     float          gravityAccumulator; // slowly increase gravity, to avoid vibrations
 
+    xRenderGL      renderer;
+    xModelInstance modelInstanceGr;
+    xModelInstance modelInstancePh;
+
     //xVector3       cp, com, cno, cro;
 protected:
     bool           forceNotStatic;
-    xRenderGL      renderer;
     xShadowMap     smap;
 
     xCollisionHierarchyBoundsRoot *collisionInfo;
@@ -54,10 +56,12 @@ public:
 public:
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physicalNotLocked = false, bool phantom = true);
     virtual void Finalize   ();
-    virtual void Invalidate () { renderer.Invalidate(); smap.texId = 0; }
+    virtual void Invalidate () {
+        renderer.InvalidateInstanceGraphics(modelInstanceGr);
+        renderer.InvalidateInstanceGraphics(modelInstancePh);
+        smap.texId = 0;
+    }
     /********* LIFETIME : END *********/
-
-    xRender                       *GetRenderer()       { renderer.UpdatePointers(); return &renderer; }
 
     /******** UPDATE : BEGIN ********/
 public:
@@ -72,7 +76,7 @@ public:
     void                            CollisionInfo_ReFill ();
     std::vector<CollisionWithModel> CollidedModels;
 protected:
-    void CollisionInfo_Fill   (xRender *rend, xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime);
+    void CollisionInfo_Fill   (xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime);
     void CollisionInfo_Free   (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
     void CollisionInfo_Render (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
     /********* PHYSICS : END *********/
@@ -82,27 +86,84 @@ public:
     void       CreateShadowMap(xLight *light)
     {
         xMatrix blocker;
+        UpdatePointers();
         GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, Config::ShadowMapSize);
-        smap.texId = GetRenderer()->CreateShadowMapTexture(Config::ShadowMapSize, blocker);
+        renderer.CreateShadowMapTexture( *xModelPh, modelInstancePh, smap.texId,
+                                          Config::ShadowMapSize, blocker);
     }
     xShadowMap GetShadowMap ()                { return smap; }
-    void       RenderShadowMap (xShadowMap smap, const xFieldOfView *FOV)
+    void       RenderShadowMap (xShadowMap smap, const xFieldOfView &FOV)
     {
-        GetRenderer()->SetLocation(mLocationMatrix);
-        GetRenderer()->RenderShadowMap(smap, FOV);
+        UpdatePointers();
+        renderer.RenderShadowMap(*xModelGr, modelInstanceGr, smap, FOV);
     }
-
-    void       RenderShadowVolume(xLight &light, xFieldOfView *FOV)
+    void       RenderShadowVolume(xLight &light, xFieldOfView &FOV)
     {
-        GetRenderer()->SetLocation(mLocationMatrix);
-        GetRenderer()->RenderShadowVolume(light, FOV);
+        UpdatePointers();
+        renderer.RenderShadowVolume(*xModelGr, modelInstanceGr, light, FOV);
     }
-
+    void InvalidateShadowRenderData()
+    {
+        InvalidateShadowRenderData(modelInstanceGr);
+        if (hModelGraphics != hModelPhysical)
+            InvalidateShadowRenderData(modelInstancePh);
+    }
 protected:
     void GetShadowProjectionMatrix (xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width);
     /********* SHADOWS : END *********/
 
-    void RenderObject(bool transparent, const xFieldOfView *FOV);
+public:
+    xModel *GetModelPh() { UpdatePointers(); return xModelPh; }
+    xModel *GetModelGr() { UpdatePointers(); return xModelGr; }
+
+    void CopySpineToPhysical()
+    {
+        CopySpine(xModelGr->spineP, xModelPh->spineP);
+    }
+    void CopySpineToGraphics()
+    {
+        CopySpine(xModelPh->spineP, xModelGr->spineP);
+    }
+
+    virtual void VerticesChanged(bool free);
+    virtual void CalculateSkeleton();
+
+protected:
+    void RenderObject(bool transparent, const xFieldOfView &FOV);
+
+protected:
+    HModel     hModelGraphics;
+    HModel     hModelPhysical;
+    xModel   * xModelGr;
+    xModel   * xModelPh;
+
+    void UpdatePointers()
+    {
+        xModelGr = g_ModelMgr.GetModel(hModelGraphics)->model;
+        xModelPh = g_ModelMgr.GetModel(hModelPhysical)->model;
+        modelInstancePh.location = modelInstanceGr.location = mLocationMatrix;
+    }
+
+    void CopySpine(const xBone *src, xBone *&dst)
+    {
+        if (src != dst)
+        {
+            if (dst) dst->Free();
+            dst = src ? src->Clone() : NULL;
+        }
+    }
+
+    void InvalidateShadowRenderData(xModelInstance &instance)
+    {
+        if (instance.elementInstanceP)
+        {
+            xElementInstance *iter = instance.elementInstanceP;
+            for (int i = instance.elementInstanceC; i; --i, ++iter)
+                iter->InvalidateVertexData();
+        }
+    }
+
+    void FreeInstanceData();
 };
 
 #endif

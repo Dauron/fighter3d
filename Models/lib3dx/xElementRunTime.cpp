@@ -20,17 +20,23 @@ xShadowData & xElementInstance :: GetShadowData(xLight &light, bool zPassOnly)
     return *gpuShadows.rbegin();
 }
 
-void xElementInstance :: FreeShadowData()
+void xElementInstance :: Clear()
 {
     xShadowDataVector::iterator iter = gpuShadows.begin(), iterE = gpuShadows.end();
     for (; iter != iterE; ++iter)
         iter->FreeData();
     gpuShadows.clear();
+
+    if (verticesP) { delete[] verticesP; verticesP = NULL; }
+    if (normalsP)  { delete[] normalsP;  normalsP  = NULL; }
 }
 
-void xElementInstance :: InvalidateShadowData()
+void xElementInstance :: InvalidateVertexData()
 {
     xShadowDataVector::iterator iter = gpuShadows.begin(), iterE = gpuShadows.end();
     for (; iter != iterE; ++iter)
         iter->InvalidateData();
+
+    //if (verticesP) { delete[] verticesP; verticesP = NULL; }
+    //if (normalsP)  { delete[] normalsP;  normalsP  = NULL; }
 }

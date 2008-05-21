@@ -1,4 +1,5 @@
 #include "xBone.h"
+#include "xModel.h"
 
 ////////////////////// xBone
 void  xBone :: ResetQ()
@@ -217,11 +218,11 @@ xMatrix xBoneCalculateMatrix(const xBone *spine, int boneId)
     return res;
 }
 
-void   _xBoneCalculateMatrices(const xBone *bone, xMatrix *&boneP, bool *boneMod, const xBone *pbone)
+void   _xBoneCalculateMatrices(const xBone *bone, xModelInstance &instance, const xBone *pbone)
 {
-    xMatrix *boneDst = boneP + bone->id;
-    bool    *modDst  = boneMod + bone->id;
-    xMatrix *parent  = pbone ? boneP + pbone->id : NULL;
+    xMatrix *boneDst = instance.bonesM + bone->id;
+    bool    *modDst  = instance.bonesMod + bone->id;
+    xMatrix *parent  = pbone ? instance.bonesM + pbone->id : NULL;
 
     xMatrix newMat;
     if (parent)
@@ -232,45 +233,45 @@ void   _xBoneCalculateMatrices(const xBone *bone, xMatrix *&boneP, bool *boneMod
     *boneDst = newMat;
 
     for (xBone *cbone = bone->kidsP; cbone; cbone = cbone->nextP)
-        _xBoneCalculateMatrices(cbone, boneP, boneMod, bone);
+        _xBoneCalculateMatrices(cbone, instance, bone);
 }
 
-void    xBoneCalculateMatrices(const xBone *spine, xMatrix *&boneP, bool *&boneMod, xBYTE &boneC)
+void    xBoneCalculateMatrices(const xBone *spine, xModelInstance *instance)
 {
     if (!spine)
     {
-        boneC = 0;
-        if (boneP)   { delete[] boneP; boneP = NULL; }
-        if (boneMod) { delete[] boneMod; boneMod = NULL; }
+        instance->bonesC = 0;
+        if (instance->bonesM)   { delete[] instance->bonesM; instance->bonesM = NULL; }
+        if (instance->bonesMod) { delete[] instance->bonesMod; instance->bonesMod = NULL; }
         return;
     }
-    boneC = spine->CountAllKids() + 1;
-    if (!boneP) boneP = new xMatrix[boneC];
-    if (!boneMod) boneMod = new bool[boneC];
-    _xBoneCalculateMatrices(spine, boneP, boneMod, NULL);
+    instance->bonesC = spine->CountAllKids() + 1;
+    if (!instance->bonesM)   instance->bonesM = new xMatrix[instance->bonesC];
+    if (!instance->bonesMod) instance->bonesMod = new bool[instance->bonesC];
+    _xBoneCalculateMatrices(spine, *instance, NULL);
 }
 
-void   _xBoneCalculateQuats(const xBone *bone, xVector4 *&boneP, const xBone *pBone)
+void   _xBoneCalculateQuats(const xBone *bone, xModelInstance &instance, const xBone *pBone)
 {
-    xVector4 *boneDst = boneP + bone->id*2;
+    xVector4 *boneDst = instance.bonesQ + bone->id*2;
     *(boneDst+0) = bone->quaternion;
     if (pBone)
         (boneDst+1)->init(pBone->ending, pBone->id);
     else
         (boneDst+1)->init(bone->quaternion.vector3, -1.f);
     for (xBone *cbone = bone->kidsP; cbone; cbone = cbone->nextP)
-        _xBoneCalculateQuats(cbone, boneP, bone);
+        _xBoneCalculateQuats(cbone, instance, bone);
 }
 
-void    xBoneCalculateQuats(const xBone *spine, xVector4 *&boneP, xBYTE &boneC)
+void    xBoneCalculateQuats(const xBone *spine, xModelInstance *instance)
 {
     if (!spine)
     {
-        boneC = 0;
-        boneP = NULL;
+        instance->bonesC = 0;
+        instance->bonesQ = NULL;
         return;
     }
-    boneC = spine->CountAllKids() + 1;
-    if (!boneP) boneP = new xVector4[boneC*2];
-    _xBoneCalculateQuats(spine, boneP, NULL);
+    instance->bonesC = spine->CountAllKids() + 1;
+    if (!instance->bonesQ) instance->bonesQ = new xVector4[instance->bonesC*2];
+    _xBoneCalculateQuats(spine, *instance, NULL);
 }

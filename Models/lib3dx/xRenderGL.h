@@ -8,47 +8,33 @@
 class xRenderGL : public xRender
 {
   public:
-    virtual void RenderModel    ( bool transparent, const xFieldOfView *FOV );
-    virtual void RenderSkeleton ( bool selectionRendering, xWORD selBoneId = xWORD_MAX);
-    virtual void RenderVertices ( SelectionMode         selectionMode    = smNone,
+    virtual void RenderModel    ( xModel &model, xModelInstance &instance,
+                                  bool transparent, const xFieldOfView &FOV );
+    virtual void RenderSkeleton ( xModel &model, xModelInstance &instance,
+                                  bool selectionRendering, xWORD selBoneId = xWORD_MAX );
+    virtual void RenderVertices ( xModel &model, xModelInstance &instance,
+                                  SelectionMode         selectionMode    = smNone,
                                   xWORD                 selElementId     = xWORD_MAX,
                                   std::vector<xDWORD> * selectedVertices = NULL );
-    virtual void RenderFaces    ( xWORD                 selectedElement,
+    virtual void RenderFaces    ( xModel &model, xModelInstance &instance,
+                                  xWORD                 selectedElement,
                                   std::vector<xDWORD>  * facesToRender );
 
-    virtual void   RenderShadowVolume    ( xLight &light, xFieldOfView *FOV );
-    virtual void   RenderShadowMap       ( const xShadowMap &shadowMap, const xFieldOfView *FOV );
-    virtual xDWORD CreateShadowMapTexture( xWORD width, xMatrix &mtxBlockerToLight );
+    virtual void RenderShadowVolume    ( xModel &model, xModelInstance &instance,
+                                         xLight &light, xFieldOfView &FOV );
+    virtual void RenderShadowMap       ( xModel &model, xModelInstance &instance,
+                                         const xShadowMap &shadowMap, const xFieldOfView &FOV );
+    virtual void CreateShadowMapTexture( xModel &model, xModelInstance &instance, xDWORD &shadowMapTexId,
+                                         xWORD width, xMatrix &mtxBlockerToLight );
 
     xRenderGL() : UseVBO(GLExtensions::Exists_ARB_VertexBufferObject), UseList(true) {};
 
-    virtual void Initialize(bool isStatic, HModel hGrModel, HModel hPhModel = HModel())
+    virtual void InvalidateInstanceGraphics(xModelInstance &instance)
     {
-        xRender::Initialize(isStatic, hGrModel, hPhModel);
-        UseVBO = GLExtensions::Exists_ARB_VertexBufferObject;// && !isStatic;
-    }
-
-    virtual void Invalidate()
-    {
-        xRender::Invalidate();
-
-        xElementInstance *iter;
-        xBYTE cnt;
-        if (instanceDataGrP)
+        if (instance.elementInstanceP)
         {
-            cnt = instanceDataGrC;
-            for (iter = instanceDataGrP; cnt; --cnt, ++iter)
-            {
-                iter->gpuMain.vertexB = 0;
-                iter->gpuMain.normalB = 0;
-                iter->gpuMain.indexB = 0;
-                iter->mode = xElementInstance::xRenderMode_NULL;
-            }
-        }
-        if (instanceDataPhP)
-        {
-            cnt = instanceDataPhC;
-            for (iter = instanceDataPhP; cnt; --cnt, ++iter)
+            xBYTE cnt = instance.elementInstanceC;
+            for (xElementInstance *iter = instance.elementInstanceP; cnt; --cnt, ++iter)
             {
                 iter->gpuMain.vertexB = 0;
                 iter->gpuMain.normalB = 0;
@@ -58,30 +44,22 @@ class xRenderGL : public xRender
         }
     }
 
-    virtual void Finalize()
+    virtual void FreeInstanceGraphics(xModelInstance &instance)
     {
-        if (this->shadowMapTexId)
-        {
-            GLuint tid = this->shadowMapTexId;
-            glDeleteTextures(1, &tid);
-            this->shadowMapTexId = 0;
-        }
-
-        FreeAllRenderData();
-        if (instanceDataGrP)
-        {
-            delete[] instanceDataGrP;
-            instanceDataGrP = NULL;
-        }
-        if (instanceDataPhP)
-        {
-            if (hModelGraphics != hModelPhysical)
-                delete[] instanceDataPhP;
-            instanceDataPhP = NULL;
-        }
-
-        xRender::Finalize();
+        if (UseVBO) FreeVBORenderData(instance.elementInstanceP, instance.elementInstanceC);
+        else        FreeListRenderData(instance.elementInstanceP, instance.elementInstanceC);
     }
+
+    virtual void InvalidateBonePositions(xModelInstance &instance)
+    {
+        if (!UseVBO) FreeListRenderData(instance.elementInstanceP, instance.elementInstanceC);
+    }
+
+    static void InitVBO (const xElement *elem, xElementInstance &instance);
+
+  private:
+    bool       UseVBO;
+    bool       UseList;
 
     void FreeListRenderData(xElementInstance *instanceDataP, xBYTE instanceDataC)
     {
@@ -120,82 +98,6 @@ class xRenderGL : public xRender
                 }
         }
     }
-    void FreeListRenderData()
-    {
-        FreeListRenderData(instanceDataGrP, instanceDataGrC);
-        if (hModelGraphics != hModelPhysical)
-            FreeListRenderData(instanceDataPhP, instanceDataPhC);
-    }
-    void FreeVBORenderData()
-    {
-        FreeVBORenderData(instanceDataGrP, instanceDataGrC);
-        if (hModelGraphics != hModelPhysical)
-            FreeVBORenderData(instanceDataPhP, instanceDataPhC);
-    }
-
-    virtual void FreeAllRenderData()
-    {
-        if (this->shadowMapTexId)
-        {
-            GLuint tid = this->shadowMapTexId;
-            glDeleteTextures(1, &tid);
-            this->shadowMapTexId = 0;
-        }
-        if (UseVBO) FreeVBORenderData();
-        else        FreeListRenderData();
-    }
-
-    virtual void VerticesChanged() // need to refresh VBO & list data
-    {
-        FreeAllRenderData();
-        xRender::VerticesChanged();
-    }
-
-    virtual void CalculateSkeleton()
-    {
-        xRender::CalculateSkeleton();
-        if (!UseVBO) FreeListRenderData();
-    }
-
-  private:
-    bool       UseVBO;
-    bool       UseList;
-    xMaterial *m_currentMaterial;
-
-    void RenderBone(const xBone * bone, bool selectionRendering, xWORD selBoneId);
-
-    void InitVBO     (xElement *elem, xElementInstance *instance);
-    void SetMaterial (xColor color, xMaterial *mat);
-
-    void RenderElementVerticesVBO( xElement            * elem,
-                                   SelectionMode         selectionMode,
-                                   xWORD                 selElementId,
-                                   std::vector<xDWORD> * selectedVertices);
-    void RenderElementVerticesLST( xElement            * elem,
-                                   SelectionMode         selectionMode,
-                                   xWORD                 selElementId,
-                                   std::vector<xDWORD> * selectedVertices);
-
-    void RenderElementFacesVBO( xElement            * elem,
-                                xWORD                 selElementId,
-                                std::vector<xDWORD> * facesToRender);
-    void RenderElementFacesLST( xElement            * elem,
-                                xWORD                 selElementId,
-                                std::vector<xDWORD> * facesToRender);
-
-    void RenderModelVBO( xElement * elem, bool transparent );
-    void RenderModelLST( xElement * elem, bool transparent );
-
-    void RenderShadowMapTexture( bool transparent );
-    void RenderShadowMapLST    ( xElement *elem );
-    void RenderShadowMapVBO    ( xElement *elem );
-
-    void RenderShadowMapTextureLST( xElement *elem, bool transparent );
-    void RenderShadowMapTextureVBO( xElement *elem, bool transparent );
-
-    void RenderShadowVolumeElem(xElement *elem, xLight &light);
-    void RenderShadowVolumeZPass(xShadowData &shadowData, bool infiniteL);
-    void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL);
 };
 
 #endif

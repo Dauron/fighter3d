@@ -2,5 +2,5 @@
 
 void main()
 {
-	gl_FragColor = gl_FrontLightModelProduct.sceneColor * gl_Color;
+	gl_FragColor = gl_FrontLightModelProduct.sceneColor;
 }

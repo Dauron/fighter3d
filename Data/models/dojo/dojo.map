@@ -23,7 +23,7 @@ phantom	0
 shadows 1
 #
 model	skeleton.3dx
-position	0.0	0.0	-0.21
+position	0.0	0.0	-0.68
 physical	0
 phantom	0
 #
@@ -35,105 +35,39 @@ shadows 1
 #
 # North
 #
-model	wall_inner_short.3dx
-position	0.0	0.0	-0.21
+model	wall_inner_short.3ds
+position	-19.592	0.055	7.039
+rotation	0	0	-90
 physical	0
 phantom	0
 shadows 1
-#
-model	grates_short.3dx
-position	0.001	0.0	-0.21
-physical	0
-phantom	0
-#
-model	grates_short.3dx
-position	-7.75	0.0	-0.21
-physical	0
-phantom	0
-#
-model	grates_short.3dx
-position	7.75	0.0	-0.21
-physical	0
-phantom	0
 #
 # South
 #
 model	wall_inner_short.3dx
-position	0.04	0.18	-0.21
-rotation	0	0	180
+position	-19.491	0.015	7.039
+rotation	0	0	90
 physical	0
 phantom	0
 shadows 1
-#
-model	grates_short.3dx
-position	0.03	0.15	-0.21
-rotation	0	0	180
-physical	0
-phantom	0
-#
-model	grates_short.3dx
-position	-7.72	0.15	-0.21
-rotation	0	0	180
-physical	0
-phantom	0
-#
-model	grates_short.3dx
-position	7.79	0.15	-0.21
-rotation	0	0	180
-physical	0
-phantom	0
 #
 # West
 #
 model	wall_inner_long.3dx
-position	0.0	0.0	-0.21
+position	-0.034	-11.919	7.0
+rotation	0	0	-90
 physical	0
 phantom	0
 shadows 1
-#
-model	grates_long.3dx
-position	0.0	0.0	-0.21
-physical	0
-phantom	0
-#
-model	wall_inner_long.3dx
-position	0.0	19.8	-0.21
-physical	0
-phantom	1
-shadows 1
-#
-model	grates_long.3dx
-position	0.0	19.32	-0.21
-physical	0
-phantom	0
 #
 # East
 #
 model	wall_inner_long.3dx
-position	0.04	0.1	-0.21
-rotation	0	0	180
+position	0.066	-11.9575	7.0
+rotation	0	0	90
 physical	0
 phantom	0
 shadows 1
-#
-model	grates_long.3dx
-position	0.04	0.1	-0.21
-rotation	0	0	180
-physical	0
-phantom	0
-#
-model	wall_inner_long.3dx
-position	0.04	19.9	-0.21
-rotation	0	0	180
-physical	0
-phantom	0
-shadows 1
-#
-model	grates_long.3dx
-position	0.04	19.42	-0.21
-rotation	0	0	180
-physical	0
-phantom	0
 #
 # External wall west
 #
@@ -149,17 +83,17 @@ physical	0
 phantom	0
 #
 model	pillar.3dx
-position	0.0	9.7	-0.21
+position	0.0	9.665	-0.21
 physical	0
 phantom	0
 #
 model	pillar.3dx
-position	0.0	19.2	-0.21
+position	0.0	19.32	-0.21
 physical	0
 phantom	0
 #
 model	pillar.3dx
-position	0.0	29.4	-0.21
+position	0.0	29.1	-0.21
 physical	0
 phantom	0
 #
@@ -287,7 +221,8 @@ shadows 1
 # Stuff
 #
 model	stairs.3dx
-position	0.0	0.0	-0.21
+position	6.359	-14.588	0.36
+rotation	0	0	-90
 physical	0
 phantom	0
 shadows 1

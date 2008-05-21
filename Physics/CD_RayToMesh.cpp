@@ -83,7 +83,7 @@ bool CD_RayToMesh::CollideBox(xBox &box)
     return true;
 }
 
-bool CD_RayToMesh::IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, xVector3 *crossing)
+bool CD_RayToMesh::IntersectTriangles(xVector4 *a1, xVector4 *a2, xVector4 *a3, xVector3 *crossing)
 {
     // Calculate plane (with CrossProduct)
     float p1x = a2->x - a1->x, p1y = a2->y - a1->y, p1z = a2->z - a1->z;
@@ -113,7 +113,7 @@ bool CD_RayToMesh::IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, 
     crossing->y = p1y + ipol*p2y;
     crossing->z = p1z + ipol*p2z;
 
-    xVector3 *swp;
+    xVector4 *swp;
     if (determinant(a1,a2,a3) < 0.f) { swp = a2; a2 = a3; a3 = swp; }
 
     P1 = determinant(crossing, a1, a2);
@@ -148,9 +148,9 @@ bool CD_RayToMesh::CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,
             for (int i1 = ch->facesC; i1; --i1)
             {
                 xFace **face1 = ch->facesP + ch->facesC - i1;
-                xVector3 *a1 = ci->verticesP + (**face1)[0];
-                xVector3 *a2 = ci->verticesP + (**face1)[1];
-                xVector3 *a3 = ci->verticesP + (**face1)[2];
+                xVector4 *a1 = ci->verticesP + (**face1)[0];
+                xVector4 *a2 = ci->verticesP + (**face1)[1];
+                xVector4 *a3 = ci->verticesP + (**face1)[2];
                 // Exclude elements that can't collide
                 xBox faceB;
                 faceB.min.x = min(a1->x, min(a2->x, a3->x));
@@ -194,11 +194,10 @@ bool CD_RayToMesh::CollideElements(xCollisionHierarchyBoundsRoot *&ci, xElement 
 }
 
 bool CD_RayToMesh::Collide(ModelObj *model,
-                                     xVector3 &rayB, xVector3 &rayE,
-                                     xVector3 &colPoint, float &colDist)
+                           xVector3 &rayB, xVector3 &rayE,
+                           xVector3 &colPoint, float &colDist)
 {
     xCollisionHierarchyBoundsRoot *ci = model->GetCollisionInfo()-1;
-    xRender *r = model->GetRenderer();
 
     this->rayB = rayB;
     this->rayE = rayE;
@@ -207,7 +206,7 @@ bool CD_RayToMesh::Collide(ModelObj *model,
     notCollided = true;
 
     bool res = false;
-    for (xElement *elem = r->xModelPhysical->kidsP; elem; elem = elem->nextP)
+    for (xElement *elem = model->GetModelPh()->kidsP; elem; elem = elem->nextP)
         res |= CollideElements(++ci, elem);
 
     colPoint = collisionPoint;
