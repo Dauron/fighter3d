@@ -3,21 +3,6 @@
 #include "../../OpenGL/GLAnimSkeletal.h"
 #include "../../OpenGL/Textures/TextureMgr.h"
 
-static xVector3 OrthoPoint(const xVector3 &source)
-{
-    if (IsZero(source.x))
-        return xVector3::Create(1.f,0.f,0.f);
-    if (IsZero(source.y))
-        return xVector3::Create(0.f,1.f,0.f);
-    if (IsZero(source.z))
-        return xVector3::Create(0.f,0.f,1.f);
-
-    return xVector3::Create(source.y*source.z, source.x*source.z, -2.f*source.x*source.y);
-    //xVector3 dest(source.x, source.y, 0.f);
-    //dest.z = -(source.x*source.x+source.y*source.y)/source.z;
-    //return dest;
-}
-
 void xRenderGL :: RenderSkeleton(bool selectionRendering, xWORD selBoneId)
 {
     if (spineP)
@@ -70,7 +55,7 @@ void xRenderGL :: RenderBone(const xBone * bone, bool selectionRendering, xWORD 
 
         xVector3 halfVector = (boneP->ending - bone->ending) / 5.0f;
         xVector3 pointHalf  = bone->ending + halfVector;
-        xVector3 point3 = pointHalf + OrthoPoint(halfVector).normalize() / 10.0f;
+        xVector3 point3 = pointHalf + xVector3::Orthogonal(halfVector).normalize() / 10.0f;
 
         halfVector.normalize();
         float s = sin(PI/4.0f);

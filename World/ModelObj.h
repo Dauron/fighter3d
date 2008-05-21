@@ -27,6 +27,7 @@ public:
     xVector3       collisionVelo;
     xVector3       collisionCent;
     xVector3       penetrationCorrection;
+    float          gravityAccumulator; // slowly increase gravity, to avoid vibrations
 
     //xVector3       cp, com, cno, cro;
 

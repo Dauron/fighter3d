@@ -23,6 +23,7 @@ void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename)
     resilience = 0.5f;
     physical   = false;
     phantom    = true;
+    gravityAccumulator = 1.f;
 }
 
 void ModelObj:: Finalize ()

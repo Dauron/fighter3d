@@ -109,4 +109,14 @@ union xVector3 {
                                 a.z*b.x - a.x*b.z,
                                 a.x*b.y - a.y*b.x);
     }
+    static xVector3 Orthogonal(const xVector3 &source)
+    {
+        if (IsZero(source.x)) return xVector3::Create(1.f,0.f,0.f);
+        if (IsZero(source.y)) return xVector3::Create(0.f,1.f,0.f);
+        if (IsZero(source.z)) return xVector3::Create(0.f,0.f,1.f);
+        return xVector3::Create(source.y*source.z, source.x*source.z, -2.f*source.x*source.y);
+        //xVector3 dest(source.x, source.y, 0.f);
+        //dest.z = -(source.x*source.x+source.y*source.y)/source.z;
+        //return dest;
+    }
 };

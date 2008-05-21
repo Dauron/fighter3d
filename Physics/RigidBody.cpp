@@ -1,5 +1,8 @@
 #include "RigidBody.h"
 
+const float RigidBody::GRAVITY      = 10.f;
+const float RigidBody::FRICTION_AIR = 0.5f;
+
 float RigidBody :: CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVector3 &planeN)
 {
     // Calculate plane (with CrossProduct)
@@ -92,7 +95,7 @@ void RigidBody :: CalculateCollisions(ModelObj *model)
 void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
 {
     xVector3 T = model->transVelocity;
-    T = T * 0.5f * deltaTime;
+    T = T * FRICTION_AIR * deltaTime;
     if (fabs(T.x) > fabs(model->transVelocity.x) ||
         fabs(T.y) > fabs(model->transVelocity.y) ||
         fabs(T.z) > fabs(model->transVelocity.z))
@@ -100,14 +103,9 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
     else
         model->transVelocity -= T;
 
-    if (deltaTime < 2.f)
-    {
-        xVector4 TR = xQuaternion::interpolateFull(model->rotatVelocity, deltaTime);
-        TR.vector3.invert();
-        model->rotatVelocity = xQuaternion::product(model->rotatVelocity, TR);
-    }
-    else
-        model->rotatVelocity.zeroQ();
+    xVector4 TR = xQuaternion::interpolateFull(model->rotatVelocity, FRICTION_AIR * deltaTime);
+    TR.vector3.invert();
+    model->rotatVelocity = xQuaternion::product(model->rotatVelocity, TR);
 
     float pcL = 0.f;
 
@@ -136,7 +134,7 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
             {
                 float velo = ( xVector3::CrossProduct(xQuaternion::angularVelocity(model->rotatVelocity), vArm).length()
                     + model->transVelocity.length() + model->penetrationCorrection.length() ) * model->resilience;
-                velo += model->collisionVelo.length();
+                velo += model->collisionVelo.length()*(1.f-model->resilience);
                 float Angle = sinColAngle * 0.5f * velo / vArm.length();
                 if (Angle > 0.01f)
                 {
@@ -152,20 +150,25 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
             // straight movement
             if (1.f-sinColAngle)
             {
-                float resilienceVeloL = model->transVelocity.length() * model->resilience;
-                xVector3 resilianceVelo = model->collisionNorm * resilienceVeloL;
-                //xVector3 resilianceVelo = model->transVelocity * (-model->resilience);
-                model->transVelocity = (resilianceVelo + model->collisionVelo) * (1.f-sinColAngle);
-                if (model->transVelocity.length() < 0.01f)
+                // TODO: resilience should be mirrored by collision normal
+                float    resilienceVeloL = model->transVelocity.length() * model->resilience;
+                xVector3 resilianceVelo  = model->collisionNorm * resilienceVeloL;
+                xVector3 collisionVelo   = model->collisionVelo * (1.f-model->resilience);
+                model->transVelocity = (resilianceVelo + collisionVelo) * (1.f-sinColAngle);
+                if (model->transVelocity.length() < 0.05f)
                     model->transVelocity.zero();
             }
         }
         model->CollidedModels.clear();
+        model->gravityAccumulator = 1.f;
     }
+    else
+    if (model->gravityAccumulator < GRAVITY)
+        model->gravityAccumulator += 1.f; // slowly increase gravity, to avoid vibrations
 
-    model->mLocationMatrixPrev = model->mLocationMatrix;
-
+    model->mLocationMatrixPrev  = model->mLocationMatrix;
     bool needsRefill = false;
+
     if (xVector4::Normalize(model->rotatVelocity).vector3.length() > 0.01f)
     {
         xMatrix translation; translation.identity();
@@ -177,8 +180,7 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
     }
     else
         model->rotatVelocity.zeroQ();
-
-    if (pcL > 0.001f)
+    if (pcL > 0.0001f)
     {
         xMatrix translation;
         translation.identity();
@@ -186,7 +188,7 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
         model->mLocationMatrix *= translation;
         needsRefill = true;
     }
-    if (model->transVelocity.length() > 10.f * deltaTime)
+    if (model->transVelocity.length() > 0.001f)
     {
         xMatrix translation;
         translation.identity();
@@ -202,5 +204,5 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
         model->CollisionInfo_ReFill();
 
     if (model->physical)
-        model->transVelocity.z -= 10.f * deltaTime;
+        model->transVelocity.z -= model->gravityAccumulator * deltaTime;
 }

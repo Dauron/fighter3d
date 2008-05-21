@@ -9,6 +9,9 @@ public:
     static float CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVector3 &planeN);
     static void  CalculateCollisions(ModelObj *model);
     static void  CalculateMovement(ModelObj *model, float deltaTime);
+
+    static const float GRAVITY;
+    static const float FRICTION_AIR;
 };
 
 #endif
