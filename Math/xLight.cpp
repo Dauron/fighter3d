@@ -41,3 +41,15 @@ void xLight::update()
         boundingPoints[7].init(position.x - radius, position.y + radius, position.z + radius);
     }
 }
+
+bool xLight :: elementReceivesLight(const xVector3 &bsCenter, float bsRadius) const
+{
+    if (type == xLight_INFINITE || radius < 0)
+        return true;
+
+    if (bsRadius == 0) return false;
+
+    xFLOAT   dist   = (bsCenter - position).lengthSqr();
+    xFLOAT  rdist   = radius + bsRadius;
+    return dist < rdist*rdist;
+}

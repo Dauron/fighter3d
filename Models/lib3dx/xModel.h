@@ -78,11 +78,19 @@ union xVertexTexSkel {
 struct xFaceList {
     xWORD      indexOffset; // first face in the facesP array
     xWORD      indexCount;  // no of faces in the facesP array
-    xVector3  *normalP;     // non-smooth normals (not saved)
+
+    xDWORD     _RESERVED;
 
     bool       smooth;
     xWORD      materialId;
     xMaterial *materialP;
+};
+
+struct xEdge {
+    xWORD face1;
+    xWORD face2;
+    xWORD vert1;
+    xWORD vert2;
 };
 
 struct xElementInstance
@@ -107,6 +115,10 @@ struct xElementInstance
         };
     };
 
+    xWORD4  *shadowQuadsP;
+    xWORD3  *shadowBackCP;
+    xWORD    shadowEdgesC;
+
     xBox     bbBox;
     xVector3 bsCenter;
     xFLOAT   bsRadius;
@@ -126,6 +138,8 @@ struct xRenderData
     xDWORD             verticesC;
     xVector3          *normalP; // smooth normals
     xWORD3            *facesP;
+
+    xVector3          *faceNormalsP;
 };
 
 struct xCollisionHierarchy;
@@ -162,6 +176,8 @@ struct xElement {
     xWORD       facesC;
     xFaceList  *faceListP;
     xWORD       faceListC;
+    xEdge      *edgesP;
+    xWORD       edgesC;
 
     bool       textured;
     bool       skeletized;
@@ -218,5 +234,6 @@ void       xFileFree(xFile *xfile);
 
 void       xFaceListCalculateNormals(xElement *elem, xFaceList *faceL);
 void       xElementCalculateSmoothVertices(xElement *elem);
+void       xElementFillEdges(xElement *elem);
 
 #endif

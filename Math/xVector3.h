@@ -98,6 +98,11 @@ union xVector3 {
         return b <= a;
     }
 
+    bool nearlyEqual (const xVector3 &vec) {
+        return abs(x - vec.x) < EPSILON2 &&
+               abs(y - vec.y) < EPSILON2 &&
+               abs(z - vec.z) < EPSILON2;
+    }
     static xVector3 Normalize(const xVector3 &a) {
         xVector3 res = a;
         return res.normalize();

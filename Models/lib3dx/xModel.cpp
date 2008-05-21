@@ -22,31 +22,6 @@ struct smoothVert {
     xWORD3  *flatFace;  // used when smooth == 0
 };
 
-void      xFaceListCalculateNormals(xElement *elem, xFaceList *faceL)
-{
-    size_t stride = elem->skeletized
-        ? elem->textured
-        ? sizeof (xVertexTexSkel)
-        : sizeof (xVertexSkel)
-        : elem->textured
-        ? sizeof (xVertexTex)
-        : sizeof (xVertex);
-    xBYTE *vertices = (xBYTE*) elem->verticesP;
-
-    faceL->normalP = new xVector3[faceL->indexCount];
-    xWORD   (*face)[3] = elem->facesP+faceL->indexOffset;
-    xVector3 *normal = faceL->normalP;
-    for (int i=faceL->indexCount; i; --i, ++face, ++normal)
-    {
-        xWORD idx0 = (*face)[0], idx1 = (*face)[1], idx2 = (*face)[2];
-
-        xVector3 v0 = * ((xVector3*)(vertices + idx0*stride));
-        xVector3 v1 = * ((xVector3*)(vertices + idx1*stride));
-        xVector3 v2 = * ((xVector3*)(vertices + idx2*stride));
-        *normal = xVector3::CrossProduct(v1-v0, v2-v0).normalize();
-    }
-}
-
 void      xElementCalculateSmoothVertices(xElement *elem)
 {
     size_t stride = elem->skeletized
@@ -58,24 +33,27 @@ void      xElementCalculateSmoothVertices(xElement *elem)
         : sizeof (xVertex);
     xBYTE *verticesIn = (xBYTE*) elem->verticesP;
 
+    elem->renderData.faceNormalsP = new xVector3[elem->facesC];
+    xVector3 *faceNormal = elem->renderData.faceNormalsP;
+
     //// assign smoothing groups to vertices
     std::vector<smoothVert>::iterator iterF, iterE, iterF2, iterE2;
     std::vector<std::vector<smoothVert> > vertices; // vertex_id->(smooth, normal)[]
     vertices.resize(elem->verticesC);
     xDWORD *smooth = elem->smoothP;
     xWORD3 *faceIn = elem->facesP;
-    for (int fP=elem->facesC; fP; --fP, ++smooth, ++faceIn)
+    for (int fP=elem->facesC; fP; --fP, ++smooth, ++faceIn, ++faceNormal)
     {
         xVector3 *v0 = (xVector3*)(verticesIn + (*faceIn)[0]*stride);
         xVector3 *v1 = (xVector3*)(verticesIn + (*faceIn)[1]*stride);
         xVector3 *v2 = (xVector3*)(verticesIn + (*faceIn)[2]*stride);
-        xVector3 normal = xVector3::CrossProduct(*v1-*v0, *v2-*v0).normalize();
+        *faceNormal = xVector3::CrossProduct(*v1-*v0, *v2-*v0).normalize();
 
         for (int i=0; i<3; ++i)
         {
             int      idx     = (*faceIn)[i];
             bool     found   = false;
-            xVector3 vnormal = normal;
+            xVector3 vnormal = *faceNormal;
             xWORD    vcount  = 1;
 
             if (*smooth)
@@ -86,7 +64,7 @@ void      xElementCalculateSmoothVertices(xElement *elem)
                     {
                         if (iterF->smooth == *smooth)
                         {
-                            iterF->normal += normal;
+                            iterF->normal += *faceNormal;
                             ++(iterF->count);
                             found = true;
                         }
@@ -95,7 +73,7 @@ void      xElementCalculateSmoothVertices(xElement *elem)
                             vnormal += iterF->normal;
                             vcount  += iterF->count;
                         }
-                        iterF->mnormal += normal;
+                        iterF->mnormal += *faceNormal;
                         ++(iterF->mcount);
                     }
                 if (found) continue;
@@ -104,7 +82,7 @@ void      xElementCalculateSmoothVertices(xElement *elem)
             iterF = vertices[idx].end()-1;
             iterF->smooth   = *smooth;
             iterF->count    = 1;
-            iterF->normal   = normal;
+            iterF->normal   = *faceNormal;
             iterF->mcount   = vcount;
             iterF->mnormal  = vnormal;
             iterF->flatFace = faceIn;
@@ -238,6 +216,90 @@ void      xElementCalculateSmoothVertices(xElement *elem)
     }
 }
 
+
+xMaterial *xFaceGetMaterial(const xElement *elem, int faceIdx)
+{
+    xFaceList *faceL = elem->faceListP;
+    for (int i=elem->faceListC; i; --i, ++faceL)
+        if (faceIdx - faceL->indexOffset < faceL->indexCount)
+            return faceL->materialP;
+    return NULL;
+}
+
+bool xFaceTransparent(const xElement *elem, int faceIdx)
+{
+    xMaterial *mat = xFaceGetMaterial(elem, faceIdx);
+    return mat && mat->transparency > 0.f;
+}
+
+void      xElementFillEdges(xElement *elem)
+{
+    xWORD edgesC = 3 * (elem->facesC >> 1);
+    elem->edgesP = new xEdge[edgesC << 1];
+
+    bool *flags = new bool[elem->facesC*3];
+    memset(flags, 0, elem->facesC*3);
+
+    xWORD3 *iterF1 = elem->facesP, *iterF2;
+    bool   *iterUsed1 = flags, *iterUsed2;
+    xEdge  *iterE = elem->edgesP;
+
+    size_t stride = elem->skeletized
+        ? elem->textured
+        ? sizeof (xVertexTexSkel)
+        : sizeof (xVertexSkel)
+        : elem->textured
+        ? sizeof (xVertexTex)
+        : sizeof (xVertex);
+    xBYTE *verticesIn = (xBYTE*) elem->verticesP;
+
+    xWORD cnt = 0;
+    for (int i = 0; i < elem->facesC; ++i, ++iterF1, iterUsed1 += 3)
+        for (int e1 = 0; e1 < 3; ++e1)
+            if (!iterUsed1[e1] && !xFaceTransparent(elem, i))
+            {
+                ++cnt;
+                iterE->vert1 = (*iterF1)[e1];
+                iterE->vert2 = (*iterF1)[(e1+1)%3];
+                iterE->face1 = i;
+                iterE->face2 = xWORD_MAX;
+                iterUsed1[e1] = true;
+                xVector3 *vc1a = (xVector3 *)(verticesIn + stride* iterE->vert1);
+                xVector3 *vc1b = (xVector3 *)(verticesIn + stride* iterE->vert2);
+
+                iterF2    = iterF1 + 1;
+                iterUsed2 = iterUsed1 + 3;
+                bool found = false;
+
+                for (int j = i+1; j < elem->facesC && !found; ++j, ++iterF2, iterUsed2+=3)
+                    for (int e2 = 0; e2 < 3 && !found; ++e2)
+                        if (!iterUsed2[e2] && !xFaceTransparent(elem, i))
+                        {
+                            xWORD v1 = (*iterF2)[e2];
+                            xWORD v2 = (*iterF2)[(e2+1)%3];
+                            xVector3 *vc2a = (xVector3 *)(verticesIn + stride*v1);
+                            xVector3 *vc2b = (xVector3 *)(verticesIn + stride*v2);
+
+                            //if ((vc1a->nearlyEqual(*vc2a) && vc1b->nearlyEqual(*vc2b)) ||
+                            //    (vc1a->nearlyEqual(*vc2b) && vc1b->nearlyEqual(*vc2a)) )
+                            if ((*vc1a == *vc2a && *vc1b == *vc2b) ||
+                                (*vc1a == *vc2b && *vc1b == *vc2a) )
+                            {
+                                iterE->face2 = j;
+                                iterUsed2[e2] = true;
+                                found = true;
+                                --edgesC;
+                            }
+                        }
+                ++iterE;
+            }
+    xEdge *tmp = elem->edgesP;
+    elem->edgesC = cnt;
+    elem->edgesP = new xEdge[cnt];
+    memcpy(elem->edgesP, tmp, cnt*sizeof(xEdge));
+    delete[] tmp;
+}
+
 ////////////////////// xMaterial
 xMaterial *xMaterialByName(const xFile *file, char *materialName)
 {
@@ -369,7 +431,6 @@ void       xMaterialsSave(FILE *file, const xFile *xfile)
 }
 
 ////////////////////// xCollisionData
-
 void xCollisionHierarchyLoad(FILE *file, xElement *elem, xCollisionHierarchy *colH)
 {
     fread(&colH->kidsC, sizeof(colH->kidsC), 1, file);
@@ -482,7 +543,7 @@ void xCollisionInfo_Fill(xFile *xfile, xElement *elem)
 }
 
 ////////////////////// xElement
-xElement *_xElementById(xElement *elem, xWORD elementId, xWORD &currElemID)
+xElement * _xElementById (xElement *elem, xWORD elementId, xWORD &currElemID)
 {
     xElement *relem;
     for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
@@ -495,7 +556,7 @@ xElement *_xElementById(xElement *elem, xWORD elementId, xWORD &currElemID)
     return NULL;
 }
 
-xElement *xElementById(const xFile* model, xWORD elementId)
+xElement * xElementById  (const xFile* model, xWORD elementId)
 {
     xWORD     currElemID = xWORD_MAX;
     xElement *relem;
@@ -508,7 +569,7 @@ xElement *xElementById(const xFile* model, xWORD elementId)
     }
     return NULL;
 }
-xWORD     _xElementCountKids (xElement *elem)
+xWORD      _xElementCountKids (xElement *elem)
 {
     xDWORD res = elem->kidsC;
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
@@ -516,7 +577,7 @@ xWORD     _xElementCountKids (xElement *elem)
     return res;
 }
 
-xWORD     xElementCount (const xFile* model)
+xWORD      xElementCount (const xFile* model)
 {
     xWORD res = 0;
     for (xElement *elem = model->firstP; elem; elem = elem->nextP)
@@ -532,6 +593,8 @@ void      xElementFree(xElement *elem)
         delete[] elem->renderData.verticesP;
     if (elem->renderData.normalP)
         delete[] elem->renderData.normalP;
+    if (elem->renderData.faceNormalsP)
+        delete[] elem->renderData.faceNormalsP;
     if (elem->name)
         delete[] elem->name;
     if (elem->verticesP) {
@@ -551,12 +614,9 @@ void      xElementFree(xElement *elem)
     if (elem->smoothP)
         delete[] elem->smoothP;
     if (elem->faceListP)
-    {
-        xFaceList *faceL = elem->faceListP;
-        for (int i=elem->faceListC; i; --i, ++faceL)
-            if (faceL->normalP) delete[] faceL->normalP;
         delete[] elem->faceListP;
-    }
+    if (elem->edgesP)
+        delete[] elem->edgesP;
     xElement *curr = elem->kidsP, *next;
     while (curr)
     {
@@ -571,131 +631,199 @@ void      xElementFree(xElement *elem)
     delete elem;
 }
 
+#ifndef FILE_CURRENT
+#define FILE_CURRENT 1
+#endif
+
 xElement *xElementLoad(FILE *file, xFile *xfile)
 {
     xElement *elem = new xElement();
-    if (elem && fread(elem, sizeof(xElement)-sizeof(xCollisionData)-sizeof(xRenderData), 1, file))
+    if (!elem) return NULL;
+
+    int i = 128;
+    i -= fread(&elem->id,     sizeof(elem->id), 1, file) * sizeof(elem->id);
+    i -= 2; fseek(file, 2, FILE_CURRENT);
+
+    i -= fread(&elem->name,   sizeof(elem->name), 1, file) * sizeof(elem->name);
+    i -= fread(&elem->color,  sizeof(elem->color), 1, file) * sizeof(elem->color);
+    i -= fread(&elem->matrix, sizeof(elem->matrix), 1, file) * sizeof(elem->matrix);
+
+    i -= fread(&elem->verticesP, sizeof(elem->verticesP), 1, file) * sizeof(elem->verticesP); // irrelevant
+    i -= fread(&elem->verticesC, sizeof(elem->verticesC), 1, file) * sizeof(elem->verticesC);
+
+
+    i -= 10; fseek(file, 8+2, FILE_CURRENT);
+    i -= fread(&elem->facesC,    sizeof(elem->facesC), 1, file) * sizeof(elem->facesC);
+    i -= 6; fseek(file, 4+2, FILE_CURRENT);
+    i -= fread(&elem->faceListC, sizeof(elem->faceListC), 1, file) * sizeof(elem->faceListC);
+
+    //xWORD2     *edgesP;
+
+    i -= fread(&elem->textured,   sizeof(elem->textured), 1, file) * sizeof(elem->textured);
+    i -= fread(&elem->skeletized, sizeof(elem->skeletized), 1, file) * sizeof(elem->skeletized);
+
+    i -= 8; fseek(file, 8, FILE_CURRENT);
+    i -= fread(&elem->kidsC,   sizeof(elem->kidsC), 1, file) * sizeof(elem->kidsC);
+    i -= 2; fseek(file, 2, FILE_CURRENT);
+
+    //xCollisionData    collisionData; // loaded later on
+    //xRenderData       renderData;
+
+    memset(&(elem->renderData),    0, sizeof(elem->renderData));
+    memset(&(elem->collisionData), 0, sizeof(elem->collisionData));
+
+    elem->verticesP = NULL;
+    elem->smoothP   = NULL;
+    elem->facesP    = NULL;
+    elem->faceListP = NULL;
+    elem->edgesP    = NULL;
+    elem->edgesC    = 0;
+    elem->kidsP = NULL;
+    elem->nextP = NULL;
+
+    if (elem->name)
     {
-        memset(&(elem->renderData),0, sizeof(elem->renderData));
-
-        elem->collisionData.kidsP = NULL;
-        elem->collisionData.kidsC = 0;
-
-        elem->verticesP = NULL;
-        elem->smoothP   = NULL;
-        elem->facesP    = NULL;
-        elem->faceListP = NULL;
-        elem->kidsP = NULL;
-        elem->nextP = NULL;
-
-        if (elem->name)
+        size_t len = (size_t) elem->name;
+        elem->name = new char[len];
+        if (!(elem->name) ||
+            fread(elem->name, 1, len, file) != len)
         {
-            size_t len = (size_t) elem->name;
-            elem->name = new char[len];
-            if (!(elem->name) ||
-                fread(elem->name, 1, len, file) != len)
-            {
-                xElementFree(elem);
-                return NULL;
-            }
+            xElementFree(elem);
+            return NULL;
         }
-        if (elem->verticesC)
-        {
-            size_t stride = elem->skeletized
-                ? elem->textured
-                ? sizeof (xVertexTexSkel)
-                : sizeof (xVertexSkel)
-                : elem->textured
-                ? sizeof (xVertexTex)
-                : sizeof (xVertex);
-            elem->verticesP = (xVertex*) new xBYTE[stride*elem->verticesC];
-            if (!elem->verticesTSP ||
-                    fread(elem->verticesP, stride, elem->verticesC, file)
-                        != elem->verticesC)
-            {
-                xElementFree(elem);
-                return NULL;
-            }
-        }
-        if (elem->facesC)
-        {
-            elem->facesP = (xWORD(*)[3]) new xWORD[3*elem->facesC];
-            if (!elem->facesP ||
-                fread(elem->facesP, 3*sizeof(xWORD), elem->facesC, file)
-                    != elem->facesC)
-            {
-                xElementFree(elem);
-                return NULL;
-            }
-            elem->smoothP = new xDWORD[elem->facesC];
-            if (!elem->smoothP ||
-                fread(elem->smoothP, sizeof(xDWORD), elem->facesC, file)
-                    != elem->facesC)
-            {
-                xElementFree(elem);
-                return NULL;
-            }
-        }
-        if (elem->faceListC)
-        {
-            elem->faceListP = new xFaceList[elem->faceListC];
-            if (!elem->faceListP ||
-                fread(elem->faceListP, sizeof(xFaceList), elem->faceListC, file)
-                    != elem->faceListC)
-            {
-                xElementFree(elem);
-                return NULL;
-            }
-
-            xFaceList *faceL = elem->faceListP;
-            for (int fL=elem->faceListC; fL; --fL, ++faceL)
-            {
-                faceL->materialP = xMaterialById(xfile, faceL->materialId);
-                if (faceL->materialP)
-                {
-                    bool transparent = faceL->materialP->transparency > 0.f;
-                    elem->renderData.transparent |= transparent;
-                    elem->renderData.opaque      |= !transparent;
-                }
-                else
-                    xfile->opaque = elem->renderData.opaque = true;
-            }
-            xElementCalculateSmoothVertices(elem);
-        }
-        if (elem->kidsC)
-        {
-            xElement *last = NULL;
-            for (int i=0; i < elem->kidsC; ++i)
-            {
-                if (last)
-                    last = last->nextP = xElementLoad(file, xfile);
-                else
-                    last = elem->kidsP = xElementLoad(file, xfile);
-                if (!last)
-                {
-                    xElementFree(elem);
-                    return NULL;
-                }
-            }
-        }
-
-        if (xfile->saveCollisionData)
-            xCollisionDataLoad(file, elem);
-
-        return elem;
     }
-    return NULL;
+    if (elem->verticesC)
+    {
+        size_t stride = elem->skeletized
+            ? elem->textured
+            ? sizeof (xVertexTexSkel)
+            : sizeof (xVertexSkel)
+            : elem->textured
+            ? sizeof (xVertexTex)
+            : sizeof (xVertex);
+        elem->verticesP = (xVertex*) new xBYTE[stride*elem->verticesC];
+        if (!elem->verticesTSP ||
+                fread(elem->verticesP, stride, elem->verticesC, file)
+                    != elem->verticesC)
+        {
+            xElementFree(elem);
+            return NULL;
+        }
+    }
+    if (elem->facesC)
+    {
+        elem->facesP = (xWORD(*)[3]) new xWORD[3*elem->facesC];
+        if (!elem->facesP ||
+            fread(elem->facesP, 3*sizeof(xWORD), elem->facesC, file)
+                != elem->facesC)
+        {
+            xElementFree(elem);
+            return NULL;
+        }
+        elem->smoothP = new xDWORD[elem->facesC];
+        if (!elem->smoothP ||
+            fread(elem->smoothP, sizeof(xDWORD), elem->facesC, file)
+                != elem->facesC)
+        {
+            xElementFree(elem);
+            return NULL;
+        }
+    }
+    if (elem->faceListC)
+    {
+        elem->faceListP = new xFaceList[elem->faceListC];
+        if (!elem->faceListP ||
+            fread(elem->faceListP, sizeof(xFaceList), elem->faceListC, file)
+                != elem->faceListC)
+        {
+            xElementFree(elem);
+            return NULL;
+        }
+
+        xFaceList *faceL = elem->faceListP;
+        for (int fL=elem->faceListC; fL; --fL, ++faceL)
+        {
+            faceL->materialP = xMaterialById(xfile, faceL->materialId);
+            if (faceL->materialP)
+            {
+                bool transparent = faceL->materialP->transparency > 0.f;
+                elem->renderData.transparent |= transparent;
+                elem->renderData.opaque      |= !transparent;
+            }
+            else
+                xfile->opaque = elem->renderData.opaque = true;
+        }
+        xElementCalculateSmoothVertices(elem);
+    }
+    xElementFillEdges(elem);
+    if (elem->kidsC)
+    {
+        xElement *last = NULL;
+        for (int i=0; i < elem->kidsC; ++i)
+        {
+            if (last)
+                last = last->nextP = xElementLoad(file, xfile);
+            else
+                last = elem->kidsP = xElementLoad(file, xfile);
+            if (!last)
+            {
+                xElementFree(elem);
+                return NULL;
+            }
+        }
+    }
+
+    if (xfile->saveCollisionData)
+        xCollisionDataLoad(file, elem);
+
+    return elem;
 }
 
 void      xElementSave(FILE *file, const xFile *xfile, xElement *elem)
 {
+    if (!elem) return;
+
     char *name = elem->name;
     if (name)
         elem->name = (char *) strlen(name)+1;
 
-    int i = fwrite((xBYTE*)elem, sizeof(xElement)-sizeof(xCollisionData)-sizeof(xRenderData), 1, file);
+    char buff[255];
+
+    int i = 128;
+    i -= fwrite(&elem->id,     sizeof(elem->id), 1, file) * sizeof(elem->id);
+    i -= fwrite(buff, 1, 2, file);
+
+    i -= fwrite(&elem->name,   sizeof(elem->name), 1, file) * sizeof(elem->name);
+    i -= fwrite(&elem->color,  sizeof(elem->color), 1, file) * sizeof(elem->color);
+    i -= fwrite(&elem->matrix, sizeof(elem->matrix), 1, file) * sizeof(elem->matrix);
+
+    i -= fwrite(&elem->verticesP, sizeof(elem->verticesP), 1, file) * sizeof(elem->verticesP); // irrelevant
+    i -= fwrite(&elem->verticesC, sizeof(elem->verticesC), 1, file) * sizeof(elem->verticesC);
+
+
+    i -= fwrite(&elem->smoothP,   sizeof(elem->smoothP), 1, file) * sizeof(elem->smoothP); // irrelevant
+    i -= fwrite(&elem->facesP,    sizeof(elem->facesP), 1, file) * sizeof(elem->facesP);  // irrelevant
+    i -= fwrite(buff, 1, 2, file);
+    i -= fwrite(&elem->facesC,    sizeof(elem->facesC), 1, file) * sizeof(elem->facesC);
+    i -= fwrite(&elem->faceListP, sizeof(elem->facesP), 1, file) * sizeof(elem->facesP);  // irrelevant
+    i -= fwrite(buff, 1, 2, file);
+    i -= fwrite(&elem->faceListC, sizeof(elem->faceListC), 1, file) * sizeof(elem->faceListC);
+
+    //xWORD2     *edgesP;
+
+    i -= fwrite(&elem->textured,   sizeof(elem->textured), 1, file) * sizeof(elem->textured);
+    i -= fwrite(&elem->skeletized, sizeof(elem->skeletized), 1, file) * sizeof(elem->skeletized);
+
+    i -= fwrite(&elem->nextP,   sizeof(elem->nextP), 1, file) * sizeof(elem->nextP); // irrelevant
+    i -= fwrite(&elem->kidsP,   sizeof(elem->kidsP), 1, file) * sizeof(elem->kidsP); // irrelevant
+    i -= fwrite(&elem->kidsC,   sizeof(elem->kidsC), 1, file) * sizeof(elem->kidsC);
+    i -= fwrite(buff, 1, 2, file);
+
+    //xCollisionData    collisionData; // saved later on
+    //xRenderData       renderData;
+
     if (name)
-        i = fwrite(name, 1, (size_t)elem->name, file);
+        fwrite(name, 1, (size_t)elem->name, file);
     if (elem->verticesC) {
         size_t stride = elem->skeletized
                 ? elem->textured
@@ -704,15 +832,15 @@ void      xElementSave(FILE *file, const xFile *xfile, xElement *elem)
                 : elem->textured
                 ? sizeof (xVertexTex)
                 : sizeof (xVertex);
-        i = fwrite(elem->verticesP, stride, elem->verticesC, file);
+        fwrite(elem->verticesP, stride, elem->verticesC, file);
     }
     if (elem->facesC)
     {
-        i = fwrite(elem->facesP, 3*sizeof(xWORD), elem->facesC, file);
-        i = fwrite(elem->smoothP, sizeof(xDWORD), elem->facesC, file);
+        fwrite(elem->facesP, 3*sizeof(xWORD), elem->facesC, file);
+        fwrite(elem->smoothP, sizeof(xDWORD), elem->facesC, file);
     }
     if (elem->faceListC)
-        i = fwrite(elem->faceListP, sizeof(xFaceList), elem->faceListC, file);
+        fwrite(elem->faceListP, sizeof(xFaceList), elem->faceListC, file);
     if (elem->kidsC)
     {
         xElement *last = elem->kidsP;

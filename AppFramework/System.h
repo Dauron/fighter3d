@@ -18,7 +18,8 @@ typedef long LONG;
 
 inline float GetTick()
 {
-   return clock() / (float)CLOCKS_PER_SEC * 1000.f;
+    static float __TimerScale = 1000.f / CLOCKS_PER_SEC;
+    return clock() * __TimerScale;
 }
 
 #endif

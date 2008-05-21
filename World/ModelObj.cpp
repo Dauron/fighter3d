@@ -1,11 +1,6 @@
 #include "ModelObj.h"
 #include "../Physics/RigidBody.h"
 
-float time1;
-float time2;
-float time1b = 0.f;
-float time2b = 0.f;
-
 void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bool physical, bool phantom)
 {
     collisionInfo = NULL;
@@ -20,9 +15,9 @@ void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bo
     smap.texId = 0;
 
     if (ph_filename)
-        renderer.Initialize(!physical && !forceNotStatic, g_ModelMgr.GetModel(gr_filename), g_ModelMgr.GetModel(ph_filename));
+        renderer.Initialize(!forceNotStatic, g_ModelMgr.GetModel(gr_filename), g_ModelMgr.GetModel(ph_filename));
     else
-        renderer.Initialize(!physical && !forceNotStatic, g_ModelMgr.GetModel(gr_filename));
+        renderer.Initialize(!forceNotStatic, g_ModelMgr.GetModel(gr_filename));
     xRender *rend = GetRenderer();
     centerOfTheMass = xCenterOfTheModelMass(rend->xModelPhysical, rend->bonesM);
 }
@@ -68,7 +63,7 @@ xCollisionHierarchyBoundsRoot *ModelObj::GetCollisionInfo()
     for (xElement *elem = rend->xModelPhysical->firstP; elem; elem = elem->nextP)
         CollisionInfo_Fill(rend, elem, collisionInfo, true);
 
-    time1 += GetTick() - delta;
+    Performance.CollisionDataFillMS += GetTick() - delta;
 
     return collisionInfo;
 }
@@ -82,7 +77,7 @@ void ModelObj::CollisionInfo_ReFill()
         xRender *rend  = GetRenderer();
         for (xElement *elem = rend->xModelPhysical->firstP; elem; elem = elem->nextP)
             CollisionInfo_Fill(rend, elem, collisionInfo, false);
-        time1 += GetTick() - delta;
+        Performance.CollisionDataFillMS += GetTick() - delta;
     }
 }
 
@@ -110,6 +105,7 @@ void ModelObj::CollisionInfo_Fill(xRender *rend, xElement *elem, xCollisionHiera
 
 void ModelObj::CollisionInfo_Free(xElement *elem, xCollisionHierarchyBoundsRoot *ci)
 {
+    if (!elem) return;
     xElement_FreeCollisionHierarchyBounds(&elem->collisionData, ci[elem->id].kids);
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
         CollisionInfo_Free(celem, ci);

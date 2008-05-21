@@ -88,19 +88,8 @@ void SceneConsole::AppendConsole(std::string text)
 
 bool SceneConsole::Update(float deltaTime)
 {
-    if (deltaTime != 0.0f) {
-        curFPS = (unsigned int)(1/deltaTime);
-        if (curFPS > maxFPS) maxFPS = curFPS;
-        if (curFPS < minFPS && curFPS > 0) minFPS = curFPS;
-        if (fabs(meanFPS - (float)curFPS) > 5.0f)
-            meanFPS = ((meanFPS*19.0f + curFPS)/20.0f);
-        else
-            meanFPS = ((meanFPS*49.0f + curFPS)/50.0f);
-        if (meanFPS > maxFPS) meanFPS = (float)maxFPS;
-        if (meanFPS < minFPS) meanFPS = (float)minFPS;
-    }
     float curTick = GetTick();
-    if (curTick - carretTick > 500)
+    if (curTick - carretTick > 500.f)
     {
         carretTick = curTick;
         carretVisible = !carretVisible;
@@ -357,9 +346,8 @@ test  = ";
     }
     if (cmd == "clrfps" || cmd == "zero_fps_counters")
     {
-        maxFPS = 0;
-        meanFPS = 50.0f;
-        minFPS = xDWORD_MAX;
+        Performance.FPSmin = 1000.f;
+        Performance.FPSmax = 0;
         return true;
     }
     if (cmd.substr(0, 4) == "log ")
@@ -388,13 +376,6 @@ test  = ";
     }
     return false;
 }
-
-extern int testsLevel0;
-extern int testsLevel1;
-extern int testsLevel2;
-extern int testsLevel3;
-extern float time1b;
-extern float time2b;
 
 bool SceneConsole::Render()
 {
@@ -441,7 +422,10 @@ bool SceneConsole::Render()
     glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
     pFont->PrintF(0.0f, (float)cHeight-lineHeight, 0.0f,
         "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u FPS: %2u L0: %5u L1: %5u L2: %5u L3: %5u, T1: %f, T2: %f",
-        (int)minFPS, (int) meanFPS, (int)maxFPS, (int)curFPS, testsLevel0,testsLevel1,testsLevel2,testsLevel3, time1b, time2b);
+        (int)Performance.FPSmin, (int)Performance.FPSsnap, (int)Performance.FPSmax, (int)Performance.FPS,
+        Performance.CollidedPreTreeLevels, Performance.CollidedTreeLevels,
+        Performance.CollidedTriangleBounds, Performance.CollidedTriangles,
+        Performance.snapCollisionDataFillMS, Performance.snapCollisionDeterminationMS);
     pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
         "   Num culled elements: %u", (int)Performance.CulledElements);
 

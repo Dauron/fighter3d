@@ -21,9 +21,32 @@ struct State
 
 struct _Performance
 {
+private:
+    float _timeCounter;
+
+    float CollisionDataFillMS_max;
+    float CollisionDeterminationMS_max;
+
+public:
     int CulledElements;
 
-    _Performance() : CulledElements(0) {}
+    int CollidedPreTreeLevels;
+    int CollidedTreeLevels;
+    int CollidedTriangleBounds;
+    int CollidedTriangles;
+
+    float CollisionDataFillMS;
+    float CollisionDeterminationMS;
+    float snapCollisionDataFillMS;
+    float snapCollisionDeterminationMS;
+
+    float FPS;
+    float FPSmin;
+    float FPSmax;
+    float FPSsnap;
+
+    void Reset();
+    void NextFrame(float ticks);
 };
 extern _Performance Performance;
 

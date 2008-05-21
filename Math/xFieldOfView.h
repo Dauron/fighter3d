@@ -16,6 +16,23 @@ public:
     xFLOAT  BackClip;
 
     xMatrix  ViewTransform;
+    xVector3 Corners3D[4];
+
+    void updateCorners3D()
+    {
+        Corners3D[0].z = FrontClip;
+        Corners3D[0].y = -Corners3D[0].z * (xFLOAT)tan( Angle * 0.5f );
+        Corners3D[0].x = Corners3D[0].y * Aspect;
+        Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, FrontClip);
+        Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, FrontClip);
+        Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, FrontClip);
+
+        xMatrix mtxViewToWorld = xMatrix::Invert(ViewTransform);
+        Corners3D[0] = mtxViewToWorld.preTransformP(Corners3D[0]);
+        Corners3D[1] = mtxViewToWorld.preTransformP(Corners3D[1]);
+        Corners3D[2] = mtxViewToWorld.preTransformP(Corners3D[2]);
+        Corners3D[3] = mtxViewToWorld.preTransformP(Corners3D[3]);
+    }
 
     void init( xFLOAT angle, xFLOAT aspect, xFLOAT frontClip, xFLOAT backClip )
     {

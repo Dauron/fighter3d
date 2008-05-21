@@ -24,7 +24,7 @@ void xRender :: Initialize(bool isStatic, HModel hGrModel, HModel hPhModel)
     bonesM = NULL;
     bonesQ = NULL;
     bonesC = 0;
-    shadowTexId  = 0;
+    shadowMapTexId  = 0;
     instanceDataGrP = instanceDataPhP = instanceDataTRP = NULL;
     instanceDataGrC = instanceDataPhC = instanceDataTRC = 0;
     location.identity();

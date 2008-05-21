@@ -239,8 +239,6 @@ bool SceneGame::Update(float deltaTime)
         return true;
     }
 
-    memset(&Performance, 0, sizeof(Performance));
-
     world.Update(deltaTime);
     return true;
 }
@@ -293,6 +291,8 @@ bool SceneGame::Render()
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE); // GL_TRUE=two, GL_FALSE=one
     glDisable (GL_LINE_SMOOTH);
     glDisable (GL_POLYGON_SMOOTH);                    // produces errors on many cards... use FSAA!
+    glDisable(GL_LIGHT0); glDisable(GL_LIGHT1); glDisable(GL_LIGHT2); glDisable(GL_LIGHT3);
+    glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
 
     // Render the contents of the world
     World::objectVec::iterator i,j,   begin = world.objects.begin(), end = world.objects.end();
@@ -340,6 +340,7 @@ bool SceneGame::Render()
 
         ////// RENDER SHADOWS AND LIGHTS
 
+        FOV.updateCorners3D();
         for (light=beginL; light!=endL; ++light)
         {
             light->update();
@@ -358,6 +359,12 @@ bool SceneGame::Render()
                 glDepthFunc(GL_LESS);
                 glEnable(GL_CULL_FACE);             // enable face culling
                 glColorMask(0, 0, 0, 0);            // do not write to frame buffer
+
+                xElementInstance *modelElementsP;
+                xBYTE modelElementsC;
+                for ( i = begin+1 ; i != end ; ++i )
+                    if ((*i)->castsShadows)
+                        (*i)->RenderShadowVolume(*light, &FOV);
 
                 glPopAttrib();
 
@@ -379,9 +386,9 @@ bool SceneGame::Render()
                 glEnable(GL_LIGHT0);                // light0 should be set to have the
                                                     // characteristics of the light
                                                     // we want to use for this pass
-                if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
+                //if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
                 for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, &FOV);
-                if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
+                //if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
                 glPopAttrib();
             }
             light->modified = false;
@@ -435,7 +442,6 @@ bool SceneGame::Render()
 
     //////////////////// WORLD - END
 
-    // Flush the buffer to force drawing of all objects thus far
     glFlush();
     return true;
 }

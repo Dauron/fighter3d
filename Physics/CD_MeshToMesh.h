@@ -53,14 +53,9 @@ public:
         for (xElement *elem1 = r1->xModelPhysical->firstP; elem1; elem1 = elem1->nextP)
             res |= Collide1(++ci1, ci2, elem1, r2->xModelPhysical->firstP);
 
-        time2 += GetTick() - delta;
+        Performance.CollisionDeterminationMS += GetTick() - delta;
         return res;
     }
 };
-
-extern int testsLevel0;
-extern int testsLevel1;
-extern int testsLevel2;
-extern int testsLevel3;
 
 #endif

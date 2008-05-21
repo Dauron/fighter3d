@@ -11,28 +11,6 @@ varying vec3  halfV;
 attribute vec4 boneIdxWghts;
 uniform   vec4 bones[80]; // up to 40 bones
 
-mat4 MatrixFromQuaternion(const vec4 q)
-{
-    mat4 res;
-    res[0][0] = 1.0 - 2.0 * (q.y*q.y + q.z*q.z);
-    res[0][1] = 2.0 * (q.z*q.y - q.w*q.z);
-    res[0][2] = 2.0 * (q.w*q.y + q.x*q.z);
-    res[0][3] = 0.0;
-    res[1][0] = 2.0 * (q.x*q.y + q.w*q.z);
-    res[1][1] = 1.0 - 2.0 * (q.x*q.x + q.z*q.z);
-    res[1][2] = 2.0 * (q.y*q.z - q.w*q.x);
-    res[1][3] = 0.0;
-    res[2][0] = 2.0 * (q.x*q.z - q.w*q.y);
-    res[2][1] = 2.0 * (q.y*q.z + q.w*q.x);
-    res[2][2] = 1.0 - 2.0 * (q.x*q.x + q.y*q.y);
-    res[2][3] = 0.0;
-    res[3][0] = 0.0;
-    res[3][1] = 0.0;
-    res[3][2] = 0.0;
-    res[3][3] = 1.0;
-    return res;
-}
-
 vec4 QuaternionProduct(vec4 a, vec4 b) 
 {
   vec4 ret;
@@ -66,7 +44,7 @@ void getPositionAndNormal(int i, inout vec4 position, inout vec3 normal)
             }
             else if (t.w == -1.0)
             {
-                pos += t;
+                pos.xyz += t.xyz;
             }
             idx = int(t.w);
         } while (idx >= 0);
@@ -79,18 +57,18 @@ void main()
 {
 	//// Skeletal animation
     vec4 position = vec4(0.0,0.0,0.0,0.0);
+    normal = vec3(0.0,0.0,0.0);
 	getPositionAndNormal(0, position, normal);
 	getPositionAndNormal(1, position, normal);
 	getPositionAndNormal(2, position, normal);
 	getPositionAndNormal(3, position, normal);
-    normal = normalize(normal);
 	
 	//// Lighting
 	vec3 vertex;
 	
 	/* first transform the normal into eye space and normalize the result */
-	normal = normalize(gl_NormalMatrix * normal);
 	vertex = vec3(gl_ModelViewMatrix * position);
+	normal = normalize(gl_NormalMatrix * normal);
 
 	if (lighting > 0)
     {

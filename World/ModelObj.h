@@ -14,6 +14,7 @@
 class ModelObj : public Object3D
 {
 public:
+    bool           castsShadows;
     bool           phantom;    // no collisions
     bool           physical;   // affected by gravity?
     float          mass;       // weight of an object
@@ -42,10 +43,10 @@ protected:
 
     /******** CONSTRUCTORS : BEGIN ********/
 public:
-    ModelObj () : Object3D(), forceNotStatic(false) {}
-    ModelObj (GLfloat x, GLfloat y, GLfloat z) : Object3D(x,y,z), forceNotStatic(false) {}
+    ModelObj () : Object3D(), castsShadows(false), forceNotStatic(false) {}
+    ModelObj (GLfloat x, GLfloat y, GLfloat z) : Object3D(x,y,z), castsShadows(false), forceNotStatic(false) {}
     ModelObj (GLfloat x, GLfloat y, GLfloat z,
-         GLfloat rotX, GLfloat rotY, GLfloat rotZ) : Object3D(x,y,z, rotX,rotY,rotZ), forceNotStatic(false) {}
+         GLfloat rotX, GLfloat rotY, GLfloat rotZ) : Object3D(x,y,z, rotX,rotY,rotZ), castsShadows(false), forceNotStatic(false) {}
     /********* CONSTRUCTORS : END *********/
 
     /******** LIFETIME : BEGIN ********/
@@ -89,16 +90,18 @@ public:
         GetRenderer()->SetLocation(mLocationMatrix);
         GetRenderer()->RenderShadow(smap, FOV);
     }
+
+    void       RenderShadowVolume(xLight &light, xFieldOfView *FOV)
+    {
+        GetRenderer()->SetLocation(mLocationMatrix);
+        GetRenderer()->RenderShadowVolume(light, FOV);
+    }
+
 protected:
     void GetShadowProjectionMatrix (xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width);
     /********* SHADOWS : END *********/
 
     void RenderObject(bool transparent, const xFieldOfView *FOV);
 };
-
-extern float time1b;
-extern float time2b;
-extern float time1;
-extern float time2;
 
 #endif

@@ -1,10 +1,5 @@
 #include "CD_MeshToMesh.h"
 
-int testsLevel0;
-int testsLevel1;
-int testsLevel2;
-int testsLevel3;
-
 int  CD_MeshToMesh:: CheckPlanes(xVector3 *a1, xVector3 *a2, xVector3 *a3,
                                  xVector3 *b1, xVector3 *b2, xVector3 *b3)
 {
@@ -302,7 +297,7 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
         ch2 = pch2; chb2 = pchb2;
         for (int h2 = cnt2; h2; --h2, ++chb2, ++ch2)
         {
-            ++testsLevel0;
+            ++Performance.CollidedPreTreeLevels;
 
             if (chb1->bounding.min.x < chb2->bounding.max.x &&
                 chb1->bounding.max.x > chb2->bounding.min.x &&
@@ -329,7 +324,7 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                                             1, ch2->kidsC, elem1, elem2);
                     continue;
                 }
-                ++testsLevel1;
+                ++Performance.CollidedTreeLevels;
 
                 for (int i1 = ch1->facesC; i1; --i1)
                 {
@@ -348,7 +343,7 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
 
                     for (int i2 = ch2->facesC; i2; --i2)
                     {
-                        ++testsLevel2;
+                        ++Performance.CollidedTriangleBounds;
 
                         xWORD3 **face2 = ch2->facesP + ch2->facesC - i2;
                         xVector3 *b1 = ci2->verticesP + (**face2)[0];
@@ -369,7 +364,7 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                         faceB2.min.z = min(b1->z, min(b2->z, b3->z));
                         if (faceB1.max.z < faceB2.min.z) continue;
 
-                        ++testsLevel3;
+                        ++Performance.CollidedTriangles;
 
                         if (IntersectTriangles(a1,a2,a3,b1,b2,b3,&colPoint))
                         {

@@ -12,10 +12,6 @@ class SceneConsole : public Scene
     SceneConsole(Scene *prevScene)
     {
         this->prevScene = prevScene;
-        prevTick = 0;
-        minFPS   = xDWORD_MAX; // max uint
-        meanFPS  = 50.0f;
-        maxFPS   = 0;
         carretTick = 0;
         font = HFont();
         overlayInput = false;
@@ -40,12 +36,6 @@ class SceneConsole : public Scene
 
     Scene   *prevScene;
     HFont    font;
-
-    float    prevTick;
-    xDWORD   curFPS;
-    xDWORD   minFPS;
-    float    meanFPS;
-    xDWORD   maxFPS;
 
     float    carretTick;
     bool     carretVisible;

@@ -15,7 +15,7 @@ void main()
 	vec4 color, specular = vec4(0.0, 0.0, 0.0, 0.0);
 
     if (lighting >= 0)
-	{
+    {
         /* The global ambient term will always be present */
 	    color = gl_FrontLightModelProduct.sceneColor;
 
@@ -28,8 +28,8 @@ void main()
     	    
 		    // normalize interpolated normal
 		    n = normalize(normal);
-    	    
-		    if (gl_LightSource[0].position.w == 1.0)
+
+            if (gl_LightSource[0].position.w == 1.0)
             {
                 // compute the dot product between normal and ldir
 				NdotL = max(dot(n,normalize(lightDir)),0.0);

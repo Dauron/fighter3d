@@ -10,8 +10,6 @@ class xRenderGL : public xRender
 {
   public:
     virtual void RenderModel    ( bool transparent, const xFieldOfView *FOV );
-    virtual void RenderShadow   ( const xShadowMap &shadowMap, const xFieldOfView *FOV );
-            void RenderShadowMap( bool transparent );
     virtual void RenderSkeleton ( bool selectionRendering, xWORD selBoneId = xWORD_MAX);
     virtual void RenderVertices ( SelectionMode         selectionMode    = smNone,
                                   xWORD                 selElementId     = xWORD_MAX,
@@ -19,6 +17,11 @@ class xRenderGL : public xRender
     virtual void RenderFaces    ( xWORD                 selectedElement,
                                   std::vector<xDWORD>  * facesToRender );
 
+    virtual void   RenderShadow   ( const xShadowMap &shadowMap, const xFieldOfView *FOV );
+            void   RenderShadowMap( bool transparent );
+    virtual xDWORD CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight);
+
+    virtual void RenderShadowVolume(xLight &light, xFieldOfView *FOV);
 
     xRenderGL() : UseVBO(agl_VBOLoaded), UseList(true) {};
 
@@ -60,10 +63,10 @@ class xRenderGL : public xRender
 
     virtual void Finalize()
     {
-        if (this->shadowTexId)
+        if (this->shadowMapTexId)
         {
-            glDeleteTextures(1, (GLuint*)&this->shadowTexId);
-            this->shadowTexId = 0;
+            glDeleteTextures(1, (GLuint*)&this->shadowMapTexId);
+            this->shadowMapTexId = 0;
         }
 
         FreeAllRenderData();
@@ -121,9 +124,9 @@ class xRenderGL : public xRender
     }
     void FreeListRenderData()
     {
-        FreeVBORenderData(instanceDataGrP, instanceDataGrC);
+        FreeListRenderData(instanceDataGrP, instanceDataGrC);
         if (hModelGraphics != hModelPhysical)
-            FreeVBORenderData(instanceDataPhP, instanceDataPhC);
+            FreeListRenderData(instanceDataPhP, instanceDataPhC);
     }
     void FreeVBORenderData()
     {
@@ -134,6 +137,11 @@ class xRenderGL : public xRender
 
     virtual void FreeAllRenderData()
     {
+        if (this->shadowMapTexId)
+        {
+            glDeleteTextures(1, (GLuint*)&this->shadowMapTexId);
+            this->shadowMapTexId = 0;
+        }
         if (UseVBO) FreeVBORenderData();
         else        FreeListRenderData();
     }
@@ -149,17 +157,6 @@ class xRenderGL : public xRender
         xRender::CalculateSkeleton();
         if (!UseVBO) FreeListRenderData();
     }
-/*
-    virtual void FreeRenderData()
-    {
-        if (this->shadowTexId)
-        {
-            glDeleteTextures(1, (GLuint*)&this->shadowTexId);
-            this->shadowTexId = 0;
-        }
-    }
-*/
-    virtual xDWORD CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight);
 
   private:
     bool       UseVBO;
@@ -195,6 +192,10 @@ class xRenderGL : public xRender
 
     void RenderShadowMapLST( xElement *elem, bool transparent );
     void RenderShadowMapVBO( xElement *elem, bool transparent );
+
+    void RenderShadowVolumeElem(xElement *elem, xLight &light);
+    void RenderShadowVolumeZPass(xElement *elem, xLight &light);
+    void RenderShadowVolumeZFail(xElement *elem, xLight &light);
 };
 
 #endif

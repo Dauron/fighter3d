@@ -62,7 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="opengl32.lib glu32.lib"
-				OutputFile="$(SolutionDir)\..\fighter_dbg.exe"
+				OutputFile="$(SolutionDir)..\fighter_dbg.exe"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="true"
@@ -297,6 +297,14 @@
 				</File>
 				<File
 					RelativePath="..\Models\lib3dx\xRenderGL.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xShadowVolume.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xShadowVolume.h"
 					>
 				</File>
 				<File

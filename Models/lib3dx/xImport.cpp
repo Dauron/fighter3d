@@ -26,11 +26,11 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
     elem->nextP = NULL;
     elem->name = strdup(node->name);
     elem->verticesP = NULL;
-    elem->facesP = NULL;
     elem->kidsP = NULL;
-    elem->kidsC = elem->facesC = elem->verticesC = 0;
+    elem->kidsC = 0;
 
     memset(&(elem->renderData), 0, sizeof(elem->renderData));
+    memset(&(elem->collisionData), 0, sizeof(elem->collisionData));
     memcpy(elem->matrix.matrix, node->matrix, sizeof(elem->matrix));
 
     int mirrorFaces = 0;
@@ -50,14 +50,13 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
     pivot = scl * pivot;
     elem->matrix.preTranslateT(pivot.vector3);
 
-    elem->collisionData.kidsP = NULL;
-    elem->collisionData.kidsC = 0;
-
     elem->smoothP = NULL;
+    elem->facesP = NULL;
     elem->facesC = 0;
     elem->facesP = NULL;
     elem->faceListC = 0;
     elem->faceListP = NULL;
+    elem->edgesP = NULL;
     elem->verticesC = 0;
     elem->verticesP = NULL;
     elem->textured = elem->skeletized = false;
@@ -171,7 +170,6 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                     if (faces[mid][group].size()) {
 
                         faceL->indexOffset = offset;
-                        faceL->normalP     = NULL;
                         faceL->smooth      = group;
                         faceL->materialId  = mid;
                         faceL->materialP   = xMaterialById(file, mid);
@@ -190,6 +188,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                         faceL->indexCount = offset - faceL->indexOffset;
                         ++faceL;
                     }
+            xElementFillEdges(elem);
             xElementCalculateSmoothVertices(elem);
         }
     }
@@ -224,6 +223,7 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
     file->fileName = 0;
     xMaterial *lastm = NULL;
     xWORD matId = 0;
+
     for (Lib3dsMaterial *mat = model->materials; mat != NULL; mat = mat->next)
     {
         if (lastm)
@@ -266,6 +266,7 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
             laste = file->firstP->kidsP = xImportElementFrom3ds(model,file,node, ++currId);
         ++(file->firstP->kidsC);
     }
+    file->elementC = xElementCount(file);
 
     return file;
 }
@@ -302,6 +303,10 @@ xFile *xLoadFrom3dmFile(const char *fileName)
             elem->matrix.matrix[x][y] = (x == y ? 1.0f : 0.0f);
     elem->skeletized = true;
     elem->textured = true;
+    elem->edgesP = NULL;
+
+    elem->collisionData.kidsC = 0;
+    elem->collisionData.kidsP = 0;
 
     while (file.good() && file.getline(buffer, 1000))
     {
@@ -434,7 +439,6 @@ xFile *xLoadFrom3dmFile(const char *fileName)
         elem->faceListP = new xFaceList[1];
         elem->faceListP->indexOffset = 0;
         elem->faceListP->indexCount = elem->facesC;
-        elem->faceListP->normalP = NULL;
         elem->faceListP->materialId = 0;
         elem->faceListP->materialP = 0;
         elem->faceListP->smooth = 0;
@@ -456,8 +460,10 @@ xFile *xLoadFrom3dmFile(const char *fileName)
         }
         while (++iter != end);
 
+        xElementFillEdges(elem);
         xElementCalculateSmoothVertices(elem);
     }
+    model->elementC = xElementCount(model);
 
     file.close();
     return model;

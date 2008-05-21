@@ -34,11 +34,6 @@ void World:: Update(float deltaTime)
     if (deltaTime > 0.05f) deltaTime = 0.05f;
     deltaTime *= Config::Speed;
 
-    testsLevel0 = testsLevel1 = testsLevel2 = testsLevel3 = 0;
-    time1b = ((time1b*49.0f + time1)/50.0f);
-    time2b = ((time2b*49.0f + time2)/50.0f);
-    time1 = time2 = 0.f;
-
     float delta = 0.02f;
     while (deltaTime > EPSILON)
     {
@@ -89,7 +84,7 @@ void World:: Initialize()
     light.color.init(0.8f, 0.f, 0.f, 1.f);
     light.position.init(10.f, -5.f, 5.f);
     light.type = xLight_SPOT;
-    lights.push_back(light);
+    //lights.push_back(light);
     // SKY
     light.color.init(0.4f, 0.4f, 0.4f, 1.f);
     light.position.init(0.f, 0.f, 100.f);
@@ -105,16 +100,19 @@ void World:: Initialize()
         model = new ModelObj(-4.0f, -2.0f, 1.0f);
         model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
+        model->castsShadows = true;
         objects.push_back(model);
 
         model = new ModelObj(-2.0f, -5.0f, 0.0f);
         model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
+        model->castsShadows = true;
         objects.push_back(model);
 
         model = new ModelObj(2.f, 0.f, 0.0f, 0.0f, 0.0f, 45.0f);
         model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
+        model->castsShadows = true;
         objects.push_back(model);
 /*
         model = new ModelObj(10.0f, -2.0f, 0.0f);
@@ -125,9 +123,10 @@ void World:: Initialize()
         model->Initialize("Data/models/2stend.3dx");
         objects.push_back(model);
 */
-        shadowCaster = model = new ModelObj(0.0f, -10.0f, 5.0f);
+        model = new ModelObj(0.0f, -10.0f, 5.0f);
         model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
         model->mass     = 60.f;
+        model->castsShadows = true;
         objects.push_back(model);
 
         modelA = new SkeletizedObj(-0.3f, -3.2f, -0.21f, 0.0f, 0.0f, 170.0f);
@@ -135,6 +134,7 @@ void World:: Initialize()
         modelA->mass     = 70.f;
         modelA->AddAnimation("Data/models/anims/human/yoko-geri2.ska", 4000, 5300);
         modelA->AddAnimation("Data/models/anims/human/garda.ska");
+        modelA->castsShadows = false;
         objects.push_back(modelA);
 
         modelA = new SkeletizedObj(-0.5f, -1.5f, -0.21f, 0.0f, 0.0f, 0.0f);
@@ -143,6 +143,7 @@ void World:: Initialize()
         modelA->AddAnimation("Data/models/anims/human/garda.ska", 0, 4700);
         modelA->AddAnimation("Data/models/anims/human/skulony.ska", 4700);
         modelA->AddAnimation("Data/models/anims/human/kiwa_sie.ska", 4700);
+        modelA->castsShadows = false;
         objects.push_back(modelA);
 /*
         modelA = new SkeletizedObj(4.5f, -1.5f, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -279,6 +280,13 @@ void World:: Load(char *mapFileName)
                 float resilience;
                 sscanf(buffer, "resilience\t%f", &resilience);
                 model->resilience = resilience;
+                continue;
+            }
+            if (StartsWith(buffer, "shadows"))
+            {
+                int b;
+                sscanf(buffer, "shadows\t%d", &b);
+                model->castsShadows = b;
                 continue;
             }
         }

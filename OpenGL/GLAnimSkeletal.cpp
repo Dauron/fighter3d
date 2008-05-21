@@ -88,7 +88,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance 
             if (State::RenderingShadows) glTexCoordPointer (3, GL_FLOAT, stride, element->renderData.verticesP);
 
             /************************* LOAD NORMALS ****************************/
-            if (GLShader::LightingState() && element->renderData.normalP) {
+            if (!State::RenderingSelection && element->renderData.normalP) {
                 glNormalPointer ( GL_FLOAT, sizeof(xVector3), element->renderData.normalP );
                 glEnableClientState(GL_NORMAL_ARRAY);
             }
@@ -101,7 +101,8 @@ void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance 
         if (VBO) glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
         glVertexPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
         if (State::RenderingShadows) glTexCoordPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
-        if (GLShader::LightingState())
+        if ((VBO && GLShader::LightingState()) ||
+            (!VBO && !State::RenderingSelection))
         {
             glNormalPointer (GL_FLOAT, sizeof(xVector3), sft_normals);
             glEnableClientState(GL_NORMAL_ARRAY);

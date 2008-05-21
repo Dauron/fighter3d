@@ -1,7 +1,11 @@
 #include "xRenderGL.h"
-
 #include "../../OpenGL/GLAnimSkeletal.h"
 #include "../../OpenGL/Textures/TextureMgr.h"
+#include "xShadowVolume.h"
+
+/* EXT_stencil_wrap */
+#define GL_INCR_WRAP_EXT                    0x8507
+#define GL_DECR_WRAP_EXT                    0x8508
 
 void xRenderGL :: RenderSkeleton(bool selectionRendering, xWORD selBoneId)
 {
@@ -569,10 +573,9 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
         || (!transparent && !elem->renderData.opaque)) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
+    xMatrix mtxTrasformation = elem->matrix * location;
     if (FOV &&
-        (!FOV->CheckSphere(
-            location.preTransformP(elem->matrix.preTransformP(instance->bsCenter)),
-            instance->bsRadius) ||
+        (!FOV->CheckSphere(mtxTrasformation.preTransformP(instance->bsCenter), instance->bsRadius) ||
          !FOV->CheckBox(instance->bbBox.TransformatedPoints(elem->matrix * location)) ) )
     {
         ++Performance.CulledElements;
@@ -613,7 +616,7 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
             else
                 glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), elem->renderData.verticesP);
             /************************* LOAD NORMALS ****************************/
-            if (GLShader::LightingState() && elem->renderData.normalP)
+            if (!State::RenderingSelection && elem->renderData.normalP)
             {
                 glNormalPointer (GL_FLOAT, sizeof(xVector3), elem->renderData.normalP);
                 glEnableClientState(GL_NORMAL_ARRAY);
@@ -630,10 +633,11 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
                 SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
-        if (!State::RenderingSelection && elem->textured)
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        if (elem->renderData.normalP && GLShader::LightingState())
-            glDisableClientState(GL_NORMAL_ARRAY);
+        if (!State::RenderingSelection)
+        {
+            if (elem->textured)           glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            if (elem->renderData.normalP) glDisableClientState(GL_NORMAL_ARRAY);
+        }
         if (elem->skeletized)
             g_AnimSkeletal.EndAnimation();
 
@@ -664,10 +668,9 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
         || (!transparent && !elem->renderData.opaque)) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
+    xMatrix mtxTrasformation = elem->matrix * location;
     if (FOV &&
-        (!FOV->CheckSphere(
-            location.preTransformP(elem->matrix.preTransformP(instance->bsCenter)),
-            instance->bsRadius) ||
+        (!FOV->CheckSphere(mtxTrasformation.preTransformP(instance->bsCenter), instance->bsRadius) ||
          !FOV->CheckBox(instance->bbBox.TransformatedPoints(elem->matrix * location)) ) )
     {
         ++Performance.CulledElements;
@@ -797,10 +800,9 @@ void xRenderGL :: RenderShadowLST(xElement *elem)
     if (!elem->renderData.verticesC) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
+    xMatrix mtxTrasformation = elem->matrix * location;
     if (FOV &&
-        (!FOV->CheckSphere(
-            location.preTransformP(elem->matrix.preTransformP(instance->bsCenter)),
-            instance->bsRadius) ||
+        (!FOV->CheckSphere(mtxTrasformation.preTransformP(instance->bsCenter), instance->bsRadius) ||
          !FOV->CheckBox(instance->bbBox.TransformatedPoints(elem->matrix * location)) ) )
     {
         ++Performance.CulledElements;
@@ -843,10 +845,9 @@ void xRenderGL :: RenderShadowVBO(xElement *elem)
     if (!elem->renderData.verticesC) return;
 
     xElementInstance *instance = instanceDataTRP + elem->id;
+    xMatrix mtxTrasformation = elem->matrix * location;
     if (FOV &&
-        (!FOV->CheckSphere(
-            location.preTransformP(elem->matrix.preTransformP(instance->bsCenter)),
-            instance->bsRadius) ||
+        (!FOV->CheckSphere(mtxTrasformation.preTransformP(instance->bsCenter), instance->bsRadius) ||
          !FOV->CheckBox(instance->bbBox.TransformatedPoints(elem->matrix * location)) ) )
     {
         ++Performance.CulledElements;
@@ -892,7 +893,7 @@ void xRenderGL :: RenderShadowVBO(xElement *elem)
 
 
 /******************************* shadow maps **********************************/
-void xRenderGL :: RenderShadowMap(bool transparent)
+void   xRenderGL :: RenderShadowMap(bool transparent)
 {
     assert(xModelToRender);
 
@@ -913,7 +914,7 @@ void xRenderGL :: RenderShadowMap(bool transparent)
     glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-void xRenderGL :: RenderShadowMapLST(xElement *elem, bool transparent)
+void   xRenderGL :: RenderShadowMapLST(xElement *elem, bool transparent)
 {
     for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
         RenderShadowMapLST(selem, transparent);
@@ -955,7 +956,7 @@ void xRenderGL :: RenderShadowMapLST(xElement *elem, bool transparent)
     glPopMatrix();
 }
 
-void xRenderGL :: RenderShadowMapVBO(xElement *elem, bool transparent)
+void   xRenderGL :: RenderShadowMapVBO(xElement *elem, bool transparent)
 {
     for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
         RenderShadowMapVBO(selem, transparent);
@@ -1006,10 +1007,8 @@ void xRenderGL :: RenderShadowMapVBO(xElement *elem, bool transparent)
     glPopMatrix();
 }
 
-/********************************* shadows ************************************/
 xDWORD xRenderGL :: CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight)
 {
-/*
     glPushAttrib(GL_VIEWPORT_BIT | GL_SCISSOR_BIT | GL_TRANSFORM_BIT);
     glViewport(0, 0, width, width);
     glEnable(GL_SCISSOR_TEST);
@@ -1028,7 +1027,7 @@ xDWORD xRenderGL :: CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight)
     glDisable(GL_BLEND);
     GLShader::EnableLighting(0);
     GLShader::EnableTexturing(0);
-*/
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Load BlockerLocalToShadowMap matrix
     glMatrixMode(GL_MODELVIEW);
@@ -1048,14 +1047,14 @@ xDWORD xRenderGL :: CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight)
     //xModelToRender = xModelToRenderOld;
     if (xModelToRenderOld != xModelPhysical)
         SetRenderMode(xRender::rmGraphical);
-/*
+
     glPopMatrix();
     // Restore OpenGL's PROJECTION matrix
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();//glLoadMatrixf(&mtxProjection.x0);
     glMatrixMode(GL_MODELVIEW);
     glPopAttrib();
-*/
+
     // Make the image we just rendered (the shadow-map) an OpenGL texture
     /*
     if (width != this->shadowWidth)
@@ -1087,10 +1086,10 @@ xDWORD xRenderGL :: CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight)
     }
     */
     // NOTE: glCopyTexImage2D is MUCH faster than glReadPixels+glTexImage2D
-    if (!this->shadowTexId)
+    if (!this->shadowMapTexId)
     {
-        glGenTextures(1, (GLuint*)&this->shadowTexId);
-        glBindTexture(GL_TEXTURE_2D, this->shadowTexId);
+        glGenTextures(1, (GLuint*)&this->shadowMapTexId);
+        glBindTexture(GL_TEXTURE_2D, this->shadowMapTexId);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         float Sh_TxBorder[4]= { 1.0, 1.0, 1.0, 1.0};
@@ -1099,9 +1098,191 @@ xDWORD xRenderGL :: CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
     else
-        glBindTexture(GL_TEXTURE_2D, this->shadowTexId);
+        glBindTexture(GL_TEXTURE_2D, this->shadowMapTexId);
     glReadBuffer(GL_BACK);
     glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8/*GL_INTENSITY8*/, 0, 0, width, width, 0);
 
-    return this->shadowTexId;
+    return this->shadowMapTexId;
+}
+/***************************** shadow volumes *********************************/
+void   xRenderGL :: RenderShadowVolume(xLight &light, xFieldOfView *FOV)
+{
+    assert(xModelToRender);
+
+    if (!bonesC && spineP)
+        CalculateSkeleton();
+    if (!instanceDataTRP)
+        PrepareInstanceDataTr();
+
+    this->FOV = FOV;
+
+    glPushMatrix();
+    glMultMatrixf(&location.x0);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    for (xElement *elem = xModelToRender->firstP; elem; elem = elem->nextP)
+        RenderShadowVolumeElem(elem, light);
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+
+    glPopMatrix();
+}
+void xRenderGL :: RenderShadowVolumeElem(xElement *elem, xLight &light)
+{
+    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+        RenderShadowVolumeElem(selem, light);
+
+    if (!elem->renderData.verticesC) return;
+
+    xElementInstance *instance = instanceDataTRP + elem->id;
+
+    if (!light.elementReceivesLight((elem->matrix * location).preTransformP(instance->bsCenter), instance->bsRadius)) return;
+
+    if (!xShadows_ViewportMaybeShadowed(elem, instance, location, FOV, light))
+        RenderShadowVolumeZPass(elem, light);
+    else
+        RenderShadowVolumeZFail(elem, light);
+}
+void xRenderGL :: RenderShadowVolumeZPass(xElement *elem, xLight &light)
+{
+    xElementInstance *instance = instanceDataTRP + elem->id;
+
+    glPushMatrix();
+    glMultMatrixf(&elem->matrix.x0);
+
+    xVector4 *verticesPextr = NULL;
+    bool     *facingFlag    = NULL;
+    xMatrix  mtxWorldToObject;
+    mtxWorldToObject = (elem->matrix * location).invert();
+    xVector3 lightPos = mtxWorldToObject.preTransformP(light.position);
+    xShadows_ExtrudePoints(elem, light.type == xLight_INFINITE, lightPos, verticesPextr);
+    xShadows_GetBackFaces (elem, verticesPextr, facingFlag);
+    xShadows_GetSilhouette(elem, facingFlag, instance->shadowQuadsP, instance->shadowBackCP, instance->shadowEdgesC);
+
+    if (elem->skeletized) {
+        g_AnimSkeletal.BeginAnimation();
+        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetVertices(sizeof(xVector4), (float *)verticesPextr, elem->verticesC << 1);
+    }
+    else
+        glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), verticesPextr);
+
+    /************************* RENDER FACES ****************************/
+
+    glCullFace(GL_FRONT);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_INCR); // GL_INCR_WRAP_EXT
+
+    // Extruded quads
+    glDrawElements ( GL_QUADS, 4*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowQuadsP);
+
+    glCullFace(GL_BACK);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_DECR); // GL_DECR_WRAP_EXT
+
+    // Extruded quads
+    glDrawElements ( GL_QUADS, 4*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowQuadsP);
+
+    delete[] facingFlag;
+    delete[] verticesPextr;
+
+    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+
+    glPopMatrix();
+}
+void xRenderGL :: RenderShadowVolumeZFail(xElement *elem, xLight &light)
+{
+    xElementInstance *instance = instanceDataTRP + elem->id;
+
+    glPushMatrix();
+    glMultMatrixf(&elem->matrix.x0);
+
+    xVector4 *verticesPextr = NULL;
+    bool     *facingFlag    = NULL;
+    xMatrix  mtxWorldToObject;
+    mtxWorldToObject = (elem->matrix * location).invert();
+    xVector3 lightPos = mtxWorldToObject.preTransformP(light.position);
+    xShadows_ExtrudePoints(elem, light.type == xLight_INFINITE, lightPos, verticesPextr);
+    xShadows_GetBackFaces (elem, verticesPextr, facingFlag);
+    xShadows_GetSilhouette(elem, facingFlag, instance->shadowQuadsP, instance->shadowBackCP, instance->shadowEdgesC);
+    bool useBackCapOptimization = false;//(lightPos - instance->bsCenter).lengthSqr() > instance->bsRadius*instance->bsRadius;
+
+    if (elem->skeletized) {
+        g_AnimSkeletal.BeginAnimation();
+        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetVertices(sizeof(xVector4), (float *)verticesPextr, elem->verticesC << 1);
+    }
+    else
+        glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), verticesPextr);
+
+    /************************* RENDER FACES ****************************/
+
+    glCullFace(GL_BACK);
+    glStencilOp(GL_KEEP, GL_INCR, GL_KEEP); // GL_INCR_WRAP_EXT
+
+    // Extruded quads
+    glDrawElements ( GL_QUADS, 4*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowQuadsP);
+    // Front cap
+    bool   *faceFlag = facingFlag;
+    int     end = elem->facesC;
+    for (int i = 0; i < end; ++i, ++faceFlag)
+        if(*faceFlag)
+            glDrawElements ( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, elem->facesP+i);
+    // Back cap
+    if (light.type != xLight_INFINITE)
+        if (useBackCapOptimization)
+            glDrawElements ( GL_TRIANGLES, 3*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowBackCP);
+        else
+        {
+            faceFlag = facingFlag;
+            glBegin(GL_TRIANGLES);
+            {
+                for (int i = 0; i < end; ++i, ++faceFlag)
+                    if(!*faceFlag)
+                    {
+                        glIndexs(elem->verticesC + elem->facesP[i][0]);
+                        glIndexs(elem->verticesC + elem->facesP[i][1]);
+                        glIndexs(elem->verticesC + elem->facesP[i][2]);
+                        //glDrawElements ( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, elem->facesP+i);
+                    }
+            }
+            glEnd();
+        }
+
+    glCullFace(GL_FRONT);
+    glStencilOp(GL_KEEP, GL_DECR, GL_KEEP); // GL_DECR_WRAP_EXT
+
+    // Extruded quads
+    glDrawElements ( GL_QUADS, 4*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowQuadsP);
+    // Front cap
+    faceFlag = facingFlag;
+    for (int i = 0; i < end; ++i, ++faceFlag)
+        if(*faceFlag)
+            glDrawElements ( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, elem->facesP+i);
+    // Back cap
+    if (light.type != xLight_INFINITE)
+        if (useBackCapOptimization)
+            glDrawElements ( GL_TRIANGLES, 3*instance->shadowEdgesC, GL_UNSIGNED_SHORT, instance->shadowBackCP);
+        else
+        {
+            faceFlag = facingFlag;
+            glBegin(GL_TRIANGLES);
+            {
+                for (int i = 0; i < end; ++i, ++faceFlag)
+                    if(!*faceFlag)
+                    {
+                        glIndexs(elem->verticesC + elem->facesP[i][0]);
+                        glIndexs(elem->verticesC + elem->facesP[i][1]);
+                        glIndexs(elem->verticesC + elem->facesP[i][2]);
+                        //glDrawElements ( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, elem->facesP+i);
+                    }
+            }
+            glEnd();
+        }
+
+    delete[] facingFlag;
+    delete[] verticesPextr;
+
+    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+
+    glPopMatrix();
 }

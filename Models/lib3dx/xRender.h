@@ -4,6 +4,7 @@
 #include "../ModelMgr.h"
 #include "xSkeleton.h"
 #include "../../Math/xFieldOfView.h"
+#include "../../Math/xLight.h"
 #include "xUtils.h"
 
 struct xShadowMap
@@ -15,13 +16,11 @@ struct xShadowMap
 class xRender
 {
 protected:
-    HModel hModelGraphics;
-    HModel hModelPhysical;
+    HModel     hModelGraphics;
+    HModel     hModelPhysical;
     xFile    * xModelToRender;
 
-    //static xDWORD*     texture;
-    //static xWORD       shadowWidth;
-    xDWORD             shadowTexId;
+    xDWORD             shadowMapTexId;
 
     xElementInstance  *instanceDataGrP;
     xBYTE              instanceDataGrC;
@@ -85,6 +84,13 @@ public:
         }
     }
 
+    void InstanceDataGet(xElementInstance *&instanceP, xBYTE &instanceC)
+    {
+        PrepareInstanceDataTr();
+        instanceP = instanceDataTRP;
+        instanceC = instanceDataTRC;
+    }
+
     xFile    * xModelGraphics;
     xFile    * xModelPhysical;
 
@@ -96,6 +102,7 @@ public:
 
     virtual void RenderModel( bool transparent, const xFieldOfView *FOV ) = 0;
     virtual void RenderShadow(const xShadowMap &shadowMap, const xFieldOfView *FOV) = 0;
+    virtual void RenderShadowVolume(xLight &light, xFieldOfView *FOV) = 0;
 
     virtual void RenderSkeleton( bool selectionRendering, xWORD selBoneId = xWORD_MAX ) = 0;
 
@@ -113,7 +120,7 @@ public:
 
     virtual void Invalidate()
     {
-        shadowTexId = 0;
+        shadowMapTexId = 0;
     }
 
     virtual void Finalize()

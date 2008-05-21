@@ -20,8 +20,6 @@ private:
 
     bool m_Valid;
 
-    ModelObj *shadowCaster;
-
     virtual void RenderSelect(const xFieldOfView *FOV)
     {
         assert(m_Valid);

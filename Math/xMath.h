@@ -15,7 +15,8 @@ static inline float RadToDeg(float a) { return a*57.29577951f;}
 static inline float max(float f1, float f2) { return f1 < f2 ? f2 : f1; }
 static inline float min(float f1, float f2) { return f1 > f2 ? f2 : f1; }
 #endif
-#define EPSILON 0.0000000001
+#define EPSILON  0.0000000001
+#define EPSILON2 0.0001
 static inline bool IsZero(float f)   { return fabs(f) <= EPSILON; }
 
 static inline float Sign(float f)
@@ -31,7 +32,9 @@ typedef unsigned long  xDWORD;
 typedef short  xSHORT;
 typedef long   xLONG;
 typedef float  xFLOAT;
+typedef xWORD  xWORD2    [2];
 typedef xWORD  xWORD3    [3];
+typedef xWORD  xWORD4    [4];
 typedef xFLOAT xFLOAT2   [2];
 typedef xFLOAT xFLOAT3   [3];
 typedef xFLOAT xFLOAT4   [4];
@@ -81,6 +84,39 @@ struct xBox
         points[7] = transformation.preTransformP(points[7]);
 
         return points;
+    }
+
+    const xVector3 *UnTransformatedPoints()
+    {
+        points[0] = min;
+        points[1] = max;
+        points[2].init(min.x, min.y, max.z);
+        points[3].init(min.x, max.y, max.z);
+        points[4].init(max.x, min.y, max.z);
+        points[5].init(max.x, max.y, min.z);
+        points[6].init(max.x, min.y, min.z);
+        points[7].init(min.x, max.y, min.z);
+        return points;
+    }
+
+    bool culledBy(const xPlane *planes, int count)
+    {
+        UnTransformatedPoints();
+        // See if there is one plane for which all of the
+        // vertices are in the negative half space.
+        for (int p = 0; p < count; ++p) {
+
+            bool culled = true;
+            int v;
+            // Assume this plane culls all points.  See if there is a point
+            // not culled by the plane... early out when at least one point
+            // is in the positive half space.
+            for (v = 0; (v < 8) && culled; ++v)
+                culled = xVector3::DotProduct(planes[p].vector3, points[v]) + planes[p].w < 0;
+            if (culled) return true;
+        }
+        // None of the planes could cull this box
+        return false;
     }
 };
 

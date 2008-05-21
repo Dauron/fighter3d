@@ -95,6 +95,10 @@ union xVector4 {
     xFLOAT length() const {
         return (xFLOAT) sqrt(x*x + y*y + z*z + w*w);
     }
+    xVector4 &invert() {
+        x = -x; y = -y; z = -z; w = -w;
+        return *this;
+    }
     xVector4 &normalize() {
         xFLOAT m = length();
         m = (m > 0.0F) ? 1.0F / m : 0.0F;
