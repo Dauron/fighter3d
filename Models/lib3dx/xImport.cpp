@@ -158,11 +158,9 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
             xWORD3 *faceP   = elem->facesP;
             xDWORD *smoothP = elem->smoothP;
             xWORD   offset  = 0;
-            bool smooth = false;
             for (mid=0; mid<faces.size(); ++mid)
                 for (size_t group=0; group<faces[mid].size(); ++group)
                     if (faces[mid][group].size()) {
-                        if (group) smooth = true;
 
                         faceL->indexOffset = offset;
                         faceL->normalP     = NULL;
@@ -182,16 +180,9 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                             *((xWORD*)smoothP+1) = *(iter++);
                         }
                         faceL->indexCount = offset - faceL->indexOffset;
-                        if (!group) xFaceListCalculateNormals(elem, faceL);
                         ++faceL;
                     }
-            if (smooth) xElementCalculateSmoothVertices(elem);
-            else
-            {
-                elem->renderData.verticesP = elem->verticesP;
-                elem->renderData.verticesC = elem->verticesC;
-                elem->renderData.facesP = elem->facesP;
-            }
+            xElementCalculateSmoothVertices(elem);
         }
     }
 
@@ -433,6 +424,7 @@ xFile *xLoadFrom3dmFile(const char *fileName)
         elem->faceListP->normalP = NULL;
         elem->faceListP->materialId = 0;
         elem->faceListP->materialP = 0;
+        elem->faceListP->smooth = 0;
 
         xWORD (*iter)[3] = elem->facesP;
         xWORD (*end)[3]  = elem->facesP + elem->facesC;
@@ -451,10 +443,7 @@ xFile *xLoadFrom3dmFile(const char *fileName)
         }
         while (++iter != end);
 
-        xFaceListCalculateNormals(elem, elem->faceListP);
-        elem->renderData.verticesP = elem->verticesP;
-        elem->renderData.verticesC = elem->verticesC;
-        elem->renderData.facesP = elem->facesP;
+        xElementCalculateSmoothVertices(elem);
     }
 
     file.close();

@@ -50,6 +50,7 @@ xVector3 operator * (const xMatrix &a,  const xVector3 &b);
 xVector3 operator * (const xVector3 &a, const xMatrix &b);
 xVector3 operator / (const xVector3 &v, float f);
 xVector3 operator - (const xVector3 &a);
+bool     operator ==(const xVector3 &a, const xVector3 &b);
 bool     operator <=(const xVector3 &a, const xVector3 &b);
 bool     operator >=(const xVector3 &a, const xVector3 &b);
 

@@ -82,6 +82,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
         if (!g_SelectionRendering && element->renderData.normalP) {
             glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.normalB );
             glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
+            glEnableClientState(GL_NORMAL_ARRAY);
         }
     }
     else {

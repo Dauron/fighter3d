@@ -85,6 +85,9 @@ union xVector3 {
     friend xVector3 operator - (const xVector3 &a) {
         return xVector3::Create(-a.x, -a.y, -a.z);
     }
+    friend bool operator == (const xVector3 &a, const xVector3 &b) {
+        return a.x == b.x && a.y == b.y && a.z == b.z;
+    }
     friend bool operator <= (const xVector3 &a, const xVector3 &b) {
         return a.x <= b.x && a.y <= b.y && a.z <= b.z;
     }

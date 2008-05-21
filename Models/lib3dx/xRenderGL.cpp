@@ -596,15 +596,18 @@ void xRenderGL :: RenderModelLST(xElement *elem)
                 glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), elem->renderData.verticesP);
 
             if (!g_SelectionRendering && elem->renderData.normalP)
+            {
                 glNormalPointer (GL_FLOAT, sizeof(xVector3), elem->renderData.normalP);
-            bool normArrayEnabled = false;
+                glEnableClientState(GL_NORMAL_ARRAY);
+            }
 
             xFaceList *faceL = elem->faceListP;
             for(int i=0; i<elem->faceListC; ++i, ++faceL)
             {
                 if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
                     SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
-
+                glDrawElements (GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
+                /*
                 if (faceL->smooth)
                 {
                     if (!g_SelectionRendering && !normArrayEnabled) glEnableClientState(GL_NORMAL_ARRAY);
@@ -624,11 +627,13 @@ void xRenderGL :: RenderModelLST(xElement *elem)
                         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, iter);
                     }
                 }
+                */
             }
-            if (!g_SelectionRendering && normArrayEnabled) glDisableClientState(GL_NORMAL_ARRAY);
-
-            if (!g_SelectionRendering && elem->textured)
-                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            if (!g_SelectionRendering)
+            {
+                glDisableClientState(GL_NORMAL_ARRAY);
+                if (elem->textured) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            }
             if (elem->skeletized)
                 g_AnimSkeletal.EndAnimation();
         }
@@ -690,9 +695,9 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
         if (!g_SelectionRendering && elem->renderData.normalP) {
             glBindBufferARB ( GL_ARRAY_BUFFER_ARB, elem->renderData.normalB );
             glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
+            glEnableClientState(GL_NORMAL_ARRAY);
         }
     }
-    bool lastSmooth = false;
 
     /************************* RENDER FACES ****************************/
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, elem->renderData.indexB );
@@ -701,7 +706,8 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
     {
         if (!g_SelectionRendering && faceL->materialP != m_currentMaterial)
             SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
-
+        glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
+/*
         if (faceL->smooth)
         {
             if (!g_SelectionRendering && !lastSmooth) glEnableClientState(GL_NORMAL_ARRAY);
@@ -722,14 +728,16 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
                 glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, (void*)offset);
             }
         }
+*/
     }
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB ( GL_ARRAY_BUFFER_ARB, 0 );
 
-    if (!g_SelectionRendering && lastSmooth)
+    if (!g_SelectionRendering)
+    {
         glDisableClientState(GL_NORMAL_ARRAY);
-    if (!g_SelectionRendering && elem->textured)
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        if (elem->textured) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
     if (elem->skeletized)
         g_AnimSkeletal.EndAnimation();
 

@@ -12,19 +12,19 @@ bool Model3dx :: Load ( const char *name )
 
     int size = strlen(name);
     if (!strcasecmp(name + size - 4, ".3dx"))
-        //renderer.Initialize(xFileLoad (name));
         model = xFileLoad(name);
     else
     {
         if (!strcasecmp(name + size - 4, ".3dm"))
-            //renderer.Initialize(xLoadFrom3dmFile (name));
             model = xLoadFrom3dmFile (name);
         else
         {
             Lib3dsFile *file3ds = lib3ds_file_load (name);
-            //renderer.Initialize(xImportFileFrom3ds(file3ds));
-            model = xImportFileFrom3ds(file3ds);
-            lib3ds_file_free(file3ds);
+            if (file3ds)
+            {
+                model = xImportFileFrom3ds(file3ds);
+                lib3ds_file_free(file3ds);
+            }
         }
         // save
         char *fname = strdup (name);

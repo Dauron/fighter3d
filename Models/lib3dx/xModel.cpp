@@ -13,7 +13,13 @@ struct smoothVert {
     xDWORD   smooth;    // smoothing group
     xVector3 normal;    // normal for this sgroup
     xWORD    count;     // count for normal calculation
+
+    xVector3 mnormal;   // merged normal for this sgroup
+    xWORD    mcount;    // merged count for normal calculation
+    smoothVert *mergedWith;
+
     xDWORD   vertexId;  // new vertex id
+    xWORD3  *flatFace;  // used when smooth == 0
 };
 
 void      xFaceListCalculateNormals(xElement *elem, xFaceList *faceL)
@@ -53,72 +59,121 @@ void      xElementCalculateSmoothVertices(xElement *elem)
     xBYTE *verticesIn = (xBYTE*) elem->verticesP;
 
     //// assign smoothing groups to vertices
-    std::vector<smoothVert>::iterator iterF, iterE, iterF2;
+    std::vector<smoothVert>::iterator iterF, iterE, iterF2, iterE2;
     std::vector<std::vector<smoothVert> > vertices; // vertex_id->(smooth, normal)[]
     vertices.resize(elem->verticesC);
     xDWORD *smooth = elem->smoothP;
     xWORD3 *faceIn = elem->facesP;
     for (int fP=elem->facesC; fP; --fP, ++smooth, ++faceIn)
     {
-        if (! *smooth) continue;
-
-        xVector3 v0 = * ((xVector3*)(verticesIn + (*faceIn)[0]*stride));
-        xVector3 v1 = * ((xVector3*)(verticesIn + (*faceIn)[1]*stride));
-        xVector3 v2 = * ((xVector3*)(verticesIn + (*faceIn)[2]*stride));
-        xVector3 normal = xVector3::CrossProduct(v1-v0, v2-v0).normalize();
+        xVector3 *v0 = (xVector3*)(verticesIn + (*faceIn)[0]*stride);
+        xVector3 *v1 = (xVector3*)(verticesIn + (*faceIn)[1]*stride);
+        xVector3 *v2 = (xVector3*)(verticesIn + (*faceIn)[2]*stride);
+        xVector3 normal = xVector3::CrossProduct(*v1-*v0, *v2-*v0).normalize();
 
         for (int i=0; i<3; ++i)
         {
-            int  idx = (*faceIn)[i];
-            bool found = false;
-            iterF2 = iterE = vertices[idx].end();
-            for (iterF = vertices[idx].begin(); iterF != iterE; ++iterF)
-                if (iterF->count && (iterF->smooth & *smooth))
-                {
-                    iterF->smooth |= *smooth;
-                    found = true;
-                    iterF->normal += normal;
-                    ++(iterF->count);
+            int      idx     = (*faceIn)[i];
+            bool     found   = false;
+            xVector3 vnormal = normal;
+            xWORD    vcount  = 1;
 
-                    for (iterF2 = iterF+1; iterF2 != iterE; ++iterF2)   // merge smoothed groups
-                        if (iterF2->count && (iterF2->smooth & *smooth))
-                        {
-                            iterF->smooth |= iterF2->smooth;
-                            iterF->normal += iterF2->normal;
-                            iterF->count  += iterF2->count;
-                            iterF2->count = 0;
-                        }
-                    break;
-                }
-                else if (!iterF->count)
-                    iterF2 = iterF;     // remember free slot
-            if (found) continue;
-            if (iterF2 == iterE)    // if no free slot
+            if (*smooth)
             {
-                vertices[idx].resize(vertices[idx].size()+1);
-                iterF2 = vertices[idx].end()-1;
+                iterE = vertices[idx].end();
+                for (iterF = vertices[idx].begin(); iterF != iterE; ++iterF)
+                    if (iterF->smooth & *smooth)
+                    {
+                        if (iterF->smooth == *smooth)
+                        {
+                            iterF->normal += normal;
+                            ++(iterF->count);
+                            found = true;
+                        }
+                        else
+                        {
+                            vnormal += iterF->normal;
+                            vcount  += iterF->count;
+                        }
+                        iterF->mnormal += normal;
+                        ++(iterF->mcount);
+                    }
+                if (found) continue;
             }
-            iterF2->count  = 1;
-            iterF2->smooth = *smooth;
-            iterF2->normal = normal;
+            vertices[idx].resize(vertices[idx].size()+1);
+            iterF = vertices[idx].end()-1;
+            iterF->smooth   = *smooth;
+            iterF->count    = 1;
+            iterF->normal   = normal;
+            iterF->mcount   = vcount;
+            iterF->mnormal  = vnormal;
+            iterF->flatFace = faceIn;
+            iterF->mergedWith = NULL;
         }
     }
 
-    //// normalize normals and assign ids for vertex duplicates
+    //// smooth normals for original vertex duplicates
     xDWORD verticesC = elem->verticesC;
-    std::vector<std::vector<smoothVert> >::iterator vertF = vertices.begin();
+    std::vector<std::vector<smoothVert> >::iterator vertF = vertices.begin(), vertF2;
     std::vector<std::vector<smoothVert> >::iterator vertE = vertices.end();
-    for (; vertF != vertE; ++vertF)
+    xBYTE *xvertI = verticesIn, *xvertI2;
+
+    for (; vertF != vertE; ++vertF, xvertI += stride)
+    {
+        if (!vertF->size()) continue;
+        xVector3 *v1 = (xVector3*)xvertI;
+
+        xvertI2 = xvertI+1;
+        for (vertF2 = vertF+1; vertF2 != vertE; ++vertF2, xvertI2 += stride)
+        {
+            xVector3 *v2 = (xVector3*)xvertI2;
+            if (v1 != v2) continue;
+
+            iterE  = vertF->end();
+            iterE2 = vertF2->end();
+            for (iterF = vertF->begin(); iterF != iterE; ++iterF)
+                for (iterF2 = vertF2->begin(); iterF2 != iterE2; ++iterF2)
+                    if (iterF->smooth & iterF2->smooth)
+                    {
+                        iterF->mnormal  += iterF2->normal;
+                        iterF->mcount   += iterF2->count;
+                        iterF2->mnormal += iterF->normal;
+                        iterF2->mcount  += iterF->count;
+                    }
+        }
+    }
+
+    //// merge smoothing groups, where possible
+    for (vertF = vertices.begin(); vertF != vertE; ++vertF)
+    {
+        if (!vertF->size()) continue;
+
+        iterE = vertF->end();
+        for (iterF = vertF->begin(); iterF != iterE; ++iterF)
+            if (!iterF->mergedWith)
+            {
+                xDWORD msmooth = iterF->smooth;
+                for (iterF2 = iterF+1; iterF2 != iterE; ++iterF2)
+                    if (!iterF2->mergedWith && (msmooth & iterF2->smooth) && (iterF->count == iterF2->count))
+                    {
+                        msmooth |= iterF2->smooth;
+                        iterF2->mergedWith = &*iterF;
+                    }
+            }
+    }
+
+    //// normalize normals and assign ids for new vertex duplicates
+    for (vertF = vertices.begin(); vertF != vertE; ++vertF)
     {
         if (!vertF->size()) continue;
 
         bool used = false;
         iterE = vertF->end();
         for (iterF = vertF->begin(); iterF != iterE; ++iterF)
-            if (iterF->count)
+            if (!iterF->mergedWith)
             {
-                iterF->normal /= (float)iterF->count;
-                iterF->normal.normalize();
+                iterF->mnormal /= (float)iterF->mcount;
+                iterF->mnormal.normalize();
                 if (!used)
                 {
                     iterF->vertexId = 0; // no change
@@ -127,6 +182,8 @@ void      xElementCalculateSmoothVertices(xElement *elem)
                 }
                 iterF->vertexId = verticesC++;
             }
+            else
+                iterF->vertexId = iterF->mergedWith->vertexId;
     }
 
     elem->renderData.verticesC = verticesC;
@@ -150,7 +207,7 @@ void      xElementCalculateSmoothVertices(xElement *elem)
                 int  idx = (*faceOut)[i] = (*faceIn)[i];
                 iterE = vertices[idx].end();
                 for (iterF = vertices[idx].begin(); iterF != iterE; ++iterF)
-                    if (iterF->count && (iterF->smooth & *smooth))
+                    if (iterF->smooth == *smooth && (*smooth || iterF->flatFace == faceIn))
                     {
                         if (iterF->vertexId) idx = iterF->vertexId;
                         (*faceOut)[i] = idx;
@@ -169,15 +226,15 @@ void      xElementCalculateSmoothVertices(xElement *elem)
         if (!vertF->size()) continue;
         iterE = vertF->end();
         for (iterF = vertF->begin(); iterF != iterE; ++iterF)
-            if (iterF->count)
+            if (!iterF->mergedWith)
                 if (iterF->vertexId)
                 {
                     memcpy(verticesOut, verticesIn, stride);
                     verticesOut += stride;
-                    *(normalP2++) = iterF->normal;
+                    *(normalP2++) = iterF->mnormal;
                 }
                 else
-                    *normalP = iterF->normal;
+                    *normalP = iterF->mnormal;
     }
 }
 
@@ -585,20 +642,9 @@ xElement *xElementLoad(FILE *file, xFile *xfile)
             }
 
             xFaceList *faceL = elem->faceListP;
-            bool smooth = false;
             for (int fL=elem->faceListC; fL; --fL, ++faceL)
-            {
-                if (faceL->smooth) smooth = true;
-                else               xFaceListCalculateNormals(elem, faceL);
                 faceL->materialP = xMaterialById(xfile, faceL->materialId);
-            }
-            if (smooth) xElementCalculateSmoothVertices(elem);
-            else
-            {
-                elem->renderData.verticesP = elem->verticesP;
-                elem->renderData.verticesC = elem->verticesC;
-                elem->renderData.facesP = elem->facesP;
-            }
+            xElementCalculateSmoothVertices(elem);
         }
         if (elem->kidsC)
         {
