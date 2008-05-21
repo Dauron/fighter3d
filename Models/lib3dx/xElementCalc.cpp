@@ -291,6 +291,10 @@ void xElement :: FillShadowEdges ()
                                 --edgesC;
                             }
                         }
+                if (iterE->face2 == xWORD_MAX)
+                {
+                    iterE->face2 = xWORD_MAX;
+                }
                 ++iterE;
             }
     xEdge *tmp = this->edgesP;
