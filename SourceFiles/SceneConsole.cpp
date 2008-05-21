@@ -416,6 +416,7 @@ bool SceneConsole::Render()
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
     GLShader::EnableLighting(0);
     GLShader::EnableTexturing(0);
+    glDisable (GL_POLYGON_SMOOTH);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable (GL_BLEND);                    // Enable blending

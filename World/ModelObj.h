@@ -51,7 +51,7 @@ public:
 public:
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physical = false, bool phantom = true);
     virtual void Finalize   ();
-    virtual void Invalidate () { renderer.Invalidate(); }
+    virtual void Invalidate () { renderer.Invalidate(); smap.texId = 0; }
     /********* LIFETIME : END *********/
 
     xRender                       *GetRenderer()       { renderer.UpdatePointers(); return &renderer; }
@@ -79,16 +79,20 @@ public:
     void       CreateShadowMap(xLight *light)
     {
         xMatrix blocker;
-        GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, 256);
-        smap.texId = GetRenderer()->CreateShadowMap(256, blocker);
+        GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, g_ShadowMapSize);
+        smap.texId = GetRenderer()->CreateShadowMap(g_ShadowMapSize, blocker);
     }
     xShadowMap GetShadowMap ()                { return smap; }
-    void       RenderShadow (xShadowMap smap) { GetRenderer()->RenderShadow(smap, mLocationMatrix); }
+    void       RenderShadow (xShadowMap smap, const xFieldOfView *FOV)
+    {
+        GetRenderer()->SetLocation(mLocationMatrix);
+        GetRenderer()->RenderShadow(smap, FOV);
+    }
 protected:
     void GetShadowProjectionMatrix (xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width);
     /********* SHADOWS : END *********/
 
-    void RenderObject(bool transparent);
+    void RenderObject(bool transparent, const xFieldOfView *FOV);
 };
 
 extern float time1b;

@@ -48,7 +48,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
     }
     xVector4 pivot; pivot.init(-node->data.object.pivot[0], -node->data.object.pivot[1], -node->data.object.pivot[2], 1.f);
     pivot = scl * pivot;
-    elem->matrix = xMatrixTranslate(pivot.vector3.xyz).transpose() * elem->matrix;
+    elem->matrix.preTranslateT(pivot.vector3);
 
     elem->collisionData.kidsP = NULL;
     elem->collisionData.kidsC = 0;

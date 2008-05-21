@@ -334,9 +334,9 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                 for (int i1 = ch1->facesC; i1; --i1)
                 {
                     xWORD3 **face1 = ch1->facesP + ch1->facesC - i1;
-                    xVector3 *a1 = &(ci1->verticesP + (**face1)[0])->vector3;
-                    xVector3 *a2 = &(ci1->verticesP + (**face1)[1])->vector3;
-                    xVector3 *a3 = &(ci1->verticesP + (**face1)[2])->vector3;
+                    xVector3 *a1 = ci1->verticesP + (**face1)[0];
+                    xVector3 *a2 = ci1->verticesP + (**face1)[1];
+                    xVector3 *a3 = ci1->verticesP + (**face1)[2];
 
                     xBox faceB1;
                     faceB1.min.x = min(a1->x, min(a2->x, a3->x));
@@ -351,9 +351,9 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                         ++testsLevel2;
 
                         xWORD3 **face2 = ch2->facesP + ch2->facesC - i2;
-                        xVector3 *b1 = &(ci2->verticesP + (**face2)[0])->vector3;
-                        xVector3 *b2 = &(ci2->verticesP + (**face2)[1])->vector3;
-                        xVector3 *b3 = &(ci2->verticesP + (**face2)[2])->vector3;
+                        xVector3 *b1 = ci2->verticesP + (**face2)[0];
+                        xVector3 *b2 = ci2->verticesP + (**face2)[1];
+                        xVector3 *b3 = ci2->verticesP + (**face2)[2];
                         // Exclude elements that can't collide
                         xBox faceB2;
                         faceB2.max.x = max(b1->x, max(b2->x, b3->x));

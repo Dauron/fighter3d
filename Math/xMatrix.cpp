@@ -11,13 +11,110 @@ xMatrix &xMatrix::operator *= (const xMatrix &m)
     for (unsigned int c = 0; c < 4; ++c)
     {
         xFLOAT f = 0;
-        f += (matrix[r][0] * m.row0[c]);
-        f += (matrix[r][1] * m.row1[c]);
-        f += (matrix[r][2] * m.row2[c]);
-        f += (matrix[r][3] * m.row3[c]);
+        f += (matrix[r][0] * m.row0.xyzw[c]);
+        f += (matrix[r][1] * m.row1.xyzw[c]);
+        f += (matrix[r][2] * m.row2.xyzw[c]);
+        f += (matrix[r][3] * m.row3.xyzw[c]);
         res.matrix[r][c] = f;
     }
     return (*this = res);
+}
+
+xMatrix &xMatrix::preMultiply(const xMatrix &m)
+{
+    xMatrix res;
+    for (unsigned int r = 0; r < 4; ++r)
+    for (unsigned int c = 0; c < 4; ++c)
+    {
+        xFLOAT f = 0.f;
+        f += (m.matrix[r][0] * row0.xyzw[c]);
+        f += (m.matrix[r][1] * row1.xyzw[c]);
+        f += (m.matrix[r][2] * row2.xyzw[c]);
+        f += (m.matrix[r][3] * row3.xyzw[c]);
+        res.matrix[r][c] = f;
+    }
+    return (*this = res);
+}
+
+xMatrix &xMatrix::postTranslate(const xVector3& pos)
+{
+    w0 += x0*pos.x + y0*pos.y + z0*pos.z;
+    w1 += x1*pos.x + y1*pos.y + z1*pos.z;
+    w2 += x2*pos.x + y2*pos.y + z2*pos.z;
+    w3 += x3*pos.x + y3*pos.y + z3*pos.z;
+    return *this;
+}
+xMatrix &xMatrix::preTranslate(const xVector3& pos)
+{
+    x0 += x3*pos.x; y0 += y3*pos.x; z0 += z3*pos.x; w0 += w3*pos.x;
+    x1 += x3*pos.y; y1 += y3*pos.y; z1 += z3*pos.y; w1 += w3*pos.y;
+    x2 += x3*pos.z; y2 += y3*pos.z; z2 += z3*pos.z; w2 += w3*pos.z;
+    return *this;
+}
+
+xMatrix &xMatrix::postTranslateT(const xVector3& pos)
+{
+    x0 += w0*pos.x; y0 += w0*pos.y; z0 += w0*pos.z;
+    x1 += w1*pos.x; y1 += w1*pos.y; z1 += w1*pos.z;
+    x2 += w2*pos.x; y2 += w2*pos.y; z2 += w2*pos.z;
+    x3 += w3*pos.x; y3 += w3*pos.y; z3 += w3*pos.z;
+    return *this;
+}
+xMatrix &xMatrix::preTranslateT(const xVector3& pos)
+{
+    x3 += x0*pos.x + x1*pos.y + x2*pos.z;
+    y3 += y0*pos.x + y1*pos.y + y2*pos.z;
+    z3 += z0*pos.x + z1*pos.y + z2*pos.z;
+    w3 += w0*pos.x + w1*pos.y + w2*pos.z;
+    return *this;
+}
+
+// Transform point
+xVector3 xMatrix::postTransformP(const xVector3& point) const
+{
+    xVector3 res;
+    res.x = x0*point.x + y0*point.y + z0*point.z + w0;
+    res.y = x1*point.x + y1*point.y + z1*point.z + w1;
+    res.z = x2*point.x + y2*point.y + z2*point.z + w2;
+    xFLOAT w = x3*point.x + y3*point.y + z3*point.z + w3;
+    if (w != 1.f)
+        res *= 1.f/w;
+    return res;
+}
+xVector3 xMatrix::preTransformP(const xVector3& point) const
+{
+    xVector3 res;
+    res.x = x0*point.x + x1*point.y + x2*point.z + x3;
+    res.y = y0*point.x + y1*point.y + y2*point.z + y3;
+    res.z = z0*point.x + z1*point.y + z2*point.z + z3;
+    xFLOAT w = w0*point.x + w1*point.y + w2*point.z + w3;
+    if (w != 1.f)
+        res *= 1.f/w;
+    return res;
+}
+
+// Transform vector
+xVector3 xMatrix::postTransformV(const xVector3& vec) const
+{
+    xVector3 res;
+    res.x = x0*vec.x + y0*vec.y + z0*vec.z;
+    res.y = x1*vec.x + y1*vec.y + z1*vec.z;
+    res.z = x2*vec.x + y2*vec.y + z2*vec.z;
+    xFLOAT w = x3*vec.x + y3*vec.y + z3*vec.z;
+    if (w != 1.f)
+        res *= 1.f/w;
+    return res;
+}
+xVector3 xMatrix::preTransformV(const xVector3& vec) const
+{
+    xVector3 res;
+    res.x = x0*vec.x + x1*vec.y + x2*vec.z;
+    res.y = y0*vec.x + y1*vec.y + y2*vec.z;
+    res.z = z0*vec.x + z1*vec.y + z2*vec.z;
+    xFLOAT w = w0*vec.x + w1*vec.y + w2*vec.z;
+    if (w != 1.f)
+        res *= 1.f/w;
+    return res;
 }
 
 // Transpose the xMatrix
@@ -252,5 +349,23 @@ xMatrix xMatrixTranslate(const xFLOAT3 xyz)
   ret.w0 = xyz[0];
   ret.w1 = xyz[1];
   ret.w2 = xyz[2];
+  return ret;
+}
+xMatrix xMatrixTranslateT(xFLOAT x, xFLOAT y, xFLOAT z)
+{
+  xMatrix ret;
+  ret.identity();
+  ret.x3 = x;
+  ret.y3 = y;
+  ret.z3 = z;
+  return ret;
+}
+xMatrix xMatrixTranslateT(const xFLOAT3 xyz)
+{
+  xMatrix ret;
+  ret.identity();
+  ret.x3 = xyz[0];
+  ret.y3 = xyz[1];
+  ret.z3 = xyz[2];
   return ret;
 }

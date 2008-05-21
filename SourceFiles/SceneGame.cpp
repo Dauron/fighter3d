@@ -25,7 +25,7 @@ bool SceneGame::Initialize(int left, int top, unsigned int width, unsigned int h
     stepAccum = 0.0f;
     InitInputMgr();
 
-    texNightSky = g_TextureMgr.GetTexture("Data/textures/night.bmp");
+    FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
 
     if (!world.IsValid())
         world.Initialize();
@@ -34,7 +34,7 @@ bool SceneGame::Initialize(int left, int top, unsigned int width, unsigned int h
 
 bool SceneGame::InitGL()
 {
-    glClearDepth(100.0f);                   // Draw distance ???
+    glClearDepth(1.f);                      // Mapped draw distance ([0-1])
     glDepthFunc(GL_LEQUAL);                 // Depth testing function
 
     glEnable(GL_CULL_FACE);                 // Do not draw hidden faces
@@ -119,7 +119,6 @@ void SceneGame::Terminate()
     m_Font1 = HFont();
     g_FontMgr.DeleteFont(m_Font2);
     m_Font2 = HFont();
-    g_TextureMgr.DeleteTexture(texNightSky);
 }
 
 bool SceneGame::Update(float deltaTime)
@@ -207,10 +206,11 @@ bool SceneGame::Update(float deltaTime)
         // Set projection
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        xglPerspective(45.0f, AspectRatio, 0.1f, 1000.0f);
+        xglPerspective(FOV);
         glMatrixMode(GL_MODELVIEW);
-        Camera_Aim_GL(*DefaultCamera);
-        ModelObj *obj = world.Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
+        DefaultCamera->LookAtMatrix(FOV.ViewTransform);
+        glLoadMatrixf(&FOV.ViewTransform.x0);
+        ModelObj *obj = world.Select(&FOV, g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
         {
             xRender *rend = obj->GetRenderer();
@@ -223,10 +223,8 @@ bool SceneGame::Update(float deltaTime)
         float norm_y = (float)g_InputMgr.mouseY/(Height/2.0f) - 1.0f;
 
         // get model view matrix
-        glMatrixMode(GL_MODELVIEW);
-        DefaultCamera->Aim();
         xMatrix modelView;
-        glGetFloatv(GL_MODELVIEW_MATRIX, &(modelView.x0));
+        DefaultCamera->LookAtMatrix(modelView);
         modelView.invert();
 
         // get ray of the mouse
@@ -294,13 +292,6 @@ bool SceneGame::Render()
         g_Init = false;
     }
 
-    glViewport(Left, Top, Width, Height);
-    // Set projection
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    xglPerspective(45.0f, AspectRatio, 0.1f, 1000.0f);
-    glMatrixMode(GL_MODELVIEW);
-
     glPolygonMode(GL_FRONT_AND_BACK, g_PolygonMode);
 
     GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
@@ -308,72 +299,90 @@ bool SceneGame::Render()
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE); // GL_TRUE=two, GL_FALSE=one
 
-    Camera_Aim_GL(*DefaultCamera);
-
     // Render the contents of the world
     World::objectVec::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
 
-    for ( i = begin + 45 ; i != end ; ++i )
+    //////////////////// SHADOW MAPS - BEGIN
+
+    glViewport(0, 0, g_ShadowMapSize, g_ShadowMapSize);
+    //glEnable(GL_SCISSOR_TEST);
+    //glScissor(0, 0, g_ShadowMapSize, g_ShadowMapSize);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    // We will make a dark grey on white shadow-map, so clear the buffer with white
+    glClearColor(1.0, 1.0, 1.0, 0.0);
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    GLShader::EnableLighting(0);
+    GLShader::EnableTexturing(0);
+    glShadeModel(GL_FLAT);
+    glDisable (GL_POINT_SMOOTH);
+    glDisable (GL_LINE_SMOOTH);
+    glDisable (GL_POLYGON_SMOOTH);
+    for ( i = begin + 35 ; i != end ; ++i )
         if (world.lights[0].modified || !(*i)->GetShadowMap().texId)
             (*i)->CreateShadowMap(&world.lights[0]);
+
+    //////////////////// SHADOW MAPS - END
+
     world.lights[0].modified = false;
 
-    // Clear surface
+    //////////////////// WORLD - BEGIN
+
+    glViewport(Left, Top, Width, Height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    xglPerspective(FOV);
+    glMatrixMode(GL_MODELVIEW);
+    DefaultCamera->LookAtMatrix(FOV.ViewTransform);
+    glLoadMatrixf(&FOV.ViewTransform.x0); //Camera_Aim_GL(*DefaultCamera);
+
+    glShadeModel(GL_SMOOTH);
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT/* | GL_STENCIL_BUFFER_BIT*/);
-    glEnable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    /////// Render the SKY
+    (*begin)->Render(false, NULL);
+
     SetLights();
+    glEnable(GL_DEPTH_TEST);
 
-    GLShader::EnableLighting(0);
-    (*begin)->Render(false);
-/*
-    GLShader::EnableTexturing(1);
-    g_TextureMgr.BindTexture(texNightSky);
-    glBegin(GL_QUADS);
-        glTexCoord2f(-4.f, -4.f);
-        glVertex3f(-400.f, -400.f, 100.f);
-        glTexCoord2f(-4.f, 4.f);
-        glVertex3f(-400.f, 400.f, 100.f);
-        glTexCoord2f(4.f, 4.f);
-        glVertex3f(400.f, 400.f, 100.f);
-        glTexCoord2f(4.f, -4.f);
-        glVertex3f(400.f, -400.f, 100.f);
-    glEnd();
-*/
-
-    if (g_UseCustomShader && shader.IsInitialized())
-        shader.Start();
-    if (g_EnableLighting)
-        GLShader::EnableLighting(world.lights.size());
-    for ( i = begin+1 ; i != end ; ++i )
-        (*i)->Render(false);
-    if (g_UseCustomShader && shader.IsInitialized())
-        shader.Suspend();
-
-    for ( i = begin+45 ; i != end ; ++i )
+    /////// Render the opaque World
+    if (g_UseCustomShader && shader.IsInitialized()) shader.Start();
+    if (g_EnableLighting)                            GLShader::EnableLighting(world.lights.size());
+    for ( i = begin+1 ; i != end ; ++i )             (*i)->Render(false, &FOV);
+    if (g_UseCustomShader && shader.IsInitialized()) shader.Suspend();
+    /////// Render shadows of the World
+    glClearStencil(0);
+    //glEnable( GL_STENCIL_TEST );
+    glStencilFunc( GL_NOTEQUAL, 1, 1 );
+    glStencilOp( GL_KEEP, GL_KEEP, GL_REPLACE );
+    for ( j = begin+1 ; j != begin+35 ; ++j )
     {
-        xShadowMap &smap = (*i)->GetShadowMap();
-        if (smap.texId)
-            for ( j = begin+1 ; j != begin+45 ; ++j )
-                if (*i != *j)
+        glClear(GL_STENCIL_BUFFER_BIT);
+        for ( i = begin+35 ; i != end ; ++i )
+            if (*i != *j)
+            {
+                xShadowMap &smap = (*i)->GetShadowMap();
+                if (smap.texId)
                 {
                     xVector3 vecI = (xVector4::Create((*i)->centerOfTheMass, 1.f) * (*i)->mLocationMatrix).vector3;
                     xVector3 vecJ = (xVector4::Create((*j)->centerOfTheMass, 1.f) * (*j)->mLocationMatrix).vector3;
                     vecI -= world.lights[0].position;
                     vecJ -= world.lights[0].position;
                     if (xVector3::DotProduct(vecI, vecJ) > 0.f)
-                        (*j)->RenderShadow(smap);
+                        (*j)->RenderShadow(smap, &FOV);
                 }
+            }
     }
+    glDisable( GL_STENCIL_TEST );
+    /////// Render the transparent World
+    //if (g_UseCustomShader && shader.IsInitialized()) shader.Start();
+    if (g_EnableLighting)                            GLShader::EnableLighting(world.lights.size());
+    for ( i = begin+1 ; i != end ; ++i )             (*i)->Render(true, &FOV);
+    //if (g_UseCustomShader && shader.IsInitialized()) shader.Suspend();
 
-    if (g_UseCustomShader && shader.IsInitialized())
-        shader.Start();
-    if (g_EnableLighting)
-        GLShader::EnableLighting(world.lights.size());
-    for ( i = begin+1 ; i != end ; ++i )
-        (*i)->Render(true);
-    if (g_UseCustomShader && shader.IsInitialized())
-        shader.Suspend();
+    //////////////////// WORLD - END
 
     // Flush the buffer to force drawing of all objects thus far
     glFlush();

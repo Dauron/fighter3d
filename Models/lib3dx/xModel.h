@@ -97,35 +97,46 @@ struct xFaceList {
     xMaterial *materialP;
 };
 
-struct xRenderData
+struct xElementInstance
 {
+    typedef enum {
+        xRenderMode_NULL = 0,
+        xRenderMode_VBO  = 1,
+        xRenderMode_LIST = 2
+    } xRenderMode;
+
+    xRenderMode mode;
+
     union {
-        struct {                     // VBO buffer
-            xDWORD     vertexB;
-            xDWORD     normalB;
-            xDWORD     indexB;
+        struct {
+            xDWORD vertexB;
+            xDWORD normalB;
+            xDWORD indexB;
         };
         struct {
-            xDWORD     listID;       // Compiled Render List
-            xDWORD     listIDTransp; // Compiled Render List for transparent faces
+            xDWORD listID;       // Compiled Render List
+            xDWORD listIDTransp; // Compiled Render List for transparent faces
         };
     };
-    xBYTE              mode;
-    bool               transparent;  // Are there transparent faces?
-    bool               opaque;       // Are there opaque faces?
 
-#define xRENDERMODE_NULL      0
-#define xRENDERMODE_VBO       1
-#define xRENDERMODE_LIST      2
+    xBox     bbBox;
+    xVector3 bsCenter;
+    xFLOAT   bsRadius;
+};
 
-    union {                          // smooth vertices
+struct xRenderData
+{
+    bool       transparent;  // Are there transparent faces?
+    bool       opaque;       // Are there opaque faces?
+
+    union {                  // smooth vertices
         xVertex        *verticesP;
         xVertexTex     *verticesTP;
         xVertexSkel    *verticesSP;
         xVertexTexSkel *verticesTSP;
     };
-    xWORD              verticesC;
-    xVector3          *normalP;      // smooth normals
+    xDWORD             verticesC;
+    xVector3          *normalP; // smooth normals
     xWORD3            *facesP;
 };
 
@@ -171,8 +182,8 @@ struct xElement {
     xElement  *kidsP; // first kid
     xWORD      kidsC; // no of kids
 
-    xCollisionData collisionData;
-    xRenderData    renderData;
+    xCollisionData    collisionData;
+    xRenderData       renderData;
 };
 
 struct xBone {
@@ -193,6 +204,8 @@ struct xFile {
     xWORD      materialC; // no of materials
 
     xElement  *firstP;    // first child
+    xBYTE      elementC;  // count of all childs
+
     xBone     *spineP;    // spine of the model
 
     bool       texturesInited;

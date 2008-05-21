@@ -130,6 +130,16 @@ public:
         else
             glDisable(GL_LIGHTING);
     }
+
+    static int TexturingState()
+    {
+        return textures;
+    }
+
+    static int LightingState()
+    {
+        return lights;
+    }
 };
 
 #endif

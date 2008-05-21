@@ -45,30 +45,18 @@ const xWORD  xWORD_MAX  = (xWORD)-1;
 #include "xQuaternion.h"
 #include "xMatrix.h"
 
-xVector3 operator + (const xVector3 &a, const xVector3 &b);
-xVector3 operator - (const xVector3 &a, const xVector3 &b);
-xVector3 operator * (float f, const xVector3 &v);
-xVector3 operator * (const xVector3 &v, float f);
-xVector3 operator * (const xMatrix &a,  const xVector3 &b);
-xVector3 operator * (const xVector3 &a, const xMatrix &b);
-xVector3 operator / (const xVector3 &v, float f);
-xVector3 operator - (const xVector3 &a);
-bool     operator ==(const xVector3 &a, const xVector3 &b);
-bool     operator <=(const xVector3 &a, const xVector3 &b);
-bool     operator >=(const xVector3 &a, const xVector3 &b);
+typedef xVector4 xPlane;
 
-xVector4 operator + (const xVector4 &a, const xVector4 &b);
-xMatrix  operator + (const xMatrix &a, const xMatrix &b);
-xVector4 operator - (const xVector4 &a, const xVector4 &b);
-xVector4 operator * (float f, const xVector4 &v);
-xVector4 operator * (const xVector4 &v, float f);
-xVector4 operator * (const xMatrix &a,  const xVector4 &b);
-xVector4 operator * (const xVector4 &a, const xMatrix &b);
-xMatrix  operator * (const xMatrix &a, const xMatrix &b);
-xMatrix  operator * (const xMatrix &m, xFLOAT f);
-xMatrix  operator * (xFLOAT f, const xMatrix &m);
-xVector4 operator / (const xVector4 &v, float f);
-xVector4 operator - (const xVector4 &a);
+struct xBox
+{
+    xVector3 min;
+    xVector3 max;
+
+    bool Contains(const xVector3 &vert) const
+    {
+        return vert >= min && vert <= max;
+    }
+};
 
 bool operator == (const xMatrix &a, const xMatrix &b);
 bool operator != (const xMatrix &a, const xMatrix &b);
@@ -78,5 +66,7 @@ xVector4 xMatrixToQuaternion(const xMatrix &m);
 xMatrix  xMatrixRotateRad(xFLOAT radX, xFLOAT radY, xFLOAT radZ);
 xMatrix  xMatrixTranslate(xFLOAT x, xFLOAT y, xFLOAT z);
 xMatrix  xMatrixTranslate(const xFLOAT3 xyz);
+xMatrix  xMatrixTranslateT(xFLOAT x, xFLOAT y, xFLOAT z);
+xMatrix  xMatrixTranslateT(const xFLOAT3 xyz);
 
 #endif

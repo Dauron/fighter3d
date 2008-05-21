@@ -14,7 +14,7 @@ float RigidBody :: CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVect
 
     for (; cc; --cc, ++ci)
     {
-        xVector4 *vec = ci->verticesP;
+        xVector3 *vec = ci->verticesP;
         xDWORD    vc  = ci->verticesC;
         for (; vc; --vc, ++vec)
         {

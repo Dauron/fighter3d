@@ -899,6 +899,7 @@ xFile *xFileLoad(const char *fileName, bool createCollisionInfo)
                 fclose(file);
                 return NULL;
             }
+            xfile->elementC = xElementCount(xfile);
 
             bool skeletized;
             fread(&skeletized, sizeof(bool), 1, file);

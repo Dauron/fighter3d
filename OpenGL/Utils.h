@@ -2,6 +2,7 @@
 #define __incl_OpenGL_Utils_h
 
 #include "../Math/Cameras/Camera.h"
+#include "../Math/xFieldOfView.h"
 
 class GLUtils
 {
@@ -18,8 +19,17 @@ public:
 };
 
 void xglPerspective ( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar );
-void xglLookAt      ( const xVector3 &eye, const xVector3 &center, const xVector3 &up );
 
-void Camera_Aim_GL(Camera &camera);
+inline void xglPerspective ( const xFieldOfView &FOV )
+{
+    xglPerspective( FOV.Angle, FOV.Aspect, FOV.FrontClip, FOV.BackClip );
+}
+
+inline void Camera_Aim_GL(Camera &camera)
+{
+    xMatrix m;
+    camera.LookAtMatrix(m);
+    glLoadMatrixf(&m.x0);
+}
 
 #endif

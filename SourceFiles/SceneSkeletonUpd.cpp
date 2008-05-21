@@ -95,7 +95,7 @@ bool SceneSkeleton::Update(float deltaTime)
     {
         m_EditGraphical = !m_EditGraphical;
         xRender *renderer = m_Model.GetRenderer();
-        renderer->xModelToRender = (m_EditGraphical) ? renderer->xModelGraphics : renderer->xModelPhysical;
+        renderer->SetRenderMode((m_EditGraphical) ? xRender::rmGraphical : xRender::rmPhysical);
         m_Buttons[emMain][3].Down = !m_EditGraphical;
     }
     if (m_EditMode == emInputWght)
@@ -208,7 +208,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         {
             m_EditGraphical = !m_EditGraphical;
             xRender *renderer = m_Model.GetRenderer();
-            renderer->xModelToRender = (m_EditGraphical) ? renderer->xModelGraphics : renderer->xModelPhysical;
+            renderer->SetRenderMode((m_EditGraphical) ? xRender::rmGraphical : xRender::rmPhysical);
             button.Down = !m_EditGraphical;
         }
         else
@@ -230,7 +230,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             renderer->CopySpineToPhysical();
             xBoneDelete(renderer->xModelPhysical, selectedBone);
             selectedBone = NULL;
-            renderer->FreeRenderData();
+            renderer->VerticesChanged();
             renderer->CalculateSkeleton();
         }
         return true;
@@ -687,10 +687,8 @@ xVector3 SceneSkeleton::Get3dPos(int X, int Y, xVector3 planeP)
     float norm_y = (float)Y/(Height/2.0f) - 1.0f;
 
     // get model view matrix
-    glMatrixMode(GL_MODELVIEW);
-    Camera_Aim_GL(*m_Cameras.Current);
     xMatrix modelView;
-    glGetFloatv(GL_MODELVIEW_MATRIX, &(modelView.x0));
+    m_Cameras.Current->LookAtMatrix(modelView);
     modelView.invert();
 
     // get ray of the mouse
@@ -793,7 +791,7 @@ void SceneSkeleton::SetVertexWghts()
             }
         }
         xRender *renderer = m_Model.GetRenderer();
-        renderer->FreeRenderData();
+        renderer->VerticesChanged();
         renderer->CalculateSkeleton();
     }
 }

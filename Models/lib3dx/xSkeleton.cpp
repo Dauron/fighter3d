@@ -50,8 +50,7 @@ bool   _xBoneCalculateMatrix(const xBone *bone, xMatrix &boneP, const xBone *pbo
 {
     if (boneId == bone->id) {
         if (pbone)
-            boneP  = xMatrixTranslate(pbone->ending.xyz) * xMatrixFromQuaternion(bone->quaternion)
-                * xMatrixTranslate(-pbone->ending.x, -pbone->ending.y, -pbone->ending.z);
+            boneP = xMatrixFromQuaternion(bone->quaternion).preTranslate(pbone->ending).postTranslate(-pbone->ending);
         else
             boneP = xMatrixTranslate(bone->quaternion.vector3.xyz);
         return true;
@@ -60,11 +59,10 @@ bool   _xBoneCalculateMatrix(const xBone *bone, xMatrix &boneP, const xBone *pbo
         bool res = _xBoneCalculateMatrix(cbone, boneP, bone, boneId);
         if (res) {
             if (pbone)
-                boneP = xMatrixTranslate(pbone->ending.xyz) * xMatrixFromQuaternion(bone->quaternion)
-                    * xMatrixTranslate(-pbone->ending.x, -pbone->ending.y, -pbone->ending.z)
-                    * boneP;
+                boneP.preMultiply(
+                    xMatrixFromQuaternion(bone->quaternion).preTranslate(pbone->ending).postTranslate(-pbone->ending));
             else
-                boneP = xMatrixTranslate(bone->quaternion.vector3.xyz) * boneP;
+                boneP.preTranslate(bone->quaternion.vector3);
             return true;
         }
     }
@@ -86,9 +84,7 @@ void   _xBoneCalculateMatrices(const xBone *bone, xMatrix *&boneP, const xBone *
     if (parent)
     {
         *boneDst  = *parent;
-        *boneDst *= xMatrixTranslate(pbone->ending.xyz);
-        *boneDst *= xMatrixFromQuaternion(bone->quaternion);
-        *boneDst *= xMatrixTranslate(-pbone->ending.x, -pbone->ending.y, -pbone->ending.z);
+        *boneDst *= xMatrixFromQuaternion(bone->quaternion).preTranslate(pbone->ending).postTranslate(-pbone->ending);
     }
     else
         *boneDst = xMatrixTranslate(bone->quaternion.vector3.xyz);

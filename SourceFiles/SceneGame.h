@@ -6,6 +6,7 @@
 #include "../World/World.h"
 #include "../OpenGL/GLShader.h"
 #include "../OpenGL/Fonts/FontMgr.h"
+#include "../Math/xFieldOfView.h"
 
 class SceneGame : public Scene
 {
@@ -20,6 +21,12 @@ class SceneGame : public Scene
     virtual bool Update(float deltaTime);
     virtual bool Render();
 
+    virtual void Resize(int left, int top, unsigned int width, unsigned int height)
+    {
+        Scene::Resize(left, top, width, height);
+        FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
+    }
+
   private:
     bool InitGL();
     void InitInputMgr();
@@ -32,10 +39,11 @@ class SceneGame : public Scene
     World          world;
 
     GLShader       shader;
-    HTexture       texNightSky;
 
     HFont          m_Font1;
     HFont          m_Font2;
+
+    xFieldOfView   FOV;
 };
 
 #endif

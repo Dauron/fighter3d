@@ -63,7 +63,7 @@ union xVector3 {
         return *this;
     }
     xVector3 &operator /= (float f) {
-        x /= f; y /= f; z /= f;
+        *this *= 1.f/f;
         return *this;
     }
     friend xVector3 operator + (const xVector3 &a, const xVector3 &b) {
@@ -123,3 +123,13 @@ union xVector3 {
         //return dest;
     }
 };
+
+xVector3 operator + (const xVector3 &a, const xVector3 &b);
+xVector3 operator - (const xVector3 &a, const xVector3 &b);
+xVector3 operator * (float f, const xVector3 &v);
+xVector3 operator * (const xVector3 &v, float f);
+xVector3 operator / (const xVector3 &v, float f);
+xVector3 operator - (const xVector3 &a);
+bool     operator ==(const xVector3 &a, const xVector3 &b);
+bool     operator <=(const xVector3 &a, const xVector3 &b);
+bool     operator >=(const xVector3 &a, const xVector3 &b);

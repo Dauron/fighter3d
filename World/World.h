@@ -22,7 +22,7 @@ private:
 
     ModelObj *shadowCaster;
 
-    virtual void RenderSelect()
+    virtual void RenderSelect(const xFieldOfView *FOV)
     {
         assert(m_Valid);
 
@@ -30,8 +30,8 @@ private:
         objectVec::iterator i, begin = objects.begin(), end = objects.end();
         for ( i = begin ; i != end ; ++i ) {
             glLoadName(++objectID);
-            (*i)->Render(false);
-            (*i)->Render(true);
+            (*i)->Render(false, FOV);
+            (*i)->Render(true,  FOV);
         }
     }
     virtual unsigned int CountSelectable()
@@ -46,9 +46,9 @@ public:
     World( void ) : m_Valid(false) {}
 
     ModelObj *CollideWithRay(xVector3 rayPos, xVector3 rayDir);
-    ModelObj *Select(int X, int Y)
+    ModelObj *Select(const xFieldOfView *FOV, int X, int Y)
     {
-        std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(X, Y);
+        std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(FOV, X, Y);
         return objectIDs == NULL ? NULL : objects[objectIDs->back()];
     }
 

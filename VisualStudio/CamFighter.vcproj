@@ -847,6 +847,10 @@
 			Name="Math"
 			>
 			<File
+				RelativePath="..\Math\xFieldOfView.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Math\xMath.h"
 				>
 			</File>

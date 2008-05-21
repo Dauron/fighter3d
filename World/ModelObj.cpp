@@ -8,8 +8,6 @@ float time2b = 0.f;
 
 void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bool physical, bool phantom)
 {
-    assert(!renderer.IsValid());
-
     collisionInfo = NULL;
     mLocationMatrixPrev = mLocationMatrix;
     transVelocity.zero();
@@ -40,10 +38,10 @@ void ModelObj:: Finalize ()
     renderer.Finalize();
 }
 
-void ModelObj:: RenderObject(bool transparent)
+void ModelObj:: RenderObject(bool transparent, const xFieldOfView *FOV)
 {
-    assert(renderer.IsValid());
-    GetRenderer()->RenderModel(transparent);
+    GetRenderer()->SetLocation(mLocationMatrix);
+    GetRenderer()->RenderModel(transparent, FOV);
 }
 
 void ModelObj:: PreUpdate()
@@ -64,7 +62,7 @@ xCollisionHierarchyBoundsRoot *ModelObj::GetCollisionInfo()
 
     idx.clear();
     xRender *rend  = GetRenderer();
-    collisionInfoC = xElementCount(rend->xModelPhysical);
+    collisionInfoC = rend->xModelPhysical->elementC;
     collisionInfo  = new xCollisionHierarchyBoundsRoot[collisionInfoC];
 
     for (xElement *elem = rend->xModelPhysical->firstP; elem; elem = elem->nextP)
@@ -176,18 +174,17 @@ void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     lViewMatrix.row1.vector3 = lUAxis; lViewMatrix.row1.w = 0.f;
     lViewMatrix.row2.vector3 = lFAxis; lViewMatrix.row2.w = 0.f;
     lViewMatrix.row3.zeroQ();
-    xMatrix lViewMatrixT = lViewMatrix * xMatrixTranslate(-light->position.x, -light->position.y, -light->position.z);
-    lViewMatrixT.transpose();
+    lViewMatrix.postTranslate(-light->position).transpose();
 
     // Find the horizontal and vertical angular spreads to find out FOV and aspect ratio
     float RxMax = 0.f, RyMax = 0.f;
     xCollisionHierarchyBoundsRoot* ci = GetCollisionInfo();
     for (int i=collisionInfoC; i; --i, ++ci)
     {
-        xVector4 *iter = ci->verticesP;
+        xVector3 *iter = ci->verticesP;
         for (int j=ci->verticesC; j; --j, ++iter)
         {
-            xVector4 v = *iter * lViewMatrixT;
+            xVector3 v = lViewMatrix.preTransformP(*iter);
             v.z = 1.f / v.z;
             v.x *= v.z; v.y *= v.z;
 
@@ -225,12 +222,12 @@ void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     mtxBlockerToLight.row1.init(0.f, YProj, 0.f, 0.f);
     mtxBlockerToLight.row2.init(0.f, 0.f, (ZFar+ZNear)/(ZNear-ZFar), -1.f);
     mtxBlockerToLight.row3.init(0.f, 0.f, 2.f*ZFar*ZNear/(ZNear-ZFar), 0.f);
-    mtxBlockerToLight = mLocationMatrix * lViewMatrixT * mtxBlockerToLight;
+    mtxBlockerToLight.preMultiply(lViewMatrix).preMultiply(mLocationMatrix);
 
     // Projection matrix for computing UVs on the receiver object
     mtxReceiverUVMatrix.row0.init(XProj*0.5f, 0.f, 0.f, 0.f);
     mtxReceiverUVMatrix.row1.init(0.f, YProj*0.5f, 0.f, 0.f);
     mtxReceiverUVMatrix.row2.init(-0.5f, -0.5f, (ZFar+ZNear)/(ZNear-ZFar), -1.f);
     mtxReceiverUVMatrix.row3.init(0.f, 0.f, 2.f*ZFar*ZNear/(ZNear-ZFar), 0.f);
-    mtxReceiverUVMatrix = lViewMatrixT * mtxReceiverUVMatrix;
+    mtxReceiverUVMatrix.preMultiply(lViewMatrix);
 }

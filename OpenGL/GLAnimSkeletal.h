@@ -48,7 +48,7 @@ public:
     void EndAnimation();
 
     void SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xVector4 *bonesQ);
-    void SetElement(const xElement *element, bool VBO = false);
+    void SetElement(const xElement *element, const xElementInstance *instance, bool VBO = false);
 
     /**************** generic implementation ******************/
 

@@ -115,7 +115,7 @@ void World:: Initialize()
         model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx", true, false);
         model->mass     = 50.f;
         objects.push_back(model);
-
+/*
         model = new ModelObj(10.0f, -2.0f, 0.0f);
         model->Initialize("Data/models/1barbells.3dx");
         objects.push_back(model);
@@ -123,7 +123,7 @@ void World:: Initialize()
         model = new ModelObj(10.0f, 0.0f, 0.6f);
         model->Initialize("Data/models/2stend.3dx");
         objects.push_back(model);
-
+*/
         shadowCaster = model = new ModelObj(0.0f, -10.0f, 5.0f);
         model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx", true, false);
         model->mass     = 60.f;
@@ -152,7 +152,7 @@ void World:: Initialize()
         //modelA->AddAnimation("Data/models/anims/human/idzie.ska");
         //modelA->AddAnimation("Data/models/anims/human/garda.ska");
         objects.push_back(modelA);
-*/
+*//*
         modelA = new SkeletizedObj(5.f, -1.5f, -0.21f, 0.0f, 0.0f, 0.0f);
         modelA->Initialize("Data/models/human3.3dx", "Data/models/human3_fst.3dx", false, false);
         modelA->mass     = 70.f;
@@ -161,7 +161,7 @@ void World:: Initialize()
         model = new ModelObj(1.0f, 5.0f, -0.21f);
         model->Initialize("Data/models/wolf.3dx", "Data/models/wolf.3dx", false, false);
         model->mass     = 65.f;
-        objects.push_back(model);
+        objects.push_back(model);*/
     }
     else
     if (g_Test == 1)

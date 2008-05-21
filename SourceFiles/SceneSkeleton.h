@@ -102,7 +102,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     void        FillDirectoryBtns(bool files = false, const char *mask = NULL);
 
     /* SELECT */
-    virtual void         RenderSelect();
+    virtual void         RenderSelect   (const xFieldOfView *FOV);
     virtual unsigned int CountSelectable();
     std::vector<xDWORD> *SelectCommon  (int X, int Y, int W = 1, int H = 1);
     xBone               *SelectBone    (int X, int Y);

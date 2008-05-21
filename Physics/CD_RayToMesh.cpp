@@ -148,9 +148,9 @@ bool CD_RayToMesh::CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,
             for (int i1 = ch->facesC; i1; --i1)
             {
                 xWORD3 **face1 = ch->facesP + ch->facesC - i1;
-                xVector3 *a1 = &(ci->verticesP + (**face1)[0])->vector3;
-                xVector3 *a2 = &(ci->verticesP + (**face1)[1])->vector3;
-                xVector3 *a3 = &(ci->verticesP + (**face1)[2])->vector3;
+                xVector3 *a1 = ci->verticesP + (**face1)[0];
+                xVector3 *a2 = ci->verticesP + (**face1)[1];
+                xVector3 *a3 = ci->verticesP + (**face1)[2];
                 // Exclude elements that can't collide
                 xBox faceB;
                 faceB.min.x = min(a1->x, min(a2->x, a3->x));

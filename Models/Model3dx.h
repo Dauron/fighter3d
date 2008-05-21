@@ -24,22 +24,8 @@ public:
         return res;
     }
 
-    void Invalidate()  {
-        model->texturesInited = false;
-        for (xElement *elem = model->firstP; elem; elem = elem->nextP)
-            InvalidateElementRenderData(elem);
-    }
+    void Invalidate()  { model->texturesInited = false; }
     bool IsValid()     { return model; }
-
-    void FreeRenderData(bool listOnly = false)
-    {
-        for (xElement *elem = model->firstP; elem; elem = elem->nextP)
-            FreeElementRenderData(elem, listOnly);
-    }
-
-private:
-    void InvalidateElementRenderData(xElement *elem);
-    void FreeElementRenderData(xElement *elem, bool listOnly);
 };
 
 #endif

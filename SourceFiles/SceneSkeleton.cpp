@@ -231,8 +231,8 @@ bool SceneSkeleton::Render()
     Camera_Aim_GL(*m_Cameras.Current);
 
     xRender *renderer = m_Model.GetRenderer();
-    renderer->RenderModel(false);
-    renderer->RenderModel(true);
+    renderer->RenderModel(false, NULL);
+    renderer->RenderModel(true, NULL);
 
     GLShader::EnableTexturing(0);
     GLShader::EnableLighting(0);
@@ -427,7 +427,7 @@ void SceneSkeleton::RenderProgressBar()
 }
 
 /************************** SELECTIONS *************************************/
-void SceneSkeleton::RenderSelect()
+void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 {
     if (m_EditMode == emCreateBone || m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
         m_Model.GetRenderer()->RenderSkeleton(true);
@@ -468,7 +468,7 @@ std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)
     glMatrixMode(GL_MODELVIEW);
     Camera_Aim_GL(*m_Cameras.Current);
 
-    return ISelectionProvider::Select(X, Y, W, H);
+    return ISelectionProvider::Select(NULL, X, Y, W, H);
 }
 
 xBone *SceneSkeleton::SelectBone(int X, int Y)

@@ -19,18 +19,18 @@ bool IWindow::SetFullScreen(bool fullscreen)
 {
     assert(!terminated);
 
-#ifndef NDEBUG
+//#ifndef NDEBUG
     if (fullscreen)
     {
-        width = 1280;
-        height = 1024;
+        width = 1680;
+        height = 1050;
     }
     else
     {
         width = 800;
         height = 600;
     }
-#endif
+//#endif
 
     return Initialize(title, width, height, fullscreen)
         && g_Application.Invalidate()

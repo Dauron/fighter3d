@@ -4,8 +4,9 @@
 #include "../AppFramework/System.h"
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include "GLShader.h"
 
-std::vector<xDWORD> * ISelectionProvider:: Select(int X, int Y, int W, int H)
+std::vector<xDWORD> * ISelectionProvider:: Select(const xFieldOfView *FOV, int X, int Y, int W, int H)
 {
     if (W == 0) W = 1; if (H == 0) H = 1;
 
@@ -20,6 +21,8 @@ std::vector<xDWORD> * ISelectionProvider:: Select(int X, int Y, int W, int H)
     glSelectBuffer(capacity, selectBuffer);
     glRenderMode(GL_SELECT);
     g_SelectionRendering = true;
+    GLShader::EnableLighting(0);
+    GLShader::EnableTexturing(0);
 
     //Retrieve viewport (x, y, width, height) & projection matrix
     GLint viewport[4];
@@ -40,7 +43,7 @@ std::vector<xDWORD> * ISelectionProvider:: Select(int X, int Y, int W, int H)
         //Draw the scene
         glInitNames();
         glPushName(0);
-        RenderSelect();
+        RenderSelect(FOV);
         //Return to render mode, glRenderMode returns the number of hits (only because GL_SELECT was selected before)
         nbRecords = glRenderMode(GL_RENDER);
         g_SelectionRendering = false;

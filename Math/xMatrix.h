@@ -148,6 +148,20 @@ union xMatrix {
     xMatrix &transpose();
     // Invert the xMatrix
     xMatrix &invert();
+    // PreMultiply xMatrix
+    xMatrix &preMultiply(const xMatrix &m);
+    // Translate xMatrix
+    xMatrix &preTranslate  (const xVector3& pos);
+    xMatrix &preTranslateT (const xVector3& pos);
+    xMatrix &postTranslate (const xVector3& pos);
+    xMatrix &postTranslateT(const xVector3& pos);
+
+    // Transform point
+    xVector3 postTransformP(const xVector3& point) const;
+    xVector3 preTransformP(const xVector3& point) const;
+    // Transform vector
+    xVector3 postTransformV(const xVector3& vec) const;
+    xVector3 preTransformV(const xVector3& vec) const;
 
     static xMatrix Identity()
     {
@@ -165,3 +179,12 @@ union xMatrix {
         return ret.invert();
     }
 };
+
+xVector3 operator * (const xMatrix &a,  const xVector3 &b);
+xVector3 operator * (const xVector3 &a, const xMatrix &b);
+xMatrix  operator + (const xMatrix &a, const xMatrix &b);
+xVector4 operator * (const xMatrix &a,  const xVector4 &b);
+xVector4 operator * (const xVector4 &a, const xMatrix &b);
+xMatrix  operator * (const xMatrix &a, const xMatrix &b);
+xMatrix  operator * (const xMatrix &m, xFLOAT f);
+xMatrix  operator * (xFLOAT f, const xMatrix &m);

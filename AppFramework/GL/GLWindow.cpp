@@ -121,6 +121,7 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
     pfd.iPixelType = PFD_TYPE_RGBA;                    // Request An RGBA Format
     pfd.cColorBits = 32;                               // Select Our Color Depth
     pfd.cDepthBits = 24;                               // 16Bit Z-Buffer (Depth Buffer)
+    pfd.cStencilBits = 8;                              // Use Stencil Buffer
     pfd.iLayerType = PFD_MAIN_PLANE;                   // Main Drawing Layer
 
     unsigned int PixelFormat;

@@ -63,20 +63,20 @@ void GLAnimSkeletal::SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xV
     }
 }
 
-void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
+void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance *instance, bool VBO)
 {
     if (m_GPUprogram && m_notForceCPU) {
         xDWORD stride = element->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
         glEnableVertexAttribArrayARB(aBoneIdxWghts);
         if (VBO) {
             glVertexAttribPointerARB (aBoneIdxWghts, 4, GL_FLOAT, GL_FALSE, stride, (void *)(3*sizeof(xFLOAT)));
-            glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.vertexB );
+            glBindBufferARB ( GL_ARRAY_BUFFER_ARB, instance->vertexB );
             glVertexPointer (3, GL_FLOAT, stride, 0);
             if (g_ShadowRendering) glTexCoordPointer (3, GL_FLOAT, stride, 0);
 
             /************************* LOAD NORMALS ****************************/
-            if (!g_SelectionRendering && element->renderData.normalP) {
-                glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.normalB );
+            if (GLShader::LightingState() && instance->normalB) {
+                glBindBufferARB ( GL_ARRAY_BUFFER_ARB, instance->normalB );
                 glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
                 glEnableClientState(GL_NORMAL_ARRAY);
             }
@@ -88,7 +88,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
             if (g_ShadowRendering) glTexCoordPointer (3, GL_FLOAT, stride, element->renderData.verticesP);
 
             /************************* LOAD NORMALS ****************************/
-            if (!g_SelectionRendering && element->renderData.normalP) {
+            if (GLShader::LightingState() && element->renderData.normalP) {
                 glNormalPointer ( GL_FLOAT, sizeof(xVector3), element->renderData.normalP );
                 glEnableClientState(GL_NORMAL_ARRAY);
             }
@@ -101,8 +101,11 @@ void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
         if (VBO) glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
         glVertexPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
         if (g_ShadowRendering) glTexCoordPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
-        glNormalPointer (GL_FLOAT, sizeof(xVector3), sft_normals);
-        glEnableClientState(GL_NORMAL_ARRAY);
+        if (GLShader::LightingState())
+        {
+            glNormalPointer (GL_FLOAT, sizeof(xVector3), sft_normals);
+            glEnableClientState(GL_NORMAL_ARRAY);
+        }
     }
 }
 

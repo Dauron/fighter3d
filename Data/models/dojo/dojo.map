@@ -30,11 +30,6 @@ position	0.0	0.0	-0.21
 physical	0
 phantom	0
 #
-model	stairs.3dx
-position	0.0	0.0	-0.21
-physical	0
-phantom	0
-#
 model	wall_entrance.3dx
 position	0.0	0.0	-0.21
 physical	0
@@ -274,6 +269,11 @@ phantom	0
 #
 #
 # Stuff
+#
+model	stairs.3dx
+position	0.0	0.0	-0.21
+physical	0
+phantom	0
 #
 model	rack.3dx
 position	8.0	15.60	0.265
