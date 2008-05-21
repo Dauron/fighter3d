@@ -15,7 +15,8 @@ struct xModel {
     xBYTE      kidsC;     // model's elements
     xBYTE      elementC;  // count of all kids
 
-    xBone     *spineP;    // spine of the model
+    //xBone     *spineP;    // spine of the model
+    xSkeleton  spine;
 
     bool       texturesInited;
     bool       saveCollisionData;
@@ -23,8 +24,7 @@ struct xModel {
     bool       opaque;       // Are there opaque faces?
 
     void   Free();
-    xBone *BoneAdd   ( xBone *parent, xVector3 ending );
-    void   BoneDelete( xBone *boneToDel );
+    void   BoneDelete( xBYTE boneId );
     void   SkeletonAdd();
     void   SkeletonReset();
 

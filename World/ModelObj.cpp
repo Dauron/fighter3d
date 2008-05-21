@@ -94,8 +94,8 @@ void ModelObj :: VerticesChanged(bool free)
     }
     else InvalidateShadowRenderData();
 
-    xBoneCalculateMatrices (xModelGr->spineP, &modelInstanceGr);
-    xBoneCalculateQuats    (xModelGr->spineP, &modelInstanceGr);
+    xBoneCalculateMatrices (xModelGr->spine, &modelInstanceGr);
+    xBoneCalculateQuats    (xModelGr->spine, &modelInstanceGr);
     modelInstancePh.bonesM   = modelInstanceGr.bonesM;
     modelInstancePh.bonesQ   = modelInstanceGr.bonesQ;
     modelInstancePh.bonesMod = modelInstanceGr.bonesMod;
@@ -112,8 +112,8 @@ void ModelObj :: VerticesChanged(bool free)
 
 void ModelObj :: CalculateSkeleton()
 {
-    if (!xModelGr->spineP) return;
-    if (xModelGr->spineP->CountAllKids()+1 != modelInstanceGr.bonesC)
+    if (!xModelGr->spine.boneC) return;
+    if (xModelGr->spine.boneC != modelInstanceGr.bonesC)
     {
         modelInstanceGr.ClearSkeleton();
         if (!modelInstanceGr.bonesC) // skeleton was added, so refresh VBO data

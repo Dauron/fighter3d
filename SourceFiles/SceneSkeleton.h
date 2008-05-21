@@ -65,7 +65,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     xBYTE                boneWghts[4];
     xLONG                frameParams[2];
     xBYTE                param;
-    xBone               *selectedBone;
+    xIKNode             *selectedBone;
     xElement            *selectedElement;
     xWORD                selectedElemID;
     std::vector<xDWORD>  selectedVert;
@@ -102,7 +102,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     virtual void         RenderSelect   (const xFieldOfView *FOV);
     virtual unsigned int CountSelectable();
     std::vector<xDWORD> *SelectCommon  (int X, int Y, int W = 1, int H = 1);
-    xBone               *SelectBone    (int X, int Y);
+    xIKNode             *SelectBone    (int X, int Y);
     xWORD                SelectElement (int X, int Y);
 
 };

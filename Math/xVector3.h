@@ -91,6 +91,9 @@ union xVector3 {
     friend bool operator == (const xVector3 &a, const xVector3 &b) {
         return a.x == b.x && a.y == b.y && a.z == b.z;
     }
+    friend bool operator != (const xVector3 &a, const xVector3 &b) {
+        return !(a == b);
+    }
     friend bool operator <= (const xVector3 &a, const xVector3 &b) {
         return a.x <= b.x && a.y <= b.y && a.z <= b.z;
     }
@@ -136,5 +139,6 @@ xVector3 operator * (const xVector3 &v, float f);
 xVector3 operator / (const xVector3 &v, float f);
 xVector3 operator - (const xVector3 &a);
 bool     operator ==(const xVector3 &a, const xVector3 &b);
+bool     operator !=(const xVector3 &a, const xVector3 &b);
 bool     operator <=(const xVector3 &a, const xVector3 &b);
 bool     operator >=(const xVector3 &a, const xVector3 &b);

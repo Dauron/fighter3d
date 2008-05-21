@@ -169,7 +169,7 @@ void World:: Initialize()
         modelA->phantom = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
-        bool captureOK = g_CaptureInput.Initialize(modelA->GetModelGr()->spineP);
+        bool captureOK = g_CaptureInput.Initialize(modelA->GetModelGr()->spine);
         modelA->ControlType = (captureOK)
             ? SkeletizedObj::Control_CaptureInput
             : SkeletizedObj::Control_AI;
@@ -250,7 +250,7 @@ void World:: Initialize()
         modelA->phantom  = false;
         modelA->physical = false;
         modelA->mass     = 70.f;
-        bool captureOK = g_CaptureInput.Initialize(modelA->GetModelGr()->spineP);
+        bool captureOK = g_CaptureInput.Initialize(modelA->GetModelGr()->spine);
         modelA->ControlType = (captureOK)
             ? SkeletizedObj::Control_CaptureInput
             : SkeletizedObj::Control_AI;

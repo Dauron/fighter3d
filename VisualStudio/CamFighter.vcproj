@@ -6,7 +6,6 @@
 	ProjectGUID="{EEDB48FF-1411-48BA-AA59-11165C3985A4}"
 	RootNamespace="CamFighter"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -69,8 +68,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				EntryPointSymbol=""
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -90,6 +87,9 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -146,8 +146,6 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -167,6 +165,9 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -292,6 +293,14 @@
 				</File>
 				<File
 					RelativePath="..\Models\lib3dx\xElementRunTime.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xIKNode.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\lib3dx\xIKNode.h"
 					>
 				</File>
 				<File
@@ -1091,6 +1100,14 @@
 			</File>
 			<File
 				RelativePath="..\Physics\CollisionInfo.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Physics\IKEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Physics\IKEngine.h"
 				>
 			</File>
 			<File

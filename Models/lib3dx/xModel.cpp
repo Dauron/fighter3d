@@ -56,10 +56,11 @@ void _xElement_SkeletonAdd(xElement *elem)
 
 void  xModel :: SkeletonAdd()
 {
-    if (!this->spineP)
+    if (!this->spine.boneC)
     {
-        this->spineP = new xBone();
-        this->spineP->Zero();
+        this->spine.boneC = 1;
+        this->spine.boneP = new xIKNode[1];
+        this->spine.boneP->Zero();
 
         for (xElement *last = this->kidsP; last; last = last->nextP)
             _xElement_SkeletonAdd(last);
@@ -67,27 +68,6 @@ void  xModel :: SkeletonAdd()
 }
 
 /* BONES */
-xBone *xModel :: BoneAdd(xBone *parent, xVector3 ending)
-{
-    int cnt = this->spineP->CountAllKids()+1;
-
-    xBone *ptr;
-    ++(parent->kidsC);
-
-    if (parent->kidsP)
-    {
-        for (ptr = parent->kidsP; ptr->nextP != NULL; ptr = ptr->nextP) {}
-        ptr = ptr->nextP = new xBone();
-    }
-    else
-        ptr = parent->kidsP = new xBone();
-
-    ptr->Zero();
-    ptr->id = cnt;
-    ptr->ending = ending;
-    return ptr;
-}
-
 void  _xBoneDelete_CorrectElementIds(xElement *elem, xWORD deleteId, xWORD parentId, xWORD topId)
 {
     xElement *last = elem->kidsP;
@@ -169,39 +149,42 @@ void  _xBoneDelete_CorrectElementIds(xElement *elem, xWORD deleteId, xWORD paren
     }
 }
 
-void   xModel :: BoneDelete(xBone *boneToDel)
+void   xModel :: BoneDelete(xBYTE boneId)
 {
-    xBone *parent = this->spineP->ParentById(boneToDel->id);
+    xIKNode &bone   = spine.boneP[boneId];
 
-    if (parent) {                                   // cannot delete spine root
-        int cnt = this->spineP->CountAllKids();
+    if (bone.joinsBC) {                                   // cannot delete spine root
+        xIKNode &parent = spine.boneP[bone.joinsBP[0]];
 
-        if (parent->kidsP == boneToDel)             // if first bone is the del bone
-            parent->kidsP = boneToDel->nextP;       //   remove it from the list
+        parent.JoinEDelete(boneId);
 
-        if (parent->kidsP) {
-            xBone *ptr = parent->kidsP;
-            while (ptr->nextP) {             // move through the whole list
-                if (ptr->nextP == boneToDel)        //   if next bone is the del bone
-                    ptr->nextP = boneToDel->nextP;  //     remove it from the list
-                else
-                    ptr = ptr->nextP;               //   check next bone on the list
-            }
-            ptr->nextP = boneToDel->kidsP;          // move kids to the parent bone
+        xBYTE *joinId = bone.joinsBP;
+        for (int i = bone.joinsBC; i; --i, ++joinId)
+            spine.boneP[*joinId].JoinBReplace(boneId, parent.id);
+
+        int lastId = spine.boneC-1;
+        if (boneId != lastId) // if it is not the bone with the last id,
+        {                     //   then we have to correct largest id (= count)
+            bone = spine.boneP[lastId];
+            bone.id = boneId;
+
+            joinId = bone.joinsBP;
+            for (int i = bone.joinsBC; i; --i, ++joinId)
+                spine.boneP[*joinId].JoinBReplace(lastId, boneId);
+            joinId = bone.joinsEP;
+            for (int i = bone.joinsEC; i; --i, ++joinId)
+                spine.boneP[*joinId].JoinEReplace(lastId, boneId);
         }
-        else
-            parent->kidsP = boneToDel->kidsP;       // move kids to the parent bone
 
-        parent->kidsC += boneToDel->kidsC - 1;      // add node's kids, but remove node
+        --(spine.boneC);
+        xIKNode *bones = new xIKNode[spine.boneC];
+        memcpy(bones, spine.boneP, sizeof(xIKNode)*spine.boneC);
+        delete[] spine.boneP;
+        spine.boneP = bones;
 
-        if (boneToDel->id != cnt) // if it is not the bone with the last id,
-        {                         //   then we have to correct largest id (= count)
-            this->spineP->ById(cnt)->id = boneToDel->id;
-
-            xElement *last = this->kidsP;
-            for (; last; last = last->nextP)
-                _xBoneDelete_CorrectElementIds(last, boneToDel->id, parent->id, cnt);
-        }
+        xElement *last = this->kidsP;
+        for (; last; last = last->nextP)
+            _xBoneDelete_CorrectElementIds(last, boneId, parent.id, lastId);
     }
 }
 
@@ -228,8 +211,7 @@ void   xModel :: Free()
         currE->Free();
         currE = nextE;
     }
-    if (this->spineP)
-        this->spineP->Free();
+    this->spine.Clear();
     delete this;
 }
 
@@ -298,9 +280,8 @@ xModel *xModel :: Load(const char *fileName, bool createCollisionInfo)
 
             bool skeletized;
             fread(&skeletized, sizeof(bool), 1, file);
-            if (skeletized) {
-                xmodel->spineP = xBone::Load(file);
-            }
+            if (skeletized)
+                xmodel->spine.Load(file);
         }
         fclose(file);
         return xmodel;
@@ -335,10 +316,10 @@ void   xModel :: Save()
         }
 
         // are the bones defined?
-        bool skeletized = this->spineP != NULL;
+        bool skeletized = this->spine.boneC;
         fwrite(&skeletized, sizeof(bool), 1, file);
         if (skeletized)
-            this->spineP->Save(file);
+            this->spine.Save(file);
 
         fclose(file);
     }

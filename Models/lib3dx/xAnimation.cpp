@@ -5,11 +5,11 @@
 #pragma warning(disable : 4996) // deprecated
 #endif
 
-void xKeyFrame::LoadFromSkeleton(xBone *spine)
+void xKeyFrame::LoadFromSkeleton(const xSkeleton &spine)
 {
-    boneP[spine->id] = spine->quaternion;
-    for (xBone *iter = spine->kidsP; iter; iter = iter->nextP)
-        LoadFromSkeleton(iter);
+    xIKNode *node = spine.boneP;
+    for (int i = spine.boneC; i; --i, ++node)
+        boneP[node->id] = node->quaternion;
 }
 
 xAnimationInfo xAnimation::GetInfo()
@@ -38,18 +38,18 @@ xAnimationInfo xAnimation::GetInfo()
     return info;
 }
 
-void           xAnimation::SaveToSkeleton(xBone *spine, xVector4 *transf)
+void           xAnimation::SaveToSkeleton(xSkeleton &spine, xVector4 *transf)
 {
-    spine->quaternion = transf[spine->id];
-    for (xBone *iter  = spine->kidsP; iter; iter = iter->nextP)
-        SaveToSkeleton(iter, transf);
+    xIKNode *node = spine.boneP;
+    for (int i = spine.boneC; i; --i, ++node)
+        node->quaternion = transf[node->id];
 }
-void           xAnimation::SaveToSkeleton(xBone *spine)
+void           xAnimation::SaveToSkeleton(xSkeleton &spine)
 {
     xVector4 *transf   = GetTransformations();
-    spine->quaternion = transf[spine->id];
-    for (xBone *iter  = spine->kidsP; iter; iter = iter->nextP)
-        SaveToSkeleton(iter, transf);
+    xIKNode  *node = spine.boneP;
+    for (int i = spine.boneC; i; --i, ++node)
+        node->quaternion = transf[node->id];
     delete[] transf;
 }
 void           xAnimation::UpdatePosition()

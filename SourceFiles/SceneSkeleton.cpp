@@ -53,18 +53,18 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
 
     xModel *modelGr = m_Model.GetModelGr();
     xModel *modelPh = m_Model.GetModelPh();
-    if (!modelPh->spineP && modelGr->spineP)
+    if (!modelPh->spine.boneC && modelGr->spine.boneC)
     {
         modelPh->SkeletonAdd(); //   add skeleton to model
         m_Model.CopySpineToPhysical();
     }
     else
-    if (!modelGr->spineP && modelPh->spineP)
+    if (!modelGr->spine.boneC && modelPh->spine.boneC)
     {
         modelGr->SkeletonAdd(); //   add skeleton to model
         m_Model.CopySpineToGraphics();
     }
-    modelGr->spineP->ResetQ();
+    modelGr->spine.ResetQ();
     m_Model.CalculateSkeleton();
 
     m_CurrentDirectory = Filesystem::GetFullPath("Data/models");
@@ -460,11 +460,7 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 unsigned int SceneSkeleton::CountSelectable()
 {
     if (m_EditMode == emCreateBone || m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-    {
-        if (m_Model.GetModelGr()->spineP)
-            return m_Model.GetModelGr()->spineP->CountAllKids() + 1;
-        return 0;
-    }
+        return m_Model.GetModelGr()->spine.boneC;
     else
     if (m_EditMode == emSelectElement)
         if (m_EditGraphical)
@@ -494,14 +490,14 @@ std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)
     return ISelectionProvider::Select(NULL, X, Y, W, H);
 }
 
-xBone *SceneSkeleton::SelectBone(int X, int Y)
+xIKNode *SceneSkeleton::SelectBone(int X, int Y)
 {
     std::vector<xDWORD> *sel = SelectCommon(X, Y);
 
     if (sel && sel->size()) {
         GLuint id = sel->back();
         delete sel;
-        return m_Model.GetModelGr()->spineP->ById(id);
+        return m_Model.GetModelGr()->spine.boneP + id;
     }
     delete sel;
     return NULL;

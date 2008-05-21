@@ -2,57 +2,57 @@
 #include "../../OpenGL/GLAnimSkeletal.h"
 #include "../../OpenGL/Textures/TextureMgr.h"
 
-void RenderBone ( const xBone * bone, bool selectionRendering, xWORD selBoneId )
+void RenderBone ( const xIKNode * boneP, xBYTE boneId, bool selectionRendering, xWORD selBoneId )
 {
     static xFLOAT4 boneWght = { 0.1f, 0.0f, 0.0f, 0.0f };
 
-    for (xBone *boneP = bone->kidsP; boneP != NULL; boneP = boneP->nextP)
+    const xIKNode &bone = boneP[boneId];
+    if (boneId)
     {
-        if (selectionRendering || boneP->id == selBoneId)
+        if (selectionRendering || boneId == selBoneId)
         {
             glEnd();
             if (selectionRendering)
-                glLoadName(boneP->id);
+                glLoadName(boneId);
             else
-            if (boneP->id == selBoneId)
+            if (boneId == selBoneId)
                 glColor4f(1.0f,0.0f,1.0f,1.0f);
             glBegin(GL_TRIANGLES);
         }
 
-        xVector3 halfVector = (boneP->ending - bone->ending) / 5.0f;
-        xVector3 pointHalf  = bone->ending + halfVector;
+        xVector3 halfVector = (bone.pointE - bone.pointB) / 5.0f;
+        xVector3 pointHalf  = bone.pointB + halfVector;
         xVector3 point3 = pointHalf + xVector3::Orthogonal(halfVector).normalize() / 10.0f;
 
         halfVector.normalize();
         float s = sin(PI/4.0f);
         xVector4 q; q.init(halfVector.x*s, halfVector.y*s, halfVector.z*s, cos(PI/4.0f));
 
+        boneWght[0] = boneId + 0.1f;
+        g_AnimSkeletal.SetBoneIdxWghts(boneWght);
+
         for (int i=0; i<4; ++i) {
-            boneWght[0] = bone->id + 0.1f;
-            g_AnimSkeletal.SetBoneIdxWghts(boneWght);
-            g_AnimSkeletal.SetVertex(bone->ending.xyz);
-
-            boneWght[0] = boneP->id + 0.1f;
-            g_AnimSkeletal.SetBoneIdxWghts(boneWght);
-            g_AnimSkeletal.SetVertex(boneP->ending.xyz);
-
+            g_AnimSkeletal.SetVertex(bone.pointE.xyz);
+            g_AnimSkeletal.SetVertex(bone.pointB.xyz);
             g_AnimSkeletal.SetVertex(point3.xyz);
             point3 = xQuaternion::rotate(q, point3-pointHalf)+pointHalf;
         }
 
-        if (boneP->id == selBoneId) {
+        if (boneId == selBoneId) {
             glEnd();
             glColor4f(1.0f,1.0f,0.0f,1.0f);
             glBegin(GL_TRIANGLES);
         }
-
-        RenderBone(boneP, selectionRendering, selBoneId);
     }
+
+    xBYTE *cbone = bone.joinsEP;
+    for (int i = bone.joinsEC; i; --i, ++cbone)
+        RenderBone(boneP, *cbone, selectionRendering, selBoneId);
 }
 
 void xRenderGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, bool selectionRendering, xWORD selBoneId )
 {
-    if (model.spineP)
+    if (model.spine.boneC)
     {
         if (selectionRendering) g_AnimSkeletal.ForceSoftware(true);
 
@@ -68,7 +68,9 @@ void xRenderGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, bool
 
         glColor4f(1.0f,1.0f,0.0f,1.0f);
         glBegin(GL_TRIANGLES);
-            RenderBone(model.spineP, selectionRendering, selBoneId);
+        {
+            RenderBone(model.spine.boneP, 0, selectionRendering, selBoneId);
+        }
         glEnd();
 
         glEnable(GL_DEPTH_TEST);

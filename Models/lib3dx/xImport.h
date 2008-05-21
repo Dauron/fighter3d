@@ -5,6 +5,5 @@
 #include "xModel.h"
 
 xModel *xImportFileFrom3ds(Lib3dsFile *model);
-xModel *xLoadFrom3dmFile(const char *fileName);
 
 #endif

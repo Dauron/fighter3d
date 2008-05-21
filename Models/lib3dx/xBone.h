@@ -1,39 +1,27 @@
 #ifndef __incl_lib3dx_xBone_h
 #define __incl_lib3dx_xBone_h
 
-#include <cstdio>
 #include "../../Math/xMath.h"
+#include "xIKNode.h"
 
-struct xBone {
-    char      *name;
-    xBYTE      id;
-    xVector4   quaternion;
-    xVector3   ending;
+struct xSkeleton
+{
+    xIKNode *boneP;
+    xBYTE    boneC;
 
-    xBone     *nextP; // next sibling
-    xBone     *kidsP; // first kid
-    xBYTE      kidsC; // no of kids
+    void      Clear();
+    xSkeleton Clone() const;
+    void      ResetQ();
 
-    bool       modified;
+    xIKNode  *BoneAdd(xBYTE parentId, xVector3 ending);
 
-    xBone *ByName    ( const char *boneName );
-    xBone *ById      ( xBYTE id );
-    xBone *ParentById( xBYTE id );
-    xBYTE  CountAllKids() const;
-
-    void   Zero();
-    void   Free();
-    void   ResetQ();
-    xBone *Clone() const;
-
-           void   Save( FILE *file );
-    static xBone *Load( FILE *file );
+    void Load( FILE *file );
+    void Save( FILE *file ) const;
 };
 
 struct xModelInstance;
 
-xMatrix xBoneCalculateMatrix   (const xBone *spine, int boneId);
-void    xBoneCalculateMatrices (const xBone *spine, xModelInstance *instance);
-void    xBoneCalculateQuats    (const xBone *spine, xModelInstance *instance);
+void    xBoneCalculateMatrices (const xSkeleton &spine, xModelInstance *instance);
+void    xBoneCalculateQuats    (const xSkeleton &spine, xModelInstance *instance);
 
 #endif

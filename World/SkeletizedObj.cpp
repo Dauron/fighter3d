@@ -60,12 +60,12 @@ void SkeletizedObj :: Update(float deltaTime)
 
     if (bones)
     {
-        xAnimation::SaveToSkeleton(GetModelGr()->spineP, bones);
+        xAnimation::SaveToSkeleton(GetModelGr()->spine, bones);
         delete[] bones;
 
         CalculateSkeleton();
         CollisionInfo_ReFill();
     }
     else
-        GetModelGr()->spineP->ResetQ();
+        GetModelGr()->spine.ResetQ();
 }

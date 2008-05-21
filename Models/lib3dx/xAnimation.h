@@ -13,7 +13,7 @@ struct xKeyFrame
     xKeyFrame *prev;   // prev key frame
     xKeyFrame *next;   // next key frame
 
-    void LoadFromSkeleton(xBone *spine);
+    void LoadFromSkeleton(const xSkeleton &spine);
 };
 
 struct xAnimationInfo
@@ -68,12 +68,12 @@ struct xAnimation
 
     void       UpdatePosition();
     xVector4 * GetTransformations();
-    void       SaveToSkeleton(xBone *spine);
+    void       SaveToSkeleton(xSkeleton &spine);
 
     bool       Save(const char *fileName);
     bool       Load(const char *fileName);
 
-    static void       SaveToSkeleton(xBone *spine, xVector4 *transf);
+    static void       SaveToSkeleton(xSkeleton &spine, xVector4 *transf);
     static xVector4 * Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT progress, xWORD boneC);
     static void       Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xVector4 *&bones);
 };

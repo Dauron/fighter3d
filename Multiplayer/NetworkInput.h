@@ -9,14 +9,12 @@
 class NetworkInput : public Singleton<NetworkInput>
 {
 private:
-    xWORD  boneC;
-    xBone *spineP;
+    const xSkeleton *spine;
 
 public:
-    bool Initialize(xBone *spineP)
+    bool Initialize(const xSkeleton &spine)
     {
-        this->spineP = spineP;
-        this->boneC  = (spineP) ? spineP->CountAllKids()+1 : 0;
+        this->spine = &spine;
         return true;
     }
     void Finalize()
@@ -24,7 +22,7 @@ public:
 
     xVector4 * GetTransformations()
     {
-        xVector4 *trans = new xVector4[boneC];
+        xVector4 *trans = new xVector4[spine->boneC];
 
         // kwaternion trans[0] nie opisuje obrotu, a przesuniêcie ca³ego modelu, pozosta³e to obroty w formacie
         // x = axis.x * sin(alpha/2)
@@ -33,7 +31,7 @@ public:
         // w = cos(alpha/2)
         // oœ Z wskazuje do góry
 
-        for (int i=0; i<boneC; ++i)
+        for (int i=0; i < spine->boneC; ++i)
             trans[i].zeroQ(); // no rotation
 
         return trans;

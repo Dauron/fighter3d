@@ -2,7 +2,10 @@
 class xQuaternion
 {
   public:
+    static xVector4 getRotation     (const xVector3 &srcP, const xVector3 &dstP, const xVector3 &center);
+
     static xVector3 rotate          (const xVector4 &q, const xVector3 &p);
+    static xVector3 rotate          (const xVector4 &q, const xVector3 &p, const xVector3 &center);
 
     static xVector3 angularVelocity (const xVector4 &q);
 

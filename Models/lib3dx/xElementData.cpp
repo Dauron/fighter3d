@@ -143,7 +143,7 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
             : (elem->textured ? sizeof(xVertexTex)     : sizeof(xVertex));
         std::vector<xCollisionHierarchy> cHierarchy;
 
-        if (!elem->skeletized || !xmodel->spineP)
+        if (!elem->skeletized || !xmodel->spine.boneC)
         {
             xCollisionHierarchy hierarchy;
             hierarchy.kidsC = 0;
@@ -189,7 +189,7 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
         }
         else
         {
-            this->kidsC = xmodel->spineP->CountAllKids()+1;
+            this->kidsC = xmodel->spine.boneC;
 
             std::vector<xBox> cBoundings;
             cBoundings.resize(this->kidsC);

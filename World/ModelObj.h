@@ -118,11 +118,11 @@ public:
 
     void CopySpineToPhysical()
     {
-        CopySpine(xModelGr->spineP, xModelPh->spineP);
+        CopySpine(xModelGr->spine, xModelPh->spine);
     }
     void CopySpineToGraphics()
     {
-        CopySpine(xModelPh->spineP, xModelGr->spineP);
+        CopySpine(xModelPh->spine, xModelGr->spine);
     }
 
     virtual void VerticesChanged(bool free);
@@ -144,12 +144,12 @@ protected:
         modelInstancePh.location = modelInstanceGr.location = mLocationMatrix;
     }
 
-    void CopySpine(const xBone *src, xBone *&dst)
+    void CopySpine(const xSkeleton &src, xSkeleton &dst)
     {
-        if (src != dst)
+        if (src.boneP != dst.boneP)
         {
-            if (dst) dst->Free();
-            dst = src ? src->Clone() : NULL;
+            dst.Clear();
+            dst = src.Clone();
         }
     }
 

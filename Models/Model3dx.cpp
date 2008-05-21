@@ -15,16 +15,11 @@ bool Model3dx :: Load ( const char *name )
         model = xModel::Load(name);
     else
     {
-        if (!strcasecmp(name + size - 4, ".3dm"))
-            model = xLoadFrom3dmFile (name);
-        else
+        Lib3dsFile *file3ds = lib3ds_file_load (name);
+        if (file3ds)
         {
-            Lib3dsFile *file3ds = lib3ds_file_load (name);
-            if (file3ds)
-            {
-                model = xImportFileFrom3ds(file3ds);
-                lib3ds_file_free(file3ds);
-            }
+            model = xImportFileFrom3ds(file3ds);
+            lib3ds_file_free(file3ds);
         }
         if (model) {
             // save
@@ -34,6 +29,7 @@ bool Model3dx :: Load ( const char *name )
             model->Save();
         }
     }
+    //model->Save();
     return model;
 }
 
