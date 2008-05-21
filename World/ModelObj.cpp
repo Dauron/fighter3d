@@ -14,11 +14,12 @@ void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename, bo
     mLocationMatrixPrev = mLocationMatrix;
     transVelocity.zero();
     rotatVelocity.zeroQ();
-    mass       = physical ? 1.f : 100000000.f;
-    resilience = 0.2f;
+    mass               = physical ? 1.f : 100000000.f;
+    resilience         = 0.2f;
     gravityAccumulator = 1.f;
     this->phantom = phantom;
     this->physical = physical;
+    smap.texId = 0;
 
     if (ph_filename)
         renderer.Initialize(!physical && !forceNotStatic, g_ModelMgr.GetModel(gr_filename), g_ModelMgr.GetModel(ph_filename));
@@ -43,66 +44,6 @@ void ModelObj:: RenderObject(bool transparent)
 {
     assert(renderer.IsValid());
     GetRenderer()->RenderModel(transparent);
-/*
-    if (!phantom)
-        if (!CollidedModels.empty())
-        {
-            srand(100);
-            //if (idx.empty())
-            {
-                std::vector<CollisionWithModel>::iterator cmiter;
-                for (cmiter = CollidedModels.begin(); cmiter < CollidedModels.end(); ++cmiter)
-                {
-                    std::vector<Collisions>::iterator iter;
-                    std::vector<xDWORD>::iterator found;
-                    xElement *prevElem = NULL;
-                    for (iter = cmiter->collisions.begin(); iter < cmiter->collisions.end(); ++iter)
-                    {
-                        if (prevElem != iter->elem1)
-                        {
-                            if (prevElem)
-                                GetRenderer()->RenderFaces(prevElem->id, &idx);
-                            prevElem = iter->elem1;
-                            idx.clear();
-                        }
-                        found = std::find(idx.begin(), idx.end(), (xDWORD)iter->face1);
-                        if (found == idx.end()) idx.push_back((xDWORD)iter->face1);
-                    }
-                    if (prevElem)
-                        GetRenderer()->RenderFaces(prevElem->id, &idx);
-                    idx.clear();
-                }
-            }
-        }
-*/
-/*
-    GetCollisionInfo();
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_COLOR_MATERIAL);
-    g_TextureMgr.DisableTextures();
-    glColor3f(1.f, 1.f, 0.f);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glPointSize(5.f);
-    glPopMatrix();
-    //CollisionInfo_Render(GetRenderer()->xModel->firstP, collisionInfo);
-    glBegin(GL_LINES);
-    {
-        glColor3f(1.f, 1.f, 0.f);
-        glVertex3fv(cp.xyz);
-        glVertex3fv(com.xyz);
-        glColor3f(1.f, 0.f, 0.f);
-        glVertex3fv(cp.xyz);
-        glVertex3fv(cno.xyz);
-        glColor3f(0.f, 0.f, 1.f);
-        glVertex3fv(com.xyz);
-        glVertex3fv(cro.xyz);
-    }
-    glEnd();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glPushMatrix();
-    glDisable(GL_COLOR_MATERIAL);
-    glEnable(GL_DEPTH_TEST);*/
-
 }
 
 void ModelObj:: PreUpdate()
@@ -136,6 +77,7 @@ xCollisionHierarchyBoundsRoot *ModelObj::GetCollisionInfo()
 
 void ModelObj::CollisionInfo_ReFill()
 {
+    smap.texId = 0;
     if (collisionInfo)
     {
         float   delta  = GetTick();
@@ -215,8 +157,6 @@ void ModelObj::CollisionInfo_Render(xElement *elem, xCollisionHierarchyBoundsRoo
 
 void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width)
 {
-    //E3d_MatrixCopy(LModel->LocalToWorldMatrix,LBlockerLocalToWorldMatrix);
-
     xVector3 centerOfTheMassG = (xVector4::Create(centerOfTheMass, 1.f)*mLocationMatrix).vector3;
     xVector3 lFAxis = (light->position - centerOfTheMassG).normalize();
     xVector3 tmp;

@@ -7,7 +7,6 @@
 #include "../AppFramework/Application.h"
 #include "../Math/Cameras/CameraHuman.h"
 #include "../OpenGL/GLAnimSkeletal.h"
-#include "../SourceFiles/LightsAndMaterials.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
@@ -26,6 +25,8 @@ bool SceneGame::Initialize(int left, int top, unsigned int width, unsigned int h
     stepAccum = 0.0f;
     InitInputMgr();
 
+    texNightSky = g_TextureMgr.GetTexture("Data/textures/night.bmp");
+
     if (!world.IsValid())
         world.Initialize();
     return InitGL();
@@ -42,8 +43,8 @@ bool SceneGame::InitGL()
 
     glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
     glEnable (GL_POINT_SMOOTH);
-//    glEnable (GL_LINE_SMOOTH);
-//    glEnable (GL_POLYGON_SMOOTH);         // produces errors on many cards... use FSAA!
+    //glEnable (GL_LINE_SMOOTH);
+    //glEnable (GL_POLYGON_SMOOTH);         // produces errors on many cards... use FSAA!
 
     glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -56,6 +57,20 @@ bool SceneGame::InitGL()
         shader.Load("Data/program.vert", "Data/program.frag");
         shader.Initialize();
     }
+    return true;
+}
+
+bool SceneGame::Invalidate()
+{
+    shader.Invalidate();
+    World::lightsVec::iterator light, begin = world.lights.begin(), end = world.lights.end();
+    for (light=begin; light!=end; ++light)
+        light->modified = true;
+
+    World::objectVec::iterator model, beginM = world.objects.begin(), endM = world.objects.end();
+    for (model=beginM; model!=endM; ++model)
+        (*model)->Invalidate();
+
     return true;
 }
 
@@ -104,6 +119,7 @@ void SceneGame::Terminate()
     m_Font1 = HFont();
     g_FontMgr.DeleteFont(m_Font2);
     m_Font2 = HFont();
+    g_TextureMgr.DeleteTexture(texNightSky);
 }
 
 bool SceneGame::Update(float deltaTime)
@@ -229,12 +245,54 @@ bool SceneGame::Update(float deltaTime)
     return true;
 }
 
+void SceneGame::SetLights()
+{
+    World::lightsVec::iterator light, begin = world.lights.begin(), end = world.lights.end();
+    GLuint lightNo = GL_LIGHT0;
+
+    for (light=begin; light!=end; ++light, ++lightNo)
+    {
+        xVector4 position; position.init(light->position, light->type == xLight_INFINITE ? 0.f : 1.f);
+        glLightfv(lightNo, GL_POSITION, position.xyzw);
+
+        xVector4 ambient; ambient.init(light->color.col); ambient *= 0.1f;
+        glLightfv(lightNo, GL_AMBIENT,  ambient.xyzw);     // environment
+        glLightfv(lightNo, GL_DIFFUSE,  light->color.col); // direct light
+        glLightfv(lightNo, GL_SPECULAR, light->color.col); // light on mirrors/metal
+
+        // rozpraszanie siê œwiat³a
+        glLightf(lightNo, GL_CONSTANT_ATTENUATION,  light->attenuationConst);
+        glLightf(lightNo, GL_LINEAR_ATTENUATION,    light->attenuationLinear);
+        glLightf(lightNo, GL_QUADRATIC_ATTENUATION, light->attenuationSquare);
+
+        if (light->type == xLight_SPOT)
+        {
+            glLightfv(lightNo, GL_SPOT_DIRECTION, light->spotDirection.xyz);
+            glLightf(lightNo,  GL_SPOT_CUTOFF,    light->spotCutOff);
+            glLightf(lightNo,  GL_SPOT_EXPONENT,  light->spotAttenuation);
+        }
+        else
+            glLightf(lightNo, GL_SPOT_CUTOFF, 180.0f);
+
+        glEnable(lightNo);
+    }
+    for (; lightNo < GL_LIGHT0+GL_MAX_LIGHTS; ++lightNo)
+        glDisable(lightNo);
+}
+
 bool SceneGame::Render()
 {
     if (!g_FontMgr.IsHandleValid(m_Font1))
         m_Font1 = g_FontMgr.GetFont("Courier New", 12);
     if (!g_FontMgr.IsHandleValid(m_Font2))
         m_Font2 = g_FontMgr.GetFont("Courier New", 15);
+
+    if (g_Init)
+    {
+        world.Finalize();
+        world.Initialize();
+        g_Init = false;
+    }
 
     glViewport(Left, Top, Width, Height);
     // Set projection
@@ -245,34 +303,49 @@ bool SceneGame::Render()
 
     glPolygonMode(GL_FRONT_AND_BACK, g_PolygonMode);
 
-    Camera_Aim_GL(*DefaultCamera);
+    GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE); // GL_TRUE=two, GL_FALSE=one
 
-    if (g_Init)
-    {
-        world.Finalize();
-        world.Initialize();
-        g_Init = false;
-    }
-    //world.Render();
+    Camera_Aim_GL(*DefaultCamera);
 
     // Render the contents of the world
     World::objectVec::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
 
-//    xShadowMap smap;
-//    smap.texId = 0;
-//    if (shadowCaster) smap = shadowCaster->GetShadowMap(&lights[0]);
-    for ( i = begin+45 ; i != end ; ++i )
-        (*i)->CreateShadowMap(&world.lights[0]);
+    for ( i = begin + 45 ; i != end ; ++i )
+        if (world.lights[0].modified || !(*i)->GetShadowMap().texId)
+            (*i)->CreateShadowMap(&world.lights[0]);
+    world.lights[0].modified = false;
 
     // Clear surface
-    glClearColor( 0.1f, 0.1f, 0.3f, 0.0f ); // Background color
+    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT/* | GL_STENCIL_BUFFER_BIT*/);
     glEnable(GL_DEPTH_TEST);
+    SetLights();
+
+    GLShader::EnableLighting(0);
+    (*begin)->Render(false);
+/*
+    GLShader::EnableTexturing(1);
+    g_TextureMgr.BindTexture(texNightSky);
+    glBegin(GL_QUADS);
+        glTexCoord2f(-4.f, -4.f);
+        glVertex3f(-400.f, -400.f, 100.f);
+        glTexCoord2f(-4.f, 4.f);
+        glVertex3f(-400.f, 400.f, 100.f);
+        glTexCoord2f(4.f, 4.f);
+        glVertex3f(400.f, 400.f, 100.f);
+        glTexCoord2f(4.f, -4.f);
+        glVertex3f(400.f, -400.f, 100.f);
+    glEnd();
+*/
 
     if (g_UseCustomShader && shader.IsInitialized())
         shader.Start();
-    setLights();
-    for ( i = begin ; i != end ; ++i )
+    if (g_EnableLighting)
+        GLShader::EnableLighting(world.lights.size());
+    for ( i = begin+1 ; i != end ; ++i )
         (*i)->Render(false);
     if (g_UseCustomShader && shader.IsInitialized())
         shader.Suspend();
@@ -280,36 +353,27 @@ bool SceneGame::Render()
     for ( i = begin+45 ; i != end ; ++i )
     {
         xShadowMap &smap = (*i)->GetShadowMap();
-        //(*begin)->RenderShadow(smap);
-        for ( j = begin ; j != begin+45 ; ++j )
-            if (*i != *j)
-                (*j)->RenderShadow(smap);
+        if (smap.texId)
+            for ( j = begin+1 ; j != begin+45 ; ++j )
+                if (*i != *j)
+                {
+                    xVector3 vecI = (xVector4::Create((*i)->centerOfTheMass, 1.f) * (*i)->mLocationMatrix).vector3;
+                    xVector3 vecJ = (xVector4::Create((*j)->centerOfTheMass, 1.f) * (*j)->mLocationMatrix).vector3;
+                    vecI -= world.lights[0].position;
+                    vecJ -= world.lights[0].position;
+                    if (xVector3::DotProduct(vecI, vecJ) > 0.f)
+                        (*j)->RenderShadow(smap);
+                }
     }
 
     if (g_UseCustomShader && shader.IsInitialized())
         shader.Start();
-    setLights();
-    for ( i = begin ; i != end ; ++i )
+    if (g_EnableLighting)
+        GLShader::EnableLighting(world.lights.size());
+    for ( i = begin+1 ; i != end ; ++i )
         (*i)->Render(true);
     if (g_UseCustomShader && shader.IsInitialized())
         shader.Suspend();
-
-    /*glBindTexture(GL_TEXTURE_2D, (*(end-4))->GetShadowMap().texId);
-    GLShader::EnableTexturing(1);
-    GLShader::EnableLighting(0);
-    glDisable(GL_BLEND);
-    glBegin(GL_QUADS);
-    {
-        glTexCoord2f(0.f,0.f);
-        glVertex3f(0.f, 0.f, 0.5f);
-        glTexCoord2f(1.f,0.f);
-        glVertex3f(1.f, 0.f, 0.5f);
-        glTexCoord2f(1.f,1.f);
-        glVertex3f(1.f, 1.f, 0.5f);
-        glTexCoord2f(0.f,1.f);
-        glVertex3f(0.f, 1.f, 0.5f);
-    }
-    glEnd();*/
 
     // Flush the buffer to force drawing of all objects thus far
     glFlush();

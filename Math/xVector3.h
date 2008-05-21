@@ -36,6 +36,9 @@ union xVector3 {
     xFLOAT length() const {
         return (xFLOAT) sqrt(x*x + y*y + z*z);
     }
+    xFLOAT lengthSqr() const {
+        return x*x + y*y + z*z;
+    }
     xVector3 &normalize() {
         xFLOAT m = length();
         m = (m > 0.0F) ? 1.0F / m : 0.0F;

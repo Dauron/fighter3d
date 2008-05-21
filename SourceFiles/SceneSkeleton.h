@@ -23,7 +23,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate() {
-        m_Model.GetRenderer()->Invalidate();
+        m_Model.Invalidate();
         return m_PrevScene->Invalidate();
     }
     virtual void Terminate();

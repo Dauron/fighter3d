@@ -1,5 +1,10 @@
 #
-model	floor0.3dx
+model	../night.3dx
+position	0.0	0.0	0.0
+physical	0
+phantom	0
+#
+model	floor0_F.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
@@ -14,8 +19,9 @@ position	0.0	0.0	-0.21
 physical	0
 phantom	0
 #
-model	ceiling_upper.3dx
-position	0.0	0.0	-0.21
+model	roof_upper.3dx
+position	-0.03	-0.117	15.15
+rotation	0.0	0.0	90.0
 physical	0
 phantom	0
 #

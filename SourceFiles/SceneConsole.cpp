@@ -414,7 +414,6 @@ bool SceneConsole::Render()
 
     glViewport(Left, Top+cHeight, Width, cHeight); // Set viewport
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
-    glDisable(GL_LIGHTING);                        // Disable lighting
     GLShader::EnableLighting(0);
     GLShader::EnableTexturing(0);
 

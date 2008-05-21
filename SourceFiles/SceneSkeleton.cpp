@@ -236,7 +236,6 @@ bool SceneSkeleton::Render()
 
     GLShader::EnableTexturing(0);
     GLShader::EnableLighting(0);
-    glDisable(GL_LIGHTING);
 
     if (m_EditMode == emSelectVertex)
         renderer->RenderVertices(xRender::smNone, selectedElemID, &selectedVert);

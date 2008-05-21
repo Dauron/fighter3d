@@ -12,6 +12,8 @@ union xColor {
 
     xColor() {};
     xColor(xFLOAT R, xFLOAT G, xFLOAT B, xFLOAT A) : r(R), g(G), b(B), a(A) {}
+
+    void init(xFLOAT R, xFLOAT G, xFLOAT B, xFLOAT A) { r = R; g = G; b = B; a = A; }
 };
 
 struct xTexture {

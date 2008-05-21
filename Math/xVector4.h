@@ -24,6 +24,7 @@ union xVector4 {
     xVector4       &init  (xFLOAT X, xFLOAT Y, xFLOAT Z, xFLOAT W) { x = X; y = Y; z = Z; w = W; return *this; }
     xVector4       &init  (const xVector3 &src, xFLOAT W)          { vector3 = src; w = W;       return *this; }
     xVector4       &init  (const xVector3 &src)                    { vector3 = src; w = 0.f;     return *this; }
+    xVector4       &init  (const xFLOAT   *src)                    { memcpy(this, src, 4*sizeof(xFLOAT)); return *this; }
     xVector4       &zero  ()                                       { x = y = z = w = 0.f;        return *this; }
     xVector4       &zeroQ ()                                       { x = y = z = 0.f; w = 1.f;   return *this; }
 

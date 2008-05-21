@@ -30,64 +30,65 @@ public:
     float          gravityAccumulator; // slowly increase gravity, to avoid vibrations
 
     //xVector3       cp, com, cno, cro;
-
-public:
-    ModelObj () : Object3D(), forceNotStatic(false) {}
-    ModelObj (GLfloat x, GLfloat y, GLfloat z)
-      : Object3D(x,y,z), forceNotStatic(false) {}
-    ModelObj (GLfloat x, GLfloat y, GLfloat z,
-         GLfloat rotX, GLfloat rotY, GLfloat rotZ)
-      : Object3D(x,y,z, rotX,rotY,rotZ), forceNotStatic(false) {}
-
-    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physical = false, bool phantom = true);
-    virtual void Finalize ();
-
-    xRender    * GetRenderer()   {
-        renderer.UpdatePointers();
-        return &renderer;
-    }
-    xCollisionHierarchyBoundsRoot *GetCollisionInfo();
-    xWORD                          GetCollisionInfoC() { return collisionInfoC; }
-
-    std::vector<CollisionWithModel> CollidedModels;
-
-    virtual void PreUpdate();
-    virtual void Update(float deltaTime);
-
-    void   CollisionInfo_ReFill ();
-
-    void       CreateShadowMap(xLight *light)
-    {
-        xMatrix    blocker;
-        GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, 256);
-        smap.texId = GetRenderer()->CreateShadowMap(256, blocker);
-    }
-    xShadowMap GetShadowMap()
-    {
-        return smap;
-    }
-
-    void RenderShadow(xShadowMap smap)
-    {
-        GetRenderer()->RenderShadow(smap, mLocationMatrix);
-    }
-
 protected:
     bool           forceNotStatic;
     xRenderGL      renderer;
-    xShadowMap smap;
+    xShadowMap     smap;
 
     xCollisionHierarchyBoundsRoot *collisionInfo;
     xWORD                          collisionInfoC;
     std::vector<xDWORD> idx;
 
-    void RenderObject(bool transparent);
+    /******** CONSTRUCTORS : BEGIN ********/
+public:
+    ModelObj () : Object3D(), forceNotStatic(false) {}
+    ModelObj (GLfloat x, GLfloat y, GLfloat z) : Object3D(x,y,z), forceNotStatic(false) {}
+    ModelObj (GLfloat x, GLfloat y, GLfloat z,
+         GLfloat rotX, GLfloat rotY, GLfloat rotZ) : Object3D(x,y,z, rotX,rotY,rotZ), forceNotStatic(false) {}
+    /********* CONSTRUCTORS : END *********/
 
+    /******** LIFETIME : BEGIN ********/
+public:
+    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physical = false, bool phantom = true);
+    virtual void Finalize   ();
+    virtual void Invalidate () { renderer.Invalidate(); }
+    /********* LIFETIME : END *********/
+
+    xRender                       *GetRenderer()       { renderer.UpdatePointers(); return &renderer; }
+
+    /******** UPDATE : BEGIN ********/
+public:
+    virtual void PreUpdate();
+    virtual void Update(float deltaTime);
+    /********* UPDATE : END *********/
+
+    /******** PHYSICS : BEGIN ********/
+public:
+    xCollisionHierarchyBoundsRoot  *GetCollisionInfo();
+    xWORD                           GetCollisionInfoC() { return collisionInfoC; }
+    void                            CollisionInfo_ReFill ();
+    std::vector<CollisionWithModel> CollidedModels;
+protected:
     void CollisionInfo_Fill   (xRender *rend, xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime);
     void CollisionInfo_Free   (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
     void CollisionInfo_Render (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
+    /********* PHYSICS : END *********/
 
+    /******** SHADOWS : BEGIN ********/
+public:
+    void       CreateShadowMap(xLight *light)
+    {
+        xMatrix blocker;
+        GetShadowProjectionMatrix(light, blocker, smap.receiverUVMatrix, 256);
+        smap.texId = GetRenderer()->CreateShadowMap(256, blocker);
+    }
+    xShadowMap GetShadowMap ()                { return smap; }
+    void       RenderShadow (xShadowMap smap) { GetRenderer()->RenderShadow(smap, mLocationMatrix); }
+protected:
     void GetShadowProjectionMatrix (xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width);
+    /********* SHADOWS : END *********/
+
+    void RenderObject(bool transparent);
 };
 
 extern float time1b;

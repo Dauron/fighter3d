@@ -102,8 +102,6 @@ public:
 
     void Invalidate()
     {
-        g_ModelMgr.GetModel(hModelGraphics)->Invalidate();
-        g_ModelMgr.GetModel(hModelPhysical)->Invalidate();
         shadowTexId = 0;
     }
 

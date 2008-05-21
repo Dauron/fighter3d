@@ -58,15 +58,15 @@ GLenum GLShader::Initialize()
 
     if (!agl_ShaderObjectsLoaded || !agl_VertexShaderLoaded || !agl_FragmentShaderLoaded)
     {
-    if (!agl_ShaderObjectsLoaded)  LOG("WARNING: agl_ShaderObjectsLoaded is not supported\n");
-    if (!agl_VertexShaderLoaded)   LOG("WARNING: agl_VertexShaderLoaded is not supported\n");
-    if (!agl_FragmentShaderLoaded) LOG("WARNING: agl_FragmentShaderLoaded is not supported\n");
+        if (!agl_ShaderObjectsLoaded)  LOG("WARNING: agl_ShaderObjectsLoaded is not supported\n");
+        if (!agl_VertexShaderLoaded)   LOG("WARNING: agl_VertexShaderLoaded is not supported\n");
+        if (!agl_FragmentShaderLoaded) LOG("WARNING: agl_FragmentShaderLoaded is not supported\n");
         return 0;
     }
 
     if (!vertexShaderSrc && !fragmentShaderSrc)
     {
-    LOG("WARNING: shader source not found\n");
+        LOG("WARNING: shader source not found\n");
         return 0;
     }
 

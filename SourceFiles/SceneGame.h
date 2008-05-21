@@ -15,9 +15,7 @@ class SceneGame : public Scene
     SceneGame() : DefaultCamera(NULL) { sceneName="[Game]"; shader.Load("Data/program.vert", "Data/program.frag"); };
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
-    virtual bool Invalidate() {
-        shader.Invalidate(); return true;
-    }
+    virtual bool Invalidate();
     virtual void Terminate();
     virtual bool Update(float deltaTime);
     virtual bool Render();
@@ -25,14 +23,16 @@ class SceneGame : public Scene
   private:
     bool InitGL();
     void InitInputMgr();
+    void SetLights();
 
     long  accum;
     float stepAccum;
 
-    CameraHuman  hCamera;
+    CameraHuman    hCamera;
     World          world;
 
     GLShader       shader;
+    HTexture       texNightSky;
 
     HFont          m_Font1;
     HFont          m_Font2;

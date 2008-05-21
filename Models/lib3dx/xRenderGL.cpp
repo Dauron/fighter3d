@@ -74,7 +74,6 @@ void xRenderGL :: RenderBone(const xBone * bone, bool selectionRendering, xWORD 
             point3 = xQuaternion::rotate(q, point3-pointHalf)+pointHalf;
         }
 
-
         if (boneP->id == selBoneId) {
             glEnd();
             glColor4f(1.0f,1.0f,0.0f,1.0f);
@@ -147,11 +146,15 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
             //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
             glColor4f(1.f,1.f,1.f, 1.f-mat->transparency);
+            glDisable (GL_LINE_SMOOTH);
+            glDisable (GL_POLYGON_SMOOTH);
         }
         else
         {
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             glDisable(GL_BLEND);
+            glEnable (GL_LINE_SMOOTH);
+            glEnable (GL_POLYGON_SMOOTH);         // produces errors on many cards... use FSAA!
         }
         if (mat->two_sided)
             glDisable(GL_CULL_FACE);
@@ -566,9 +569,9 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
 
     xDWORD &listID = transparent ? elem->renderData.listIDTransp : elem->renderData.listID;
 
-    if (g_SelectionRendering || !UseList || !listID)
+    if (g_SelectionRendering || g_ShadowMapRendering || !UseList || !listID)
     {
-        if (g_SelectionRendering || !UseList) {
+        if (g_SelectionRendering || g_ShadowMapRendering || !UseList) {
             glPushMatrix();
             glMultMatrixf(&elem->matrix.matrix[0][0]);
         }
@@ -590,7 +593,6 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
         {
             if (elem->textured) {
                 glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), elem->renderData.verticesTP);
-
                 if (!g_SelectionRendering && !g_ShadowMapRendering) {
                     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                     glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), &(elem->renderData.verticesTP->tx));
@@ -598,7 +600,7 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
             }
             else
                 glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), elem->renderData.verticesP);
-
+            /************************* LOAD NORMALS ****************************/
             if (!g_SelectionRendering && !g_ShadowMapRendering && elem->renderData.normalP)
             {
                 glNormalPointer (GL_FLOAT, sizeof(xVector3), elem->renderData.normalP);
@@ -624,13 +626,13 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
         if (elem->skeletized)
             g_AnimSkeletal.EndAnimation();
 
-        if (g_SelectionRendering || !UseList)
+        if (g_SelectionRendering || g_ShadowMapRendering || !UseList)
             glPopMatrix();
         else
             glEndList();
     }
 
-    if (!g_SelectionRendering && UseList && listID)
+    if (!g_SelectionRendering && !g_ShadowMapRendering && UseList && listID)
     {
         glPushMatrix();
         {
@@ -736,9 +738,6 @@ void xRenderGL :: RenderShadow(const xShadowMap &shadowMap, const xMatrix &locat
     glPushMatrix();
     xMatrix mtxTextureMapping = locationMatrix * shadowMap.receiverUVMatrix;
     glLoadMatrixf(&mtxTextureMapping.x0);
-    //glLoadIdentity();
-    //glMultMatrixf(&shadowMap.receiverUVMatrix.x0);
-    //glMultMatrixf(&locationMatrix.x0);
 
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -869,15 +868,16 @@ xDWORD xRenderGL :: CreateShadowMap(xWORD width, xMatrix &mtxBlockerToLight)
     GLShader::EnableLighting(0);
     GLShader::EnableTexturing(0);
 
-    //glDisable(GL_CULL_FACE);
-    // Shadow color
-    glColor3f(0.5f, 0.5f, 0.5f);
-
     // DRAW
     g_ShadowMapRendering = true;
     xFile * xModelToRenderOld = xModelToRender;
     xModelToRender = xModelPhysical;
+    // Shadow color
+    glColor3f(0.5f, 0.5f, 0.5f);
     this->RenderModel(false);
+    // Shadow color
+    glColor3f(0.9f, 0.9f, 0.9f);
+    this->RenderModel(true);
     xModelToRender = xModelToRenderOld;
     g_ShadowMapRendering = false;
 

@@ -26,7 +26,6 @@ void setLights()
 
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
         glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
-        glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE); // GL_TRUE=two, GL_FALSE=one
         glEnable(GL_LIGHTING);
 
         // light 0
