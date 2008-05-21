@@ -578,6 +578,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
     else
     if (m_EditMode == emSelectVertex)
     {
+        // show vertex info on hover
         std::vector<xDWORD> *sel = SelectCommon(X-3, Y-3, 6, 6);
         // if there were vertices inside the selection box
         if (sel) {

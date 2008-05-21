@@ -207,7 +207,7 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
         lastm->id = ++matId;
         lastm->nextP = NULL;
         lastm->shininess_gloss = mat->shininess;
-        lastm->shininess_level = mat->shin_strength;
+        lastm->shininess_level = mat->shin_strength / 100.f;
         lastm->transparency = mat->transparency;
         lastm->self_illum = mat->self_illum;
         lastm->shader = 0;

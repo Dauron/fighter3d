@@ -31,24 +31,28 @@ std::vector<xDWORD> * ISelectionProvider:: Select(int X, int Y, int W, int H)
     glPushMatrix();
     glLoadIdentity();
     {
-    //Restrict drawing in our picking region.
-    gluPickMatrix(X+W/2, viewport[3]-Y-H/2, W, H, viewport);
-    //Defines the viewing volume
-    glMultMatrixf(projection);
-    //Select the modelview matrix for the drawing
-    glMatrixMode(GL_MODELVIEW);
-    //Draw the scene
+        //Restrict drawing in our picking region.
+        gluPickMatrix(X+W/2, viewport[3]-Y-H/2, W, H, viewport);
+        //Defines the viewing volume
+        glMultMatrixf(projection);
+        //Select the modelview matrix for the drawing
+        glMatrixMode(GL_MODELVIEW);
+        //Draw the scene
         glInitNames();
-    glPushName(0);
+        glPushName(0);
         RenderSelect();
         //Return to render mode, glRenderMode returns the number of hits (only because GL_SELECT was selected before)
-    nbRecords = glRenderMode(GL_RENDER);
+        nbRecords = glRenderMode(GL_RENDER);
         g_SelectionRendering = false;
     }
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
-    if(nbRecords <= 0) return NULL; //Don't pick any objects
+    if(nbRecords <= 0)
+    {
+        delete[] selectBuffer;
+        return NULL; //Don't pick any objects
+    }
 
     /*
      * Select buffer
@@ -65,12 +69,12 @@ std::vector<xDWORD> * ISelectionProvider:: Select(int X, int Y, int W, int H)
     GLuint *record = selectBuffer, minDepth = (GLuint)-1; // (GLuint)-1 = MAXUINT
     do
     {
-    if(minDepth == (GLuint)-1 || minDepth > record[2])
-    {
+        if(minDepth == (GLuint)-1 || minDepth > record[2])
+        {
             if (minDepth != (GLuint)-1)
                 res->push_back(objectID);
             minDepth = record[1];
-        objectID = record[3];
+            objectID = record[3];
         }
         else
             res->push_back(record[3]);

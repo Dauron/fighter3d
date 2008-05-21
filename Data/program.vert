@@ -29,6 +29,7 @@ void main()
             halfV[i] = normalize(gl_LightSource[i].halfVector.xyz);
 		}
 		else {
+            break;
 			lightDir[i] = vec3(1.0,0.0,0.0);
 			dist[i] = 0.0;
 		}

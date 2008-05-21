@@ -36,8 +36,8 @@ void setLights()
         GLfloat light_spec_color[] = { 0.8f, 0.6f, 0.0f, 1.0f };
 
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, light_dif_color); // direct light
-        glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb_color); // environment
+        glLightfv(GL_LIGHT0, GL_AMBIENT,  light_amb_color);  // environment
+        glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_dif_color);  // direct light
         glLightfv(GL_LIGHT0, GL_SPECULAR, light_spec_color); // light on mirrors/metal
 
         // rozpraszanie siê œwiat³a
@@ -54,14 +54,14 @@ void setLights()
         glEnable(GL_LIGHT0);
 
         // light 1
-        GLfloat light_position1[]  = { 10.0f, -10.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
+        GLfloat light_position1[]  = { 10.0f, -5.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
         GLfloat light_amb_color1[] = { 0.1f, 0.0f, 0.0f, 1.0f };
         GLfloat light_dif_color1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
         GLfloat light_spec_color1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 
         glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, light_dif_color1); // direct light
-        glLightfv(GL_LIGHT1, GL_AMBIENT, light_amb_color1); // environment
+        glLightfv(GL_LIGHT1, GL_AMBIENT,  light_amb_color1);  // environment
+        glLightfv(GL_LIGHT1, GL_DIFFUSE,  light_dif_color1);  // direct light
         glLightfv(GL_LIGHT1, GL_SPECULAR, light_spec_color1); // light on mirrors/metal
 
         // rozpraszanie siê œwiat³a
@@ -78,14 +78,15 @@ void setLights()
         glEnable(GL_LIGHT1);
 
         // light 2
-        GLfloat light_position2[]  = { -10.0f, -10.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
+        //GLfloat light_position2[]  = { -10.0f, -10.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
+        GLfloat light_position2[]  = { 0.0f, 0.0f, 1.0f, 0.0f }; // w=0 - directional, w=1 - positional
         GLfloat light_amb_color2[] = { 0.0f, 0.1f, 0.01f, 1.0f };
-        GLfloat light_dif_color2[] = { 0.0f, 1.0f, 0.1f, 1.0f };
-        GLfloat light_spec_color2[] = { 0.0f, 1.0f, 0.1f, 1.0f };
+        GLfloat light_dif_color2[] = { 0.0f, 0.8f, 0.1f, 1.0f };
+        GLfloat light_spec_color2[] = { 0.0f, 0.8f, 0.1f, 1.0f };
 
         glLightfv(GL_LIGHT2, GL_POSITION, light_position2);
-        glLightfv(GL_LIGHT2, GL_DIFFUSE, light_dif_color2); // direct light
-        glLightfv(GL_LIGHT2, GL_AMBIENT, light_amb_color2); // environment
+        glLightfv(GL_LIGHT2, GL_AMBIENT,  light_amb_color2);  // environment
+        glLightfv(GL_LIGHT2, GL_DIFFUSE,  light_dif_color2);  // direct light
         glLightfv(GL_LIGHT2, GL_SPECULAR, light_spec_color2); // light on mirrors/metal
 
         // rozpraszanie siê œwiat³a
