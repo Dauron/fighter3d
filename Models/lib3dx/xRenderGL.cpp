@@ -3,56 +3,6 @@
 #include "../../OpenGL/GLAnimSkeletal.h"
 #include "../../OpenGL/Textures/TextureMgr.h"
 
-void xRenderGL :: Finalize()
-{
-    if (xModel)
-    {
-        if (xModel->texturesInited)
-            for (xMaterial *mat = xModel->materialP; mat; mat = mat->nextP)
-                if (mat->texture.name && mat->texture.htex)
-                {
-                    HTexture htex;
-                    htex.SetHandle(mat->texture.htex);
-                    g_TextureMgr.DeleteTexture(htex);
-                    mat->texture.htex = 0;
-                }
-    }
-    xRender::Finalize();
-}
-void xRenderGL :: InvalidateElementRenderData(xElement *elem)
-{
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
-        InvalidateElementRenderData(selem);
-    elem->renderData.vertexB = 0;
-    elem->renderData.normalB = 0;
-    elem->renderData.indexB = 0;
-    elem->renderData.mode = xRENDERMODE_NULL;
-}
-
-void xRenderGL :: FreeElementRenderData(xElement *elem, bool listOnly)
-{
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
-        FreeElementRenderData(selem, listOnly);
-
-    if (listOnly && elem->renderData.mode != xRENDERMODE_LIST) return;
-
-    if (elem->renderData.mode == xRENDERMODE_VBO)
-    {
-        GLuint p = elem->renderData.vertexB;
-        if (p) glDeleteBuffersARB(1, &p);
-        p = elem->renderData.normalB;
-        if (p) glDeleteBuffersARB(1, &p);
-        p = elem->renderData.indexB;
-    }
-    else
-    if (elem->renderData.mode == xRENDERMODE_LIST && elem->renderData.listID)
-        glDeleteLists(elem->renderData.listID, 1);
-    elem->renderData.vertexB = 0;
-    elem->renderData.normalB = 0;
-    elem->renderData.indexB = 0;
-    elem->renderData.mode = xRENDERMODE_NULL;
-}
-
 static xVector3 OrthoPoint(const xVector3 &source)
 {
     if (IsZero(source.x))
@@ -70,10 +20,9 @@ static xVector3 OrthoPoint(const xVector3 &source)
 
 void xRenderGL :: RenderSkeleton(bool selectionRendering, xWORD selBoneId)
 {
-    if (xModel->spineP)
+    if (spineP)
     {
-        if (!bonesC && xModel->spineP)
-            CalculateSkeleton();
+        if (!bonesC) CalculateSkeleton();
 
         if (selectionRendering) g_AnimSkeletal.ForceSoftware(true);
 
@@ -84,17 +33,17 @@ void xRenderGL :: RenderSkeleton(bool selectionRendering, xWORD selBoneId)
         glDisable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         g_TextureMgr.DisableTextures();
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+        glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
         glEnable(GL_COLOR_MATERIAL);
 
         glColor4f(1.0f,1.0f,0.0f,1.0f);
         glBegin(GL_TRIANGLES);
-            RenderBone(xModel->spineP, selectionRendering, selBoneId);
+            RenderBone(spineP, selectionRendering, selBoneId);
         glEnd();
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
-    glDisable(GL_COLOR_MATERIAL);
+        glDisable(GL_COLOR_MATERIAL);
 
         g_AnimSkeletal.EndAnimation();
 
@@ -125,9 +74,9 @@ void xRenderGL :: RenderBone(const xBone * bone, bool selectionRendering, xWORD 
 
         halfVector.normalize();
         float s = sin(PI/4.0f);
-        xVector4 q; q.Init(halfVector.x*s, halfVector.y*s, halfVector.z*s, cos(PI/4.0f));
+        xVector4 q; q.init(halfVector.x*s, halfVector.y*s, halfVector.z*s, cos(PI/4.0f));
 
-    for (int i=0; i<4; ++i) {
+        for (int i=0; i<4; ++i) {
             boneWght[0] = bone->id + 0.1f;
             g_AnimSkeletal.SetBoneIdxWghts(boneWght);
             g_AnimSkeletal.SetVertex(bone->ending.xyz);
@@ -228,9 +177,10 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
 void xRenderGL :: RenderFaces( xWORD                 selectedElement,
                                std::vector<xDWORD> * facesToRender )
 {
+    assert(xModelToRender);
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    if (!bonesC && xModel->spineP)
+    if (!bonesC && spineP)
         CalculateSkeleton();
 
     glColor4f( 0.8f, 0.8f, 0.f, 1.f );
@@ -238,7 +188,7 @@ void xRenderGL :: RenderFaces( xWORD                 selectedElement,
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
 
-    for (xElement *elem = xModel->firstP; elem; elem = elem->nextP)
+    for (xElement *elem = xModelToRender->firstP; elem; elem = elem->nextP)
         if (UseVBO)
             RenderElementFacesVBO(elem, selectedElement, facesToRender);
         else
@@ -374,6 +324,7 @@ void xRenderGL :: RenderVertices( SelectionMode         selectionMode,
                                   xWORD                 selectedElement,
                                   std::vector<xDWORD> * selectedVertices )
 {
+    assert(xModelToRender);
     glEnableClientState(GL_VERTEX_ARRAY);
     GLint prevMode[2];
     GLfloat prevSize;
@@ -384,7 +335,7 @@ void xRenderGL :: RenderVertices( SelectionMode         selectionMode,
 
     if (selectionMode != smNone) g_AnimSkeletal.ForceSoftware(true);
 
-    if (!bonesC && xModel->spineP)
+    if (!bonesC && spineP)
         CalculateSkeleton();
 
     glColor4f( 0.8f, 0.8f, 0.f, 1.f );
@@ -392,7 +343,7 @@ void xRenderGL :: RenderVertices( SelectionMode         selectionMode,
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
 
-    for (xElement *elem = xModel->firstP; elem; elem = elem->nextP)
+    for (xElement *elem = xModelToRender->firstP; elem; elem = elem->nextP)
         if (UseVBO)
             RenderElementVerticesVBO(elem, selectionMode, selectedElement, selectedVertices);
         else
@@ -568,9 +519,9 @@ void xRenderGL :: RenderElementVerticesLST(
 /********************************* model ************************************/
 void xRenderGL :: RenderModel()
 {
-    assert(xModel);
-    if (!xModel->texturesInited)
-        for (xMaterial *mat = xModel->materialP; mat; mat = mat->nextP)
+    assert(xModelToRender);
+    if (!xModelToRender->texturesInited)
+        for (xMaterial *mat = xModelToRender->materialP; mat; mat = mat->nextP)
             if (mat->texture.name)
             {
                 char tmp[74] = "Data/textures/";
@@ -581,9 +532,9 @@ void xRenderGL :: RenderModel()
             }
             else
                 mat->texture.htex = 0;
-    xModel->texturesInited = true;
+    xModelToRender->texturesInited = true;
 
-    if (!bonesC && xModel->spineP)
+    if (!bonesC && spineP)
         CalculateSkeleton();
 
     m_currentMaterial = (xMaterial*)1;
@@ -591,7 +542,7 @@ void xRenderGL :: RenderModel()
     // NOTE: SelectionRendering doesn't like custom shaders (speed!!!)
     if (g_SelectionRendering) g_AnimSkeletal.ForceSoftware(true);
 
-    for (xElement *elem = xModel->firstP; elem; elem = elem->nextP)
+    for (xElement *elem = xModelToRender->firstP; elem; elem = elem->nextP)
         // NOTE: MIX of display lists and VBO appears to be much slower than VBO only
         if (UseVBO)
             RenderModelVBO(elem);
@@ -721,25 +672,25 @@ void xRenderGL :: RenderModelVBO(xElement *elem)
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), (void *)(7*sizeof(xFLOAT)));
         }
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
         g_AnimSkeletal.SetElement(elem, true);
     }
     else
-    if (elem->textured) {
-        glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), 0);
-
-        if (!g_SelectionRendering) {
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), (void *)(3*sizeof(xFLOAT)));
+    {
+        if (elem->textured) {
+            glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), 0);
+            if (!g_SelectionRendering) {
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), (void *)(3*sizeof(xFLOAT)));
+            }
         }
-    }
-    else
-        glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), 0);
-
-    /************************* LOAD NORMALS ****************************/
-    if (!g_SelectionRendering && elem->renderData.normalP) {
-        glBindBufferARB ( GL_ARRAY_BUFFER_ARB, elem->renderData.normalB );
-        glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
+        else
+            glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), 0);
+        /************************* LOAD NORMALS ****************************/
+        if (!g_SelectionRendering && elem->renderData.normalP) {
+            glBindBufferARB ( GL_ARRAY_BUFFER_ARB, elem->renderData.normalB );
+            glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
+        }
     }
     bool lastSmooth = false;
 

@@ -84,7 +84,7 @@ void main()
 	for (int i=0; i < numLights; ++i) {
 		if (i < lighting) {
 			/* compute the light's direction */
-			aux = vec3(gl_LightSource[i].position)-vertex;
+			aux = gl_LightSource[i].position.xyz-vertex;
 			lightDir[i] = normalize(aux);
 			dist[i] = length(aux);
             halfV[i] = normalize(gl_LightSource[i].halfVector.xyz);

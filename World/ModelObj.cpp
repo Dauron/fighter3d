@@ -6,17 +6,19 @@ float time2;
 float time1b = 0.f;
 float time2b = 0.f;
 
-void ModelObj:: Initialize (const char *filename)
+void ModelObj:: Initialize (const char *gr_filename, const char *ph_filename)
 {
-    assert(modelHandle.IsNull());
-    modelHandle = g_ModelMgr.GetModel(filename);
-    renderer.Initialize(NULL);
+    assert(!renderer.IsValid());
+    if (ph_filename)
+        renderer.Initialize(g_ModelMgr.GetModel(gr_filename), g_ModelMgr.GetModel(ph_filename));
+    else
+        renderer.Initialize(g_ModelMgr.GetModel(gr_filename));
     collisionInfo = NULL;
-    centerOfTheMass.x = centerOfTheMass.y = centerOfTheMass.z = 0.f;
-    transVelocity.x = transVelocity.y = transVelocity.z = 0.f;
-    rotatVelocity.x = rotatVelocity.y = rotatVelocity.z = 0.f; rotatVelocity.w = 1.f;
-    transVelocityPrev = transVelocity;
-    rotatVelocityPrev = rotatVelocity;
+    xRender *rend = GetRenderer();
+    centerOfTheMass = xCenterOfTheModelMass(rend->xModelPhysical, rend->bonesM);
+    mLocationMatrixPrev = mLocationMatrix;
+    transVelocity.zero();
+    rotatVelocity.zeroQ();
     mass       = 1.f;
     resilience = 0.5f;
     physical   = false;
@@ -27,27 +29,16 @@ void ModelObj:: Finalize ()
 {
     if (collisionInfo)
     {
-        CollisionInfo_Free(GetRenderer()->xModel->firstP, collisionInfo);
+        CollisionInfo_Free(GetRenderer()->xModelPhysical->firstP, collisionInfo);
         delete[] collisionInfo;
         collisionInfo = NULL;
     }
-    if (!modelHandle.IsNull())
-    {
-        assert(ModelMgr::GetSingletonPtr());
-        //if (ModelMgr::GetSingletonPtr()) // not needed when the World is used
-        g_ModelMgr.DeleteModel(modelHandle);
-        modelHandle = HModel();
-    }
-    renderer.xModel = NULL; // do not free the model and its render data, it may be used by other ModelObj, Model3dx will free it, when needed
     renderer.Finalize();
 }
 
 void ModelObj:: RenderObject()
 {
-    transVelocityPrev = transVelocity;
-    rotatVelocityPrev = rotatVelocity;
-
-    assert(!modelHandle.IsNull());
+    assert(renderer.IsValid());
     GetRenderer()->RenderModel();
 /*
     if (!phantom)
@@ -90,7 +81,7 @@ void ModelObj:: RenderObject()
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glPointSize(5.f);
     glPopMatrix();
-    CollisionInfo_Render(GetRenderer()->xModel->firstP, collisionInfo);
+    //CollisionInfo_Render(GetRenderer()->xModel->firstP, collisionInfo);
     glBegin(GL_LINES);
     {
         glColor3f(1.f, 1.f, 0.f);
@@ -99,13 +90,21 @@ void ModelObj:: RenderObject()
         glColor3f(1.f, 0.f, 0.f);
         glVertex3fv(cp.xyz);
         glVertex3fv(cno.xyz);
+        glColor3f(0.f, 0.f, 1.f);
+        glVertex3fv(com.xyz);
+        glVertex3fv(cro.xyz);
     }
     glEnd();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glPushMatrix();
     glDisable(GL_COLOR_MATERIAL);
-    glEnable(GL_DEPTH_TEST);
-*/
+    glEnable(GL_DEPTH_TEST);*/
+
+}
+
+void ModelObj:: PreUpdate()
+{
+    RigidBody::CalculateCollisions(this);
 }
 
 void ModelObj:: Update(float deltaTime)
@@ -121,18 +120,18 @@ CollisionInfo *ModelObj::GetCollisionInfo()
 
     idx.clear();
     xRender *rend  = GetRenderer();
-    collisionInfoC = xElementCount(rend->xModel);
+    collisionInfoC = xElementCount(rend->xModelPhysical);
 
     collisionInfo = new CollisionInfo[collisionInfoC];
 
-    centerOfTheMass.x = centerOfTheMass.y = centerOfTheMass.z = 0.f;
+    //centerOfTheMass.x = centerOfTheMass.y = centerOfTheMass.z = 0.f;
     xDWORD   verticesC = 0;
 
-    for (xElement *elem = rend->xModel->firstP; elem; elem = elem->nextP)
+    for (xElement *elem = rend->xModelPhysical->firstP; elem; elem = elem->nextP)
         verticesC += CollisionInfo_Fill(rend, elem, collisionInfo, true);
 
-    if (verticesC)
-        centerOfTheMass /= (float)verticesC;
+    //if (verticesC)
+    //    centerOfTheMass /= (float)verticesC;
 
     time1 += GetTick() - delta;
 
@@ -146,12 +145,12 @@ void ModelObj::CollisionInfo_ReFill()
         float delta = GetTick();
 
         xRender *rend  = GetRenderer();
-        centerOfTheMass.x = centerOfTheMass.y = centerOfTheMass.z = 0.f;
+        //centerOfTheMass.x = centerOfTheMass.y = centerOfTheMass.z = 0.f;
         xDWORD   verticesC = 0;
-        for (xElement *elem = rend->xModel->firstP; elem; elem = elem->nextP)
+        for (xElement *elem = rend->xModelPhysical->firstP; elem; elem = elem->nextP)
             verticesC += CollisionInfo_Fill(rend, elem, collisionInfo, false);
-        if (verticesC)
-            centerOfTheMass /= (float)verticesC;
+        //if (verticesC)
+        //    centerOfTheMass /= (float)verticesC;
 
         time1 += GetTick() - delta;
     }
@@ -163,18 +162,17 @@ xDWORD ModelObj::CollisionInfo_Fill(xRender *rend, xElement *elem, CollisionInfo
     xElement_GetSkinnedVertices(elem, rend->bonesM, mLocationMatrix, ci[elem->id].verticesP, false);
     xDWORD verticesC = ci[elem->id].verticesC = elem->verticesC;
 
-    centerOfTheMass += xCenterOfTheMass(ci[elem->id].verticesP, ci[elem->id].verticesC, false);
+    /*centerOfTheMass += */xCenterOfTheMass(ci[elem->id].verticesP, ci[elem->id].verticesC, false);
     ci[elem->id].bounding  = xBoundingBox(ci[elem->id].verticesP, elem->verticesC);
 
     if (firstTime)
     {
-        if (!elem->collisionData.hierarchyP)
-            xElement_GetCollisionHierarchy(rend->xModel, elem);
+        if (!elem->collisionData.kidsP)
+            xElement_GetCollisionHierarchy(rend->xModelPhysical, elem);
         ci[elem->id].collisionHP = NULL;
     }
     xElement_CalcCollisionHierarchyBox(ci[elem->id].verticesP,
-        elem->collisionData.hierarchyP, elem->collisionData.hierarchyC,
-        ci[elem->id].collisionHP);
+        &elem->collisionData, ci[elem->id].collisionHP);
 
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
         verticesC += CollisionInfo_Fill(rend, celem, ci, firstTime);
@@ -184,8 +182,7 @@ xDWORD ModelObj::CollisionInfo_Fill(xRender *rend, xElement *elem, CollisionInfo
 
 void ModelObj::CollisionInfo_Free(xElement *elem, CollisionInfo *ci)
 {
-    xElement_FreeCollisionHierarchyBounds(elem->collisionData.hierarchyP, elem->collisionData.hierarchyC,
-        ci[elem->id].collisionHP);
+    xElement_FreeCollisionHierarchyBounds(&elem->collisionData, ci[elem->id].collisionHP);
 
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
         CollisionInfo_Free(celem, ci);
@@ -223,8 +220,8 @@ void RenderCI(xCollisionHierarchy *ch, xCollisionHierarchyBounds *chb)
 void ModelObj::CollisionInfo_Render(xElement *elem, CollisionInfo *ci)
 {
     if (elem->verticesC)
-        for (int i=0; i<elem->collisionData.hierarchyC; ++i)
-            RenderCI(elem->collisionData.hierarchyP + i, ci[elem->id].collisionHP + i);
+        for (int i=0; i<elem->collisionData.kidsC; ++i)
+            RenderCI(elem->collisionData.kidsP + i, ci[elem->id].collisionHP + i);
 
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
         CollisionInfo_Render(celem, ci);

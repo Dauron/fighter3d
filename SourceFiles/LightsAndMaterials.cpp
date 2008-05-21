@@ -25,15 +25,15 @@ void setLights()
         GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
 
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
-        glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 0); // 0 = infinite viewpoint, 1 = locale viewpoint
-        glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1); // 0=two 1=one
+        glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
+        glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE); // GL_TRUE=two, GL_FALSE=one
         glEnable(GL_LIGHTING);
 
         // light 0
-        GLfloat light_position[]  = { 0.0f, 0.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
-        GLfloat light_amb_color[] = { 0.08f, 0.06f, 0.0f, 1.0f };
-        GLfloat light_dif_color[] = { 0.8f, 0.6f, 0.0f, 1.0f };
-        GLfloat light_spec_color[] = { 0.8f, 0.6f, 0.0f, 1.0f };
+        GLfloat light_position[]   = { 0.0f, 0.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
+        GLfloat light_amb_color[]  = { 0.09f, 0.07f, 0.0f, 1.0f };
+        GLfloat light_dif_color[]  = { 0.9f, 0.7f, 0.0f, 1.0f };
+        GLfloat light_spec_color[] = { 0.9f, 0.7f, 0.0f, 1.0f };
 
         glLightfv(GL_LIGHT0, GL_POSITION, light_position);
         glLightfv(GL_LIGHT0, GL_AMBIENT,  light_amb_color);  // environment
@@ -54,9 +54,9 @@ void setLights()
         glEnable(GL_LIGHT0);
 
         // light 1
-        GLfloat light_position1[]  = { 10.0f, -5.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
-        GLfloat light_amb_color1[] = { 0.1f, 0.0f, 0.0f, 1.0f };
-        GLfloat light_dif_color1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+        GLfloat light_position1[]   = { 10.0f, -5.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
+        GLfloat light_amb_color1[]  = { 0.1f, 0.0f, 0.0f, 1.0f };
+        GLfloat light_dif_color1[]  = { 1.0f, 0.0f, 0.0f, 1.0f };
         GLfloat light_spec_color1[] = { 1.0f, 0.0f, 0.0f, 1.0f };
 
         glLightfv(GL_LIGHT1, GL_POSITION, light_position1);
@@ -79,10 +79,10 @@ void setLights()
 
         // light 2
         //GLfloat light_position2[]  = { -10.0f, -10.0f, 10.0f, 1.0f }; // w=0 - directional, w=1 - positional
-        GLfloat light_position2[]  = { 0.0f, 0.0f, 1.0f, 0.0f }; // w=0 - directional, w=1 - positional
-        GLfloat light_amb_color2[] = { 0.0f, 0.1f, 0.01f, 1.0f };
-        GLfloat light_dif_color2[] = { 0.0f, 0.8f, 0.1f, 1.0f };
-        GLfloat light_spec_color2[] = { 0.0f, 0.8f, 0.1f, 1.0f };
+        GLfloat light_position2[]   = { 0.0f, 0.0f, 100.0f, 1.0f }; // w=0 - directional, w=1 - positional
+        GLfloat light_amb_color2[]  = { 0.04f, 0.04f, 0.04f, 1.0f };
+        GLfloat light_dif_color2[]  = { 0.4f, 0.4f, 0.4f, 1.0f };
+        GLfloat light_spec_color2[] = { 0.4f, 0.4f, 0.4f, 1.0f };
 
         glLightfv(GL_LIGHT2, GL_POSITION, light_position2);
         glLightfv(GL_LIGHT2, GL_AMBIENT,  light_amb_color2);  // environment
@@ -91,8 +91,8 @@ void setLights()
 
         // rozpraszanie siê œwiat³a
         glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION,  1.0f);
-        glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, 0.004f);
-        glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.0008f);
+        glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, 0.000f);
+        glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.0000f);
 
         //spot cone - for positional lights
         GLfloat spot_direction2[] = { 0.0f, 0.0f, -1.0f };

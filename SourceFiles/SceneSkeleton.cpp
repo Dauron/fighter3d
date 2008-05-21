@@ -11,8 +11,8 @@
 #include "LightsAndMaterials.h"
 #include <algorithm>
 
-SceneSkeleton::SceneSkeleton(Scene *prevScene, const char* modelName)
-        : m_EditMode(emMain), m_PrevScene(prevScene),
+SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName)
+        : m_EditMode(emMain), m_PrevScene(prevScene), m_EditGraphical(true),
           modifyButton(NULL), acceptButton(NULL), mouseLIsDown(false), mouseRIsDown(false),
           play(false), currentAction(0), selectedBone(NULL), selectedElemID(-1), hoveredVert((xDWORD)-1),
           currentAnimation(NULL)
@@ -26,7 +26,8 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char* modelName)
     m_Buttons[emMain].push_back(GLButton("Create Skeleton",  10, 2, 145, 15, IC_BE_ModeSkeletize));
     m_Buttons[emMain].push_back(GLButton("Skinning",        160, 2,  80, 15, IC_BE_ModeSkin));
     m_Buttons[emMain].push_back(GLButton("Animating",       245, 2,  90, 15, IC_BE_ModeAnimate));
-    m_Buttons[emMain].push_back(GLButton("Save",            340, 2,  45, 15, IC_BE_Save));
+    m_Buttons[emMain].push_back(GLButton("Graph/Phys",      340, 2, 100, 15, IC_BE_Select));
+    m_Buttons[emMain].push_back(GLButton("Save",            445, 2,  45, 15, IC_BE_Save));
 
     m_Buttons[emCreateBone].push_back(GLButton("Select", 100, 2, 65, 15, IC_BE_Select, true, true));
     m_Buttons[emCreateBone].push_back(GLButton("Create", 170, 2, 65, 15, IC_BE_Create, true));
@@ -56,13 +57,13 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char* modelName)
     m_Buttons[emSaveAnimation].push_back(GLButton("Accept",    110, 2, 65, 15, IC_Accept));
     m_Buttons[emSaveAnimation].push_back(GLButton("Reject",    180, 2, 65, 15, IC_Reject));
 
-    m_Model.Initialize(modelName);
+    m_Model.Initialize(gr_modelName, ph_modelName);
 
     xRender *renderer = m_Model.GetRenderer();
-    xSkeletonReset(renderer->xModel->spineP);
+    xSkeletonReset(renderer->spineP);
     renderer->CalculateSkeleton();
 
-    m_CurrentDirectory = Filesystem::GetFullPath(Filesystem::GetParentDir(m_Model.GetName()));
+    m_CurrentDirectory = Filesystem::GetFullPath(Filesystem::GetParentDir( gr_modelName ));
 }
 bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned int height)
 {
@@ -429,10 +430,13 @@ void SceneSkeleton::RenderSelect()
 unsigned int SceneSkeleton::CountSelectable()
 {
     if (m_EditMode == emCreateBone || m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        return xBoneChildCount(m_Model.GetRenderer()->xModel->spineP) + 1;
+        return xBoneChildCount(m_Model.GetRenderer()->spineP) + 1;
     else
     if (m_EditMode == emSelectElement)
-        return xElementCount(m_Model.GetRenderer()->xModel);
+        if (m_EditGraphical)
+            return xElementCount(m_Model.GetRenderer()->xModelGraphics);
+        else
+            return xElementCount(m_Model.GetRenderer()->xModelPhysical);
     else
     if (m_EditMode == emSelectVertex)
         return selectedElement->verticesC;
@@ -463,7 +467,7 @@ xBone *SceneSkeleton::SelectBone(int X, int Y)
     if (sel && sel->size()) {
         GLuint id = sel->back();
         delete sel;
-        return xBoneById(m_Model.GetRenderer()->xModel->spineP, id);
+        return xBoneById(m_Model.GetRenderer()->spineP, id);
     }
     delete sel;
     return NULL;

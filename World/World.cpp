@@ -13,7 +13,7 @@ ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 
     objectVec::iterator i, j, begin = objects.begin(), end = objects.end();
     for ( i = begin ; i != end ; ++i ) {
-        if (rayCollisionDetector.Collide(*i, rayPos, rayEnd, colPoint, colDist)) {
+        if (cd_RayToMesh.Collide(*i, rayPos, rayEnd, colPoint, colDist)) {
             if (!collided || minDist > colDist) {
                 res = *i;
                 minDist = colDist;
@@ -29,8 +29,7 @@ void World:: Update(float deltaTime)
 {
     assert(m_Valid);
 
-    if (deltaTime > 2.f) return;
-
+    if (deltaTime > 0.05f) deltaTime = 0.05f;
     deltaTime *= g_Speed;
 
     testsLevel0 = testsLevel1 = testsLevel2 = testsLevel3 = 0;
@@ -38,24 +37,27 @@ void World:: Update(float deltaTime)
     time2b = ((time2b*49.0f + time2)/50.0f);
     time1 = time2 = 0.f;
 
-    //float delta = 0.001f;
-    //while (deltaTime > EPSILON)
-    //{
-    //    deltaTime -= delta;
-    //    if (deltaTime < 0.f) { delta += deltaTime; }
+    float delta = 0.02f;
+    while (deltaTime > EPSILON)
+    {
+        deltaTime -= delta;
+        if (deltaTime < 0.f) { delta += deltaTime; }
 
         objectVec::iterator i, j, begin = objects.begin(), end = objects.end();
         for ( i = begin ; i != end ; ++i )
-            (*i)->Update(deltaTime);
-
-        for ( i = begin ; i != end ; ++i )
             if (! (*i)->phantom)
                 for ( j = i + 1; j != end; ++j )
-                    if (!(*j)->phantom && collisionDetector.Collide(*i, *j))
+                    if (!(*j)->phantom && cd_MeshToMesh.Collide(*i, *j))
                     {
                         // process collision
                     }
-    //}
+
+        for ( i = begin ; i != end ; ++i )
+            (*i)->PreUpdate();
+
+        for ( i = begin ; i != end ; ++i )
+            (*i)->Update(delta);
+    }
 }
 
 void World:: Render()
@@ -76,7 +78,7 @@ void World:: Initialize()
     if (!g_Test)
     {
         model = new ModelObj(0.0f, 0.0f, -0.21f);
-        model->Initialize("Data/models/arena.3dx");
+        model->Initialize("Data/models/arena.3dx", "Data/models/arena_fst.3dx");
         model->phantom  = false;
         model->physical = false;
         model->mass     = 100000000.f;
@@ -84,7 +86,7 @@ void World:: Initialize()
         objects.push_back(model);
 
         model = new ModelObj(-4.0f, -2.0f, 0.0f);
-        model->Initialize("Data/models/crate.3dx");
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx");
         model->phantom = false;
         model->physical = true;
         model->mass     = 50.f;
@@ -92,7 +94,7 @@ void World:: Initialize()
         objects.push_back(model);
 
         model = new ModelObj(-2.0f, -5.0f, 0.0f);
-        model->Initialize("Data/models/crate.3dx");
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx");
         model->phantom = false;
         model->physical = true;
         model->mass     = 50.f;
@@ -100,7 +102,7 @@ void World:: Initialize()
         objects.push_back(model);
 
         model = new ModelObj(2.f, 0.f, 0.0f, 0.0f, 0.0f, 45.0f);
-        model->Initialize("Data/models/crate.3dx");
+        model->Initialize("Data/models/crate.3dx", "Data/models/crate_fst.3dx");
         model->phantom = false;
         model->physical = true;
         model->mass     = 50.f;
@@ -115,8 +117,8 @@ void World:: Initialize()
         model->Initialize("Data/models/2stend.3dx");
         objects.push_back(model);
 
-        model = new ModelObj(5.0f, -10.0f, 5.7f);
-        model->Initialize("Data/models/3vaulting_gym.3dx");
+        model = new ModelObj(5.0f, -10.0f, 5.0f);
+        model->Initialize("Data/models/3vaulting_gym.3dx", "Data/models/3vaulting_gym_fst.3dx");
         model->phantom = false;
         model->physical = true;
         model->mass     = 60.f;

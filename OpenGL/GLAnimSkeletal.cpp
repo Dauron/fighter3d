@@ -23,10 +23,11 @@ void GLAnimSkeletal::ReinitializeGL()
 
 void GLAnimSkeletal::BeginAnimation()
 {
-    m_notForceCPU = !m_forceCPU;
+    m_notForceCPU = !m_forceCPU && g_UseCustomShader;
     if (m_GPUprogram && m_notForceCPU)
         m_prevShader = m_SkeletalShader.Start();
     sft_vertices = NULL;
+    sft_normals  = NULL;
 }
 void GLAnimSkeletal::EndAnimation()
 {
@@ -42,6 +43,11 @@ void GLAnimSkeletal::EndAnimation()
     {
         delete[] sft_vertices;
         sft_vertices = NULL;
+    }
+    if (sft_normals)
+    {
+        delete[] sft_normals;
+        sft_normals = NULL;
     }
 }
 
@@ -64,6 +70,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
         glEnableVertexAttribArrayARB(aBoneIdxWghts);
         if (VBO) {
             glVertexAttribPointerARB (aBoneIdxWghts, 4, GL_FLOAT, GL_FALSE, stride, (void *)(3*sizeof(xFLOAT)));
+            glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.vertexB );
             glVertexPointer (3, GL_FLOAT, stride, 0);
         }
         else {
@@ -71,11 +78,19 @@ void GLAnimSkeletal::SetElement(const xElement *element, bool VBO)
                 stride, element->renderData.verticesSP->bone);
             glVertexPointer (3, GL_FLOAT, stride, element->renderData.verticesP);
         }
+        /************************* LOAD NORMALS ****************************/
+        if (!g_SelectionRendering && element->renderData.normalP) {
+            glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.normalB );
+            glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
+        }
     }
     else {
-        sft_vertices = xElement_GetSkinnedVertices(element, sft_bonesM);
+        xSkinnedData sData = xElement_GetSkinnedElement(element, sft_bonesM);
+        sft_vertices = sData.verticesP;
+        sft_normals  = sData.normalsP;
         if (VBO) glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
-        glVertexPointer (3, GL_FLOAT, sizeof(xVector4), sft_vertices);
+        glVertexPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
+        glNormalPointer (GL_FLOAT, sizeof(xVector3), sft_normals);
     }
 }
 
@@ -100,8 +115,8 @@ void GLAnimSkeletal::SetVertices(GLsizei stride, const GLfloat *pointer, int cou
         glVertexPointer   (3, GL_FLOAT, stride, pointer);
     else {
         xBYTE    *src = (xBYTE *) pointer;
-        xVector4 *dst = new xVector4[count];
-        xVector4 *itr = dst;
+        xVector3 *dst = new xVector3[count];
+        xVector3 *itr = dst;
 
         if (sft_boneIdxArray) {
             const GLfloat *wghts = sft_boneIdxWghts;
@@ -110,10 +125,10 @@ void GLAnimSkeletal::SetVertices(GLsizei stride, const GLfloat *pointer, int cou
             memset(dst, 0, count*sizeof(xVector4));
             for (int i = 0; i<count; ++i, ++itr, src += stride)
             {
-                xVector4 vec; vec.Init(*((xVector3 *)src), 1.f);
+                xVector4 vec; vec.init(*((xVector3 *)src), 1.f);
                 for (int j=0; j<4; ++j, ++wghts)
-                    (*itr) += sft_bonesM[(int)floor(*wghts)]
-                              * vec * 10*(*wghts - floor(*wghts));
+                    (*itr) += (sft_bonesM[(int)floor(*wghts)]
+                              * vec * 10*(*wghts - floor(*wghts))).vector3;
                 wghts = (GLfloat *)((xBYTE *) wghts + boneStride);
             }
         }
@@ -129,15 +144,15 @@ void GLAnimSkeletal::SetVertices(GLsizei stride, const GLfloat *pointer, int cou
 
             for (int i = 0; i<count; ++i, ++itr, src += stride)
             {
-                xVector4 vec; vec.Init(*((xVector3 *)src), 1.f);
-                *itr  = sft_bonesM[i1] * vec * w1;
-                *itr += sft_bonesM[i2] * vec * w2;
-                *itr += sft_bonesM[i3] * vec * w3;
-                *itr += sft_bonesM[i4] * vec * w4;
+                xVector4 vec; vec.init(*((xVector3 *)src), 1.f);
+                *itr  = (sft_bonesM[i1] * vec * w1).vector3;
+                *itr += (sft_bonesM[i2] * vec * w2).vector3;
+                *itr += (sft_bonesM[i3] * vec * w3).vector3;
+                *itr += (sft_bonesM[i4] * vec * w4).vector3;
             }
         }
 
-        glVertexPointer (3, GL_FLOAT, sizeof(xVector4), dst);
+        glVertexPointer (3, GL_FLOAT, sizeof(xVector3), dst);
         sft_vertices = dst;
     }
 }
@@ -169,7 +184,7 @@ void GLAnimSkeletal::SetVertex(const GLfloat vertex[3])
         int   i4 = (int) floor(sft_boneIdxWghts[3]);
         float w4 = (sft_boneIdxWghts[3] - i4)*10;
 
-        xVector4 vec; vec.Init(*((xVector3 *)vertex), 1.f);
+        xVector4 vec; vec.init(*((xVector3 *)vertex), 1.f);
         xVector4 res = sft_bonesM[i1] * vec * w1;
         res += sft_bonesM[i2] * vec * w2;
         res += sft_bonesM[i3] * vec * w3;

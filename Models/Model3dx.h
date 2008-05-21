@@ -1,23 +1,19 @@
 #ifndef __incl_Model3dx_h
 #define __incl_Model3dx_h
 
-#include "lib3dx/xRenderGL.h"
 #include "../Utils/HandleDst.h"
+#include "lib3dx/xModel.h"
 
 struct Model3dx : public HandleDst
 {
 public:
     char      *m_Name;  // for reconstruction
-    xRenderGL  renderer;
+    xFile     *model;
 
-    Model3dx() : m_Name(NULL) {}
+    Model3dx() : m_Name(NULL), model(NULL) {}
 
     bool Load ( const char *name );
-    void Unload( void )
-    {
-        renderer.Finalize();
-        if (m_Name) { delete[] m_Name; m_Name = NULL; }
-    }
+    void Unload( void );
     bool ReLoad()
     {
         assert(m_Name);
@@ -28,8 +24,22 @@ public:
         return res;
     }
 
-    void Invalidate()  { renderer.Invalidate(); }
-    bool IsValid()     { return renderer.xModel; }
+    void Invalidate()  {
+        model->texturesInited = false;
+        for (xElement *elem = model->firstP; elem; elem = elem->nextP)
+            InvalidateElementRenderData(elem);
+    }
+    bool IsValid()     { return model; }
+
+    void FreeRenderData(bool listOnly = false)
+    {
+        for (xElement *elem = model->firstP; elem; elem = elem->nextP)
+            FreeElementRenderData(elem, listOnly);
+    }
+
+private:
+    void InvalidateElementRenderData(xElement *elem);
+    void FreeElementRenderData(xElement *elem, bool listOnly);
 };
 
 #endif

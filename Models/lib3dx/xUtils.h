@@ -22,9 +22,16 @@ struct xBox
     }
 };
 
+struct xSkinnedData
+{
+    xVector3 *verticesP;
+    xVector3 *normalsP;
+};
+
 struct xCollisionHierarchyBounds
 {
     xBox           bounding;
+    bool           sorted;
 
     xCollisionHierarchyBounds *kids;
 };
@@ -32,20 +39,20 @@ struct xCollisionHierarchyBounds
 xVector4 * xElement_GetSkinnedVertices(const xElement *elem, const xMatrix *bones, bool fromRenderData = true);
 xVector4 * xElement_GetSkinnedVertices(const xElement *elem, const xMatrix *bones, xMatrix transformation,
                                        xVector4 *&dst, bool fromRenderData = true);
+xSkinnedData xElement_GetSkinnedElement(const xElement *elem, const xMatrix *bones);
 
 xVector3   xCenterOfTheMass           (const xElement *elem, const xMatrix *bones);
+xVector3   xCenterOfTheModelMass      (const xFile    *file, const xMatrix *bones);
 xVector3   xCenterOfTheElement        (const xElement *elem, const xMatrix *bones);
-xVector3   xCenterOfTheModel          (const xFile *file, const xMatrix *bones);
+xVector3   xCenterOfTheModel          (const xFile    *file, const xMatrix *bones);
 
 xVector3   xCenterOfTheMass           (const xVector4* vertices, xDWORD count, bool scale = true);
 xBox       xBoundingBox               (const xVector4* vertices, xDWORD count);
 
-void xElement_GetCollisionHierarchy(const xFile *file, xElement *elem);
-void xElement_FreeCollisionHierarchy(xCollisionHierarchy *hierarchyP, xWORD hierarchyC);
-void xElement_FreeCollisionHierarchyBounds(xCollisionHierarchy *hierarchyP, xWORD hierarchyC,
-                                           xCollisionHierarchyBounds *hierarchyBP);
-xBox xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
-                                        xCollisionHierarchy *hierarchyP, xWORD hierarchyC,
-                                        xCollisionHierarchyBounds *&bounds);
+void xElement_GetCollisionHierarchy        (const xFile *file, xElement *elem);
+void xElement_FreeCollisionHierarchy       (xCollisionData *pcData);
+void xElement_FreeCollisionHierarchyBounds (xCollisionData *pcData, xCollisionHierarchyBounds *hierarchyBP);
+xBox xElement_CalcCollisionHierarchyBox    (const xVector4* vertices,
+                                            xCollisionData *pcData, xCollisionHierarchyBounds *&bounds);
 
 #endif

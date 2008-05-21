@@ -20,9 +20,15 @@ public:
 
     xVector3       centerOfTheMass;
     xVector3       transVelocity;
-    xVector3       transVelocityPrev;
     xVector4       rotatVelocity;
-    xVector4       rotatVelocityPrev;
+
+    xMatrix        mLocationMatrixPrev;
+    xVector3       collisionNorm;
+    xVector3       collisionVelo;
+    xVector3       collisionCent;
+    xVector3       penetrationCorrection;
+
+    //xVector3       cp, com, cno, cro;
 
 public:
     ModelObj () : Object3D() {}
@@ -32,32 +38,29 @@ public:
          GLfloat rotX, GLfloat rotY, GLfloat rotZ)
       : Object3D(x,y,z, rotX,rotY,rotZ) {}
 
-    virtual void Initialize (const char *filename);
+    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL);
     virtual void Finalize ();
 
-    const char * GetName() const { return g_ModelMgr.GetName(modelHandle); }
-    Model3dx   * GetModel()      { return g_ModelMgr.GetModel(modelHandle); }
     xRender    * GetRenderer()   {
-        renderer.xModel = GetModel()->renderer.xModel;
+        renderer.UpdatePointers();
         return &renderer;
     }
     CollisionInfo *GetCollisionInfo();
+    xWORD          GetCollisionInfoC() { return collisionInfoC; }
 
     std::vector<CollisionWithModel> CollidedModels;
 
+    virtual void PreUpdate();
     virtual void Update(float deltaTime);
 
     void   CollisionInfo_ReFill ();
 
 protected:
-    HModel         modelHandle;
     xRenderGL      renderer;
 
     CollisionInfo *collisionInfo;
     xWORD          collisionInfoC;
     std::vector<xDWORD> idx;
-
-    //xVector3       cp, com, cno;
 
     void RenderObject();
 

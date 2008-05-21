@@ -15,6 +15,8 @@ class GLShader
     static int lights;
     static int textures;
 
+    char *vertexShaderFile;
+    char *fragmentShaderFile;
     char *vertexShaderSrc;
     char *fragmentShaderSrc;
 
@@ -29,11 +31,13 @@ public:
 
     GLShader()
     {
-        program           = 0;
-        vertex_shader     = 0;
-        fragment_shader   = 0;
-        vertexShaderSrc   = 0;
-        fragmentShaderSrc = 0;
+        program            = 0;
+        vertex_shader      = 0;
+        fragment_shader    = 0;
+        vertexShaderFile   = NULL;
+        vertexShaderSrc    = NULL;
+        fragmentShaderFile = NULL;
+        fragmentShaderSrc  = NULL;
 
         uTexturing = 0;
         uLighting  = 0;
@@ -47,9 +51,13 @@ public:
     void Load(const char *vShaderFile, const char *fShaderFile);
     void Unload()
     {
-        if (vertexShaderSrc)   delete[] vertexShaderSrc;
+        if (vertexShaderFile)   delete[] vertexShaderFile;
+        vertexShaderFile = NULL;
+        if (vertexShaderSrc)    delete[] vertexShaderSrc;
         vertexShaderSrc = NULL;
-        if (fragmentShaderSrc) delete[] fragmentShaderSrc;
+        if (fragmentShaderFile) delete[] fragmentShaderFile;
+        fragmentShaderFile = NULL;
+        if (fragmentShaderSrc)  delete[] fragmentShaderSrc;
         fragmentShaderSrc = NULL;
     }
 

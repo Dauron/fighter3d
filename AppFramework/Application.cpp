@@ -105,9 +105,9 @@ int Application::Run()
 
         prevTick = curTick;
         curTick = GetTick();
-
         this->Update((curTick - prevTick)/1000.f);
         if (m_window->Terminated()) break;
+        curTick = GetTick();
         this->Render();
     }
     return 0;

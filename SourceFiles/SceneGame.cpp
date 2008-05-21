@@ -200,7 +200,11 @@ bool SceneGame::Update(float deltaTime)
         Camera_Aim_GL(*DefaultCamera);
         ModelObj *obj = world.Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
-            g_Application.SetCurrentScene(new SceneSkeleton(this, obj->GetName()), false);
+        {
+            xRender *rend = obj->GetRenderer();
+            g_Application.SetCurrentScene(new SceneSkeleton(this,
+                rend->xModelGraphics->fileName, rend->xModelPhysical->fileName), false);
+        }
 /*
         float near_height = 0.1f * tan(45.0f * PI / 360.0f);
         float norm_x = 1.0f - (float)g_InputMgr.mouseX/(Width/2.0f);

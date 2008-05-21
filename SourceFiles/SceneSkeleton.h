@@ -18,12 +18,12 @@
 class SceneSkeleton : public Scene, public ISelectionProvider
 {
   public:
-    SceneSkeleton(Scene *prevScene, const char *modelName);
+    SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName);
     ~SceneSkeleton() { m_Model.Finalize(); }
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate() {
-        m_Model.GetModel()->Invalidate();
+        m_Model.GetRenderer()->Invalidate();
         return m_PrevScene->Invalidate();
     }
     virtual void Terminate();
@@ -51,6 +51,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     Scene     * m_PrevScene;
     HFont       m_Font;
     ModelObj    m_Model;
+    bool        m_EditGraphical;
     char      * modifyButton, * acceptButton;
 
     std::vector<std::vector<GLButton> > m_Buttons;

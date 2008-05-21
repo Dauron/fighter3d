@@ -19,7 +19,7 @@ Jason Shankel
 xVector3 xQuaternion::rotate(const xVector4 &q, const xVector3 &p)
 {
     //return (xVector3)QuaternionProduct(QuaternionProduct(q,(xVector4)p),(QuaternionComplement(q)));
-    xVector4 q_minus; q_minus.Init(-q.x,-q.y,-q.z,q.w);
+    xVector4 q_minus; q_minus.init(-q.x,-q.y,-q.z,q.w);
 
     xVector4 ret;
     ret.w = - q.x*p.x - q.y*p.y - q.z*p.z;

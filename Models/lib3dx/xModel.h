@@ -122,21 +122,19 @@ struct xRenderData
     xWORD3            *facesP;
 };
 
-struct xCollisionHierarchy
+struct xCollisionHierarchy;
+struct xCollisionData
+{
+    xWORD                kidsC;
+    xCollisionHierarchy *kidsP;
+};
+
+struct xCollisionHierarchy : xCollisionData
 {
     xWORD                 facesC;
     xWORD3             ** facesP;
     xWORD                 verticesC;
     xDWORD             *  verticesP;
-
-    xWORD                 kidsC;
-    xCollisionHierarchy * kidsP;
-};
-
-struct xCollisionData
-{
-    xCollisionHierarchy *hierarchyP;
-    xWORD                hierarchyC;
 };
 
 struct xElement {
@@ -182,6 +180,8 @@ struct xBone {
 };
 
 struct xFile {
+    char      *fileName;
+
     xMaterial *materialP; // first material
     xWORD      materialC; // no of materials
 
@@ -199,8 +199,11 @@ xMaterial *xMaterialById  (const xFile *file, xWORD materialId);
 xElement  *xElementById   (const xFile* model, xDWORD selectedElement = -1);
 xWORD      xElementCount  (const xFile* model);
 
-xFile     *xFileLoad(const char *fileName);
-void       xFileSave(const char *fileName, const xFile *xfile);
+void       xBoneFree(xBone *bone);
+void       xBoneCopy(const xBone *boneSrc, xBone *&boneDst);
+
+xFile     *xFileLoad(const char *fileName, bool createCollisionInfo = true);
+void       xFileSave(const xFile *xfile);
 void       xFileFree(xFile *xfile);
 
 void       xFaceListCalculateNormals(xElement *elem, xFaceList *faceL);

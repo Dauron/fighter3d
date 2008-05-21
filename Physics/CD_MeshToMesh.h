@@ -1,9 +1,9 @@
-#ifndef __incl_Physics_CollisionDetector_h
-#define __incl_Physics_CollisionDetector_h
+#ifndef __incl_Physics_CD_MeshToMesh_h
+#define __incl_Physics_CD_MeshToMesh_h
 
 #include "../World/ModelObj.h"
 
-class CollisionDetector
+class CD_MeshToMesh
 {
 #define det3(x1, y1, z1, x2, y2, z2, x3, y3, z3)    (x1)*((y2)*(z3)-(z2)*(y3))+(y1)*((z2)*(x3)-(x2)*(z3))+(z1)*((x2)*(y3)-(y2)*(x3));
 #define determinant(vA, vB, vC)                     (vA->x-vC->x)*(vB->y-vC->y)-(vA->y-vC->y)*(vB->x-vC->x)
@@ -48,8 +48,8 @@ public:
         collidedModel1 = collidedModel2 = NULL;
 
         bool res = false;
-        for (xElement *elem1 = r1->xModel->firstP; elem1; elem1 = elem1->nextP)
-            res |= Collide1(++ci1, ci2, elem1, r2->xModel->firstP);
+        for (xElement *elem1 = r1->xModelPhysical->firstP; elem1; elem1 = elem1->nextP)
+            res |= Collide1(++ci1, ci2, elem1, r2->xModelPhysical->firstP);
 
         time2 += GetTick() - delta;
         return res;

@@ -56,18 +56,19 @@ public:
 
             if (bones)
             {
-                xAnimation::SaveToSkeleton(renderer->xModel->spineP, bones);
+                xAnimation::SaveToSkeleton(renderer->spineP, bones);
                 delete[] bones;
 
                 //CollisionInfo_ReFill();
             }
             renderer->CalculateSkeleton();
             CollisionInfo_ReFill();
+            centerOfTheMass = xCenterOfTheModelMass(renderer->xModelPhysical, renderer->bonesM);
 
             if (actions.progress > 10000) actions.progress = 0;
         }
         else
-            xSkeletonReset(renderer->xModel->spineP);
+            xSkeletonReset(renderer->spineP);
     }
 
     xActionSet actions;

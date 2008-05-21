@@ -2,13 +2,13 @@
 
 const int numLights = 3;
 
-uniform int texturing;
 uniform int lighting;
+uniform int texturing;
 
 varying vec3  normal;
 varying vec3  lightDir[numLights];
-varying float dist[numLights];
-varying vec3 halfV[numLights];
+varying float dist    [numLights];
+varying vec3  halfV   [numLights];
 
 void main()
 {
@@ -23,15 +23,15 @@ void main()
 	for (int i=0; i < numLights; ++i) {
 		if (i < lighting) {
 			/* compute the light's direction */
-			aux = vec3(gl_LightSource[i].position)-vertex;
+			aux = gl_LightSource[i].position.xyz-vertex;
 			lightDir[i] = normalize(aux);
 			dist[i] = length(aux);
             halfV[i] = normalize(gl_LightSource[i].halfVector.xyz);
 		}
 		else {
             break;
-			lightDir[i] = vec3(1.0,0.0,0.0);
-			dist[i] = 0.0;
+			//lightDir[i] = vec3(1.0,0.0,0.0);
+			//dist[i] = 0.0;
 		}
 	}
 	

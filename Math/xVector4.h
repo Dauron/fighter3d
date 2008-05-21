@@ -18,12 +18,14 @@ union xVector4 {
     //xVector4(const xVector3 &src, xFLOAT W) : w(W) {
     //    memcpy(this, &src, sizeof(xVector3));
     //}
-    static xVector4 Create(xFLOAT X, xFLOAT Y, xFLOAT Z, xFLOAT W) { xVector4 res; return res.Init(X,Y,Z,W); }
-    static xVector4 Create(const xVector3 &src, xFLOAT W)          { xVector4 res; return res.Init(src,W); }
-    static xVector4 Create(const xVector3 &src)                    { xVector4 res; return res.Init(src); }
-    xVector4       &Init  (xFLOAT X, xFLOAT Y, xFLOAT Z, xFLOAT W) { x = X; y = Y; z = Z; w = W; return *this; }
-    xVector4       &Init  (const xVector3 &src, xFLOAT W)          { vector3 = src; w = W; return *this; }
-    xVector4       &Init  (const xVector3 &src)                    { vector3 = src; w = 0.f; return *this; }
+    static xVector4 Create(xFLOAT X, xFLOAT Y, xFLOAT Z, xFLOAT W) { xVector4 res; return res.init(X,Y,Z,W); }
+    static xVector4 Create(const xVector3 &src, xFLOAT W)          { xVector4 res; return res.init(src,W); }
+    static xVector4 Create(const xVector3 &src)                    { xVector4 res; return res.init(src); }
+    xVector4       &init  (xFLOAT X, xFLOAT Y, xFLOAT Z, xFLOAT W) { x = X; y = Y; z = Z; w = W; return *this; }
+    xVector4       &init  (const xVector3 &src, xFLOAT W)          { vector3 = src; w = W;       return *this; }
+    xVector4       &init  (const xVector3 &src)                    { vector3 = src; w = 0.f;     return *this; }
+    xVector4       &zero  ()                                       { x = y = z = w = 0.f;        return *this; }
+    xVector4       &zeroQ ()                                       { x = y = z = 0.f; w = 1.f;   return *this; }
 
 
     // Array indexing

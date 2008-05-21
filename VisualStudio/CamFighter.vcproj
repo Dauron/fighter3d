@@ -364,7 +364,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\lib3ds\file.h"
+					RelativePath="..\Models\lib3ds\file.h"
 					>
 				</File>
 				<File
@@ -807,11 +807,19 @@
 			Name="Physics"
 			>
 			<File
-				RelativePath="..\Physics\CollisionDetector.cpp"
+				RelativePath="..\Physics\CD_MeshToMesh.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Physics\CollisionDetector.h"
+				RelativePath="..\Physics\CD_MeshToMesh.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Physics\CD_RayToMesh.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Physics\CD_RayToMesh.h"
 				>
 			</File>
 			<File
@@ -819,11 +827,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Physics\RayTrCollisionDetector.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\Physics\RayTrCollisionDetector.h"
+				RelativePath="..\Physics\RigidBody.cpp"
 				>
 			</File>
 			<File

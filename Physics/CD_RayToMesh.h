@@ -1,9 +1,9 @@
-#ifndef __incl_Physics_RayTrCollisionDetector_h
-#define __incl_Physics_RayTrCollisionDetector_h
+#ifndef __incl_Physics_CDRayToMesh_h
+#define __incl_Physics_CDRayToMesh_h
 
 #include "../World/ModelObj.h"
 
-class RayTrCollisionDetector
+class CD_RayToMesh
 {
 #define determinant(vA, vB, vC)                     (vA->x-vC->x)*(vB->y-vC->y)-(vA->y-vC->y)*(vB->x-vC->x)
     static const float Epsilon;
@@ -19,9 +19,8 @@ class RayTrCollisionDetector
 
     bool IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, xVector3 *crossing);
     bool CheckOctreeLevel(CollisionInfo *ci,
-                          xCollisionHierarchy *ch,
+                          xCollisionData *pcd,
                           xCollisionHierarchyBounds *chb,
-                          xWORD cnt,
                           xElement *elem);
     bool CollideElements(CollisionInfo *&ci, xElement *elem);
 

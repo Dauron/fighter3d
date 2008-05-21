@@ -108,9 +108,9 @@ void   _xBoneCalculateQuats(const xBone *bone, xVector4 *&boneP, const xBone *pB
     xVector4 *boneDst = boneP + bone->id*2;
     *(boneDst+0) = bone->quaternion;
     if (pBone)
-        (boneDst+1)->Init(pBone->ending, pBone->id);
+        (boneDst+1)->init(pBone->ending, pBone->id);
     else
-        (boneDst+1)->Init(bone->quaternion.vector3, -1.f);
+        (boneDst+1)->init(bone->quaternion.vector3, -1.f);
     for (xBone *cbone = bone->kidsP; cbone; cbone = cbone->nextP)
         _xBoneCalculateQuats(cbone, boneP, bone);
 }

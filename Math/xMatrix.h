@@ -97,13 +97,13 @@ union xMatrix {
     }
     // Multiply xMatrix by a xVector3
     friend xVector3 operator * (const xMatrix &b, const xVector3 &a) {
-        xVector4 ret; ret.Init(a, 0.f);
+        xVector4 ret; ret.init(a, 0.f);
         ret = b * ret;
         return ret.vector3;
     }
     // Multiply xVector3 by a xMatrix
     friend xVector3 operator * (const xVector3 &a, const xMatrix &b) {
-        xVector4 ret; ret.Init(a, 0.f);
+        xVector4 ret; ret.init(a, 0.f);
         ret = ret * b;
         return ret.vector3;
     }

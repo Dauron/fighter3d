@@ -27,7 +27,8 @@ class GLAnimSkeletal : public Singleton<GLAnimSkeletal>
     const GLfloat  *sft_boneIdxWghts;
     GLsizei         sft_boneIdxStride;
     bool            sft_boneIdxArray;
-    const xVector4 *sft_vertices;
+    const xVector3 *sft_vertices;
+    const xVector3 *sft_normals;
 
 public:
     GLAnimSkeletal()

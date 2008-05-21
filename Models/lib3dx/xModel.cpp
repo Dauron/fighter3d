@@ -382,25 +382,25 @@ void xCollisionHierarchySave(FILE *file, xElement *elem, xCollisionHierarchy *co
 
 void xCollisionDataLoad(FILE *file, xElement *elem)
 {
-    fread(&elem->collisionData.hierarchyC, sizeof(elem->collisionData.hierarchyC), 1, file);
-    if (elem->collisionData.hierarchyC)
+    fread(&elem->collisionData.kidsC, sizeof(elem->collisionData.kidsC), 1, file);
+    if (elem->collisionData.kidsC)
     {
-        elem->collisionData.hierarchyP = new xCollisionHierarchy[elem->collisionData.hierarchyC];
-        xCollisionHierarchy *iter = elem->collisionData.hierarchyP;
-        for (int i = elem->collisionData.hierarchyC; i; --i, ++iter)
+        elem->collisionData.kidsP = new xCollisionHierarchy[elem->collisionData.kidsC];
+        xCollisionHierarchy *iter = elem->collisionData.kidsP;
+        for (int i = elem->collisionData.kidsC; i; --i, ++iter)
             xCollisionHierarchyLoad(file, elem, iter);
     }
     else
-        elem->collisionData.hierarchyP = NULL;
+        elem->collisionData.kidsP = NULL;
 }
 
 void xCollisionDataSave(FILE *file, xElement *elem)
 {
-    fwrite(&elem->collisionData.hierarchyC, sizeof(elem->collisionData.hierarchyC), 1, file);
-    if (elem->collisionData.hierarchyC)
+    fwrite(&elem->collisionData.kidsC, sizeof(elem->collisionData.kidsC), 1, file);
+    if (elem->collisionData.kidsC)
     {
-        xCollisionHierarchy *iter = elem->collisionData.hierarchyP;
-        for (int i = elem->collisionData.hierarchyC; i; --i, ++iter)
+        xCollisionHierarchy *iter = elem->collisionData.kidsP;
+        for (int i = elem->collisionData.kidsC; i; --i, ++iter)
             xCollisionHierarchySave(file, elem, iter);
     }
 }
@@ -413,11 +413,11 @@ void xCollisionInfo_Fill(xFile *xfile, xElement *elem)
         for (; last; last = last->nextP)
             xCollisionInfo_Fill(xfile, last);
     }
-    //if (elem->collisionData.hierarchyP) { // force Octree recalculation
-    //    xElement_FreeCollisionHierarchy(elem->collisionData.hierarchyP, elem->collisionData.hierarchyC);
-    //    elem->collisionData.hierarchyP = NULL;
+    //if (elem->collisionData.kidsP) { // force Octree recalculation
+    //    xElement_FreeCollisionHierarchy(elem->collisionData.kidsP, elem->collisionData.kidsC);
+    //    elem->collisionData.kidsP = NULL;
     //}
-    if (elem->collisionData.hierarchyP == NULL)
+    if (elem->collisionData.kidsP == NULL)
         xElement_GetCollisionHierarchy(xfile, elem);
 }
 
@@ -502,8 +502,8 @@ void      xElementFree(xElement *elem)
         curr = next;
     }
 
-    if (elem->collisionData.hierarchyP)
-        xElement_FreeCollisionHierarchy(elem->collisionData.hierarchyP, elem->collisionData.hierarchyC);
+    if (elem->collisionData.kidsP)
+        xElement_FreeCollisionHierarchy(&elem->collisionData);
 
     delete elem;
 }
@@ -515,8 +515,8 @@ xElement *xElementLoad(FILE *file, xFile *xfile)
     {
         memset(&(elem->renderData),0, sizeof(elem->renderData));
 
-        elem->collisionData.hierarchyP = NULL;
-        elem->collisionData.hierarchyC = 0;
+        elem->collisionData.kidsP = NULL;
+        elem->collisionData.kidsC = 0;
 
         elem->verticesP = NULL;
         elem->smoothP   = NULL;
@@ -667,6 +667,7 @@ void      xElementSave(FILE *file, const xFile *xfile, xElement *elem)
 ////////////////////// xBone
 void   xBoneFree(xBone *bone)
 {
+    if (!bone) return;
     if (bone->name)
         delete[] bone->name;
     xBone *curr = bone->kidsP, *next;
@@ -677,6 +678,47 @@ void   xBoneFree(xBone *bone)
         curr = next;
     }
     delete bone;
+}
+
+void   xBoneCopy(const xBone *boneSrc, xBone *&boneDst)
+{
+    boneDst = new xBone();
+    if (boneDst)
+    {
+        boneDst->ending = boneSrc->ending;
+        boneDst->id     = boneSrc->id;
+        boneDst->kidsC  = boneSrc->kidsC;
+        if (boneSrc->name)
+            boneDst->name = strdup(boneSrc->name);
+        else
+            boneDst->name = NULL;
+        boneDst->quaternion = boneSrc->quaternion;
+        boneDst->kidsP = NULL;
+        boneDst->nextP = NULL;
+
+        if (boneDst->kidsC)
+        {
+            xBone *iter = boneSrc->kidsP;
+            xBone *last = NULL;
+            for (int i=boneDst->kidsC; i ; --i)
+            {
+                if (last) {
+                    xBoneCopy(iter, last->nextP);
+                    last = last->nextP;
+                }
+                else {
+                    xBoneCopy(iter, boneDst->kidsP);
+                    last = boneDst->kidsP;
+                }
+                iter = iter->nextP;
+                if (!last)
+                {
+                    xBoneFree(boneDst);
+                    boneDst = NULL;
+                }
+            }
+        }
+    }
 }
 
 xBone *xBoneLoad(FILE *file, xFile *xfile)
@@ -741,6 +783,10 @@ void   xBoneSave(FILE *file, xBone *bone)
 ////////////////////// xFile
 void   xFileFree(xFile *xfile)
 {
+    if (!xfile) return;
+
+    if (xfile->fileName)
+        delete[] xfile->fileName;
     xMaterial *curr = xfile->materialP, *next;
     while (curr)
     {
@@ -756,13 +802,14 @@ void   xFileFree(xFile *xfile)
 }
 
 
-xFile *xFileLoad(const char *fileName)
+xFile *xFileLoad(const char *fileName, bool createCollisionInfo)
 {
     FILE *file;
     file = fopen(fileName, "rb");
     if (file)
     {
         xFile *xfile = new xFile();
+        xfile->fileName = strdup(fileName);
         if (xfile)
         {
             xfile->texturesInited = false;
@@ -770,7 +817,6 @@ xFile *xFileLoad(const char *fileName)
             xDWORD len;
             fread(&len, sizeof(len), 1, file);
             fread(&xfile->saveCollisionData, sizeof(xfile->saveCollisionData), 1, file);
-            //xfile->saveCollisionData = false;
 
             xfile->materialP = NULL;
             xfile->firstP = NULL;
@@ -796,7 +842,8 @@ xFile *xFileLoad(const char *fileName)
                 xfile->spineP = xBoneLoad(file, xfile);
             }
 
-            xCollisionInfo_Fill(xfile, xfile->firstP);
+            if (createCollisionInfo)
+                xCollisionInfo_Fill(xfile, xfile->firstP);
         }
         fclose(file);
         return xfile;
@@ -804,18 +851,15 @@ xFile *xFileLoad(const char *fileName)
     return NULL;
 }
 
-void   xFileSave(const char *fileName, const xFile *xfile)
+void   xFileSave(const xFile *xfile)
 {
     FILE *file;
-    file = fopen(fileName, "wb");
+    file = fopen(xfile->fileName, "wb");
     if (file)
     {
         xDWORD len = sizeof(xfile->saveCollisionData);
         fwrite(&len, sizeof(len), 1, file);
         fwrite(&xfile->saveCollisionData, sizeof(xfile->saveCollisionData), 1, file);
-        //bool b = true;
-        //fwrite(&b, sizeof(xfile->saveCollisionData), 1, file);
-
 
         xMaterialsSave(file, xfile);
         xElementSave(file, xfile, xfile->firstP);

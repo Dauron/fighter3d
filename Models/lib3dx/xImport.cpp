@@ -33,8 +33,25 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
     memset(&(elem->renderData), 0, sizeof(elem->renderData));
     memcpy(elem->matrix.matrix, node->matrix, sizeof(elem->matrix));
 
-    elem->collisionData.hierarchyP = NULL;
-    elem->collisionData.hierarchyC = 0;
+    int mirrorFaces = 0;
+    xMatrix scl;
+    scl.identity();
+    if (node->data.object.scl_track.keyL)
+    {
+        scl.x0 *= node->data.object.scl_track.keyL->value[0];
+        scl.y1 *= node->data.object.scl_track.keyL->value[1];
+        scl.z2 *= node->data.object.scl_track.keyL->value[2];
+        if (scl.x0 < 0.f) ++mirrorFaces;
+        if (scl.y1 < 0.f) ++mirrorFaces;
+        if (scl.z2 < 0.f) ++mirrorFaces;
+        if (mirrorFaces == 2) mirrorFaces = 0;
+    }
+    xVector4 pivot; pivot.init(-node->data.object.pivot[0], -node->data.object.pivot[1], -node->data.object.pivot[2], 1.f);
+    pivot = scl * pivot;
+    elem->matrix = xMatrixTranslate(pivot.vector3.xyz).transpose() * elem->matrix;
+
+    elem->collisionData.kidsP = NULL;
+    elem->collisionData.kidsC = 0;
 
     elem->smoothP = NULL;
     elem->facesC = 0;
@@ -113,14 +130,22 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xFile *file, Lib3dsNode *node
                 else
                     mid = 0;
 
-
                 xDWORD smooth = firstF->smoothing;
                 xBYTE  smGrp = smooth ? 1 : 0;
                 if (faces[mid].size() == 0) faces[mid].resize(2);
                 if (!faces[mid][smGrp].size()) ++faceListC;
-                faces[mid][smGrp].push_back(firstF->points[0]);
-                faces[mid][smGrp].push_back(firstF->points[1]);
-                faces[mid][smGrp].push_back(firstF->points[2]);
+                if (!mirrorFaces)
+                {
+                    faces[mid][smGrp].push_back(firstF->points[0]);
+                    faces[mid][smGrp].push_back(firstF->points[1]);
+                    faces[mid][smGrp].push_back(firstF->points[2]);
+                }
+                else
+                {
+                    faces[mid][smGrp].push_back(firstF->points[0]);
+                    faces[mid][smGrp].push_back(firstF->points[2]);
+                    faces[mid][smGrp].push_back(firstF->points[1]);
+                }
                 faces[mid][smGrp].push_back((xWORD)smooth);
                 faces[mid][smGrp].push_back((xWORD)(smooth >> 16));
             }
@@ -190,7 +215,12 @@ xFile *xImportFileFrom3ds(Lib3dsFile *model)
 {
     xFile *file = new xFile();
 
+    file->materialP = 0;
     file->materialC = 0;
+    file->texturesInited = false;
+    file->spineP = 0;
+    file->saveCollisionData = true;
+    file->fileName = 0;
     xMaterial *lastm = NULL;
     xWORD matId = 0;
     for (Lib3dsMaterial *mat = model->materials; mat != NULL; mat = mat->next)
@@ -250,6 +280,9 @@ xFile *xLoadFrom3dmFile(const char *fileName)
     }
 
     xFile *model = new xFile();
+    model->texturesInited = false;
+    model->saveCollisionData = true;
+    model->fileName = 0;
     model->materialC = 0;
     model->materialP = 0;
     model->spineP = 0;

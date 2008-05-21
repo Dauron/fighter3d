@@ -9,8 +9,9 @@ union xVector3 {
 //    xVector3(const xVector3 &src) {
 //        *this = src;
 //    }
-    static xVector3 Create(xFLOAT X, xFLOAT Y, xFLOAT Z) { xVector3 res; return res.Init(X,Y,Z); }
-    xVector3       &Init  (xFLOAT X, xFLOAT Y, xFLOAT Z) { x = X; y = Y; z = Z; return *this; }
+    static xVector3 Create(xFLOAT X, xFLOAT Y, xFLOAT Z) { xVector3 res;        return res.init(X,Y,Z); }
+    xVector3       &init  (xFLOAT X, xFLOAT Y, xFLOAT Z) { x = X; y = Y; z = Z; return *this; }
+    xVector3       &zero  ()                             { x = y = z = 0.f;     return *this; }
 
     // Array indexing
     xFLOAT &operator [] (unsigned int i) {
@@ -91,6 +92,10 @@ union xVector3 {
         return b <= a;
     }
 
+    static xVector3 Normalize(const xVector3 &a) {
+        xVector3 res = a;
+        return res.normalize();
+    }
     static xFLOAT DotProduct(const xVector3 &a, const xVector3 &b)
     {
         return a.x*b.x + a.y*b.y + a.z*b.z;

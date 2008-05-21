@@ -5,7 +5,7 @@ void CameraHuman::SetCamera(xFLOAT eyex, xFLOAT eyey, xFLOAT eyez,
                             xFLOAT upx, xFLOAT upy, xFLOAT upz)
 {
     Camera::SetCamera(eyex, eyey, eyez, centerx, centery, centerz, upx, upy, upz);
-    front.Init(centerx-eyex, centery-eyey, 0);
+    front.init(centerx-eyex, centery-eyey, 0);
     stepv = step = 0.f;
 }
 
@@ -19,7 +19,7 @@ void CameraHuman::Move(xFLOAT frwd, xFLOAT side, xFLOAT vert)
     center += vect;
 
     // move left/right
-    vect.Init(front.y, -front.x, front.z);
+    vect.init(front.y, -front.x, front.z);
     vect *= side;
 
     eye += vect;
@@ -69,7 +69,7 @@ void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         pitch = DegToRad (pitch)/2.f;
         xFLOAT s = sin(pitch);
         front.normalize();
-        xVector4 q; q.Init(front.y*s, -front.x*s, 0.f, cos(pitch));
+        xVector4 q; q.init(front.y*s, -front.x*s, 0.f, cos(pitch));
         a = xQuaternion::rotate(q, a);
         up = xQuaternion::rotate(q, up);
     }
@@ -80,7 +80,7 @@ void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         roll = DegToRad (roll)/2.f;
         xFLOAT s = sin(roll);
         front.normalize();
-        xVector4 q; q.Init(front.x*s, front.y*s, front.z*s, cos(roll));
+        xVector4 q; q.init(front.x*s, front.y*s, front.z*s, cos(roll));
         up = xQuaternion::rotate(q, up);
     }
 
@@ -142,7 +142,7 @@ xVector3 CameraHuman::OrthoPointUp(const xVector3 &source, const xVector3 &oldUp
     if (IsZero(source.x) && IsZero(source.y))
         return xVector3::Create(oldUp.x,oldUp.y,0.f);
 
-    xVector3 dest; dest.Init(source.x, source.y,
+    xVector3 dest; dest.init(source.x, source.y,
                              -(source.x*source.x+source.y*source.y)/source.z);
 
     if (dest.z*oldUp.z < 0.f)

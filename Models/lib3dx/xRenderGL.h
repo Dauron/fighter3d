@@ -18,24 +18,16 @@ class xRenderGL : public xRender
 
     xRenderGL() : UseVBO(agl_VBOLoaded), UseList(true) {};
 
-    virtual void Invalidate()
-    {
-        xModel->texturesInited = false;
-        for (xElement *elem = xModel->firstP; elem; elem = elem->nextP)
-            InvalidateElementRenderData(elem);
-    }
-
     virtual void CalculateSkeleton()
     {
         xRender::CalculateSkeleton();
         if (!UseVBO) // refresh lists
-    {
-        UseList = false;
-        FreeElementRenderData(xModel->firstP, true);
+        {
+            UseList = false;
+            g_ModelMgr.GetModel(hModelGraphics)->FreeRenderData(true);
+            g_ModelMgr.GetModel(hModelPhysical)->FreeRenderData(true);
+        }
     }
-    }
-
-    virtual void Finalize();
 
   private:
     bool       UseVBO;
@@ -67,9 +59,6 @@ class xRenderGL : public xRender
 
     void RenderModelVBO( xElement * elem );
     void RenderModelLST( xElement * elem );
-
-    virtual void InvalidateElementRenderData(xElement *elem);
-    virtual void FreeElementRenderData(xElement *elem, bool listOnly = false);
 };
 
 #endif

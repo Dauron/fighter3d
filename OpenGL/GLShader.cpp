@@ -16,6 +16,7 @@ void GLShader::Load(const char *vShaderFile, const char *fShaderFile)
     std::ifstream in;
 
     if (vShaderFile) {
+        vertexShaderFile = strdup(vShaderFile);
         in.open(vShaderFile, std::ios::in);
         if (in.is_open()) {
             in.seekg( 0, std::ios::end );
@@ -32,6 +33,7 @@ void GLShader::Load(const char *vShaderFile, const char *fShaderFile)
     }
 
     if (fShaderFile) {
+        fragmentShaderFile = strdup(fShaderFile);
         in.open(fShaderFile, std::ios::in);
         if (in.is_open()) {
             in.seekg( 0, std::ios::end );
@@ -116,11 +118,15 @@ GLenum GLShader::Initialize()
 
             glGetInfoLogARB(program, blen, &slen, linker_log);
             linker_log[slen-1] = 0;
-            LOG(linker_log);
-            delete[] linker_log;
+            LOG("%s,%s\n%s", vertexShaderFile, fragmentShaderFile, linker_log);
 
-            Terminate();
-            return 0;
+            if (strstr(linker_log, "error"))
+            {
+                delete[] linker_log;
+                Terminate();
+                return 0;
+            }
+            delete[] linker_log;
         }
 
         uTexturing = glGetUniformLocationARB(program, "texturing");

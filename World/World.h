@@ -4,16 +4,16 @@
 #include "SkeletizedObj.h"
 #include "../OpenGL/ISelectionProvider.h"
 #include "../OpenGL/GLShader.h"
-#include "../Physics/CollisionDetector.h"
-#include "../Physics/RayTrCollisionDetector.h"
+#include "../Physics/CD_MeshToMesh.h"
+#include "../Physics/CD_RayToMesh.h"
 
 class World : public ISelectionProvider
 {
     typedef std::vector<ModelObj*> objectVec;
     objectVec objects;
 
-    CollisionDetector collisionDetector;
-    RayTrCollisionDetector rayCollisionDetector;
+    CD_MeshToMesh cd_MeshToMesh;
+    CD_RayToMesh  cd_RayToMesh;
 
     bool m_Valid;
 

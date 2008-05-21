@@ -1,11 +1,12 @@
-#include "CollisionDetector.h"
+#include "CD_MeshToMesh.h"
 
 int testsLevel0;
 int testsLevel1;
 int testsLevel2;
 int testsLevel3;
 
-int  CollisionDetector:: CheckPlanes(xVector3 *a1, xVector3 *a2, xVector3 *a3, xVector3 *b1, xVector3 *b2, xVector3 *b3)
+int  CD_MeshToMesh:: CheckPlanes(xVector3 *a1, xVector3 *a2, xVector3 *a3,
+                                 xVector3 *b1, xVector3 *b2, xVector3 *b3)
 {
     // Calculate plane (with CrossProduct)
     float p1x = a2->x - a1->x, p1y = a2->y - a1->y, p1z = a2->z - a1->z;
@@ -39,7 +40,8 @@ int  CollisionDetector:: CheckPlanes(xVector3 *a1, xVector3 *a2, xVector3 *a3, x
     return 3;
 }
 
-bool CollisionDetector:: IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, xVector3 *b1, xVector3 *b2, xVector3 *b3, xVector3 *crossing)
+bool CD_MeshToMesh:: IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3,
+                                        xVector3 *b1, xVector3 *b2, xVector3 *b3, xVector3 *crossing)
 {
     int r = CheckPlanes(a1, a2, a3, b1, b2, b3);
     if (!r) return false;
@@ -219,7 +221,7 @@ bool CollisionDetector:: IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3
             if (!p2a) p2a = -1;
             if (!p1b) p1b = -1;
             if (!p2b) p2b = -1;
-            xVector3 p; p.Init(0.f, 0.f, 0.f);
+            xVector3 p; p.init(0.f, 0.f, 0.f);
 
             if (p1a*p2b < 0.f || p2a*p1b < 0.f)
             {
@@ -284,11 +286,11 @@ bool CollisionDetector:: IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3
 
 
 
-bool CollisionDetector:: CheckOctreeLevel(CollisionInfo *ci1,              CollisionInfo *ci2,
-                                          xCollisionHierarchy *ch1,        xCollisionHierarchy *ch2,
-                                          xCollisionHierarchyBounds *chb1, xCollisionHierarchyBounds *chb2,
-                                          xWORD cnt1,                      xWORD cnt2,
-                                          xElement *elem1,                 xElement *elem2)
+bool CD_MeshToMesh:: CheckOctreeLevel(CollisionInfo *ci1,              CollisionInfo *ci2,
+                                      xCollisionHierarchy *ch1,        xCollisionHierarchy *ch2,
+                                      xCollisionHierarchyBounds *chb1, xCollisionHierarchyBounds *chb2,
+                                      xWORD cnt1,                      xWORD cnt2,
+                                      xElement *elem1,                 xElement *elem2)
 {
     bool res = false;
     xCollisionHierarchy *pch2 = ch2;
@@ -403,7 +405,7 @@ bool CollisionDetector:: CheckOctreeLevel(CollisionInfo *ci1,              Colli
 }
 
 // Scan all elements in model2
-bool CollisionDetector:: Collide2(CollisionInfo *ci1, CollisionInfo *&ci2, xElement *elem1, xElement *elem2)
+bool CD_MeshToMesh:: Collide2(CollisionInfo *ci1, CollisionInfo *&ci2, xElement *elem1, xElement *elem2)
 {
     bool res = false;
 
@@ -415,9 +417,9 @@ bool CollisionDetector:: Collide2(CollisionInfo *ci1, CollisionInfo *&ci2, xElem
         ci1->bounding.min.z < ci2->bounding.max.z &&
         ci1->bounding.max.z > ci2->bounding.min.z)
         res |= CheckOctreeLevel(ci1, ci2,
-            elem1->collisionData.hierarchyP, elem2->collisionData.hierarchyP,
+            elem1->collisionData.kidsP, elem2->collisionData.kidsP,
             ci1->collisionHP, ci2->collisionHP,
-            elem1->collisionData.hierarchyC, elem2->collisionData.hierarchyC, elem1, elem2);
+            elem1->collisionData.kidsC, elem2->collisionData.kidsC, elem1, elem2);
 
     for (xElement *celem2 = elem2->kidsP; celem2; celem2 = celem2->nextP)
         res |= Collide2(ci1, ++ci2, elem1, celem2);
@@ -426,7 +428,7 @@ bool CollisionDetector:: Collide2(CollisionInfo *ci1, CollisionInfo *&ci2, xElem
 }
 
 // Scan all elements in model1
-bool CollisionDetector:: Collide1(CollisionInfo *&ci1, CollisionInfo *&ci2, xElement *elem1, xElement *elem2)
+bool CD_MeshToMesh:: Collide1(CollisionInfo *&ci1, CollisionInfo *&ci2, xElement *elem1, xElement *elem2)
 {
     CollisionInfo *cci2 = ci2;
 

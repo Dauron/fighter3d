@@ -1,8 +1,8 @@
-#include "RayTrCollisionDetector.h"
+#include "CD_RayToMesh.h"
 
-const float RayTrCollisionDetector::Epsilon = 0.01f;
+const float CD_RayToMesh::Epsilon = 0.01f;
 
-void RayTrCollisionDetector::RayCage(xBox &refBox, xBox &rayBox)
+void CD_RayToMesh::RayCage(xBox &refBox, xBox &rayBox)
 {
     float x = fabs(rayV.x), y = fabs(rayV.y), z = fabs(rayV.z);
     if (x >= y && x >= z)
@@ -60,7 +60,7 @@ void RayTrCollisionDetector::RayCage(xBox &refBox, xBox &rayBox)
     if (rayBox.max.z < rayBox.min.z) { swp = rayBox.max.z; rayBox.max.z = rayBox.min.z; rayBox.min.z = swp; }
 }
 
-bool RayTrCollisionDetector::CollideBox(xBox &box)
+bool CD_RayToMesh::CollideBox(xBox &box)
 {
     if((rayB.x < box.min.x && rayE.x < box.min.x) ||
        (rayB.x > box.max.x && rayE.x > box.max.x) ||
@@ -83,7 +83,7 @@ bool RayTrCollisionDetector::CollideBox(xBox &box)
     return true;
 }
 
-bool RayTrCollisionDetector::IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, xVector3 *crossing)
+bool CD_RayToMesh::IntersectTriangles(xVector3 *a1, xVector3 *a2, xVector3 *a3, xVector3 *crossing)
 {
     // Calculate plane (with CrossProduct)
     float p1x = a2->x - a1->x, p1y = a2->y - a1->y, p1z = a2->z - a1->z;
@@ -126,22 +126,22 @@ bool RayTrCollisionDetector::IntersectTriangles(xVector3 *a1, xVector3 *a2, xVec
     return false;
 }
 
-bool RayTrCollisionDetector::CheckOctreeLevel(CollisionInfo             *ci,
-                                              xCollisionHierarchy       *ch,
-                                              xCollisionHierarchyBounds *chb,
-                                              xWORD                      cnt,
-                                              xElement                  *elem)
+bool CD_RayToMesh::CheckOctreeLevel(CollisionInfo             *ci,
+                                    xCollisionData            *pcd,
+                                    xCollisionHierarchyBounds *chb,
+                                    xElement                  *elem)
 {
     bool res = false;
     xVector3 colPoint;
+    xCollisionHierarchy *ch = pcd->kidsP;
 
-    for (int h1 = cnt; h1; --h1, ++chb, ++ch)
+    for (int h1 = pcd->kidsC; h1; --h1, ++chb, ++ch)
     {
         if (CollideBox(chb->bounding))
         {
             if (ch->kidsP)
             {
-                res |= CheckOctreeLevel(ci, ch->kidsP, chb->kids, ch->kidsC, elem);
+                res |= CheckOctreeLevel(ci, ch, chb->kids, elem);
                 continue;
             }
 
@@ -180,13 +180,12 @@ bool RayTrCollisionDetector::CheckOctreeLevel(CollisionInfo             *ci,
 
 
 
-bool RayTrCollisionDetector::CollideElements(CollisionInfo *&ci, xElement *elem)
+bool CD_RayToMesh::CollideElements(CollisionInfo *&ci, xElement *elem)
 {
     bool res = false;
 
     if (elem->verticesC && ci->collisionHP && CollideBox(ci->bounding))
-        res |= CheckOctreeLevel(ci, elem->collisionData.hierarchyP, ci->collisionHP,
-            elem->collisionData.hierarchyC, elem);
+        res |= CheckOctreeLevel(ci, &elem->collisionData, ci->collisionHP, elem);
 
     for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
         res |= CollideElements(++ci, celem);
@@ -194,7 +193,7 @@ bool RayTrCollisionDetector::CollideElements(CollisionInfo *&ci, xElement *elem)
     return res;
 }
 
-bool RayTrCollisionDetector::Collide(ModelObj *model,
+bool CD_RayToMesh::Collide(ModelObj *model,
                                      xVector3 &rayB, xVector3 &rayE,
                                      xVector3 &colPoint, float &colDist)
 {
@@ -208,7 +207,7 @@ bool RayTrCollisionDetector::Collide(ModelObj *model,
     notCollided = true;
 
     bool res = false;
-    for (xElement *elem = r->xModel->firstP; elem; elem = elem->nextP)
+    for (xElement *elem = r->xModelPhysical->firstP; elem; elem = elem->nextP)
         res |= CollideElements(++ci, elem);
 
     colPoint = collisionPoint;

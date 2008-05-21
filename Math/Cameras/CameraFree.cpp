@@ -36,7 +36,7 @@ void CameraFree::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         heading = DegToRad (heading)/2.F;
         xFLOAT s = sin(heading);
         up.normalize();
-        xVector4 q; q.Init(up.x*s, up.y*s, up.z*s, cos(heading));
+        xVector4 q; q.init(up.x*s, up.y*s, up.z*s, cos(heading));
         a = xQuaternion::rotate(q, a);
     }
 
@@ -48,7 +48,7 @@ void CameraFree::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         xVector3 cross = xVector3::CrossProduct(a, up);
         cross.normalize();
 
-        xVector4 q; q.Init(cross.x*s, cross.y*s, cross.z*s, cos(pitch));
+        xVector4 q; q.init(cross.x*s, cross.y*s, cross.z*s, cos(pitch));
         a = xQuaternion::rotate(q, a);
         up = xQuaternion::rotate(q, up);
     }
@@ -61,7 +61,7 @@ void CameraFree::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         xVector3 front = a;
         front.normalize();
 
-        xVector4 q; q.Init(front.x*s, front.y*s, front.z*s, cos(roll));
+        xVector4 q; q.init(front.x*s, front.y*s, front.z*s, cos(roll));
         up = xQuaternion::rotate(q, up);
     }
 
@@ -77,7 +77,7 @@ void CameraFree::Orbit(xFLOAT horz, xFLOAT vert)
         horz = DegToRad (horz)/2.f;
         xFLOAT s = sin(horz);
         up.normalize();
-        xVector4 q; q.Init(up.x*s, up.y*s, up.z*s, cos(horz));
+        xVector4 q; q.init(up.x*s, up.y*s, up.z*s, cos(horz));
         a = xQuaternion::rotate(q, a);
     }
 
@@ -89,7 +89,7 @@ void CameraFree::Orbit(xFLOAT horz, xFLOAT vert)
         xVector3 cross = xVector3::CrossProduct(a, up);
         cross.normalize();
 
-        xVector4 q; q.Init(cross.x*s, cross.y*s, cross.z*s, cos(vert));
+        xVector4 q; q.init(cross.x*s, cross.y*s, cross.z*s, cos(vert));
         a = xQuaternion::rotate(q, a);
         up = xQuaternion::rotate(q, up);
     }
