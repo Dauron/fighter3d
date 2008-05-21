@@ -229,7 +229,7 @@ public:
             instanceDataPhC = instanceDataGrC;
             instanceDataPhP = instanceDataGrP;
         }
-        //InvalidateShadowRenderData();
+        InvalidateShadowRenderData();
     }
 };
 

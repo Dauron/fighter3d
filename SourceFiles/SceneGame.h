@@ -13,7 +13,7 @@ class SceneGame : public Scene
   public:
     Camera *DefaultCamera;
 
-    SceneGame() : DefaultCamera(NULL) { sceneName="[Game]"; shader.Load("Data/program.vert", "Data/program.frag"); };
+    SceneGame() : DefaultCamera(NULL) { sceneName="[Game]"; };
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate();
@@ -37,8 +37,6 @@ class SceneGame : public Scene
 
     CameraHuman    hCamera;
     World          world;
-
-    GLShader       shader;
 
     HFont          m_Font1;
     HFont          m_Font2;

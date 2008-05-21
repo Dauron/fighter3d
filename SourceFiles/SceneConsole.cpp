@@ -370,7 +370,7 @@ test  = ";
     }
     if (cmd.substr(0, 4) == "log ")
     {
-        logEx(true, cmd.substr(4).c_str());
+        logEx(0, true, cmd.substr(4).c_str());
         return true;
     }
     if (cmd == "tail" || cmd == "log_tail")
@@ -403,8 +403,8 @@ bool SceneConsole::Render()
 
     glViewport(Left, Top+cHeight, Width, cHeight); // Set viewport
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
-    GLShader::EnableLighting(-1);
-    GLShader::EnableTexturing(0);
+    GLShader::SetLightType(xLight_NONE);
+    GLShader::EnableTexturing(xState_Off);
     glDisable (GL_POLYGON_SMOOTH);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

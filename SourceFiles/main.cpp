@@ -11,9 +11,10 @@ int main( int argc, char **argv )
     Filesystem::WorkingDirectory = Filesystem::GetParentDir(argv[0]);
     Filesystem::SetSystemWorkingDirectory(Filesystem::WorkingDirectory);
 
-    logEx(false, "***********************************");
-    logEx(true, "Game started");
+    logEx(0, false, "***********************************");
+    logEx(0, true, "Game started");
 
+    GLShader::Load();
     Application game;
     game.OnApplicationInvalidate = OnApplicationInvalidate;
     game.OnApplicationTerminate = OnApplicationTerminate;
@@ -22,8 +23,8 @@ int main( int argc, char **argv )
     int res = game.Run();
     game.Terminate();
 
-    logEx(true, "Game finished");
-    logEx(false, "***********************************");
+    logEx(0, true, "Game finished");
+    logEx(0, false, "***********************************");
 
     return res;
 }
@@ -91,10 +92,11 @@ void OnApplicationInvalidate(Application* sender)
     else
         g_TextureMgr.InvalidateItems();
 
+    GLShader::Invalidate();
+    GLShader::Initialize();
+
     if (!GLAnimSkeletal::GetSingletonPtr())
         new GLAnimSkeletal();
-    else
-        g_AnimSkeletal.ReinitializeGL();
 
     if (!xAnimationMgr::GetSingletonPtr())
         new xAnimationMgr();
@@ -123,4 +125,5 @@ void OnApplicationTerminate(Application* sender)
         delete CaptureInput::GetSingletonPtr();
     if (GLAnimSkeletal::GetSingletonPtr())
         delete GLAnimSkeletal::GetSingletonPtr();
+    GLShader::Terminate();
 }

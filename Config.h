@@ -13,6 +13,7 @@ struct Config
     static int   TestCase;
     static float Speed;
     static int   ShadowMapSize;
+    static int   LoggingLevel;
 };
 
 struct State

@@ -235,8 +235,8 @@ bool SceneSkeleton::Render()
     glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.f);
     glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.f);
     glEnable(GL_LIGHT0);
-    GLShader::EnableLighting(0);
-    GLShader::EnableLighting(1);
+    GLShader::SetLightType(xLight_INFINITE);
+    GLShader::EnableTexturing(xState_Enable);
 
     Camera_Aim_GL(*m_Cameras.Current);
 
@@ -244,8 +244,8 @@ bool SceneSkeleton::Render()
     renderer->RenderModel(false, NULL);
     renderer->RenderModel(true, NULL);
 
-    GLShader::EnableTexturing(0);
-    GLShader::EnableLighting(-1);
+    GLShader::EnableTexturing(xState_Disable);
+    GLShader::SetLightType(xLight_NONE);
 
     if (m_EditMode == emSelectVertex)
         renderer->RenderVertices(xRender::smNone, selectedElemID, &selectedVert);

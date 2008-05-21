@@ -19,8 +19,8 @@ void xRenderGL :: RenderShadowMap(const xShadowMap &shadowMap, const xFieldOfVie
     State::RenderingShadows = true;
 
     glBindTexture(GL_TEXTURE_2D, shadowMap.texId );
-    GLShader::EnableTexturing(1);
-    GLShader::EnableLighting(-1);
+    GLShader::EnableTexturing(xState_On);
+    GLShader::SetLightType(xLight_NONE);
 
     glEnable(GL_BLEND);
     glDisable (GL_LINE_SMOOTH);
@@ -82,7 +82,7 @@ void xRenderGL :: RenderShadowMapLST(xElement *elem)
 
     if (elem->skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ, elem, false);
         g_AnimSkeletal.SetElement(elem, instance);
     }
     else
@@ -130,7 +130,7 @@ void xRenderGL :: RenderShadowMapVBO(xElement *elem)
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, instance->gpuMain.vertexB );
     if (elem->skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ, elem, true);
         g_AnimSkeletal.SetElement(elem, instance, true);
     }
     else
@@ -197,7 +197,7 @@ void   xRenderGL :: RenderShadowMapTextureLST(xElement *elem, bool transparent)
 
     if (elem->skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ, elem, false);
         g_AnimSkeletal.SetElement(elem, instance);
     }
     else
@@ -244,7 +244,7 @@ void   xRenderGL :: RenderShadowMapTextureVBO(xElement *elem, bool transparent)
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, instance->gpuMain.vertexB );
     if (elem->skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ, elem, true);
         g_AnimSkeletal.SetElement(elem, instance, true);
     }
     else
@@ -291,8 +291,8 @@ xDWORD xRenderGL :: CreateShadowMapTexture(xWORD width, xMatrix &mtxBlockerToLig
     glClearColor(1.0, 1.0, 1.0, 0.0);
 
     glDisable(GL_BLEND);
-    GLShader::EnableLighting(0);
-    GLShader::EnableTexturing(0);
+    GLShader::SetLightType(xLight_NONE);
+    GLShader::EnableTexturing(xState_Disable);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Load BlockerLocalToShadowMap matrix
@@ -313,6 +313,8 @@ xDWORD xRenderGL :: CreateShadowMapTexture(xWORD width, xMatrix &mtxBlockerToLig
     //xModelToRender = xModelToRenderOld;
     if (xModelToRenderOld != xModelPhysical)
         SetRenderMode(xRender::rmGraphical);
+
+    GLShader::EnableTexturing(xState_Enable);
 
     glPopMatrix();
     // Restore OpenGL's PROJECTION matrix

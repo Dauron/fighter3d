@@ -79,26 +79,29 @@ void World:: Initialize()
         light.modified = true;
         light.turned_on = true;
         light.attenuationConst  = 1.f;
-        light.attenuationLinear = 0.004f;
-        light.attenuationSquare = 0.0008f;
+        light.attenuationLinear = 0.0004f;
+        light.attenuationSquare = 0.00008f;
         light.spotDirection.init(0.f,0.f,-1.f);
         light.spotCutOff = 45.f;
         light.spotAttenuation = 1.f;
         // YELLOW
         light.create();
-        light.color.init(0.7f, 0.4f, 0.f, 1.f);
+        light.color.init(1.0f, 0.7f, 0.f, 1.f);
+        light.softness = 0.6f;
         light.position.init(0.f, 0.f, 10.f);
         light.type = xLight_POINT;
         lights.push_back(light);
         // RED
         light.create();
         light.color.init(0.8f, 0.f, 0.f, 1.f);
+        light.softness = 0.2f;
         light.position.init(10.f, -5.f, 5.f);
         light.type = xLight_SPOT;
         //lights.push_back(light);
         // SKY
         light.create();
-        light.color.init(0.4f, 0.4f, 0.4f, 1.f);
+        light.color.init(0.05f, 0.05f, 0.05f, 1.f);
+        light.softness = 0.8f;
         light.position.init(-20.f, 20.f, 100.f);
         light.type = xLight_INFINITE;
         light.attenuationLinear = 0.f;

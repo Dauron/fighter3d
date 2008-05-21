@@ -9,16 +9,8 @@
 
 class GLAnimSkeletal : public Singleton<GLAnimSkeletal>
 {
-    GLShader  m_SkeletalShader;
-    GLenum    m_GPUprogram;
-    GLShader *m_prevShader;
-
     bool      m_forceCPU;    // should skeletizing be done by CPU, even if GPU is aviable?
     bool      m_notForceCPU; // inverse of above - value is valid only between BeginAnimation() and EndAnimation()
-
-    // identifiers of vertex uniforms and attributes
-    int uBones;
-    int aBoneIdxWghts;
 
     // temporary storage used by CPU algorithm between BeginAnimation() and EndAnimation()
     const xMatrix  *sft_bonesM;
@@ -30,24 +22,19 @@ class GLAnimSkeletal : public Singleton<GLAnimSkeletal>
     const xVector3 *sft_vertices;
     const xVector3 *sft_normals;
 
+    ShaderSkeletal *currSkeletalShader;
+
 public:
-    GLAnimSkeletal()
-    {
-        m_forceCPU = false;
-        m_SkeletalShader.Load("Data/skeletal.vert","Data/skeletal.frag");
-        Initialize();
-    }
+    GLAnimSkeletal() : m_forceCPU(false) {}
 
-    bool HardwareEnabled()          { return m_GPUprogram; }
+    bool HardwareEnabled()          { return currSkeletalShader; }
     void ForceSoftware(bool enable) { m_forceCPU = enable; }
-
-    void Initialize();
-    void ReinitializeGL();
 
     void BeginAnimation();
     void EndAnimation();
 
-    void SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xVector4 *bonesQ);
+    void SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xVector4 *bonesQ,
+                              const xElement *element, bool VBO);
     void SetElement(const xElement *element, const xElementInstance *instance, bool VBO = false);
 
     /**************** generic implementation ******************/

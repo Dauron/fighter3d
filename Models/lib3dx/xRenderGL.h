@@ -25,7 +25,7 @@ class xRenderGL : public xRender
     virtual void Initialize(bool isStatic, HModel hGrModel, HModel hPhModel = HModel())
     {
         xRender::Initialize(isStatic, hGrModel, hPhModel);
-        UseVBO = GLExtensions::Exists_ARB_VertexBufferObject && !isStatic;
+        UseVBO = GLExtensions::Exists_ARB_VertexBufferObject;// && !isStatic;
     }
 
     virtual void Invalidate()

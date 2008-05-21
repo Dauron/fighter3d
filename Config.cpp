@@ -12,6 +12,8 @@ int   Config::TestCase          = 0;
 float Config::Speed             = 1.f;
 int   Config::ShadowMapSize     = 512;
 
+int   Config::LoggingLevel      = 3;
+
 bool  State::RenderingSelection = false;
 bool  State::RenderingShadows   = false;
 

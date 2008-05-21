@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="windows-1250"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="CamFighter"
 	ProjectGUID="{EEDB48FF-1411-48BA-AA59-11165C3985A4}"
 	RootNamespace="CamFighter"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -68,6 +69,8 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				EntryPointSymbol=""
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -87,9 +90,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -146,6 +146,8 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -165,9 +167,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -882,22 +881,194 @@
 		<Filter
 			Name="Data"
 			>
-			<File
-				RelativePath="..\Data\program.frag"
+			<Filter
+				Name="shaders"
 				>
-			</File>
-			<File
-				RelativePath="..\Data\program.vert"
-				>
-			</File>
-			<File
-				RelativePath="..\Data\skeletal.frag"
-				>
-			</File>
-			<File
-				RelativePath="..\Data\skeletal.vert"
-				>
-			</File>
+				<File
+					RelativePath="..\Data\shaders\Global_A_noTex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Global_A_noTex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Global_A_noTex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Global_A_Tex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Global_A_Tex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Global_A_Tex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_A_noTex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_A_noTex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_A_noTex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_A_Tex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_A_Tex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_A_Tex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_DS_noTex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_DS_noTex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_DS_noTex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_DS_Tex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_DS_Tex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Infinite_DS_Tex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\NoLights_noTex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\NoLights_noTex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\NoLights_noTex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\NoLights_Tex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\NoLights_Tex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\NoLights_Tex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_A_noTex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_A_noTex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_A_noTex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_A_Tex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_A_Tex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_A_Tex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_DS_noTex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_DS_noTex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_DS_noTex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_DS_Tex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_DS_Tex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Point_DS_Tex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_A_noTex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_A_noTex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_A_Tex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_A_Tex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_DS_noTex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_DS_noTex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_DS_noTex_Skel.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_DS_Tex.frag"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_DS_Tex.vert"
+					>
+				</File>
+				<File
+					RelativePath="..\Data\shaders\Spot_DS_Tex_Skel.vert"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Physics"

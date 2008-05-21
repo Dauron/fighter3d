@@ -159,7 +159,7 @@ public:
             FindClose(h);
         }
         else
-            log("Directory open error %d - %s", GetLastError(), path.c_str());
+            LOG(3, "Directory open error %d - %s", GetLastError(), path.c_str());
 #else
         dirent **eps;
         dirent **dirp;
@@ -181,7 +181,7 @@ public:
            delete[] eps;
         }
         else
-            log("Directory open error: %s - %s", strerror(errno), path.c_str());
+            LOG(3, "Directory open error: %s - %s", strerror(errno), path.c_str());
 #endif
 
         return vec;
@@ -209,7 +209,7 @@ public:
             FindClose(h);
         }
         else
-            log("Directory open error: %d - %s", GetLastError(), path.c_str());
+            LOG(3, "Directory open error: %d - %s", GetLastError(), path.c_str());
 #else
         dirent **eps;
         dirent **dirp;
@@ -232,7 +232,7 @@ public:
            delete[] eps;
         }
         else
-            log("Directory open error: %s - %s", strerror(errno), path.c_str());
+            LOG(3, "Directory open error: %s - %s", strerror(errno), path.c_str());
 #endif
         return vec;
     }

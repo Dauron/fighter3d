@@ -21,8 +21,8 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const xFieldOfView *FOV, int X
     glSelectBuffer(capacity, selectBuffer);
     glRenderMode(GL_SELECT);
     State::RenderingSelection = true;
-    GLShader::EnableLighting(-1);
-    GLShader::EnableTexturing(0);
+    GLShader::SetLightType(xLight_NONE);
+    GLShader::EnableTexturing(xState_Disable);
 
     //Retrieve viewport (x, y, width, height) & projection matrix
     GLint viewport[4];
@@ -51,6 +51,9 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const xFieldOfView *FOV, int X
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
+
+    GLShader::EnableTexturing(xState_Enable);
+
     if(nbRecords <= 0)
     {
         delete[] selectBuffer;

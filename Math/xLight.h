@@ -5,9 +5,11 @@
 
 typedef enum
 {
-    xLight_POINT    = 1,
-    xLight_SPOT     = 2,
-    xLight_INFINITE = 3
+    xLight_NONE     = 0,
+    xLight_GLOBAL   = 1,
+    xLight_INFINITE = 2,
+    xLight_POINT    = 3,
+    xLight_SPOT     = 4
 } xLightType;
 
 struct xLight
@@ -21,6 +23,7 @@ struct xLight
     xLightType  type;
     xVector3    position;
     xColor      color;
+    xFLOAT      softness;
 
     xVector3    spotDirection;
     xFLOAT      spotCutOff;

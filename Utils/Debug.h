@@ -4,32 +4,40 @@
 #include "../Config.h"
 #include <cstdio>
 
-void  logEx(bool withtime, const char *fmt, ...);
-void  log(const char *fmt, ...);
+void  logEx(int level, bool withtime, const char *fmt, ...);
+void  log(int level, const char *fmt, ...);
 char *log_read();
 char *log_tail();
 void  log_clear();
 
 #ifdef WIN32
-#define DEB_LOG(fmt, ...) \
-        { \
-            logEx(true, "%s\t%d:", __FILE__, __LINE__); \
-            logEx(false, fmt, __VA_ARGS__); \
-        }
+#define LOG(level, fmt, ...) \
+            logEx(level, false, fmt, __VA_ARGS__)
 #else
-#define DEB_LOG(fmt, a...) \
-        { \
-            logEx(true, "%s\t%d:", __FILE__, __LINE__); \
-            logEx(false, fmt , ## a ); \
-        }
+#define LOG(level, fmt, a...) \
+            logEx(level, false, fmt , ## a )
+#endif
+
+#ifdef WIN32
+#define DEB_LOG(level, fmt, ...) \
+        ( \
+            logEx(level, true, "%s\t%d:", __FILE__, __LINE__), \
+            logEx(level, false, fmt, __VA_ARGS__) \
+        )
+#else
+#define DEB_LOG(level, fmt, a...) \
+        ( \
+            logEx(level, true, "%s\t%d:", __FILE__, __LINE__), \
+            logEx(level, false, fmt , ## a ) \
+        )
 #endif
 
 #ifdef WIN32
 #define CheckForGLError(errorFmt, ...) \
-        ( _CheckForGLError(__FILE__, __LINE__) ? logEx(false, errorFmt, __VA_ARGS__), true : false )
+        ( _CheckForGLError(__FILE__, __LINE__) ? DEB_LOG(2, errorFmt, __VA_ARGS__), true : false )
 #else
 #define CheckForGLError(errorFmt, a...) \
-        ( _CheckForGLError(__FILE__, __LINE__) ? logEx(false, errorFmt , ## a ), true : false )
+        ( _CheckForGLError(__FILE__, __LINE__) ? DEB_LOG(2, errorFmt , ## a ), true : false )
 #endif
 
 bool _CheckForGLError(char *file, int line);

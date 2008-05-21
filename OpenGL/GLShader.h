@@ -7,141 +7,161 @@
 #include "../GLExtensions/ARB_vertex_shader.h"
 #include "../GLExtensions/ARB_fragment_shader.h"
 #include "../Math/xMath.h"
+#include "../Math/xLight.h"
 #include "../Utils/Debug.h"
+
+struct ShaderProgram
+{
+    static GLenum currProgram;
+
+    GLenum program;
+
+    GLenum vertex_shader;
+    char *vertexShaderFile;
+    char *vertexShaderSrc;
+
+    GLenum fragment_shader;
+    char *fragmentShaderFile;
+    char *fragmentShaderSrc;
+
+    ShaderProgram();
+
+    void Load(const char *vShaderFile, const char *fShaderFile);
+    void Unload();
+
+    GLenum IsInitialized() { return program; }
+    bool IsCurrent() { return program == currProgram; }
+
+    virtual GLenum Initialize();
+    virtual void   Terminate();
+    virtual void   Invalidate()
+    {
+        program = vertex_shader = fragment_shader = 0;
+    }
+};
+
+struct ShaderSkeletal : public ShaderProgram
+{
+    // identifiers of vertex uniforms and attributes
+    int uBones;
+    int aBoneIdxWghts;
+
+    ShaderSkeletal();
+
+    virtual GLenum Initialize();
+};
+
+struct ShaderLighting
+{
+    ShaderProgram  Plain;
+    ShaderProgram  Textured;
+    ShaderSkeletal PlainSkeletal;
+    ShaderSkeletal TexturedSkeletal;
+
+    void Initialize();
+    void Terminate();
+    void Invalidate();
+};
+
+enum xState
+{
+    xState_Disable = -2,
+    xState_Enable  = -1,
+    xState_Off     =  0,
+    xState_On      =  1
+};
 
 class GLShader
 {
-    static GLShader *currShader;
-    static GLenum    currProgram;
-    static int lights;
-    static int textures;
+    static xLightType     lightType;
 
-    char *vertexShaderFile;
-    char *fragmentShaderFile;
-    char *vertexShaderSrc;
-    char *fragmentShaderSrc;
+    static xState         shaderState;   // can we use gl shaders ?
+    static xState         textureState;  // can we use textures ?
+    static xState         skeletalState; // can we use skeleton ?
 
-    GLenum program;
-    GLenum vertex_shader;
-    GLenum fragment_shader;
+    static ShaderLighting slNoLighting;
+    static ShaderLighting slGlobalAmbient;
+    static ShaderLighting slInfiniteAmbient;
+    static ShaderLighting slInfiniteDiffuseSpecular;
+    static ShaderLighting slPointAmbient;
+    static ShaderLighting slPointDiffuseSpecular;
+    static ShaderLighting slSpotAmbient;
+    static ShaderLighting slSpotDiffuseSpecular;
 
-    int uTexturing;
-    int uLighting;
+    GLShader() {}
+    ~GLShader() {}
 
 public:
+    static ShaderProgram *currShader;
 
-    GLShader()
-    {
-        program            = 0;
-        vertex_shader      = 0;
-        fragment_shader    = 0;
-        vertexShaderFile   = NULL;
-        vertexShaderSrc    = NULL;
-        fragmentShaderFile = NULL;
-        fragmentShaderSrc  = NULL;
+    static bool ambient;
+    static bool diffuse;
+    static bool specular;
 
-        uTexturing = 0;
-        uLighting  = 0;
-    }
-    ~GLShader()
-    {
-        Terminate();
-        Unload();
-    }
+    static void Load();
+    static void Initialize();
+    static void Terminate();
+    static void Invalidate();
 
-    void Load(const char *vShaderFile, const char *fShaderFile);
-    void Unload()
+    static bool Start();
+    static void Suspend()
     {
-        if (vertexShaderFile)   delete[] vertexShaderFile;
-        vertexShaderFile = NULL;
-        if (vertexShaderSrc)    delete[] vertexShaderSrc;
-        vertexShaderSrc = NULL;
-        if (fragmentShaderFile) delete[] fragmentShaderFile;
-        fragmentShaderFile = NULL;
-        if (fragmentShaderSrc)  delete[] fragmentShaderSrc;
-        fragmentShaderSrc = NULL;
-    }
-
-    GLenum IsInitialized() { return program; }
-    GLenum Initialize();
-    void Terminate()
-    {
-        if (vertex_shader)
-            glDeleteObjectARB(vertex_shader);
-        if (fragment_shader)
-            glDeleteObjectARB(fragment_shader);
-        if (program)
-            glDeleteObjectARB(program);
-        Invalidate();
-    }
-    void Invalidate()
-    {
-        program = vertex_shader = fragment_shader = 0;
-        uTexturing = uLighting = 0;
-    }
-
-    bool IsCurrent() { return program == currProgram; }
-    GLShader *Start()
-    {
-        assert(program);
-        assert(!IsCurrent());
-        // Use The Program Object Instead Of Fixed Function OpenGL
-        GLShader *prevShader = currShader;
-        currShader = this;
-        glUseProgramObjectARB(currProgram = program);
-        glUniform1iARB(uTexturing, textures);
-        glUniform1iARB(uLighting, lights);
-        return prevShader;
-    }
-    void Suspend()
-    {
-        assert(program);
-        assert(IsCurrent());
+        //assert(program);
+        //assert(IsCurrent());
         // Use The Fixed Function OpenGL
-        glUseProgramObjectARB(currProgram = 0);
+        if (shaderState == xState_Disable) return;
+        shaderState = xState_Enable;
+        glUseProgramObjectARB(ShaderProgram::currProgram = 0);
         currShader = NULL;
     }
 
-    void SetUniform(const char *paramName, int val)
+    static void EnableShaders(xState val)
     {
-        if (program) {
-            int ptr = glGetUniformLocationARB(program, paramName);
-            glUniform1iARB(ptr, val);
-        }
+        if (shaderState == xState_Disable && val != xState_Enable)
+            return; // textures are disabled
+        shaderState = val;
     }
 
-    static void EnableTexturing(int val) // -1, 0, 1, 2
+    static void SetLightType(xLightType type)
     {
-        if (textures < 0 && val > 0)
+        lightType = type;
+        if (type == xLight_NONE)
+            glDisable(GL_LIGHTING);
+        else
+            glEnable(GL_LIGHTING);
+    }
+
+    static xLightType GetLightType()
+    {
+        return lightType;
+    }
+
+    static void EnableTexturing(xState val)
+    {
+        if (textureState == xState_Disable && val != xState_Enable)
             return; // textures are disabled
-        textures = val;
-        if (currShader)
-            glUniform1iARB(currShader->uTexturing, textures);
-        if (val)
+        textureState = val;
+        if (val == xState_On)
             glEnable(GL_TEXTURE_2D);
         else
             glDisable(GL_TEXTURE_2D);
     }
 
-    static void EnableLighting(int val) // -1, 0, 1, 2, 3
+    static void EnableSkeleton(xState val)
     {
-        lights = val;
-        if (currShader)
-            glUniform1iARB(currShader->uLighting, lights);
-        if (val >= 0)
-            glEnable(GL_LIGHTING);
-        else
-            glDisable(GL_LIGHTING);
+        if (skeletalState == xState_Disable && val != xState_Enable)
+            return; // skeleton is disabled
+        skeletalState = val;
     }
 
-    static int TexturingState()
+    static xState TexturingState()
     {
-        return textures;
+        return textureState;
     }
 
-    static int LightingState()
+    static xState SkeletonState()
     {
-        return lights;
+        return skeletalState;
     }
 };
 

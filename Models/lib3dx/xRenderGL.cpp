@@ -11,12 +11,12 @@ void xRenderGL :: RenderSkeleton ( bool selectionRendering, xWORD selBoneId )
         if (selectionRendering) g_AnimSkeletal.ForceSoftware(true);
 
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ, NULL, false);
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        GLShader::EnableTexturing(0);
+        GLShader::EnableTexturing(xState_Off);
         glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
         glEnable(GL_COLOR_MATERIAL);
 
@@ -131,11 +131,11 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
             HTexture htext;
             htext.SetHandle(mat->texture.htex);
             g_TextureMgr.BindTexture(htext);
-            GLShader::EnableTexturing(1);
+            GLShader::EnableTexturing(xState_On);
         }
         else
         {
-            GLShader::EnableTexturing(0);
+            GLShader::EnableTexturing(xState_Off);
             //float specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
             //glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
         }
@@ -159,8 +159,9 @@ void xRenderGL :: SetMaterial(xColor color, xMaterial *mat)
         glMaterialfv(GL_FRONT, GL_DIFFUSE,  diffuse);
         glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
         glMaterialf(GL_FRONT, GL_SHININESS, 2.0f);
-        GLShader::EnableTexturing(0);
+        GLShader::EnableTexturing(xState_Off);
     }
+    GLShader::Start();
 }
 
 /********************************* faces **************************************/
@@ -176,7 +177,7 @@ void xRenderGL :: RenderFaces( xWORD                 selectedElement,
         PrepareInstanceDataTr();
 
     glColor4f( 0.8f, 0.8f, 0.f, 1.f );
-    GLShader::EnableTexturing(0);
+    GLShader::EnableTexturing(xState_Disable);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
 
@@ -186,6 +187,7 @@ void xRenderGL :: RenderFaces( xWORD                 selectedElement,
         else
             RenderElementFacesLST(elem, selectedElement, facesToRender);
 
+    GLShader::EnableTexturing(xState_Enable);
     glDisable(GL_COLOR_MATERIAL);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
@@ -215,7 +217,7 @@ void xRenderGL :: RenderElementFacesVBO(
     if (elem->skeletized) {
         stride = elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ, elem, true);
         g_AnimSkeletal.SetElement(elem, instance, true);
     }
     else {
@@ -277,7 +279,7 @@ void xRenderGL :: RenderElementFacesLST(
     if (elem->skeletized) {
         stride = elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ, elem, false);
         g_AnimSkeletal.SetElement(elem, instance);
     }
     else {
@@ -336,7 +338,7 @@ void xRenderGL :: RenderVertices( SelectionMode         selectionMode,
         PrepareInstanceDataTr();
 
     glColor4f( 0.8f, 0.8f, 0.f, 1.f );
-    GLShader::EnableTexturing(0);
+    GLShader::EnableTexturing(xState_Disable);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
 
@@ -348,6 +350,7 @@ void xRenderGL :: RenderVertices( SelectionMode         selectionMode,
 
     if (selectionMode != smNone) g_AnimSkeletal.ForceSoftware(false);
 
+    GLShader::EnableTexturing(xState_Enable);
     glDisable(GL_COLOR_MATERIAL);
     glPolygonMode(GL_FRONT, prevMode[0]);
     glPolygonMode(GL_BACK,  prevMode[1]);
@@ -384,7 +387,7 @@ void xRenderGL :: RenderElementVerticesVBO(
     if (elem->skeletized) {
         stride = elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ, elem, true);
         g_AnimSkeletal.SetElement(elem, instance, true);
     }
     else {
@@ -464,7 +467,7 @@ void xRenderGL :: RenderElementVerticesLST(
     if (elem->skeletized) {
         stride = elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones(bonesC, bonesM, bonesQ, elem, false);
         g_AnimSkeletal.SetElement(elem, instance);
     }
     else {
@@ -560,6 +563,7 @@ void xRenderGL :: RenderModel(bool transparent, const xFieldOfView *FOV )
     if (State::RenderingSelection) g_AnimSkeletal.ForceSoftware(false);
 
     glDisableClientState(GL_VERTEX_ARRAY);
+    GLShader::Suspend();
 }
 
 void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
@@ -599,8 +603,10 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
                 glEnableClientState(GL_TEXTURE_COORD_ARRAY);
                 glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.verticesTSP->tx));
             }
+            GLShader::EnableSkeleton(xState_On);
+            GLShader::Start();
             g_AnimSkeletal.BeginAnimation();
-            g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ);
+            g_AnimSkeletal.SetBones (bonesC, bonesM, bonesQ, elem, false);
             g_AnimSkeletal.SetElement(elem, instance);
         }
         else
@@ -629,7 +635,10 @@ void xRenderGL :: RenderModelLST(xElement *elem, bool transparent)
                 (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
                 continue;
             if (!State::RenderingSelection && faceL->materialP != m_currentMaterial)
+            {
                 SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
+                if (elem->skeletized) g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ, elem, false);
+            }
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
         if (!State::RenderingSelection)
@@ -690,8 +699,10 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), (void *)(7*sizeof(xFLOAT)));
         }
+        GLShader::EnableSkeleton(xState_On);
+        GLShader::Start();
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ);
+        g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ, elem, true);
         g_AnimSkeletal.SetElement(elem, instance, true);
     }
     else
@@ -706,10 +717,11 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
         else
             glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), 0);
         /************************* LOAD NORMALS ****************************/
-        if (GLShader::LightingState() && elem->renderData.normalP) {
+        if ((GLShader::diffuse || GLShader::specular) && elem->renderData.normalP) {
             glBindBufferARB ( GL_ARRAY_BUFFER_ARB, instance->gpuMain.normalB );
             glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
             glEnableClientState(GL_NORMAL_ARRAY);
+            glBindBufferARB( GL_ARRAY_BUFFER_ARB, instance->gpuMain.vertexB );
         }
     }
 
@@ -722,7 +734,10 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
             (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
             continue;
         if (!State::RenderingSelection && faceL->materialP != m_currentMaterial)
+        {
             SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
+            if (elem->skeletized) g_AnimSkeletal.SetBones  (bonesC, bonesM, bonesQ, elem, true);
+        }
         glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
     }
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
@@ -730,10 +745,11 @@ void xRenderGL :: RenderModelVBO(xElement *elem, bool transparent)
 
     if (!State::RenderingSelection && elem->textured)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    if (elem->renderData.normalP && GLShader::LightingState())
+    if (elem->renderData.normalP && (GLShader::diffuse || GLShader::specular))
         glDisableClientState(GL_NORMAL_ARRAY);
     if (elem->skeletized)
         g_AnimSkeletal.EndAnimation();
+    GLShader::EnableSkeleton(xState_Off);
 
     glPopMatrix();
 }

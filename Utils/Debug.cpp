@@ -14,16 +14,31 @@
 
 FILE *log_file;
 
-void log(const char *fmt, ...)
+void log(int level, const char *fmt, ...)
 {
-    va_list        ap;              // Pointer To List Of Arguments
-    va_start(ap, fmt);              // Parses The String For Variables
-    logEx (false, fmt, ap);
-    va_end(ap);                     // Results Are Stored In Text
+    if (level > Config::LoggingLevel) return;
+
+    if (!log_file)
+        log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
+    assert(log_file);
+    if (!log_file)
+        return;
+
+    va_list ap;                        // Pointer To List Of Arguments
+    va_start(ap, fmt);                 // Parses The String For Variables
+    vfprintf(log_file, fmt, ap);            // And Converts Symbols To Actual Numbers
+    va_end(ap);                        // Results Are Stored In Text
+
+    fprintf(log_file, "\n");
+
+    fclose(log_file);
+    log_file = NULL;
 }
 
-void logEx(bool withtime, const char *fmt, ...)
+void logEx(int level, bool withtime, const char *fmt, ...)
 {
+    if (level > Config::LoggingLevel) return;
+
     if (!log_file)
         log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
     assert(log_file);
@@ -108,8 +123,8 @@ bool _CheckForGLError(char *file, int line)
 
     while ((error = glGetError())) {
         if (!wasE)
-            logEx(true, "%s\t%d:", file, line);
-        logEx(false, "OpenGL error: %d", error);
+            logEx(2, true, "%s\t%d:", file, line);
+        logEx(2, false, "OpenGL error: %d", error);
         wasE = true;
     }
     return wasE;

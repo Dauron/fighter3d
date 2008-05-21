@@ -56,16 +56,15 @@ bool SceneGame::InitGL()
 
     //if (!shader.IsInitialized())
     {
-        shader.Terminate();
-        shader.Load("Data/program.vert", "Data/program.frag");
-        shader.Initialize();
+        //GLShader::Terminate();
+        //GLShader::Load();
+        //GLShader::Initialize();
     }
     return true;
 }
 
 bool SceneGame::Invalidate()
 {
-    shader.Invalidate();
     World::lightsVec::iterator light, begin = world.lights.begin(), end = world.lights.end();
     for (light=begin; light!=end; ++light)
         light->modified = true;
@@ -248,15 +247,18 @@ bool SceneGame::Update(float deltaTime)
 
 void SceneGame::SetLight(xLight &light)
 {
-    GLfloat ambient_off[] = { 0.0, 0.0, 0.0, 1.0 };
+    float ambient_off[4] = { 0.f, 0.f, 0.f, 0.f };
+    xColor ambient; ambient = light.color * light.softness;
+    xColor diffuse; diffuse = light.color - ambient;
 
     // turn off ambient lighting
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient_off);
 
     xVector4 position; position.init(light.position, light.type == xLight_INFINITE ? 0.f : 1.f);
     glLightfv(GL_LIGHT0, GL_POSITION, position.xyzw);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE,  light.color.col); // direct light
-    glLightfv(GL_LIGHT0, GL_SPECULAR, light.color.col); // light on mirrors/metal
+    glLightfv(GL_LIGHT0, GL_AMBIENT,  ambient.col);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  diffuse.col); // direct light
+    glLightfv(GL_LIGHT0, GL_SPECULAR, diffuse.col); // light on mirrors/metal
 
     // rozpraszanie siê œwiat³a
     glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION,  light.attenuationConst);
@@ -311,8 +313,8 @@ bool SceneGame::Render()
     glShadeModel(GL_SMOOTH);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
-    GLShader::EnableLighting(-1);
-    GLShader::EnableTexturing(0);
+    GLShader::SetLightType(xLight_NONE);
+    GLShader::EnableTexturing(xState_Enable);
     glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -321,7 +323,7 @@ bool SceneGame::Render()
 
     if (Config::EnableLighting)
     {
-        ////// RENDER AMBIENT PASS
+        ////// RENDER GLOBAL AMBIENT PASS
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);
         glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
@@ -331,10 +333,13 @@ bool SceneGame::Render()
         glEnable   (GL_CULL_FACE);
         glCullFace (GL_BACK);
         glColorMask(1, 1, 1, 1);
-        GLShader::EnableTexturing(0);
-        GLShader::EnableLighting(0);
+        GLShader::EnableTexturing(xState_Enable);
+        GLShader::SetLightType(xLight_GLOBAL);
+        GLShader::ambient  = true;
+        GLShader::diffuse  = false;
+        GLShader::specular = false;
         glDisable(GL_LIGHT0);
-        GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
+        GLfloat light_global_amb_color[]  = { 0.1f, 0.1f, 0.1f, 1.0f };
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
         for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, &FOV);
         glPopAttrib();
@@ -349,19 +354,39 @@ bool SceneGame::Render()
             {
                 SetLight(*light);
 
+                ////// AMBIENT PASS
+                glPushAttrib(GL_ALL_ATTRIB_BITS);
+                glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+                glEnable   (GL_DEPTH_TEST);
+                glDepthMask(0);                     // do not write to z-buffer
+                glDepthFunc(GL_LEQUAL);
+                glEnable(GL_CULL_FACE);             // enable face culling
+                glCullFace(GL_BACK);
+                glColorMask(1,1,1,1);
+                glEnable(GL_BLEND);                 // add light contribution to frame buffer
+                glBlendFunc(GL_ONE, GL_ONE);
+                GLShader::EnableTexturing(xState_Enable);
+                GLShader::SetLightType(light->type);
+                GLShader::ambient  = true;
+                GLShader::diffuse  = false;
+                GLShader::specular = false;
+                glEnable(GL_LIGHT0);                // light0 should be set to have the
+                                                    // characteristics of the light
+                                                    // we want to use for this pass
+                for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, &FOV);
+                glPopAttrib();
+
                 if (light->type != xLight_INFINITE && light->radius > 0.f)
                 {
-                    /*
-                    int x, y, width, height;
+                    //int x, y, width, height;
                     // set scissor region optimization
-                    getScreenBoundingRectangle(vector4to3(curLight.m_position),
-                        curLight.m_radius, camera, view,
-                        vars.m_winWidth, vars.m_winHeight,
-                        x, y, width, height);
+                    //getScreenBoundingRectangle(vector4to3(curLight.m_position),
+                    //    curLight.m_radius, camera, view,
+                    //    vars.m_winWidth, vars.m_winHeight,
+                    //    x, y, width, height);
 
-                    glEnable(GL_SCISSOR_TEST);
-                    glScissor(x, y, width, height);
-                    */
+                    //glEnable(GL_SCISSOR_TEST);
+                    //glScissor(x, y, width, height);
                 }
 
                 ////// SHADOW DETERMINATION PASS
@@ -390,10 +415,15 @@ bool SceneGame::Render()
                     glDepthMask(0);                     // do not write to z-buffer
                     glDepthFunc(GL_LESS);
                     glColorMask(0, 0, 0, 0);            // do not write to frame buffer
+                    GLShader::EnableTexturing(xState_Disable);
+                    GLShader::SetLightType(xLight_NONE);
+                    GLShader::EnableShaders(xState_Disable);
 
                     for ( i = begin+1 ; i != end ; ++i )
                         if ((*i)->castsShadows)
                             (*i)->RenderShadowVolume(*light, &FOV);
+
+                    GLShader::EnableShaders(xState_Enable);
 
                     glPopAttrib();
                 }
@@ -415,16 +445,16 @@ bool SceneGame::Render()
                 glColorMask(1,1,1,1);
                 glEnable(GL_BLEND);                 // add light contribution to frame buffer
                 glBlendFunc(GL_ONE, GL_ONE);
-                GLShader::EnableTexturing(0);
-                GLShader::EnableLighting(1);
+                GLShader::EnableTexturing(xState_Enable);
+                GLShader::SetLightType(light->type);
+                GLShader::ambient  = false;
+                GLShader::diffuse  = true;
+                GLShader::specular = true;
                 glEnable(GL_LIGHT0);                // light0 should be set to have the
                                                     // characteristics of the light
                                                     // we want to use for this pass
-                //if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
                 for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, &FOV);
-                //if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
                 glPopAttrib();
-
 
                 ////// DISPLAY SHADOW VOLUMES PASS
                 if (Config::DisplayShadowVolumes)
@@ -437,16 +467,14 @@ bool SceneGame::Render()
                     glDepthMask(1);                     // do not write to z-buffer
                     glColorMask(1, 1, 1, 1);            // do not write to frame buffer
                     glEnable(GL_BLEND);
-                    GLShader::EnableTexturing(-1);
-                    GLShader::EnableLighting(-1);
+                    GLShader::EnableTexturing(xState_Disable);
+                    GLShader::SetLightType(xLight_NONE);
                     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
                     //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
 
-                    if (Config::EnableShaders && shader.IsInitialized()) shader.Start();
                     for ( i = begin+1 ; i != end ; ++i )
                         if ((*i)->castsShadows)
                             (*i)->RenderShadowVolume(*light, &FOV);
-                    if (Config::EnableShaders && shader.IsInitialized()) shader.Suspend();
                     glPopAttrib();
                 }
             }
@@ -466,13 +494,15 @@ bool SceneGame::Render()
         glEnable(GL_BLEND);
         //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_COLOR);
-        GLShader::EnableTexturing(0);
-        GLShader::EnableLighting(0);
+        GLShader::EnableTexturing(xState_Enable);
+        GLShader::SetLightType(xLight_GLOBAL);
+        GLShader::ambient  = false; // true;
+        GLShader::diffuse  = true;
+        GLShader::specular = true;
         glDisable(GL_LIGHT0);
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
         for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(true, &FOV);
         glPopAttrib();
-
     }
     else
     {
@@ -485,8 +515,8 @@ bool SceneGame::Render()
         glEnable   (GL_CULL_FACE);
         glCullFace (GL_BACK);
         glColorMask(1, 1, 1, 1);
-        GLShader::EnableTexturing(0);
-        GLShader::EnableLighting(-1);
+        GLShader::EnableTexturing(xState_Enable);
+        GLShader::SetLightType(xLight_NONE);
 
         for ( i = begin+1 ; i != end ; ++i ) (*i)->Render(false, &FOV);
 
