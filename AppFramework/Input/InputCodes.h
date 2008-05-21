@@ -54,8 +54,9 @@
 
 #define IC_PolyModeChange    IC_CameraPerspective+1
 #define IC_ViewPhysicalModel IC_PolyModeChange+1
+#define IC_ShowBonesAlways   IC_PolyModeChange+2
 
-#define IC_BE_Create          IC_ViewPhysicalModel+10
+#define IC_BE_Create          IC_PolyModeChange+10
 #define IC_BE_Edit            IC_BE_Create+1
 #define IC_BE_Delete          IC_BE_Create+2
 #define IC_BE_Select          IC_BE_Create+3
@@ -72,7 +73,8 @@
 #define IC_BE_CreateConstrMax IC_BE_Create+14
 #define IC_BE_CreateConstrMin IC_BE_Create+15
 #define IC_BE_CreateConstrEql IC_BE_Create+16
+#define IC_BE_CreateConstrAng IC_BE_Create+17
 
-#define IC_LAST_CODE         IC_BE_CreateConstrEql
+#define IC_LAST_CODE         IC_BE_CreateConstrAng
 
 #endif

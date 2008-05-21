@@ -271,6 +271,22 @@ xVector4 xMatrixToQuaternion(const xMatrix &m)
     return xVector4::Create(a, cos(angle));
 }
 
+xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up)
+{
+    /* Side = forward x up */
+    xVector3 &side = xVector3::CrossProduct(forward, up).normalize();
+    /* Recompute up as: forward = side x up */
+    xVector3 forward2 = xVector3::CrossProduct(side, up).normalize();
+    /* Fill matrix */
+    xMatrix transformation;
+    transformation.x0 = side.x;     transformation.x1 = side.y;     transformation.x2 = side.z;
+    transformation.y0 = forward2.x; transformation.y1 = forward2.y; transformation.y2 = forward2.z;
+    transformation.z0 = up.x;       transformation.z1 = up.y;       transformation.z2 = up.z;
+    transformation.w0 = transformation.w1 = transformation.w2 = 0.f;
+    transformation.row3.zeroQ();
+    return transformation;
+}
+
 // Return a 3D axis-rotation xMatrix
 // Pass in 'x', 'y', or 'z' for the axis.
 xMatrix xMatrixRotateRad(xFLOAT radX, xFLOAT radY, xFLOAT radZ)

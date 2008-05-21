@@ -11,16 +11,17 @@ class SkeletizedObj : public ModelObj
 {
 public:
 
-    SkeletizedObj () : ModelObj(), verletQuaternions(NULL), verletForces(NULL), ControlType(Control_AI) {}
+    SkeletizedObj () : ModelObj(), verletQuaternions(NULL), ControlType(Control_AI) {}
     SkeletizedObj (GLfloat x, GLfloat y, GLfloat z)
-      : ModelObj(x,y,z), verletQuaternions(NULL), verletForces(NULL), ControlType(Control_AI) {}
+      : ModelObj(x,y,z), verletQuaternions(NULL), ControlType(Control_AI) {}
     SkeletizedObj (GLfloat x, GLfloat y, GLfloat z,
         GLfloat rotX, GLfloat rotY, GLfloat rotZ)
-      : ModelObj(x,y,z, rotX,rotY,rotZ), verletQuaternions(NULL), verletForces(NULL), ControlType(Control_AI) {}
+      : ModelObj(x,y,z, rotX,rotY,rotZ), verletQuaternions(NULL), ControlType(Control_AI) {}
 
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL,
                              bool physicalNotLocked = false, bool phantom = true);
     virtual void Finalize ();
+    virtual void ResetVerletSystem();
 
     void AddAnimation(const char *fileName, xDWORD startTime = 0, xDWORD endTime = 0);
 
@@ -31,8 +32,9 @@ public:
 
     xVConstraintCollisionVector collisionConstraints;
     xVector4 *verletQuaternions;
-    xVector3 *verletForces;
-    xFLOAT    verletWeight;
+
+    xVerletSystem verletSystem;
+    xFLOAT        verletWeight;
 
     enum EControlType
     {

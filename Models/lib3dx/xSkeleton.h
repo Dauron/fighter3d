@@ -34,4 +34,6 @@ struct xModelInstance;
 void    xBoneCalculateMatrices (const xSkeleton &spine, xModelInstance *instance);
 void    xBoneCalculateQuats    (const xSkeleton &spine, xModelInstance *instance);
 
+void    xBoneCalculateQuatForVerlet(const xSkeleton &spine, xBYTE destId, xVector4 &quatPar, xVector4 &quatCur);
+
 #endif

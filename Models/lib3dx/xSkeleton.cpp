@@ -249,3 +249,40 @@ void    xBoneCalculateQuats(const xSkeleton &spine, xModelInstance *instance)
     if (!instance->bonesQ) instance->bonesQ = new xVector4[spine.boneC*2];
     _xBoneCalculateQuats(spine.boneP, 0, *instance);
 }
+
+bool   _xBoneCalculateQuatForVerlet(const xIKNode *boneP, xBYTE destId, xBYTE boneId, xVector4 &quatPar, xVector4 &quatCur)
+{
+    const xIKNode *bone = boneP + boneId;
+
+    if (bone->id == destId)
+    {
+        quatCur = bone->quaternion;
+        if (!bone->joinsBP[0])
+        {
+            const xIKNode *par;
+            if (boneP->joinsEP[0] == boneId)
+                par = boneP + boneP->joinsEP[1];
+            else
+                par = boneP + boneP->joinsEP[0];
+            quatPar.init(par->quaternion.vector3, par->quaternion.w);
+        }
+        else
+            quatPar.zeroQ();
+
+        return true;
+    }
+
+    xBYTE *cbone = bone->joinsEP;
+    for (int i = bone->joinsEC; i; --i, ++cbone)
+        if (_xBoneCalculateQuatForVerlet(boneP, destId, *cbone, quatPar, quatCur))
+        {
+            if (boneId)
+                quatPar = xQuaternion::product(bone->quaternion, quatPar);
+            return true;
+        }
+    return false;
+}
+void    xBoneCalculateQuatForVerlet(const xSkeleton &spine, xBYTE destId, xVector4 &quatPar, xVector4 &quatCur)
+{
+    _xBoneCalculateQuatForVerlet(spine.boneP, destId, 0, quatPar, quatCur);
+}

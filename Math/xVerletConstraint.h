@@ -4,17 +4,20 @@
 #include "xMath.h"
 #include <vector>
 
+struct xVerletSystem;
+
 struct xIVConstraint {
     enum xIVConstraint_Type
     {
         Constraint_LengthEql,
         Constraint_LengthMin,
         Constraint_LengthMax,
+        Constraint_Angular,
         Constraint_Plane
     } Type;
 
     virtual ~xIVConstraint() {}
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass) = 0;
+    virtual bool Satisfy(xVerletSystem *system) = 0;
     virtual void CloneTo(xIVConstraint *&dst) const = 0;
     virtual void Save( FILE *file )
     {
@@ -32,8 +35,7 @@ struct xVConstraintLengthEql : xIVConstraint
     xWORD  particleA, particleB;
     xFLOAT restLength, restLengthSqr;
 
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass);
-
+    virtual bool Satisfy(xVerletSystem *system);
     virtual void CloneTo(xIVConstraint *&dst) const;
 
     virtual void Save( FILE *file );
@@ -48,8 +50,7 @@ struct xVConstraintLengthMin : xIVConstraint
     xWORD  particleA, particleB;
     xFLOAT minLength, minLengthSqr;
 
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass);
-
+    virtual bool Satisfy(xVerletSystem *system);
     virtual void CloneTo(xIVConstraint *&dst) const;
 
     virtual void Save( FILE *file );
@@ -64,13 +65,36 @@ struct xVConstraintLengthMax : xIVConstraint
     xWORD  particleA, particleB;
     xFLOAT maxLength, maxLengthSqr;
 
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass);
-
+    virtual bool Satisfy(xVerletSystem *system);
     virtual void CloneTo(xIVConstraint *&dst) const;
 
     virtual void Save( FILE *file );
     virtual xIVConstraint *Load( FILE *file );
 };
+
+
+struct xVConstraintAngular : xIVConstraint
+{
+    xVConstraintAngular() { Type = Constraint_Angular; }
+    virtual ~xVConstraintAngular() {}
+
+    xWORD    particleRootB, particleRootE;
+    xWORD    particle;
+    xVector4 upQuat;
+    xFLOAT   minZ, maxZ;
+
+    xFLOAT   elipseMaxX, elipseMaxY, elipseMinX, elipseMinY; // sines of angles = bounding elipse
+    xCHAR    zSignMaxX, zSignMaxY, zSignMinX, zSignMinY;
+
+    virtual bool Satisfy(xVerletSystem *system);
+    bool Test(const xVector3 &pRootB, const xVector3 &pRootE, const xVector3 &p,
+        const xVector3 &up, const xVector3 &front) const;
+    virtual void CloneTo(xIVConstraint *&dst) const;
+
+    virtual void Save( FILE *file );
+    virtual xIVConstraint *Load( FILE *file );
+};
+
 
 struct xVConstraintCollision : xIVConstraint
 {
@@ -81,74 +105,100 @@ struct xVConstraintCollision : xIVConstraint
     xFLOAT   planeD;
     xWORD    particle;
 
-    virtual bool Satisfy(xVector3 *pos, xFLOAT *invmass);
-
+    virtual bool Satisfy(xVerletSystem *system);
     virtual void CloneTo(xIVConstraint *&dst) const;
 
     virtual void Save( FILE *file );
     virtual xIVConstraint *Load( FILE *file );
 };
 
+
 typedef std::vector<xVConstraintCollision> xVConstraintCollisionVector;
 
-class xVerletSolver
+struct xSkeleton;
+struct xVerletSystem
 {
-public:
-    xWORD     m_numParticles;
-    xWORD     m_numConstraints;
-    xBYTE     m_numPasses;
+    xWORD     particleC;
 
-    xVConstraintLengthEql *m_constraintsLenEql;
-    xIVConstraint        **m_constraints;
+    xVector3 *positionP;     // current positions
+    xVector3 *positionOldP;  // previous positions
+    xVector3 *accelerationP; // force accumulators
+    xFLOAT   *weightP;       // force accumulators
 
-    xVector3 *m_pos;    // current positions
-    xVector3 *m_posOld; // previous positions
-    xVector3 *m_a;      // force accumulators
-    xFLOAT   *m_weight; // force accumulators
-    xVector3  m_vGravity;
-    xFLOAT    m_fTimeStep;
+    xVConstraintLengthEql *constraintsLenEql;
+    xIVConstraint        **constraintsP;
+    xWORD                  constraintsC;
+    xSkeleton             *spine;
+    xMatrix                locationMatrix;
+    xMatrix                locationMatrixIT;
 
-public:
-    xVConstraintCollisionVector *collisionConstraints;
+    xVConstraintCollisionVector *collisions;
 
-    xVerletSolver()
+    xVerletSystem()
     {
-        m_numParticles = 0;
-        m_constraints = NULL;
-        m_constraintsLenEql = NULL;
-        m_pos = NULL;
-        m_posOld = NULL;
-        m_a = NULL;
-        m_weight = NULL;
-        collisionConstraints = NULL;
+        positionP     = NULL;
+        positionOldP  = NULL;
+        accelerationP = NULL;
+        weightP       = NULL;
+        locationMatrix.identity();
+        locationMatrixIT.identity();
     }
 
-    void Init(xWORD particleC)
+    void Init(xWORD numParticles)
     {
-        m_numParticles   = particleC;
-        m_numConstraints = 0;
-        m_numPasses      = 1;
-        m_constraints    = NULL;
-        m_constraintsLenEql = NULL;
+        particleC = numParticles;
 
-        m_pos    = new xVector3[particleC];
-        m_posOld = new xVector3[particleC];
-        m_a      = new xVector3[particleC];
-        m_weight = new xFLOAT[particleC];
-
-        xFLOAT *weight = m_weight;
+        positionP     = new xVector3[particleC];
+        positionOldP  = new xVector3[particleC];
+        accelerationP = new xVector3[particleC];
+        weightP       = new xFLOAT[particleC];
+        xFLOAT *weight = weightP;
         for (int i = particleC; i; --i, ++weight) *weight = 1.f;
 
-        m_vGravity.zero();
-        m_fTimeStep = 0;
+        constraintsC       = 0;
+        constraintsP       = NULL;
+        constraintsLenEql  = NULL;
+        collisions         = NULL;
     }
 
     void Free()
     {
-        m_numParticles   = 0;
-        if (m_pos) delete[] m_pos;
-        if (m_posOld) delete[] m_posOld;
-        if (m_weight) delete[] m_weight;
+        particleC   = 0;
+        if (positionP)     delete[] positionP;
+        if (positionOldP)  delete[] positionOldP;
+        if (accelerationP) delete[] accelerationP;
+        if (weightP)       delete[] weightP;
+        positionP     = NULL;
+        positionOldP  = NULL;
+        accelerationP = NULL;
+        weightP       = NULL;
+    }
+
+    void SwapPositions()
+    {
+        xVector3 *swp = positionP;
+        positionP = positionOldP;
+        positionOldP = swp;
+    }
+};
+
+class xVerletSolver
+{
+public:
+    xVector3       gravity;
+    xFLOAT         timeStep;
+    xBYTE          passesC;
+
+    xVerletSystem *system;
+
+public:
+    void Init(xVerletSystem *system)
+    {
+        passesC      = 1;
+        gravity.zero();
+        timeStep = 0;
+
+        this->system = system;
     }
 
     void TimeStep()
@@ -158,54 +208,9 @@ public:
         SatisfyConstraints();
     }
 
-    void SatisfyConstraints()
-    {
-        for (xBYTE pass_n = m_numPasses; pass_n; --pass_n)
-        {
-            if (collisionConstraints)
-            {
-                xVConstraintCollisionVector::iterator iter = collisionConstraints->begin(),
-                                                      end = collisionConstraints->end();
-                for (; iter != end; ++iter)
-                    iter->Satisfy(m_pos, m_weight);
-            }
-
-            if (m_constraintsLenEql)
-            {
-                xVConstraintLengthEql * iterL = m_constraintsLenEql;
-                xVConstraintLengthEql * endL = m_constraintsLenEql + m_numParticles-1;
-                for (; iterL != endL; ++iterL)
-                    iterL->Satisfy(m_pos, m_weight);
-            }
-
-            xIVConstraint **constr = m_constraints;
-            for (xWORD i = m_numConstraints; i; --i, ++constr)
-                (*constr)->Satisfy(m_pos, m_weight);
-        }
-    }
-    void AccumulateForces()
-    {
-        xVector3 *a = m_a;
-        for (xWORD i = m_numParticles; i; --i, ++a) *a = m_vGravity;
-    }
-    void Verlet()
-    {
-        xVector3 *pC = m_pos;
-        xVector3 *pO = m_posOld;
-        xVector3 *a  = m_a;
-        xFLOAT    timeStepSqr = m_fTimeStep*m_fTimeStep;
-
-        if (m_a)
-            for (xWORD i = m_numParticles; i; --i, ++pC, ++pO, ++a)
-                *pO = 2 * *pC - *pO + *a * timeStepSqr;
-        else
-            for (xWORD i = m_numParticles; i; --i, ++pC, ++pO, ++a)
-                *pO = 2 * *pC - *pO;
-
-        xVector3 *swp = m_pos;
-        m_pos = m_posOld;
-        m_posOld = swp;
-    }
+    void SatisfyConstraints();
+    void AccumulateForces();
+    void Verlet();
 };
 
 #endif

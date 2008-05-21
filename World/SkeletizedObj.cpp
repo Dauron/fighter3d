@@ -6,7 +6,37 @@ void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filena
 {
     forceNotStatic = true;
     ModelObj::Initialize(gr_filename, ph_filename);
+    Type = Model_Verlet;
+    ResetVerletSystem();
+
     resilience = 0.2f;
+}
+
+void SkeletizedObj :: ResetVerletSystem()
+{
+    verletSystem.Free();
+    verletSystem.Init(xModelGr->spine.boneC);
+    verletSystem.constraintsP = xModelGr->spine.constraintsP; // NOTE: should be redone on constraint changes in skeleton editor
+    verletSystem.constraintsC = xModelGr->spine.constraintsC; // NOTE: should be redone on constraint changes in skeleton editor
+    verletSystem.collisions = &collisionConstraints;
+    xIKNode  *bone   = xModelGr->spine.boneP;
+    xVector3 *pos    = verletSystem.positionP,
+             *posOld = verletSystem.positionOldP,
+             *a      = verletSystem.accelerationP;
+    xMatrix  *mtx    = modelInstanceGr.bonesM;
+
+    if (mtx)
+        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++a, ++mtx)
+        {
+            *pos = *posOld = mLocationMatrix.preTransformP( mtx->postTransformP(bone->pointE) );
+            a->zero();
+        }
+    else
+        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++a)
+        {
+            *pos = *posOld = mLocationMatrix.preTransformP(bone->pointE);
+            a->zero();
+        }
 }
 
 void SkeletizedObj :: Finalize ()
@@ -84,4 +114,15 @@ void SkeletizedObj :: Update(float deltaTime)
     }
     else
         GetModelGr()->spine.ResetQ();
+
+    xIKNode  *bone   = xModelGr->spine.boneP;
+    xVector3 *pos    = verletSystem.positionOldP,
+             *a      = verletSystem.accelerationP;
+    xMatrix  *mtx    = modelInstanceGr.bonesM;
+    for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++a, ++mtx)
+    {
+        *pos   = mLocationMatrix.preTransformP( mtx->postTransformP(bone->pointE) );
+        a->zero();
+    }
+    verletSystem.SwapPositions();
 }

@@ -17,68 +17,118 @@ class SceneSkeleton : public Scene, public ISelectionProvider
 {
   public:
     SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName);
-    ~SceneSkeleton() { m_Model.Finalize(); }
+    ~SceneSkeleton() { Model.Finalize(); }
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate() {
-        m_Model.Invalidate();
-        return m_PrevScene->Invalidate();
+        Model.Invalidate();
+        return PrevScene->Invalidate();
     }
     virtual void Terminate();
     virtual bool Update(float deltaTime);
     virtual bool Render();
 
   private:
-    void        InitInputMgr();
+    void         InitInputMgr();
 
-    struct
+    struct _Cameras
     {
         CameraHuman Front, Back, Top, Bottom, Left, Right, Perspective;
         Camera *Current;
-    } m_Cameras;
+    } Cameras;
 
     enum
     {
         emMain, emCreateBone,
-        emCreateConstraint_Type, emCreateConstraint_Node, emCreateConstraint_Length,
+        emCreateConstraint_Type, emCreateConstraint_Node, emCreateConstraint_Params,
         emSelectElement, emSelectVertex, emSelectBone, emInputWght,
         emSelectAnimation, emEditAnimation, emAnimateBones, emFrameParams,
         emLoadAnimation, emSaveAnimation, emLast
-    } m_EditMode;
+    } EditMode;
 
-    Scene     * m_PrevScene;
-    HFont       m_Font;
-    ModelObj    m_Model;
-    bool        m_EditGraphical;
-    char      * modifyButton, * acceptButton;
+    Scene     * PrevScene;
+    HFont       Font;
+    ModelObj    Model;
 
-    xVerletSolver engine;
+    xVerletSystem vSystem;
+    xVerletSolver vEngine;
 
-    std::vector<std::vector<GLButton> > m_Buttons;
-    std::vector<GLButton>               m_Directories;
-    std::string                         m_CurrentDirectory;
-    std::string                         m_AnimationName;
+    char                              * KeyName_Accept;
+    char                              * KeyName_Modify;
+    std::vector<std::vector<GLButton> > Buttons;
+    std::vector<GLButton>               Directories;
+    std::string                         CurrentDirectory;
+    std::string                         AnimationName;
 
-    int                  lastX, lastY;
-    bool                 mouseLIsDown, mouseRIsDown;
-    bool                 showBonesOnAnim;
-    bool                 play;
-    int                  currentAction;
-    xBYTE                boneIds[4];
-    xBYTE                boneWghts[4];
-    xLONG                frameParams[2];
-    xLONG                constrType;
-    xFLOAT               constrLen;
-    xBYTE                param;
-    xIKNode             *selectedBone;
-    xElement            *selectedElement;
-    xWORD                selectedElemID;
-    std::vector<xDWORD>  selectedVert;
-    xDWORD               hoveredVert;
-    int                  selStartX, selStartY;
-    xVector4             lastBoneQuaternion;
-    std::string          command;
-    xAnimation          *currentAnimation;
+    // Input states and key buffer
+    struct _InputState {
+        int         LastX, LastY;
+        bool        MouseLIsDown;
+        bool        MouseRIsDown;
+        std::string String;
+    } InputState;
+
+    // Scene state properties
+    struct _State {
+        bool        DisplayPhysical;
+        bool        HideBonesOnAnim;
+        bool        ShowBonesAlways;
+        bool        PlayAnimation;
+        int         CurrentAction;
+    } State;
+
+    // Specific Edit Mode properties
+    union {
+        // Constraint
+        struct _Constraint {
+            xBYTE  boneA;
+            xBYTE  boneB;
+            xLONG  type;
+            union {
+                xFLOAT length;
+                struct {
+                    xFLOAT maxX;
+                    xFLOAT minX;
+                    xFLOAT maxY;
+                    xFLOAT minY;
+                    xBYTE  step;
+                };
+                xFLOAT4    angles;
+            };
+        } Constraint;
+        // Skinning
+        struct _Skin {
+            struct {
+                xBYTE id;
+                xBYTE weight;
+            } BoneWeight[4];
+        } Skin;
+        // Animation
+        struct _Animation {
+            union {
+                // Key Frame parameters
+                struct {
+                    xBYTE step;
+                    xLONG freeze;
+                    xLONG duration;
+                } KeyFrame;
+                // Bone rotation
+                xVector4 PreviousQuaternion;
+            };
+            xAnimation * Instance;
+        } Animation;
+    };
+
+    // Selected objects
+    struct _Selection {
+        xIKNode           * Bone;
+        xElement          * Element;
+        xWORD               ElementId;
+        std::vector<xDWORD> Vertices;
+
+        int                 RectStartX, RectStartY;
+    } Selection;
+    xDWORD          HoveredVert;
 
     void        RenderProgressBar();
 
@@ -87,19 +137,18 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     void        UpdateDisplay(float deltaTime);
     /* MOUSE */
     void        UpdateMouse(float deltaTime);
-    void        MouseLDown(int X, int Y);
-    void        MouseLUp  (int X, int Y);
-    void        MouseRDown(int X, int Y);
-    void        MouseRUp  (int X, int Y);
-    void        MouseMove (int X, int Y);
+    void        MouseLDown (int X, int Y);
+    void        MouseLUp   (int X, int Y);
+    void        MouseRDown (int X, int Y);
+    void        MouseRUp   (int X, int Y);
+    void        MouseMove  (int X, int Y);
     /* 3D */
     xVector3    Get3dPos  (int X, int Y, xVector3 planeP);
-    xVector3    CastPoint(xVector3 rayPos, xVector3 planeP);
+    xVector3    CastPoint (xVector3 rayPos, xVector3 planeP);
     /* TEXT INPUT */
     void        GetCommand();
     void        GetConstraintParams();
-    void        GetInputWeight();
-    void        SetVertexWghts();
+    void        GetBoneIdAndWeight();
     void        GetFrameParams();
     /* FILES */
     void        FillDirectoryBtns(bool files = false, const char *mask = NULL);

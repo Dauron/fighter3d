@@ -14,6 +14,12 @@
 class ModelObj : public Object3D
 {
 public:
+    enum ModelType
+    {
+        Model_Rigid,
+        Model_Verlet
+    } Type;
+
     bool           castsShadows;
     bool           phantom;    // no collisions
     bool           locked;     // may not be moved?

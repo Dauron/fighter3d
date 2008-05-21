@@ -188,3 +188,9 @@ xVector4 operator * (const xVector4 &a, const xMatrix &b);
 xMatrix  operator * (const xMatrix &a, const xMatrix &b);
 xMatrix  operator * (const xMatrix &m, xFLOAT f);
 xMatrix  operator * (xFLOAT f, const xMatrix &m);
+
+xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up);
+inline xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up, const xVector3 &center)
+{
+    return xMatrixFromVectors(forward, up).preTranslateT(-center);
+}

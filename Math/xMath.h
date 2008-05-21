@@ -40,8 +40,9 @@ static inline float Sign(float f)
 typedef unsigned char  xBYTE;
 typedef unsigned short xWORD;
 typedef unsigned long  xDWORD;
-typedef short  xSHORT;
-typedef long   xLONG;
+typedef signed   char  xCHAR;
+typedef signed   short xSHORT;
+typedef signed   long  xLONG;
 typedef float  xFLOAT;
 typedef xWORD  xWORD2    [2];
 typedef xWORD  xWORD3    [3];
@@ -53,6 +54,7 @@ typedef xFLOAT xFLOAT4x4 [4][4];
 
 const xDWORD xDWORD_MAX = (xDWORD)-1;
 const xWORD  xWORD_MAX  = (xWORD)-1;
+const xBYTE  xBYTE_MAX  = (xBYTE)-1;
 
 #include "xVector3.h"
 #include "xVector4.h"

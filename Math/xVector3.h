@@ -34,15 +34,19 @@ union xVector3 {
     }
 
     xFLOAT length() const {
-        return (xFLOAT) sqrt(x*x + y*y + z*z);
+        xFLOAT sqr = x*x + y*y + z*z;
+        return sqr != 1.f ? sqrtf(sqr) : 1.f;
     }
     xFLOAT lengthSqr() const {
         return x*x + y*y + z*z;
     }
     xVector3 &normalize() {
         xFLOAT m = length();
-        m = (m > 0.0F) ? 1.0F / m : 0.0F;
-        x *= m; y *= m; z *= m;
+        if (m != 0.f && m != 1.f)
+        {
+            m = 1.0f / m;
+            x *= m; y *= m; z *= m;
+        }
         return *this;
     }
     xVector3 &invert() {

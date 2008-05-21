@@ -16,18 +16,21 @@ Jason Shankel
 #include "xMath.h"
 #include <cmath>
 
-xVector4 xQuaternion::getRotation(const xVector3 &srcP, const xVector3 &dstP, const xVector3 &center)
+xVector4 xQuaternion::getRotation(const xVector3 &srcV, const xVector3 &dstV)
 {
     xVector4 quat;
-    xVector3 v2 = (dstP-center).normalize();
-    xVector3 v1 = (srcP-center).normalize();
-    xFLOAT cosang = xVector3::DotProduct(v1, v2);
+    xFLOAT cosang = xVector3::DotProduct(xVector3::Normalize(srcV), xVector3::Normalize(dstV));
     if (cosang > 1.f) cosang = 1.f;
     else
     if (cosang < -1.f) cosang = -1.f;
-    xFLOAT hangle = acos(cosang) * 0.5f;
-    quat.vector3 = xVector3::CrossProduct(v1, v2).normalize() * sinf(hangle);
-    quat.w = cosf(hangle);
+    if (cosang == -1.f)
+        quat.init(1.f,0.f,0.f,0.f);
+    else
+    {
+        xFLOAT hangle = acos(cosang) * 0.5f;
+        quat.vector3 = xVector3::CrossProduct(srcV, dstV).normalize() * sinf(hangle);
+        quat.w = cosf(hangle);
+    }
     return quat;
 }
 

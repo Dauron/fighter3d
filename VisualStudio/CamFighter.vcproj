@@ -356,6 +356,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\Models\lib3dx\xRenderGLSkeleton.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\Models\lib3dx\xShadowVolume.cpp"
 					>
 				</File>

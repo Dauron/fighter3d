@@ -3,6 +3,7 @@
 
 void ModelObj :: Initialize (const char *gr_filename, const char *ph_filename, bool physicalNotLocked, bool phantom)
 {
+    Type = Model_Rigid;
     collisionInfo = NULL;
     mLocationMatrixPrev = mLocationMatrix;
     transVelocity.zero();

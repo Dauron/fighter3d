@@ -15,6 +15,13 @@ position	0	0	10
 
 # OBJECTS
 
+[model]
+model	dojo/floor0_F.3dx
+position	0.0	0.0	-0.21
+physical	0
+phantom	0
+#
+
 [skeletized]
 skip fastm	human2_fst.3dx
 model	human2_fst.3dx
@@ -31,12 +38,13 @@ animation	anims/human/garda.ska	0	0
 [skeletized]
 skip fastm	human2_fst.3dx
 model	human2_fst.3dx
-position	-0.5	-1.5	-0.2
+#position	-0.5	-1.5	-0.2
+position	-0.5	-2	-0.2
 physical	0
 locked      0
 phantom	0
 mass	70
 shadows 0
-animation	anims/human/garda.ska	0	4700
-animation	anims/human/skulony.ska	4700	4700
-animation	anims/human/kiwa_sie.ska	4700	4700
+skip animation	anims/human/garda.ska	0	4700
+skip animation	anims/human/skulony.ska	4700	4700
+skip animation	anims/human/kiwa_sie.ska	4700	4700

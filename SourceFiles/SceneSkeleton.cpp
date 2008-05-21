@@ -4,100 +4,119 @@
 #include "../Utils/Filesystem.h"
 
 SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName)
-        : m_EditMode(emMain), m_PrevScene(prevScene), m_EditGraphical(true),
-          modifyButton(NULL), acceptButton(NULL), mouseLIsDown(false), mouseRIsDown(false),
-          play(false), currentAction(0), selectedBone(NULL), selectedElemID(xWORD_MAX), hoveredVert(xDWORD_MAX),
-          currentAnimation(NULL)
-
 {
+    PrevScene = prevScene;
+
+    EditMode = emMain;
+
+    State.CurrentAction   = 0;
+    State.DisplayPhysical = false;
+    State.HideBonesOnAnim = false;
+    State.ShowBonesAlways = false;
+    State.PlayAnimation   = false;
+
+    Animation.Instance    = NULL;
+
+    Selection.Bone        = NULL;
+    Selection.Element     = NULL;
+    Selection.ElementId   = xWORD_MAX;
+    Selection.Vertices.clear();
+    HoveredVert           = xDWORD_MAX;
+
+    InputState.MouseLIsDown = false;
+    InputState.MouseRIsDown = false;
+    InputState.String.clear();
+    KeyName_Modify = NULL;
+    KeyName_Accept = NULL;
+
     sceneName = "[Skeleton]";
-    m_Font = HFont();
-    m_Cameras.Current = NULL;
+    Font      = HFont();
+    Cameras.Current = NULL;
 
-    m_Buttons.resize(emLast);
-    m_Buttons[emMain].push_back(GLButton("Create Skeleton",  10, 2, 145, 15, IC_BE_ModeSkeletize));
-    m_Buttons[emMain].push_back(GLButton("Skinning",        160, 2,  80, 15, IC_BE_ModeSkin));
-    m_Buttons[emMain].push_back(GLButton("Animating",       245, 2,  90, 15, IC_BE_ModeAnimate));
-    m_Buttons[emMain].push_back(GLButton("Graph/Phys",      340, 2, 100, 15, IC_BE_Select));
-    m_Buttons[emMain].push_back(GLButton("Save",            445, 2,  45, 15, IC_BE_Save));
+    Buttons.resize(emLast);
+    Buttons[emMain].push_back(GLButton("Create Skeleton",  10, 2, 145, 15, IC_BE_ModeSkeletize));
+    Buttons[emMain].push_back(GLButton("Skinning",        160, 2,  80, 15, IC_BE_ModeSkin));
+    Buttons[emMain].push_back(GLButton("Animating",       245, 2,  90, 15, IC_BE_ModeAnimate));
+    Buttons[emMain].push_back(GLButton("Graph/Phys",      340, 2, 100, 15, IC_BE_Select));
+    Buttons[emMain].push_back(GLButton("Save",            445, 2,  45, 15, IC_BE_Save));
 
-    m_Buttons[emCreateBone].push_back(GLButton("Select", 100, 2, 65, 15, IC_BE_Select, true, true));
-    m_Buttons[emCreateBone].push_back(GLButton("Create", 170, 2, 65, 15, IC_BE_Create, true));
-    m_Buttons[emCreateBone].push_back(GLButton("Move",   240, 2, 45, 15, IC_BE_Move,   true));
-    m_Buttons[emCreateBone].push_back(GLButton("Delete", 290, 2, 65, 15, IC_BE_Delete));
-    m_Buttons[emCreateBone].push_back(GLButton("Create constr", 360, 2, 130, 15, IC_BE_CreateConstr));
-    m_Buttons[emCreateBone].push_back(GLButton("Delete constr", 495, 2, 130, 15, IC_BE_DeleteConstr, true));
+    Buttons[emCreateBone].push_back(GLButton("Select", 100, 2, 65, 15, IC_BE_Select, true, true));
+    Buttons[emCreateBone].push_back(GLButton("Create", 170, 2, 65, 15, IC_BE_Create, true));
+    Buttons[emCreateBone].push_back(GLButton("Move",   240, 2, 45, 15, IC_BE_Move,   true));
+    Buttons[emCreateBone].push_back(GLButton("Delete", 290, 2, 65, 15, IC_BE_Delete));
+    Buttons[emCreateBone].push_back(GLButton("Create constr", 360, 2, 130, 15, IC_BE_CreateConstr));
+    Buttons[emCreateBone].push_back(GLButton("Delete constr", 495, 2, 130, 15, IC_BE_DeleteConstr, true));
 
-    m_Buttons[emCreateConstraint_Type].push_back(GLButton("Max",   205, 2, 35, 15, IC_BE_CreateConstrMax));
-    m_Buttons[emCreateConstraint_Type].push_back(GLButton("Min",   245, 2, 35, 15, IC_BE_CreateConstrMin));
-    m_Buttons[emCreateConstraint_Type].push_back(GLButton("Const", 285, 2, 55, 15, IC_BE_CreateConstrEql));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Max",   205, 2, 35, 15, IC_BE_CreateConstrMax));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Min",   245, 2, 35, 15, IC_BE_CreateConstrMin));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Const", 285, 2, 55, 15, IC_BE_CreateConstrEql));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Ang",   345, 2, 35, 15, IC_BE_CreateConstrAng));
 
-    m_Buttons[emSelectAnimation].push_back(GLButton("New",  110, 2, 35, 15, IC_BE_Create));
-    m_Buttons[emSelectAnimation].push_back(GLButton("Load", 150, 2, 45, 15, IC_BE_Select));
+    Buttons[emSelectAnimation].push_back(GLButton("New",  110, 2, 35, 15, IC_BE_Create));
+    Buttons[emSelectAnimation].push_back(GLButton("Load", 150, 2, 45, 15, IC_BE_Select));
 
-    m_Buttons[emEditAnimation].push_back(GLButton("Play",      110, 2, 45, 15, IC_BE_Play));
-    m_Buttons[emEditAnimation].push_back(GLButton("Insert KF", 160, 2, 90, 15, IC_BE_Create));
-    m_Buttons[emEditAnimation].push_back(GLButton("Edit KF",   255, 2, 70, 15, IC_BE_Edit));
-    m_Buttons[emEditAnimation].push_back(GLButton("KF Time",   330, 2, 70, 15, IC_BE_Move));
-    m_Buttons[emEditAnimation].push_back(GLButton("Delete KF", 405, 2, 90, 15, IC_BE_Delete));
-    m_Buttons[emEditAnimation].push_back(GLButton("Loop",      500, 2, 45, 15, IC_BE_Loop));
-    m_Buttons[emEditAnimation].push_back(GLButton("Save",      550, 2, 45, 15, IC_BE_Save));
+    Buttons[emEditAnimation].push_back(GLButton("Play",      110, 2, 45, 15, IC_BE_Play));
+    Buttons[emEditAnimation].push_back(GLButton("Insert KF", 160, 2, 90, 15, IC_BE_Create));
+    Buttons[emEditAnimation].push_back(GLButton("Edit KF",   255, 2, 70, 15, IC_BE_Edit));
+    Buttons[emEditAnimation].push_back(GLButton("KF Time",   330, 2, 70, 15, IC_BE_Move));
+    Buttons[emEditAnimation].push_back(GLButton("Delete KF", 405, 2, 90, 15, IC_BE_Delete));
+    Buttons[emEditAnimation].push_back(GLButton("Loop",      500, 2, 45, 15, IC_BE_Loop));
+    Buttons[emEditAnimation].push_back(GLButton("Save",      550, 2, 45, 15, IC_BE_Save));
 
-    m_Buttons[emAnimateBones].push_back(GLButton("Select",     110, 2, 65, 15, IC_BE_Select, true, true));
-    m_Buttons[emAnimateBones].push_back(GLButton("Move",       180, 2, 45, 15, IC_BE_Move,   true));
-    m_Buttons[emAnimateBones].push_back(GLButton("Reset Bone", 230, 2, 95, 15, IC_BE_Delete));
-    m_Buttons[emAnimateBones].push_back(GLButton("Tgl.Bones",  330, 2, 90, 15, IC_BE_ModeSkeletize));
-    m_Buttons[emAnimateBones].push_back(GLButton("Accept",     425, 2, 65, 15, IC_BE_Save));
-    m_Buttons[emAnimateBones].push_back(GLButton("Reject",     495, 2, 65, 15, IC_Reject));
+    Buttons[emAnimateBones].push_back(GLButton("Select",     110, 2, 65, 15, IC_BE_Select, true, true));
+    Buttons[emAnimateBones].push_back(GLButton("Move",       180, 2, 45, 15, IC_BE_Move,   true));
+    Buttons[emAnimateBones].push_back(GLButton("Reset Bone", 230, 2, 95, 15, IC_BE_Delete));
+    Buttons[emAnimateBones].push_back(GLButton("Tgl.Bones",  330, 2, 90, 15, IC_BE_ModeSkeletize));
+    Buttons[emAnimateBones].push_back(GLButton("Accept",     425, 2, 65, 15, IC_BE_Save));
+    Buttons[emAnimateBones].push_back(GLButton("Reject",     495, 2, 65, 15, IC_Reject));
 
-    m_Buttons[emLoadAnimation].push_back(GLButton("Reject",    110, 2, 65, 15, IC_Reject));
+    Buttons[emLoadAnimation].push_back(GLButton("Reject",    110, 2, 65, 15, IC_Reject));
 
-    m_Buttons[emSaveAnimation].push_back(GLButton("Accept",    110, 2, 65, 15, IC_Accept));
-    m_Buttons[emSaveAnimation].push_back(GLButton("Reject",    180, 2, 65, 15, IC_Reject));
+    Buttons[emSaveAnimation].push_back(GLButton("Accept",    110, 2, 65, 15, IC_Accept));
+    Buttons[emSaveAnimation].push_back(GLButton("Reject",    180, 2, 65, 15, IC_Reject));
 
-    m_Model.Initialize(gr_modelName, ph_modelName);
+    Model.Initialize(gr_modelName, ph_modelName);
 
-    xModel *modelGr = m_Model.GetModelGr();
-    xModel *modelPh = m_Model.GetModelPh();
+    xModel *modelGr = Model.GetModelGr();
+    xModel *modelPh = Model.GetModelPh();
     if (!modelPh->spine.boneC && modelGr->spine.boneC)
     {
         modelPh->SkeletonAdd(); //   add skeleton to model
-        m_Model.CopySpineToPhysical();
+        Model.CopySpineToPhysical();
     }
     else
     if (!modelGr->spine.boneC && modelPh->spine.boneC)
     {
         modelGr->SkeletonAdd(); //   add skeleton to model
-        m_Model.CopySpineToGraphics();
+        Model.CopySpineToGraphics();
     }
     modelGr->spine.ResetQ();
-    m_Model.CalculateSkeleton();
+    Model.CalculateSkeleton();
 
-    m_CurrentDirectory = Filesystem::GetFullPath("Data/models");
+    CurrentDirectory = Filesystem::GetFullPath("Data/models");
 }
 bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned int height)
 {
     Scene::Initialize(left, top, width, height);
     InitInputMgr();
     g_InputMgr.mouseWheel = 0;
-    if (!modifyButton) {
-        modifyButton = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_BE_Modifier)).c_str());
-        acceptButton = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_Accept)).c_str());
+    if (!KeyName_Modify) {
+        KeyName_Modify = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_BE_Modifier)).c_str());
+        KeyName_Accept = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_Accept)).c_str());
     }
-    if (!m_Cameras.Current)
+    if (!Cameras.Current)
     {
-        m_Cameras.Front.SetCamera(0.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        m_Cameras.Back.SetCamera(0.0f, +5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        m_Cameras.Right.SetCamera(-5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        m_Cameras.Left.SetCamera(+5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        m_Cameras.Top.SetCamera(0.0f, 0.0f,  5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
-        m_Cameras.Bottom.SetCamera(0.0f, 0.0f, -5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
-        m_Cameras.Perspective.SetCamera(-5.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        m_Cameras.Current = &m_Cameras.Front;
+        Cameras.Front.SetCamera(0.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Back.SetCamera(0.0f, +5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Right.SetCamera(-5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Left.SetCamera(+5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Top.SetCamera(0.0f, 0.0f,  5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
+        Cameras.Bottom.SetCamera(0.0f, 0.0f, -5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
+        Cameras.Perspective.SetCamera(-5.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Current = &Cameras.Front;
     }
     return true;
 }
-
 
 void SceneSkeleton::InitInputMgr()
 {
@@ -125,6 +144,7 @@ void SceneSkeleton::InitInputMgr()
     im.SetInputCode('7',       IC_CameraPerspective);
 
     im.SetInputCode('V',       IC_PolyModeChange);
+    im.SetInputCode('B',       IC_ShowBonesAlways);
     im.SetInputCode('F',       IC_ViewPhysicalModel);
 
     im.SetInputCode(VK_LBUTTON, IC_LClick);
@@ -158,27 +178,28 @@ void SceneSkeleton::InitInputMgr()
 
 void SceneSkeleton::Terminate()
 {
-    m_Cameras.Current = NULL;
-    if (modifyButton) {
-        delete[] modifyButton;  modifyButton = 0;
-        delete[] acceptButton;  acceptButton = 0;
+    Cameras.Current = NULL;
+    if (KeyName_Modify) {
+        delete[] KeyName_Modify; KeyName_Modify = NULL;
+        delete[] KeyName_Accept; KeyName_Accept = NULL;
     }
-    if (currentAnimation) {
-        currentAnimation->Unload();
-        delete currentAnimation;
-        currentAnimation = NULL;
+    if (EditMode == emEditAnimation || EditMode == emAnimateBones || EditMode == emFrameParams)
+        if (Animation.Instance) {
+            Animation.Instance->Unload();
+            delete Animation.Instance;
+            Animation.Instance = NULL;
+        }
+
+    g_FontMgr.DeleteFont(Font);
+    Font = HFont();
+
+    if (PrevScene) {
+        PrevScene->Terminate();
+        delete PrevScene;
+        PrevScene = NULL;
     }
 
-    g_FontMgr.DeleteFont(m_Font);
-    m_Font = HFont();
-
-    if (m_PrevScene) {
-        m_PrevScene->Terminate();
-        delete m_PrevScene;
-        m_PrevScene = NULL;
-    }
-
-    m_Directories.clear();
+    Directories.clear();
 }
 
 #define fractf(a)    ((a)-floorf(a))
@@ -218,11 +239,11 @@ bool SceneSkeleton::Render()
     glViewport(Left, Top, Width, Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    if (m_Cameras.Current == &m_Cameras.Perspective)
+    if (Cameras.Current == &Cameras.Perspective)
         xglPerspective(45, AspectRatio, 0.1, 1000);
     else
     {
-        double scale = fabs((m_Cameras.Current->eye - m_Cameras.Current->center).length());
+        double scale = fabs((Cameras.Current->eye - Cameras.Current->center).length());
         glOrtho( -scale*AspectRatio, scale*AspectRatio, -scale, scale, 0.1, 1000 );
     }
     glMatrixMode(GL_MODELVIEW);
@@ -247,13 +268,13 @@ bool SceneSkeleton::Render()
     GLShader::EnableTexturing(xState_Enable);
 
     xFieldOfView FOV; FOV.Empty = true;
-    m_Cameras.Current->LookAtMatrix(FOV.ViewTransform);
-    glLoadMatrixf(&FOV.ViewTransform.x0); //Camera_Aim_GL(*m_Cameras.Current);
+    Cameras.Current->LookAtMatrix(FOV.ViewTransform);
+    glLoadMatrixf(&FOV.ViewTransform.x0); //Camera_Aim_GL(*Cameras.Current);
     //FOV.update();
 
-    xModel         &model         = (m_EditGraphical) ? *m_Model.GetModelGr() : *m_Model.GetModelPh();
-    xModelInstance &modelInstance = (m_EditGraphical) ? m_Model.modelInstanceGr : m_Model.modelInstancePh;
-    xRender        &render        = m_Model.renderer;
+    xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
+    xModelInstance &modelInstance = (State.DisplayPhysical) ? Model.modelInstancePh : Model.modelInstanceGr;
+    xRender        &render        = Model.renderer;
 
     render.RenderModel(model, modelInstance, false, FOV);
     render.RenderModel(model, modelInstance, true, FOV);
@@ -263,12 +284,12 @@ bool SceneSkeleton::Render()
     GLShader::SetLightType(xLight_NONE);
     GLShader::Start();
 
-    if (m_EditMode == emSelectVertex)
-        render.RenderVertices(model, modelInstance, xRender::smNone, selectedElemID, &selectedVert);
-    if (m_EditMode == emSelectBone || m_EditMode == emCreateBone ||
-        m_EditMode == emCreateConstraint_Node || m_EditMode == emCreateConstraint_Length ||
-        m_EditMode == emInputWght  || (m_EditMode == emAnimateBones && showBonesOnAnim))
-        render.RenderSkeleton(model, modelInstance, selectedBone ? selectedBone->id : xWORD_MAX);
+    if (EditMode == emSelectVertex)
+        render.RenderVertices(model, modelInstance, xRender::smNone, Selection.ElementId, &Selection.Vertices);
+    if (State.ShowBonesAlways || EditMode == emSelectBone || EditMode == emCreateBone ||
+        EditMode == emCreateConstraint_Node || EditMode == emCreateConstraint_Params ||
+        EditMode == emInputWght  || (EditMode == emAnimateBones && !State.HideBonesOnAnim))
+        render.RenderSkeleton(model, modelInstance, Selection.Bone ? Selection.Bone->id : xWORD_MAX);
 
     GLShader::Suspend();
 
@@ -286,7 +307,7 @@ bool SceneSkeleton::Render()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    if (mouseLIsDown && m_EditMode == emSelectVertex)
+    if (InputState.MouseLIsDown && EditMode == emSelectVertex)
     {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -295,127 +316,146 @@ bool SceneSkeleton::Render()
         glBegin(GL_QUADS);
         {
             int x = g_InputMgr.mouseX, y = g_InputMgr.mouseY;
-            glVertex3i(selStartX, Height - selStartY, 0);
-            glVertex2i(selStartX, Height - y);
+            glVertex3i(Selection.RectStartX, Height - Selection.RectStartY, 0);
+            glVertex2i(Selection.RectStartX, Height - y);
             glVertex2i(x, Height - y);
-            glVertex2i(x, Height - selStartY);
+            glVertex2i(x, Height - Selection.RectStartY);
         }
         glEnd();
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
     }
 
-    if (!g_FontMgr.IsHandleValid(m_Font))
-        m_Font = g_FontMgr.GetFont("Courier New", 15);
-    const GLFont* pFont = g_FontMgr.GetFont(m_Font);
+    if (!g_FontMgr.IsHandleValid(Font))
+        Font = g_FontMgr.GetFont("Courier New", 15);
+    const GLFont* pFont = g_FontMgr.GetFont(Font);
 
     glColor4f( 1.f, 1.f, 1.f, 1.f );
 
     const char* sCamera = "NULL";
-    if (m_Cameras.Current == &m_Cameras.Front)
+    if (Cameras.Current == &Cameras.Front)
         sCamera = "Front";
-    if (m_Cameras.Current == &m_Cameras.Right)
+    if (Cameras.Current == &Cameras.Right)
         sCamera = "Right";
-    if (m_Cameras.Current == &m_Cameras.Back)
+    if (Cameras.Current == &Cameras.Back)
         sCamera = "Back";
-    if (m_Cameras.Current == &m_Cameras.Left)
+    if (Cameras.Current == &Cameras.Left)
         sCamera = "Left";
-    if (m_Cameras.Current == &m_Cameras.Top)
+    if (Cameras.Current == &Cameras.Top)
         sCamera = "Top";
-    if (m_Cameras.Current == &m_Cameras.Bottom)
+    if (Cameras.Current == &Cameras.Bottom)
         sCamera = "Bottom";
-    if (m_Cameras.Current == &m_Cameras.Perspective)
+    if (Cameras.Current == &Cameras.Perspective)
         sCamera = "Perspective";
     pFont->PrintF(5.f, Height - 20.f, 0.f, sCamera);
 
-    if (m_EditMode == emCreateBone)
+    if (EditMode == emCreateBone)
         pFont->PrintF(5.f, 5.f, 0.f, "Skeleton |");
-    else if (m_EditMode == emCreateConstraint_Type)
+    else if (EditMode == emCreateConstraint_Type)
         pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints |");
-    else if (m_EditMode == emCreateConstraint_Node)
+    else if (EditMode == emCreateConstraint_Node)
     {
-        if (frameParams[0] == -1)
+        if (Constraint.type == IC_BE_CreateConstrAng)
+            pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select bone to constrain");
+        else
+        if (Constraint.boneA == xBYTE_MAX)
             pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select first node");
         else
-        if (frameParams[1] == -1)
+        if (Constraint.boneB == xBYTE_MAX)
             pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select second node");
     }
-    else if (m_EditMode == emCreateConstraint_Length)
+    else if (EditMode == emCreateConstraint_Params)
     {
-        pFont->PrintF(5.f, 25, 0.f, "Length: (%2.2f) %s", constrLen, command.c_str());
-        pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | Input length of the constraint");
+        if (Constraint.type == IC_BE_CreateConstrAng)
+            for (int i = 0; i < 4; ++i)
+            {
+                char *label;
+                if (i == 0) label = "Max X";
+                if (i == 1) label = "Min X";
+                if (i == 2) label = "Max Y";
+                if (i == 3) label = "Min Y";
+                if (Constraint.step < i)
+                    pFont->PrintF(5.f, 85.f-20.f*i, 0.f, "%s Angle: ?", label);
+                else
+                if (Constraint.step == i)
+                    pFont->PrintF(5.f, 85.f-20.f*i, 0.f, "%s Angle: (%2.2f) %s", label, Constraint.angles[i], InputState.String.c_str());
+                else
+                    pFont->PrintF(5.f, 85.f-20.f*i, 0.f, "%s Angle: %2.2f", label, Constraint.angles[i]);
+            }
+        else
+            pFont->PrintF(5.f, 25, 0.f, "Length: (%2.2f) %s", Constraint.length, InputState.String.c_str());
+        pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | Input parameters of the constraint");
     }
-    else if (m_EditMode == emSelectElement)
+    else if (EditMode == emSelectElement)
         pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Click: Select Element");
-    else if (m_EditMode == emSelectVertex)
+    else if (EditMode == emSelectVertex)
     {
         pFont->PrintF(5.f, 5.f, 0.f,
             "Skinning | Drag: Select Vertices | %s+Drag: Unselect Vertices | %s: Assign bones to selected Vertices",
-            modifyButton, acceptButton);
-        pFont->PrintF(5.f, Height-40.f, 0.f, "%d vertices selected", selectedVert.size());
+            KeyName_Modify, KeyName_Accept);
+        pFont->PrintF(5.f, Height-40.f, 0.f, "%d vertices selected", Selection.Vertices.size());
 
-        if (selectedElement->skeletized && hoveredVert != xDWORD_MAX)
+        if (Selection.Element->skeletized && HoveredVert != xDWORD_MAX)
         {
-            size_t stride = selectedElement->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
-            xVertexSkel *vert = (xVertexSkel*)(((xBYTE*)selectedElement->verticesP)+stride*hoveredVert);
-
+            size_t stride = Selection.Element->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+            xVertexSkel *vert = (xVertexSkel*)(((xBYTE*)Selection.Element->verticesP) + stride * HoveredVert);
             for (int i=0; i < 4 && fractf(vert->bone[i]) != 0.f; ++i)
                 pFont->PrintF(5.f, Height - 20.f * (i+3), 0.f, "Bone id%d : %d", (int)floorf(vert->bone[i]), (int)(fractf(vert->bone[i])*1000));
         }
     }
-    else if (m_EditMode == emSelectBone)
+    else if (EditMode == emSelectBone)
         pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Click: Select Bone");
-    else if (m_EditMode == emInputWght)
-        pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Type in Bone weight | %s: Accept", acceptButton);
-    else if (m_EditMode == emSelectAnimation || m_EditMode == emAnimateBones
-        || m_EditMode == emLoadAnimation)
+    else if (EditMode == emInputWght)
+        pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Type in Bone weight | %s: Accept", KeyName_Accept);
+    else if (EditMode == emSelectAnimation || EditMode == emAnimateBones
+        || EditMode == emLoadAnimation)
         pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
-    else if (m_EditMode == emEditAnimation)
+    else if (EditMode == emEditAnimation)
     {
         pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
         RenderProgressBar();
     }
-    else if (m_EditMode == emFrameParams) {
+    else if (EditMode == emFrameParams) {
         pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
-        if (param == 0)
-            pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: (%d) %s", frameParams[0], command.c_str());
+        if (Animation.KeyFrame.step == 1)
+            pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: (%d) %s", Animation.KeyFrame.freeze, InputState.String.c_str());
         else
         {
-            pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: %d", frameParams[0]);
-            pFont->PrintF(5.f, Height - 60.f, 0.f, "Duration: (%d) %s", frameParams[1], command.c_str());
+            pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: %d", Animation.KeyFrame.freeze);
+            pFont->PrintF(5.f, Height - 60.f, 0.f, "Duration: (%d) %s", Animation.KeyFrame.duration, InputState.String.c_str());
         }
     }
-    else if (m_EditMode == emSaveAnimation)
+    else if (EditMode == emSaveAnimation)
     {
         pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
-        if (m_AnimationName.size())
-            pFont->PrintF(5.f, 25, 0.f, "Filename: (%s) %s", m_AnimationName.c_str(), command.c_str());
+        if (AnimationName.size())
+            pFont->PrintF(5.f, 25, 0.f, "Filename: (%s) %s", AnimationName.c_str(), InputState.String.c_str());
         else
-            pFont->PrintF(5.f, 25, 0.f, "Filename: %s", command.c_str());
+            pFont->PrintF(5.f, 25, 0.f, "Filename: %s", InputState.String.c_str());
     }
 
-    std::vector<GLButton>::iterator begin = m_Buttons[m_EditMode].begin();
-    std::vector<GLButton>::iterator end   = m_Buttons[m_EditMode].end();
+    std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
+    std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
         begin->Render(pFont);
 
-    if (m_EditMode == emSaveAnimation || m_EditMode == emLoadAnimation)
+    if (EditMode == emSaveAnimation || EditMode == emLoadAnimation)
     {
-        begin = m_Directories.begin();
-        end   = m_Directories.end();
+        begin = Directories.begin();
+        end   = Directories.end();
         for (; begin != end; ++begin)
             begin->Render(pFont);
     }
 
-    if (m_EditMode == emSelectBone || m_EditMode == emInputWght) {
+    if (EditMode == emSelectBone || EditMode == emInputWght) {
         int i;
         int sum = 0;
-        for (i=0; i < 4 && boneWghts[i] != 0; ++i) {
-            sum += boneWghts[i];
-            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : %d", boneIds[i], boneWghts[i]);
+        for (i=0; i < 4 && Skin.BoneWeight[i].weight != 0; ++i) {
+            sum += Skin.BoneWeight[i].weight;
+            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : %d", Skin.BoneWeight[i].id, Skin.BoneWeight[i].weight);
         }
-        if (m_EditMode == emInputWght)
-            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : (%d) %s", selectedBone->id, 100 - sum, command.c_str());
+        if (EditMode == emInputWght)
+            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : (%d) %s", Selection.Bone->id, 100 - sum, InputState.String.c_str());
     }
 
     glFlush();
@@ -431,11 +471,11 @@ void SceneSkeleton::RenderProgressBar()
     float y1 = (float)Height - 10;
     float y2 = y1-pHeight;
 
-    xAnimationInfo info = currentAnimation->GetInfo();
+    xAnimationInfo info = Animation.Instance->GetInfo();
     float scale = ((float)pWidth) / info.Duration;
 
-    xKeyFrame *frame = currentAnimation->frameP;
-    xWORD cnt = currentAnimation->frameC;
+    xKeyFrame *frame = Animation.Instance->frameP;
+    xWORD cnt = Animation.Instance->frameC;
     for(; frame && cnt; frame = frame->next, --cnt)
     {
         x1 = x3;
@@ -463,50 +503,51 @@ void SceneSkeleton::RenderProgressBar()
         glVertex2f (x+info.Progress*scale, y2-3);
     glEnd();
 
-    const GLFont* pFont = g_FontMgr.GetFont(m_Font);
+    const GLFont* pFont = g_FontMgr.GetFont(Font);
     pFont->PrintF(5.f, Height-40.f, 0.f, "Frame: %d/%d | Progress: %d/%d (%d/%d)",
-        info.FrameNo, currentAnimation->frameC,
+        info.FrameNo, Animation.Instance->frameC,
         info.Progress, info.Duration,
-        currentAnimation->progress, currentAnimation->frameCurrent->freeze+currentAnimation->frameCurrent->duration);
+        Animation.Instance->progress,
+        Animation.Instance->frameCurrent->freeze+Animation.Instance->frameCurrent->duration);
 }
 
 /************************** SELECTIONS *************************************/
 void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 {
-    xModel         &model         = (m_EditGraphical) ? *m_Model.GetModelGr() : *m_Model.GetModelPh();
-    xModelInstance &modelInstance = (m_EditGraphical) ? m_Model.modelInstanceGr : m_Model.modelInstancePh;
-    xRender        &render        = m_Model.renderer;
+    xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
+    xModelInstance &modelInstance = (State.DisplayPhysical) ? Model.modelInstancePh : Model.modelInstanceGr;
+    xRender        &render        = Model.renderer;
 
-    if (m_EditMode == emCreateBone || m_EditMode == emCreateConstraint_Node ||
-        m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        if (m_EditMode == emCreateBone && currentAction == IC_BE_DeleteConstr)
+    if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
+        EditMode == emSelectBone || EditMode == emAnimateBones)
+        if (EditMode == emCreateBone && State.CurrentAction == IC_BE_DeleteConstr)
             render.RenderSkeletonSelection(model, modelInstance, true);
         else
             render.RenderSkeletonSelection(model, modelInstance, false);
     else
-    if (m_EditMode == emSelectElement)
+    if (EditMode == emSelectElement)
         render.RenderVertices(model, modelInstance, xRender::smElement);
     else
-    if (m_EditMode == emSelectVertex)
-        render.RenderVertices(model, modelInstance, xRender::smVertex, selectedElemID);
+    if (EditMode == emSelectVertex)
+        render.RenderVertices(model, modelInstance, xRender::smVertex, Selection.ElementId);
 }
 unsigned int SceneSkeleton::CountSelectable()
 {
-    if (m_EditMode == emCreateBone || m_EditMode == emCreateConstraint_Node ||
-        m_EditMode == emSelectBone || m_EditMode == emAnimateBones)
-        if (m_EditMode == emCreateBone && currentAction == IC_BE_DeleteConstr)
-            return m_Model.GetModelGr()->spine.constraintsC;
+    if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
+        EditMode == emSelectBone || EditMode == emAnimateBones)
+        if (EditMode == emCreateBone && State.CurrentAction == IC_BE_DeleteConstr)
+            return Model.GetModelGr()->spine.constraintsC;
         else
-            return m_Model.GetModelGr()->spine.boneC;
+            return Model.GetModelGr()->spine.boneC;
     else
-    if (m_EditMode == emSelectElement)
-        if (m_EditGraphical)
-            return m_Model.GetModelGr()->elementC;
+    if (EditMode == emSelectElement)
+        if (State.DisplayPhysical)
+            return Model.GetModelPh()->elementC;
         else
-            return m_Model.GetModelPh()->elementC;
+            return Model.GetModelGr()->elementC;
     else
-    if (m_EditMode == emSelectVertex)
-        return selectedElement->verticesC;
+    if (EditMode == emSelectVertex)
+        return Selection.Element->verticesC;
     return 0;
 }
 std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)
@@ -514,15 +555,15 @@ std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)
     glViewport(Left, Top, Width, Height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    if (m_Cameras.Current == &m_Cameras.Perspective)
+    if (Cameras.Current == &Cameras.Perspective)
         xglPerspective(45, AspectRatio, 0.1, 1000);
     else
     {
-        double scale = fabs((m_Cameras.Current->eye - m_Cameras.Current->center).length());
+        double scale = fabs((Cameras.Current->eye - Cameras.Current->center).length());
         glOrtho( -scale*AspectRatio, scale*AspectRatio, -scale, scale, 0.1, 1000 );
     }
     glMatrixMode(GL_MODELVIEW);
-    Camera_Aim_GL(*m_Cameras.Current);
+    Camera_Aim_GL(*Cameras.Current);
 
     return ISelectionProvider::Select(NULL, X, Y, W, H);
 }
@@ -534,7 +575,7 @@ xIKNode *SceneSkeleton::SelectBone(int X, int Y)
     if (sel && sel->size()) {
         GLuint id = sel->back();
         delete sel;
-        return m_Model.GetModelGr()->spine.boneP + id;
+        return Model.GetModelGr()->spine.boneP + id;
     }
     delete sel;
     return NULL;
