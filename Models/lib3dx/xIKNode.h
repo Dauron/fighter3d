@@ -9,6 +9,7 @@ struct xIKNode
 {
     xBYTE     id;
     char     *name;
+    xFLOAT    weight;
 
     xVector3  pointB;
     xBYTE    *joinsBP;
@@ -41,6 +42,7 @@ struct xIKNode
     {
         id     = 0;
         name   = 0;
+        weight = 1.f;
         pointB.zero();
         joinsBP = NULL;
         joinsBC = 0;

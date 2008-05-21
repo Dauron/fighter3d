@@ -105,6 +105,8 @@ void xIKNode :: Load( FILE *file )
         this->name = NULL;
 
     fread(&this->id,      sizeof(xBYTE), 1, file);
+    fread(&this->weight,  sizeof(xFLOAT), 1, file);
+    //weight = 1.f;
 
     fread(&this->pointB,  sizeof(xVector3), 1, file);
     fread(&this->joinsBC, sizeof(xBYTE), 1, file);
@@ -143,6 +145,7 @@ void xIKNode :: Save( FILE *file ) const
         fwrite(this->name, 1, nameLen, file);
 
     fwrite(&this->id,      sizeof(xBYTE), 1, file);
+    fwrite(&this->weight,  sizeof(xFLOAT), 1, file);
 
     fwrite(&this->pointB,  sizeof(xVector3), 1, file);
     fwrite(&this->joinsBC, sizeof(xBYTE), 1, file);

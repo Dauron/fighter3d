@@ -7,6 +7,7 @@
 
 #include "../OpenGL/Fonts/FontMgr.h"
 #include "../Math/Cameras/CameraHuman.h"
+#include "../Math/Cameras/CameraFree.h"
 #include "../World/ModelObj.h"
 
 #include "../OpenGL/GLButton.h"
@@ -33,7 +34,8 @@ class SceneSkeleton : public Scene, public ISelectionProvider
 
     struct _Cameras
     {
-        CameraHuman Front, Back, Top, Bottom, Left, Right, Perspective;
+        CameraHuman Front, Back, Left, Right, Perspective;
+        CameraFree  Top, Bottom;
         Camera *Current;
     } Cameras;
 

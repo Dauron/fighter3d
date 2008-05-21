@@ -23,18 +23,21 @@ void SkeletizedObj :: ResetVerletSystem()
     xVector3 *pos    = verletSystem.positionP,
              *posOld = verletSystem.positionOldP,
              *a      = verletSystem.accelerationP;
+    xFLOAT   *weight = verletSystem.weightP;
     xMatrix  *mtx    = modelInstanceGr.bonesM;
 
     if (mtx)
-        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++a, ++mtx)
+        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++a, ++mtx, ++weight)
         {
             *pos = *posOld = mLocationMatrix.preTransformP( mtx->postTransformP(bone->pointE) );
+            *weight = 1 / bone->weight;
             a->zero();
         }
     else
-        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++a)
+        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++a, ++weight)
         {
             *pos = *posOld = mLocationMatrix.preTransformP(bone->pointE);
+            *weight = 1 / bone->weight;
             a->zero();
         }
 }
@@ -93,6 +96,13 @@ void SkeletizedObj :: Update(float deltaTime)
         }
         else
             bones = bones2;
+
+    if (!bones)
+    {
+        bones = new xVector4[modelInstanceGr.bonesC];
+        for (int i = 0; i < modelInstanceGr.bonesC; ++i)
+            bones[i].zeroQ();
+    }
 
     if (verletQuaternions && bones && verletWeight > 0.f)
         xAnimation::Average(verletQuaternions, bones, modelInstanceGr.bonesC, 1.f-verletWeight, bones);

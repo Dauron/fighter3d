@@ -192,8 +192,12 @@ void VerletBody :: CalculateMovement(SkeletizedObj *model, float deltaTime)
         if (!model->verletQuaternions)
             model->verletQuaternions = new xVector4[spine.boneC];
         spine.QuatsToArray(model->verletQuaternions);
+
+        model->mLocationMatrix.postTranslateT(spine.boneP->quaternion.vector3);
+        spine.boneP->quaternion.zeroQ();
+
         model->verletWeight -= deltaTime;
     }
     model->CollidedModels.clear();
-    //model->verletWeight = 0.5f;
+    model->verletWeight = max(0.5f, model->verletWeight);
 }

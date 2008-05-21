@@ -249,7 +249,8 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         if (button.Action == IC_BE_CreateConstrMax ||
             button.Action == IC_BE_CreateConstrMin ||
             button.Action == IC_BE_CreateConstrEql ||
-            button.Action == IC_BE_CreateConstrAng)
+            button.Action == IC_BE_CreateConstrAng ||
+            button.Action == IC_BE_CreateConstrWeight)
         {
             Constraint.boneA = Constraint.boneB = xBYTE_MAX;
             Constraint.type = button.Action;
@@ -562,13 +563,18 @@ void SceneSkeleton::MouseLUp(int X, int Y)
         xIKNode *bone = SelectBone(X,Y);
         xIKNode *root = Model.GetModelGr()->spine.boneP;
         if (!bone) bone = root;
-        if (Constraint.boneA == xBYTE_MAX)
+
+        if (Constraint.type == IC_BE_CreateConstrAng)
         {
-            if (Constraint.type == IC_BE_CreateConstrAng &&
-                (bone->id == 0 ||
-                 (bone->joinsBP[0] == 0 && root->joinsEC == 1 ))) return;
+            if (bone->id == 0 || (bone->joinsBP[0] == 0 && root->joinsEC == 1 )) return;
             Constraint.boneA = bone->id;
         }
+        else
+        if (Constraint.type == IC_BE_CreateConstrWeight)
+            Constraint.boneA = bone->id;
+        else
+        if (Constraint.boneA == xBYTE_MAX)
+            Constraint.boneA = bone->id;
         else
         if (Constraint.boneA != bone->id)
             Constraint.boneB = bone->id;
@@ -580,6 +586,13 @@ void SceneSkeleton::MouseLUp(int X, int Y)
             EditMode = emCreateConstraint_Params;
             Constraint.minX = Constraint.minY = -45;
             Constraint.maxX = Constraint.maxY = +45;
+            InputState.String.clear();
+            g_InputMgr.Buffer.clear();
+        }
+        else if (Constraint.type == IC_BE_CreateConstrWeight)
+        {
+            EditMode = emCreateConstraint_Params;
+            Constraint.length = bone->weight;
             InputState.String.clear();
             g_InputMgr.Buffer.clear();
         }
@@ -758,9 +771,13 @@ void SceneSkeleton::MouseMove(int X, int Y)
 
                 xIKNode  *bone = spine.boneP;
                 xVector3 *pos = vSystem.positionP, *posOld = vSystem.positionOldP;
+                xFLOAT   *weight = vSystem.weightP;
                 xMatrix  *mtx = Model.modelInstanceGr.bonesM;
-                for (int i = spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++mtx)
+                for (int i = spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++mtx, ++weight)
+                {
                     *pos = *posOld = mtx->postTransformP(bone->pointE);
+                    *weight = 1 / bone->weight;
+                }
 
                 vSystem.weightP[0] = 0.f;
                 vSystem.weightP[Selection.Bone->id] = 1.0f;
@@ -890,20 +907,24 @@ void SceneSkeleton::GetConstraintParams()
             }
             res->particle      = Constraint.boneA;
 
-            res->elipseMaxX = sin(PI * Constraint.maxX / 180);
-            res->zSignMaxX  = Constraint.maxX > 90 ? -1 : 1;
-            res->elipseMaxY = sin(PI * Constraint.maxY / 180);
-            res->zSignMaxY  = Constraint.maxY > 90 ? -1 : 1;
-            res->elipseMinX = sin(PI * Constraint.minX / 180);
-            res->zSignMinX  = Constraint.minX > 90 ? -1 : 1;
-            res->elipseMinY = sin(PI * Constraint.minY / 180);
-            res->zSignMinY  = Constraint.minY > 90 ? -1 : 1;
+            res->angleMaxX = PI * Constraint.maxX / 180;
+            res->angleMaxY = PI * Constraint.maxY / 180;
+            res->angleMinX = PI * Constraint.minX / 180;
+            res->angleMinY = PI * Constraint.minY / 180;
             res->minZ = res->maxZ = 0;
             constr = res;
         }
         else
             if (len <= 0.f)
                 len = Constraint.length;
+        if (Constraint.type == IC_BE_CreateConstrWeight)
+        {
+            xIKNode *bone = Model.GetModelGr()->spine.boneP + Constraint.boneA;
+            bone->weight = len;
+            EditMode = emCreateBone;
+            return;
+        }
+        else
         if (Constraint.type == IC_BE_CreateConstrEql)
         {
             xVConstraintLengthEql *res = new xVConstraintLengthEql();

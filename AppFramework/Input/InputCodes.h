@@ -74,7 +74,8 @@
 #define IC_BE_CreateConstrMin IC_BE_Create+15
 #define IC_BE_CreateConstrEql IC_BE_Create+16
 #define IC_BE_CreateConstrAng IC_BE_Create+17
+#define IC_BE_CreateConstrWeight IC_BE_Create+18
 
-#define IC_LAST_CODE         IC_BE_CreateConstrAng
+#define IC_LAST_CODE         IC_BE_CreateConstrWeight
 
 #endif

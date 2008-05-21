@@ -192,112 +192,31 @@ bool xVConstraintAngular :: Satisfy(xVerletSystem *system)
     xVector3 up    = system->locationMatrix.preTransformV(xQuaternion::rotate(qParent, bone.pointE-bone.pointB)).normalize();
     xVector3 front = system->locationMatrix.preTransformV(xQuaternion::rotate(qParent, xVector3::Create(0,1,0)));
 
-    xMatrix  transf   = xMatrixFromVectors(front, up, pRootE);
-    xVector3 position = transf.preTransformP(p);
+    xMatrix  transf       = xMatrixFromVectors( front, up, pRootE );
+    xVector3 position     = transf.preTransformP( p );
     xVector3 positionNorm = xVector3::Normalize( position );
-    xFLOAT cosCur = xVector3::DotProduct(xVector3::Create(0,0,1), positionNorm);
 
-    xFLOAT lenXYinv = position.x*position.x + position.y*position.y;
-    xFLOAT sinT, cosT;
-    if (lenXYinv != 0.f)
-    {
-        lenXYinv = 1 / sqrt(lenXYinv);
-        sinT = position.y * lenXYinv;
-        cosT = position.x * lenXYinv;
-    }
-    else
-    {
-        sinT = 0.f;
-        cosT = 1.f;
-    }
-    xFLOAT zSignX, zSignY, Xm, Ym;
-    if (cosT >= 0 && sinT >= 0)
-    {
-        Xm = elipseMaxX;
-        Ym = elipseMaxY;
-        zSignX = zSignMaxX;
-        zSignY = zSignMaxY;
-    }
-    else if (cosT < 0 && sinT >= 0)
-    {
-        Xm = elipseMinX;
-        Ym = elipseMaxY;
-        zSignX = zSignMinX;
-        zSignY = zSignMaxY;
-    }
-    else if (cosT >= 0 && sinT < 0)
-    {
-        Xm = elipseMaxX;
-        Ym = elipseMinY;
-        zSignX = zSignMaxX;
-        zSignY = zSignMinY;
-    }
-    else
-    {
-        Xm = elipseMinX;
-        Ym = elipseMinY;
-        zSignX = zSignMinX;
-        zSignY = zSignMinY;
-    }
+    xFLOAT alpha   = atan2(fabs(position.y), fabs(position.x));
+    xFLOAT scale   = 2*alpha * PI_inv;
+    xFLOAT betaMax;
 
-    xFLOAT fullX = Xm;
-    xFLOAT fullY = Ym;
-    Xm *= cosT;
-    Ym *= sinT;
+    if (position.x >= 0 && position.y >= 0)
+        betaMax = angleMaxY * scale + angleMaxX * (1.f - scale);
+    else if (position.x < 0 && position.y >= 0)
+        betaMax = angleMaxY * scale + angleMinX * (1.f - scale);
+    else if (position.x >= 0 && position.y < 0)
+        betaMax = angleMinY * scale + angleMaxX * (1.f - scale);
+    else
+        betaMax = angleMinY * scale + angleMinX * (1.f - scale);
+
+    xFLOAT cosMax = cos(betaMax);
+    if (positionNorm.z >= cosMax) return false;
 
     xVector3 positionNew;
-    positionNew.x = Xm; positionNew.y = Ym;
-    if (zSignX*zSignY > 0)
-        positionNew.z = zSignX * sqrt(max(1 - Xm*Xm - Ym*Ym, 0.f));
-    else
-    {
-        xFLOAT ZmX = cosT >= 0 ? elipseMaxX : elipseMinX;
-               ZmX = zSignX * sqrt(max(1 - ZmX*ZmX, 0.f));
-        xFLOAT ZmY = sinT >= 0 ? elipseMaxY : elipseMinY;
-               ZmY = zSignY * sqrt(max(1 - ZmY*ZmY, 0.f));
-        positionNew.z = cosT*ZmX + (1-cosT)*ZmY;
-        positionNew.normalize();
-    }
-
-    xFLOAT cosMax = xVector3::DotProduct(xVector3::Create(0,0,1), positionNew);
-    if (cosCur >= cosMax) return false;
-/*
-    if (( (zSignX < 0 && positionNorm.z >= 0.f) ||
-          (zSignX < 0 || positionNorm.z >= 0.f)
-           zSignX * fabs(positionNorm.x) <= zSignX*XmP) &&
-        ( (zSignY < 0 && positionNorm.z >= 0.f) || zSignY * fabs(positionNorm.y) <= zSignY*YmP) )
-            return false;
-*/
-
-    if (fullX > fullY)
-    {
-        xFLOAT scale = fabs(fullY / fullX);
-        xFLOAT maxX = min(fullX, positionNorm.x);
-        Xm = maxX - (maxX - Xm)*scale;
-        Ym = Sign(positionNorm.y) * sqrt(max(fullY*fullY - scale*scale*Xm*Xm, 0.f));
-        Ym = Ym;
-    }
-    else
-    if (fullY != 0)
-    {
-        xFLOAT scale = fabs(fullX / fullY);
-        xFLOAT maxY = min(fullY, positionNorm.y);
-        Ym = maxY - (maxY - Ym)*scale;
-        Xm = Sign(positionNorm.x) * sqrt(max(fullX*fullX - scale*scale*Ym*Ym, 0.f));
-    }
-
-    positionNew.x = Xm; positionNew.y = Ym;
-    if (zSignX*zSignY > 0)
-        positionNew.z = zSignX * sqrt(max(1 - Xm*Xm - Ym*Ym, 0.f));
-    else
-    {
-        xFLOAT ZmX = cosT >= 0 ? elipseMaxX : elipseMinX;
-               ZmX = zSignX * sqrt(max(1 - ZmX*ZmX, 0.f));
-        xFLOAT ZmY = sinT >= 0 ? elipseMaxY : elipseMinY;
-               ZmY = zSignY * sqrt(max(1 - ZmY*ZmY, 0.f));
-        positionNew.z = cosT*ZmX + (1-cosT)*ZmY;
-        positionNew.normalize();
-    }
+    xFLOAT xy     = sin(betaMax);
+    positionNew.x = xy*cos(alpha);
+    positionNew.y = xy*sin(alpha);
+    positionNew.z = cosMax;
 
     xVector4 quat = xQuaternion::getRotation(positionNorm, positionNew);
 
@@ -318,73 +237,25 @@ bool xVConstraintAngular :: Satisfy(xVerletSystem *system)
 bool xVConstraintAngular :: Test(const xVector3 &pRootB, const xVector3 &pRootE, const xVector3 &p,
                                  const xVector3 &up, const xVector3 &front) const
 {
-    xMatrix transf    = xMatrixFromVectors(front, up, pRootE);
-    xVector3 position = transf.preTransformP(p);
+    xMatrix transf        = xMatrixFromVectors(front, up, pRootE);
+    xVector3 position     = transf.preTransformP(p);
     xVector3 positionNorm = xVector3::Normalize( position );
 
-    xFLOAT lenXYinv = position.x*position.x + position.y*position.y;
-    xFLOAT sinT, cosT;
-    if (lenXYinv != 0.f)
-    {
-        lenXYinv = 1 / sqrt(lenXYinv);
-        sinT = position.y * lenXYinv;
-        cosT = position.x * lenXYinv;
-    }
-    else
-    {
-        sinT = 0.f;
-        cosT = 1.f;
-    }
-    xFLOAT zSignX, zSignY, Xm, Ym;
-    if (cosT >= 0 && sinT >= 0)
-    {
-        Xm = elipseMaxX;
-        Ym = elipseMaxY;
-        zSignX = zSignMaxX;
-        zSignY = zSignMaxY;
-    }
-    else if (cosT < 0 && sinT >= 0)
-    {
-        Xm = elipseMinX;
-        Ym = elipseMaxY;
-        zSignX = zSignMinX;
-        zSignY = zSignMaxY;
-    }
-    else if (cosT >= 0 && sinT < 0)
-    {
-        Xm = elipseMaxX;
-        Ym = elipseMinY;
-        zSignX = zSignMaxX;
-        zSignY = zSignMinY;
-    }
-    else
-    {
-        Xm = elipseMinX;
-        Ym = elipseMinY;
-        zSignX = zSignMinX;
-        zSignY = zSignMinY;
-    }
+    xFLOAT alpha   = atan2(fabs(position.y), fabs(position.x));
+    xFLOAT scale   = 2*alpha * PI_inv;
+    xFLOAT betaMax;
 
-    Xm *= cosT;
-    Ym *= sinT;
-
-    xVector3 positionNew;
-    positionNew.x = Xm; positionNew.y = Ym;
-    if (zSignX*zSignY > 0)
-        positionNew.z = zSignX * sqrt(max(1 - Xm*Xm - Ym*Ym, 0.f));
+    if (position.x >= 0 && position.y >= 0)
+        betaMax = angleMaxY * scale + angleMaxX * (1.f - scale);
+    else if (position.x < 0 && position.y >= 0)
+        betaMax = angleMaxY * scale + angleMinX * (1.f - scale);
+    else if (position.x >= 0 && position.y < 0)
+        betaMax = angleMinY * scale + angleMaxX * (1.f - scale);
     else
-    {
-        xFLOAT ZmX = cosT >= 0 ? elipseMaxX : elipseMinX;
-               ZmX = zSignX * sqrt(max(1 - ZmX*ZmX, 0.f));
-        xFLOAT ZmY = sinT >= 0 ? elipseMaxY : elipseMinY;
-               ZmY = zSignY * sqrt(max(1 - ZmY*ZmY, 0.f));
-        positionNew.z = cosT*ZmX + (1-cosT)*ZmY;
-        positionNew.normalize();
-    }
+        betaMax = angleMinY * scale + angleMinX * (1.f - scale);
 
-    xFLOAT cosMax = xVector3::DotProduct(xVector3::Create(0,0,1), positionNew);
-    xFLOAT cosCur = xVector3::DotProduct(xVector3::Create(0,0,1), positionNorm);
-    if (cosCur >= cosMax) return false;
+    xFLOAT cosMax = cos(betaMax);
+    if (positionNorm.z >= cosMax) return false;
 
     return true;
 }
@@ -395,14 +266,10 @@ void xVConstraintAngular :: CloneTo(xIVConstraint *&dst) const
     res->particleRootB = particleRootB;
     res->particleRootE = particleRootE;
     res->particle      = particle;
-    res->elipseMaxX    = elipseMaxX;
-    res->elipseMaxY    = elipseMaxY;
-    res->elipseMinX    = elipseMinX;
-    res->elipseMinY    = elipseMinY;
-    res->zSignMaxX     = zSignMaxX;
-    res->zSignMaxY     = zSignMaxY;
-    res->zSignMinX     = zSignMinX;
-    res->zSignMinY     = zSignMinY;
+    res->angleMaxX     = angleMaxX;
+    res->angleMaxY     = angleMaxY;
+    res->angleMinX     = angleMinX;
+    res->angleMinY     = angleMinY;
     res->minZ          = minZ;
     res->maxZ          = maxZ;
     res->upQuat        = upQuat;
@@ -415,14 +282,10 @@ void xVConstraintAngular :: Save( FILE *file )
     fwrite(&particleRootB, sizeof(xWORD), 1, file);
     fwrite(&particleRootE, sizeof(xWORD), 1, file);
     fwrite(&particle, sizeof(xWORD), 1, file);
-    fwrite(&elipseMaxX, sizeof(xFLOAT), 1, file);
-    fwrite(&elipseMaxY, sizeof(xFLOAT), 1, file);
-    fwrite(&elipseMinX, sizeof(xFLOAT), 1, file);
-    fwrite(&elipseMinY, sizeof(xFLOAT), 1, file);
-    fwrite(&zSignMaxX, sizeof(xCHAR), 1, file);
-    fwrite(&zSignMaxY, sizeof(xCHAR), 1, file);
-    fwrite(&zSignMinX, sizeof(xCHAR), 1, file);
-    fwrite(&zSignMinY, sizeof(xCHAR), 1, file);
+    fwrite(&angleMaxX, sizeof(xFLOAT), 1, file);
+    fwrite(&angleMaxY, sizeof(xFLOAT), 1, file);
+    fwrite(&angleMinX, sizeof(xFLOAT), 1, file);
+    fwrite(&angleMinY, sizeof(xFLOAT), 1, file);
     fwrite(&minZ, sizeof(xFLOAT), 1, file);
     fwrite(&maxZ, sizeof(xFLOAT), 1, file);
     fwrite(&upQuat, sizeof(xVector4), 1, file);
@@ -433,14 +296,10 @@ xIVConstraint * xVConstraintAngular :: Load( FILE *file )
     fread(&particleRootB, sizeof(xWORD), 1, file);
     fread(&particleRootE, sizeof(xWORD), 1, file);
     fread(&particle, sizeof(xWORD), 1, file);
-    fread(&elipseMaxX, sizeof(xFLOAT), 1, file);
-    fread(&elipseMaxY, sizeof(xFLOAT), 1, file);
-    fread(&elipseMinX, sizeof(xFLOAT), 1, file);
-    fread(&elipseMinY, sizeof(xFLOAT), 1, file);
-    fread(&zSignMaxX, sizeof(xCHAR), 1, file);
-    fread(&zSignMaxY, sizeof(xCHAR), 1, file);
-    fread(&zSignMinX, sizeof(xCHAR), 1, file);
-    fread(&zSignMinY, sizeof(xCHAR), 1, file);
+    fread(&angleMaxX, sizeof(xFLOAT), 1, file);
+    fread(&angleMaxY, sizeof(xFLOAT), 1, file);
+    fread(&angleMinX, sizeof(xFLOAT), 1, file);
+    fread(&angleMinY, sizeof(xFLOAT), 1, file);
     fread(&minZ, sizeof(xFLOAT), 1, file);
     fread(&maxZ, sizeof(xFLOAT), 1, file);
     fread(&upQuat, sizeof(xVector4), 1, file);

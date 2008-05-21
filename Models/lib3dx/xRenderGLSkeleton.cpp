@@ -62,7 +62,7 @@ void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *bonesM,
     const xIKNode *boneRB, *boneRE, *boneB;
     boneRB = spine.boneP + src->particleRootB;
     boneRE = spine.boneP + src->particleRootE;
-    boneB = spine.boneP + src->particle;
+    boneB  = spine.boneP + src->particle;
 
     xVector3 rpointB, rpointE, cpoint;
 
@@ -119,84 +119,42 @@ void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *bonesM,
     }
     glEnd();
 
-    xFLOAT maxX  = src->elipseMaxX * 0.1f;
-    xFLOAT maxXH = maxX * 0.707f; // cos45
-    xFLOAT maxY = src->elipseMaxY * 0.1f;
-    xFLOAT maxYH = maxY * 0.707f; // sin45
-    xFLOAT minX = -src->elipseMinX * 0.1f;
-    xFLOAT minXH = minX * 0.707f; // cos45
-    xFLOAT minY = -src->elipseMinY * 0.1f;
-    xFLOAT minYH = minY * 0.707f; // sin45
-    xFLOAT maxZ;
+    xVector3 v[8];
+    v[0].init(sin(src->angleMaxX) * 0.1f, 0.f, cos(src->angleMaxX) * 0.1);
+
+    xFLOAT angleH = (src->angleMaxX + src->angleMaxY) * 0.5f;
+    xFLOAT radius = sin(angleH);
+    v[1].init(radius * 0.0707f, radius * 0.0707f, cos(angleH) * 0.1f);
+
+    v[2].init(0.f, sin(src->angleMaxY) * 0.1f, cos(src->angleMaxY) * 0.1);
+
+    angleH = (src->angleMinX + src->angleMaxY) * 0.5f;
+    radius = sin(angleH);
+    v[3].init(-radius * 0.0707f, radius * 0.0707f, cos(angleH) * 0.1f);
+
+    v[4].init(sin(src->angleMinX) * -0.1f, 0.f, cos(src->angleMinX) * 0.1);
+
+    angleH = (src->angleMinX + src->angleMinY) * 0.5f;
+    radius = sin(angleH);
+    v[5].init(-radius * 0.0707f, -radius * 0.0707f, cos(angleH) * 0.1f);
+
+    v[6].init(0.f, sin(src->angleMinY) * -0.1f, cos(src->angleMinY) * 0.1);
+
+    angleH = (src->angleMaxX + src->angleMinY) * 0.5f;
+    radius = sin(angleH);
+    v[7].init(radius * 0.0707f, -radius * 0.0707f, cos(angleH) * 0.1f);
 
     glColor4f(0.0f,1.0f,1.0f,1.0f);
     glBegin(GL_TRIANGLE_FAN);
     {
         glVertex3fv(rpointE.xyz);
-
-        maxZ = src->zSignMaxX * sqrt(max(0.01f - maxX*maxX, 0.f));
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(maxX, 0.f, maxZ));
-        glVertex3fv(cpoint.xyz);
-
-        if (src->zSignMaxX*src->zSignMaxY> 0)
-            maxZ = sqrt(max(0.01f - maxXH*maxXH - maxYH*maxYH, 0.f));
-        else
+        for (int i=0; i<8; ++i)
         {
-            xFLOAT ZmX = src->zSignMaxX * sqrt(max(0.01f - maxX*maxX, 0.f));
-            xFLOAT ZmY = src->zSignMaxY * sqrt(max(0.01f - maxY*maxY, 0.f));
-            maxZ = 0.707f*ZmX + (1-0.707f)*ZmY;
+            v[i] = rpointE + transf.postTransformV(v[i]);
+            glVertex3fv(v[i].xyz);
         }
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(maxXH, maxYH, maxZ));
-        glVertex3fv(cpoint.xyz);
-
-        maxZ = src->zSignMaxY * sqrt(max(0.01f - maxY*maxY, 0.f));
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(0.f, maxY, maxZ));
-        glVertex3fv(cpoint.xyz);
-
-        if (src->zSignMinX*src->zSignMaxY> 0)
-            maxZ = sqrt(max(0.01f - minXH*minXH - maxYH*maxYH, 0.f));
-        else
-        {
-            xFLOAT ZmX = src->zSignMinX * sqrt(max(0.01f - minX*minX, 0.f));
-            xFLOAT ZmY = src->zSignMaxY * sqrt(max(0.01f - maxY*maxY, 0.f));
-            maxZ = 0.707f*ZmX + (1-0.707f)*ZmY;
-        }
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(minXH, maxYH, maxZ));
-        glVertex3fv(cpoint.xyz);
-
-        maxZ = src->zSignMinX * sqrt(max(0.01f - minX*minX, 0.f));
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(minX, 0.f, maxZ));
-        glVertex3fv(cpoint.xyz);
-
-        if (src->zSignMinX*src->zSignMinY> 0)
-            maxZ = sqrt(max(0.01f - minXH*minXH - minYH*minYH, 0.f));
-        else
-        {
-            xFLOAT ZmX = src->zSignMinX * sqrt(max(0.01f - minX*minX, 0.f));
-            xFLOAT ZmY = src->zSignMinY * sqrt(max(0.01f - minY*minY, 0.f));
-            maxZ = 0.707f*ZmX + (1-0.707f)*ZmY;
-        }
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(minXH, minYH, maxZ));
-        glVertex3fv(cpoint.xyz);
-
-        maxZ = src->zSignMinY * sqrt(max(0.01f - minY*minY, 0.f));
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(0.f, minY, maxZ));
-        glVertex3fv(cpoint.xyz);
-
-        if (src->zSignMaxX*src->zSignMinY> 0)
-            maxZ = sqrt(max(0.01f - maxXH*maxXH - minYH*minYH, 0.f));
-        else
-        {
-            xFLOAT ZmX = src->zSignMaxX * sqrt(max(0.01f - maxX*maxX, 0.f));
-            xFLOAT ZmY = src->zSignMinY * sqrt(max(0.01f - minY*minY, 0.f));
-            maxZ = 0.707f*ZmX + (1-0.707f)*ZmY;
-        }
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(maxXH, minYH, maxZ));
-        glVertex3fv(cpoint.xyz);
-
-        maxZ = src->zSignMaxX * sqrt(max(0.01f - maxX*maxX, 0.f));
-        cpoint = rpointE + transf.postTransformV(xVector3::Create(maxX, 0.f, maxZ));
-        glVertex3fv(cpoint.xyz);
+        glColor4f(0.0f,0.5f,0.5f,1.0f);
+        glVertex3fv(v[0].xyz);
     }
     glEnd();
 }

@@ -47,10 +47,11 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
     Buttons[emCreateBone].push_back(GLButton("Create constr", 360, 2, 130, 15, IC_BE_CreateConstr));
     Buttons[emCreateBone].push_back(GLButton("Delete constr", 495, 2, 130, 15, IC_BE_DeleteConstr, true));
 
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Max",   205, 2, 35, 15, IC_BE_CreateConstrMax));
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Min",   245, 2, 35, 15, IC_BE_CreateConstrMin));
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Const", 285, 2, 55, 15, IC_BE_CreateConstrEql));
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Ang",   345, 2, 35, 15, IC_BE_CreateConstrAng));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Max",    205, 2, 35, 15, IC_BE_CreateConstrMax));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Min",    245, 2, 35, 15, IC_BE_CreateConstrMin));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Const",  285, 2, 55, 15, IC_BE_CreateConstrEql));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Ang",    345, 2, 35, 15, IC_BE_CreateConstrAng));
+    Buttons[emCreateConstraint_Type].push_back(GLButton("Weight", 385, 2, 65, 15, IC_BE_CreateConstrWeight));
 
     Buttons[emSelectAnimation].push_back(GLButton("New",  110, 2, 35, 15, IC_BE_Create));
     Buttons[emSelectAnimation].push_back(GLButton("Load", 150, 2, 45, 15, IC_BE_Select));
@@ -355,6 +356,9 @@ bool SceneSkeleton::Render()
         pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints |");
     else if (EditMode == emCreateConstraint_Node)
     {
+        if (Constraint.type == IC_BE_CreateConstrWeight)
+            pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select bone");
+        else
         if (Constraint.type == IC_BE_CreateConstrAng)
             pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select bone to constrain");
         else
@@ -382,6 +386,8 @@ bool SceneSkeleton::Render()
                 else
                     pFont->PrintF(5.f, 85.f-20.f*i, 0.f, "%s Angle: %2.2f", label, Constraint.angles[i]);
             }
+        if (Constraint.type == IC_BE_CreateConstrWeight)
+            pFont->PrintF(5.f, 25, 0.f, "Weight: (%2.2f) %s", Constraint.length, InputState.String.c_str());
         else
             pFont->PrintF(5.f, 25, 0.f, "Length: (%2.2f) %s", Constraint.length, InputState.String.c_str());
         pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | Input parameters of the constraint");

@@ -83,8 +83,7 @@ struct xVConstraintAngular : xIVConstraint
     xVector4 upQuat;
     xFLOAT   minZ, maxZ;
 
-    xFLOAT   elipseMaxX, elipseMaxY, elipseMinX, elipseMinY; // sines of angles = bounding elipse
-    xCHAR    zSignMaxX, zSignMaxY, zSignMinX, zSignMinY;
+    xFLOAT   angleMaxX, angleMaxY, angleMinX, angleMinY;
 
     virtual bool Satisfy(xVerletSystem *system);
     bool Test(const xVector3 &pRootB, const xVector3 &pRootE, const xVector3 &p,

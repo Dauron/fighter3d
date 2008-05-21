@@ -5,8 +5,9 @@
 #include <cassert>
 #include <cmath>
 
-const float  PI   = 3.1415926535f;
-const double PI_d = 3.1415926535897932384626433832795;
+const float  PI     = 3.1415926535f;
+const float  PI_inv = 1 / PI;
+const double PI_d   = 3.1415926535897932384626433832795;
 static inline float DegToRad(float a) { return a*0.01745329252f;}
 static inline float RadToDeg(float a) { return a*57.29577951f;}
 
