@@ -117,6 +117,8 @@ typedef std::vector<xVConstraintCollision> xVConstraintCollisionVector;
 struct xSkeleton;
 struct xVerletSystem
 {
+    xFLOAT    timeStep;
+    xFLOAT    timeStepPrev;
     xWORD     particleC;
 
     xVector3 *positionP;     // current positions
@@ -158,6 +160,9 @@ struct xVerletSystem
         constraintsP       = NULL;
         constraintsLenEql  = NULL;
         collisions         = NULL;
+
+        timeStep           = 0;
+        timeStepPrev       = 0;
     }
 
     void Free()
@@ -171,6 +176,10 @@ struct xVerletSystem
         positionOldP  = NULL;
         accelerationP = NULL;
         weightP       = NULL;
+        constraintsC       = 0;
+        constraintsP       = NULL;
+        constraintsLenEql  = NULL;
+        collisions         = NULL;
     }
 
     void SwapPositions()
@@ -178,6 +187,7 @@ struct xVerletSystem
         xVector3 *swp = positionP;
         positionP = positionOldP;
         positionOldP = swp;
+        timeStepPrev = timeStep;
     }
 };
 
@@ -185,17 +195,18 @@ class xVerletSolver
 {
 public:
     xVector3       gravity;
-    xFLOAT         timeStep;
     xBYTE          passesC;
 
     xVerletSystem *system;
+
+    static const float GRAVITY;
+    static const float FRICTION_AIR;
 
 public:
     void Init(xVerletSystem *system)
     {
         passesC      = 1;
         gravity.zero();
-        timeStep = 0;
 
         this->system = system;
     }
@@ -210,6 +221,7 @@ public:
     void SatisfyConstraints();
     void AccumulateForces();
     void Verlet();
+    void VerletFull();
 };
 
 #endif

@@ -22,25 +22,14 @@ public:
                              bool physicalNotLocked = false, bool phantom = true);
     virtual void Finalize ();
 
-    virtual void LocationChanged() {
-        UpdateVerletSystem();
-        UpdateVerletSystem();
-        memset(verletSystem.accelerationP, 0, sizeof(xVector3)*verletSystem.particleC);
-    }
-    virtual void ResetVerletSystem();
-    virtual void UpdateVerletSystem();
-
     void AddAnimation(const char *fileName, xDWORD startTime = 0, xDWORD endTime = 0);
 
-    virtual void PreUpdate();
+    virtual void PreUpdate(float deltaTime);
     virtual void Update(float deltaTime);
 
     xActionSet actions;
 
-    xVConstraintCollisionVector collisionConstraints;
     xVector4 *verletQuaternions;
-
-    xVerletSystem verletSystem;
     xFLOAT        verletWeight;
 
     enum EControlType
@@ -49,6 +38,11 @@ public:
         Control_CaptureInput = 1,
         Control_NetworkInput = 2
     } ControlType;
+
+protected:
+    virtual void CreateVerletSystem();
+    virtual void DestroyVerletSystem();
+    virtual void UpdateVerletSystem();
 };
 
 #endif

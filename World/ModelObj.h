@@ -11,6 +11,12 @@
 #include "../OpenGL/GLShader.h"
 #include "../OpenGL/Textures/TextureMgr.h"
 
+struct xForce
+{
+    xVector3 point;
+    xVector3 accel;
+};
+
 class ModelObj : public Object3D
 {
 public:
@@ -27,8 +33,8 @@ public:
     float          mass;       // weight of an object
     float          resilience; // how much energy will the object retain during collisions
 
-    xVector3       transVelocity;
-    xVector4       rotatVelocity;
+    xVConstraintCollisionVector collisionConstraints;
+    xVerletSystem               verletSystem;
 
     xMatrix        mLocationMatrixPrev;
     xVector3       collisionNorm;
@@ -72,7 +78,7 @@ public:
 
     /******** UPDATE : BEGIN ********/
 public:
-    virtual void PreUpdate();
+    virtual void PreUpdate(float deltaTime);
     virtual void Update(float deltaTime);
     /********* UPDATE : END *********/
 
@@ -86,6 +92,16 @@ protected:
     void CollisionInfo_Fill   (xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime);
     void CollisionInfo_Free   (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
     void CollisionInfo_Render (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
+
+    virtual void LocationChanged() {
+        UpdateVerletSystem();
+        UpdateVerletSystem();
+        memset(verletSystem.accelerationP, 0, sizeof(xVector3)*verletSystem.particleC);
+    }
+
+    virtual void CreateVerletSystem();
+    virtual void DestroyVerletSystem();
+    virtual void UpdateVerletSystem();
     /********* PHYSICS : END *********/
 
     /******** SHADOWS : BEGIN ********/

@@ -25,12 +25,14 @@ ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
     return res;
 }
 
+const xFLOAT TIME_STEP = 0.02f;
+
 void World:: Update(float deltaTime)
 {
     if (deltaTime > 0.05f) deltaTime = 0.05f;
     deltaTime *= Config::Speed;
 
-    float delta = 0.02f;
+    float delta = TIME_STEP;
     while (deltaTime > EPSILON)
     {
         deltaTime -= delta;
@@ -47,7 +49,7 @@ void World:: Update(float deltaTime)
                         }
 
         for ( i = begin ; i != end ; ++i )
-            (*i)->PreUpdate();
+            (*i)->PreUpdate(delta);
 
         for ( i = begin ; i != end ; ++i )
             (*i)->Update(delta);
@@ -213,7 +215,11 @@ void World:: Load(const char *mapFileName)
                 {
                     float x,y,z;
                     sscanf(buffer, "velocity\t%f\t%f\t%f", &x,&y,&z);
-                    model->transVelocity.init(x, y, z);
+                    xVector3 *a = model->verletSystem.accelerationP;
+                    xFLOAT TIME_STEP_INV = 1.f / TIME_STEP;
+                    xVector3 speed; speed.init(x*TIME_STEP_INV, y*TIME_STEP_INV, z*TIME_STEP_INV);
+                    for (xWORD i = model->verletSystem.particleC; i; --i, ++a)
+                        *a = speed;
                     continue;
                 }
                 if (StartsWith(buffer, "physical"))

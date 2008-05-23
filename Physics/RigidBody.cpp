@@ -1,13 +1,13 @@
 #include "RigidBody.h"
-
-const float RigidBody::GRAVITY      = 10.f;
-const float RigidBody::FRICTION_AIR = 0.5f;
+#include "VerletBody.h"
 
 float RigidBody :: CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVector3 &planeN)
 {
+    if (model->locked) return 0.f;
+
     // Calculate plane (with CrossProduct)
     float W = -(planeP.x*planeN.x + planeP.y*planeN.y + planeP.z*planeN.z);
-    float Pmax = 0.0f;
+    float Pmax = 0.f;
 
     xCollisionHierarchyBoundsRoot *ci = model->GetCollisionInfo();
     xWORD                          cc = model->GetCollisionInfoC();
@@ -27,186 +27,181 @@ float RigidBody :: CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVect
     return -Pmax;
 }
 
-void RigidBody :: CalculateCollisions(ModelObj *model)
+
+void RigidBody :: CalculateCollisions(ModelObj *model, float deltaTime)
 {
     if (model->locked) return;
 
     model->penetrationCorrection.zero();
+    model->collisionConstraints.clear();
+
+    xVector3 *a = model->verletSystem.accelerationP;
+    if (model->physical)
+        for (xWORD i = model->verletSystem.particleC; i; --i, ++a)
+            a->z -= 10.f;
+
     if (!model->CollidedModels.empty())
     {
-        std::vector<Collisions>::iterator iter, end;
+        std::vector<xVector3> damps[4];
 
-        model->collisionNorm.zero();
-        model->collisionVelo.zero();
-        model->collisionCent.zero();
-        float    normScale = 0;
-        float    massScale = 0;
+        std::vector<Collisions>::iterator iter, end;
+        xMatrix transf = model->mLocationMatrix; transf.invert();
+        xVector3 *forces = model->verletSystem.accelerationP;
+
+        xVector3 velos1[4], velos2[4];
+        if (model->verletSystem.timeStep > 0.f)
+        {
+            xFLOAT t2I = 1 / (model->verletSystem.timeStep * model->verletSystem.timeStep);
+            velos1[0] = (model->verletSystem.positionP[0] - model->verletSystem.positionOldP[0]) * t2I;
+            velos1[1] = (model->verletSystem.positionP[1] - model->verletSystem.positionOldP[1]) * t2I;
+            velos1[2] = (model->verletSystem.positionP[2] - model->verletSystem.positionOldP[2]) * t2I;
+            velos1[3] = (model->verletSystem.positionP[3] - model->verletSystem.positionOldP[3]) * t2I;
+        }
+        else
+            memset (velos1, 0, sizeof(xVector3)*4);
+
         for (int i = model->CollidedModels.size()-1; i >= 0; --i)
         {
-            //xVector3 normM(0.f, 0.f, 0.f);
-            float    normMSc = 0;
-            xVector3 centM; centM.zero();
-            xWORD    numCM = model->CollidedModels[i].collisions.size();
+            CollisionWithModel &collision = model->CollidedModels[i];
+            ModelObj           *model2    = collision.model2;
 
-            iter = model->CollidedModels[i].collisions.begin();
-            end  = model->CollidedModels[i].collisions.end();
+            if (model2->Type != ModelObj::Model_Verlet)
+                if (model->verletSystem.timeStep > 0.f)
+                {
+                    xFLOAT t2I = 1 / (model->verletSystem.timeStep * model->verletSystem.timeStep);
+                    velos2[0] = (model2->verletSystem.positionP[0] - model2->verletSystem.positionOldP[0]) * t2I;
+                    velos2[1] = (model2->verletSystem.positionP[1] - model2->verletSystem.positionOldP[1]) * t2I;
+                    velos2[2] = (model2->verletSystem.positionP[2] - model2->verletSystem.positionOldP[2]) * t2I;
+                    velos2[3] = (model2->verletSystem.positionP[3] - model2->verletSystem.positionOldP[3]) * t2I;
+                }
+                else
+                    memset (velos2, 0, sizeof(xVector3)*4);
+
+            xVector3 fTotal; fTotal.zero();
+            xVector3 cPoint; cPoint.zero();
+
+            iter = collision.collisions.begin();
+            end  = collision.collisions.end();
             for (; iter != end; ++iter)
             {
-                xVector3 norm1 = xVector3::CrossProduct( iter->face1v[1] - iter->face1v[0], iter->face1v[2] - iter->face1v[0] ).normalize();
-                xVector3 norm2 = xVector3::CrossProduct( iter->face2v[1] - iter->face2v[0], iter->face2v[2] - iter->face2v[0] ).normalize();
-                float scale = (fabs(xVector3::DotProduct(norm1, norm2)) + 0.01f);
-                normMSc += scale;
-                centM += /*scale **/ iter->colPoint;
+                xVector3 force; force.zero();
+                xFLOAT scale = 0, len[4];
+                for (int bi = 0; bi < model->verletSystem.particleC; ++bi)
+                    scale += len[bi] = (iter->colPoint - model->verletSystem.positionP[bi]).length();
+                scale = 1 / scale;
+                for (int bi = 0; bi < model->verletSystem.particleC; ++bi)
+                    force += velos1[bi] * len[bi] * scale;
+                force = transf.preTransformV(force);
+                fTotal -= force * model->resilience;
+                if (!model2->locked)
+                {
+                    force.zero();
+                    if (model2->Type != ModelObj::Model_Verlet)
+                    {
+                        scale = 0;
+                        for (int bi = 0; bi < model2->verletSystem.particleC; ++bi)
+                            scale += len[bi] = (iter->colPoint - model2->verletSystem.positionP[bi]).length();
+                        scale = 1 / scale;
+                        for (int bi = 0; bi < model2->verletSystem.particleC; ++bi)
+                            force += velos2[bi] * len[bi] * scale;
+                        force = transf.preTransformV(force * (model2->mass / model->mass));
+                    }
+                    else
+                    {
+                        force = VerletBody::CalcCollisionSpeed(iter->face2v, iter->colPoint, *iter->elem2, *iter->face2,
+                            model2->verletSystem);
+                        force = transf.preTransformV(force * (model2->mass / model->mass));
+                    }
+                    fTotal += force;
+                }
+                cPoint += transf.preTransformP(iter->colPoint);
+
+                xVector3 planeN = xVector3::CrossProduct( iter->face2v[1] - iter->face2v[0], iter->face2v[2] - iter->face2v[0] ).normalize();
+                xFLOAT   Pmax   = ::CalcPenetrationDepth(iter->face1v, iter->colPoint, planeN).Pmax;
+
+                a = forces;
+                for (int bi = 0; bi < model->verletSystem.particleC; ++bi, ++a)
+                {
+                    xFLOAT   veloN = xVector3::DotProduct(planeN, velos1[bi]);
+                    damps[bi].push_back(planeN);
+
+                    xFLOAT magnitude = 0.f;//Pmax / deltaTime;
+                    xFLOAT lenA = a->length();
+                    if (lenA > 0.f)
+                    {
+                        xFLOAT forceN = xVector3::DotProduct(planeN, *a / lenA);
+                        if (forceN < 0.f) // damp force in the direction of collision (Fn = -Fc)
+                            magnitude -= forceN * lenA;
+                    }
+                    *a += magnitude * planeN;
+                }
             }
 
-            ModelObj *model2 = model->CollidedModels[i].model2;
-            float massScaleM = model2->mass;
-            centM /= numCM /** normMSc*/;
-            xVector3 centerOfTheMassG = (xVector4::Create(model2->modelInstancePh.center, 1.f) * model2->mLocationMatrix).vector3;
-            xVector3 velo = model2->transVelocity +
-                xVector3::CrossProduct(xQuaternion::angularVelocity(model2->rotatVelocity), centerOfTheMassG-centM);
-            //velo *= 1.f - model->CollidedModels[i].model2->resilience;
-
-            model->collisionVelo += velo * massScaleM;
-            model->collisionNorm += velo.normalize() * normMSc * massScaleM / numCM;
-            model->collisionCent += centM * massScaleM;
-            normScale += normMSc;
-            massScale += massScaleM;
+            xFLOAT radius = model->modelInstancePh.elementInstanceP[0].bsRadius * 0.5f; // TODO: use real radius
+            xFLOAT collCI = 1.f / collision.collisions.size();
+            fTotal *= collCI;
+            cPoint *= collCI;
+            cPoint -= model->modelInstancePh.center;
+            cPoint /= radius;
+            xVector3 s = xVector3::Create(fTotal.x * (sqrt(max(1-cPoint.y*cPoint.y-cPoint.z*cPoint.z, 0.f))),
+                                          fTotal.y * (sqrt(max(1-cPoint.x*cPoint.x-cPoint.z*cPoint.z, 0.f))),
+                                          fTotal.z * (sqrt(max(1-cPoint.x*cPoint.x-cPoint.y*cPoint.y, 0.f))));
+            forces[0] += s;
+            forces[1] += s + xVector3::Create(0, fTotal.y * cPoint.x, fTotal.z * cPoint.x);
+            forces[2] += s + xVector3::Create(fTotal.x * cPoint.y, 0, fTotal.z * cPoint.y);
+            forces[3] += s + xVector3::Create(fTotal.x * cPoint.z, fTotal.y * cPoint.z, 0);
         }
-        if (!model->collisionNorm.length())
-            model->collisionNorm = -model->transVelocity;
-        if (model->collisionNorm.length())
+
+        a = forces;
+        for (int bi = 0; bi < model->verletSystem.particleC; ++bi, ++a)
         {
-            model->collisionCent /= model->CollidedModels.size() * massScale;
-            model->collisionVelo /= model->CollidedModels.size() * model->mass;
+            xVector3 prevVelocity = velos1[bi];
+            std::vector<xVector3>::iterator damp, last = damps[bi].end();
+            for (damp = damps[bi].begin(); damp != last; ++damp)
+            {
+                xFLOAT len = a->length();
+                if (len > 0.f)
+                {
+                    xFLOAT forceN = xVector3::DotProduct(*damp, *a / len);
+                    if (forceN < 0.f) // damp force in the direction of collision (Fn = -Fc)
+                        *a -= forceN * len * *damp;
+                }
+                len = velos1[bi].length();
+                if (len > 0.f)
+                {
+                    xFLOAT forceN = xVector3::DotProduct(*damp, velos1[bi] / len);
+                    if (forceN < 0.f) // damp force in the direction of collision (Fn = -Fc)
+                        velos1[bi] -= forceN * len * *damp;
+                }
+            }
+            *a += velos1[bi] - prevVelocity;
 
-            xVector3 centerOfTheMassG = (xVector4::Create(model->modelInstancePh.center, 1.f)*model->mLocationMatrix).vector3;
-            xVector3 vArm             = centerOfTheMassG - model->collisionCent;
-
-            model->collisionNorm.normalize();
-            if (xVector3::DotProduct(vArm, model->collisionNorm) < 0.f)
-                model->collisionNorm.invert();
-
-            float pDepth = CalcPenetrationDepth(model, model->collisionCent, model->collisionNorm);
-            float pcL = (pDepth * massScale / (massScale + model->CollidedModels.size() * model->mass));
-            model->penetrationCorrection = model->collisionNorm * pcL;
+            damps[bi].clear();
         }
     }
 }
 
 void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
 {
-    if (model->locked)
-    {
-        model->CollidedModels.clear();
-        return;
-    }
+    model->CollidedModels.clear();
+    if (model->locked) return;
 
-    xVector3 T = model->transVelocity;
-    T = T * FRICTION_AIR * deltaTime;
-    if (fabs(T.x) > fabs(model->transVelocity.x) ||
-        fabs(T.y) > fabs(model->transVelocity.y) ||
-        fabs(T.z) > fabs(model->transVelocity.z))
-        model->transVelocity.zero();
-    else
-        model->transVelocity -= T;
-
-    xVector4 TR = xQuaternion::interpolateFull(model->rotatVelocity, FRICTION_AIR * deltaTime);
-    TR.vector3.invert();
-    model->rotatVelocity = xQuaternion::product(model->rotatVelocity, TR);
-
-    float pcL = 0.f;
-
-    if (!model->CollidedModels.empty())
-    {
-        if (model->collisionNorm.length())
-        {
-            pcL = model->penetrationCorrection.length();
-            xVector3 centerOfTheMassG = (xVector4::Create(model->modelInstancePh.center, 1.f)*model->mLocationMatrix).vector3;
-            //xVector3 centerOfTheMassGprev = (xVector4::Create(model->modelInstancePh.center, 1.f)*model->mLocationMatrixPrev).vector3;
-            //float tvL = (centerOfTheMassG-centerOfTheMassGprev).length();
-            //if (tvL-pcL > 0.f && tvL > EPSILON) model->transVelocity *= (tvL-pcL)/tvL;
-            //else               model->transVelocity.zero();
-
-            //model->cp  = model->collisionCent;
-            //model->com = centerOfTheMassG;
-            //model->cno = model->cp + model->collisionNorm;
-
-            // angular velocity
-            xVector3 vArm  = centerOfTheMassG - model->collisionCent;
-            xVector3 vArmN = xVector3::Normalize(vArm);
-            float cosColAngle = xVector3::DotProduct(vArmN, model->collisionNorm);
-            float sinColAngle = fabs(sqrt(1.f - cosColAngle*cosColAngle));
-
-            if (sinColAngle > 0.01f)
-            {
-                float velo = ( xVector3::CrossProduct(xQuaternion::angularVelocity(model->rotatVelocity), vArm).length()
-                    + model->transVelocity.length() + model->penetrationCorrection.length() ) * model->resilience;
-                velo += model->collisionVelo.length()*(1.f-model->resilience);
-                float Angle = sinColAngle * 0.5f * velo / vArm.length();
-                if (Angle > 0.01f)
-                {
-                    xVector3 vAxis = xVector3::CrossProduct(vArmN, model->collisionNorm).normalize();
-                    //model->cro = centerOfTheMassG+vAxis;
-                    vAxis *= sin(Angle);
-                    //xVector4 q; q.init(vAxis, cos(Angle));
-                    //model->rotatVelocity = xQuaternion::product(model->rotatVelocity, q);
-                    model->rotatVelocity.init(vAxis, cos(Angle));
-                }
-            }
-
-            // straight movement
-            if (1.f-sinColAngle)
-            {
-                // TODO: resilience should be mirrored by collision normal
-                float    resilienceVeloL = model->transVelocity.length() * model->resilience;
-                xVector3 resilianceVelo  = model->collisionNorm * resilienceVeloL;
-                xVector3 collisionVelo   = model->collisionVelo * (1.f-model->resilience);
-                model->transVelocity = (resilianceVelo + collisionVelo) * (1.f-sinColAngle);
-                if (model->transVelocity.length() < 0.05f)
-                    model->transVelocity.zero();
-            }
-        }
-        model->CollidedModels.clear();
-        model->gravityAccumulator = 1.f;
-    }
-    else
-    if (model->gravityAccumulator < GRAVITY)
-        model->gravityAccumulator += 1.f; // slowly increase gravity, to avoid vibrations
+    model->verletSystem.timeStep = deltaTime;
+    xVerletSolver engine;
+    engine.Init(& model->verletSystem);
+    engine.passesC = 5;
+    engine.VerletFull();
+    engine.SatisfyConstraints();
 
     model->mLocationMatrixPrev  = model->mLocationMatrix;
-    bool needsRefill = false;
+    model->mLocationMatrix = xMatrixFromVectors(model->verletSystem.positionP[2]-model->verletSystem.positionP[0],
+        model->verletSystem.positionP[3]-model->verletSystem.positionP[0], -model->verletSystem.positionP[0]);
 
-    if (xVector4::Normalize(model->rotatVelocity).vector3.length() > 0.01f)
-    {
-        xMatrix translation; translation.identity();
-        translation.row3.vector3 = -model->modelInstancePh.center;
-        xMatrix rotation = translation * xMatrixFromQuaternion(xQuaternion::interpolateFull(model->rotatVelocity, deltaTime));
-        translation.row3.vector3.invert();
-        model->mLocationMatrix = rotation * translation * model->mLocationMatrix;
-        needsRefill = true;
-    }
-    else
-        model->rotatVelocity.zeroQ();
-    if (pcL > 0.0001f)
-    {
-        xMatrix translation;
-        translation.identity();
-        translation.row3.vector3 = model->penetrationCorrection;
-        model->mLocationMatrix *= translation;
-        needsRefill = true;
-    }
-    if (model->transVelocity.length() > 0.001f)
-    {
-        xMatrix translation;
-        translation.identity();
-        translation.row3.vector3 = model->transVelocity * deltaTime;
+    bool needsRefill = model->mLocationMatrix != model->mLocationMatrixPrev;
 
-        model->mLocationMatrix *= translation;
-        needsRefill = true;
-    }
-    else
-        model->transVelocity.zero();
+    xVector3 *a = model->verletSystem.accelerationP;
+    for (xWORD i = model->verletSystem.particleC; i; --i, ++a)
+        a->zero();
 
     if (needsRefill)
     {
@@ -214,7 +209,4 @@ void RigidBody :: CalculateMovement(ModelObj *model, float deltaTime)
         model->CollisionInfo_ReFill();
         model->InvalidateShadowRenderData();
     }
-
-    if (model->physical)
-        model->transVelocity.z -= model->gravityAccumulator * deltaTime;
 }

@@ -6,8 +6,6 @@ void ModelObj :: Initialize (const char *gr_filename, const char *ph_filename, b
     Type = Model_Rigid;
     collisionInfo = NULL;
     mLocationMatrixPrev = mLocationMatrix;
-    transVelocity.zero();
-    rotatVelocity.zeroQ();
     mass               = !locked ? 1.f : 100000000.f;
     resilience         = 0.2f;
     gravityAccumulator = 1.f;
@@ -38,6 +36,7 @@ void ModelObj :: Initialize (const char *gr_filename, const char *ph_filename, b
         mdl->IncReferences();
     }
 
+    CreateVerletSystem();
     VerticesChanged(true);
 }
 
@@ -61,6 +60,7 @@ void ModelObj :: Finalize ()
         collisionInfo = NULL;
     }
     FreeInstanceData();
+    DestroyVerletSystem();
     g_ModelMgr.DeleteModel(hModelGraphics);
     g_ModelMgr.DeleteModel(hModelPhysical);
 }
@@ -136,12 +136,86 @@ void ModelObj :: CalculateSkeleton()
     renderer.InvalidateBonePositions(modelInstancePh);
 }
 
-
-
-
-void ModelObj:: PreUpdate()
+void ModelObj :: CreateVerletSystem()
 {
-    RigidBody::CalculateCollisions(this);
+    verletSystem.Free();
+    verletSystem.Init(4);
+    verletSystem.constraintsP = new xIVConstraint*[6];
+    verletSystem.constraintsC = 6;
+    verletSystem.collisions = &collisionConstraints;
+    verletSystem.constraintsLenEql = NULL;
+
+    xVConstraintLengthEql *constr;
+    verletSystem.constraintsP[0] = constr = new xVConstraintLengthEql();
+    constr->particleA = 0;
+    constr->particleB = 1;
+    constr->restLength = constr->restLengthSqr = 1;
+
+    verletSystem.constraintsP[1] = constr = new xVConstraintLengthEql();
+    constr->particleA = 0;
+    constr->particleB = 2;
+    constr->restLength = constr->restLengthSqr = 1;
+
+    verletSystem.constraintsP[2] = constr = new xVConstraintLengthEql();
+    constr->particleA = 0;
+    constr->particleB = 3;
+    constr->restLength = constr->restLengthSqr = 1;
+
+    xFLOAT sqrt2 = sqrtf(2.f);
+    verletSystem.constraintsP[3] = constr = new xVConstraintLengthEql();
+    constr->particleA = 1;
+    constr->particleB = 2;
+    constr->restLengthSqr = 2;
+    constr->restLength    = sqrt2;
+
+    verletSystem.constraintsP[4] = constr = new xVConstraintLengthEql();
+    constr->particleA = 1;
+    constr->particleB = 3;
+    constr->restLengthSqr = 2;
+    constr->restLength    = sqrt2;
+
+    verletSystem.constraintsP[5] = constr = new xVConstraintLengthEql();
+    constr->particleA = 2;
+    constr->particleB = 3;
+    constr->restLengthSqr = 2;
+    constr->restLength    = sqrt2;
+
+    verletSystem.positionP[0] = verletSystem.positionOldP[0] = mLocationMatrix.preTransformP( xVector3::Create(0,0,0) );
+    verletSystem.positionP[1] = verletSystem.positionOldP[1] = mLocationMatrix.preTransformP( xVector3::Create(1,0,0) );
+    verletSystem.positionP[2] = verletSystem.positionOldP[2] = mLocationMatrix.preTransformP( xVector3::Create(0,1,0) );
+    verletSystem.positionP[3] = verletSystem.positionOldP[3] = mLocationMatrix.preTransformP( xVector3::Create(0,0,1) );
+
+    verletSystem.weightP[0] = verletSystem.weightP[1] = verletSystem.weightP[2] = verletSystem.weightP[3]
+        = 4.f / mass;
+
+    verletSystem.accelerationP[0].zero();
+    verletSystem.accelerationP[1].zero();
+    verletSystem.accelerationP[2].zero();
+    verletSystem.accelerationP[3].zero();
+}
+
+void ModelObj :: DestroyVerletSystem()
+{
+    if (verletSystem.constraintsP)
+        delete[] verletSystem.constraintsP;
+    verletSystem.Free();
+}
+
+void ModelObj :: UpdateVerletSystem()
+{
+    verletSystem.positionOldP[0] = mLocationMatrix.preTransformP( xVector3::Create(0,0,0) );
+    verletSystem.positionOldP[1] = mLocationMatrix.preTransformP( xVector3::Create(1,0,0) );
+    verletSystem.positionOldP[2] = mLocationMatrix.preTransformP( xVector3::Create(0,1,0) );
+    verletSystem.positionOldP[3] = mLocationMatrix.preTransformP( xVector3::Create(0,0,1) );
+    verletSystem.SwapPositions();
+}
+
+
+
+
+void ModelObj:: PreUpdate(float deltaTime)
+{
+    RigidBody::CalculateCollisions(this, deltaTime);
 }
 
 void ModelObj:: Update(float deltaTime)

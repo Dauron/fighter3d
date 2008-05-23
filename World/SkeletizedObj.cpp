@@ -7,17 +7,28 @@ void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filena
     forceNotStatic = true;
     ModelObj::Initialize(gr_filename, ph_filename);
     Type = Model_Verlet;
-    ResetVerletSystem();
 
     resilience = 0.2f;
 }
 
-void SkeletizedObj :: ResetVerletSystem()
+void SkeletizedObj :: Finalize ()
+{
+    ModelObj::Finalize();
+    if (actions.actions.size())
+    {
+        std::vector<xAction>::iterator iterF = actions.actions.begin(), iterE = actions.actions.end();
+        for (; iterF != iterE; ++iterF)
+            g_AnimationMgr.DeleteAnimation(iterF->hAnimation);
+        actions.actions.clear();
+    }
+}
+
+
+
+void SkeletizedObj :: CreateVerletSystem()
 {
     verletSystem.Free();
     verletSystem.Init(xModelGr->spine.boneC);
-    verletSystem.constraintsP = xModelGr->spine.constraintsP; // NOTE: should be redone on constraint changes in skeleton editor
-    verletSystem.constraintsC = xModelGr->spine.constraintsC; // NOTE: should be redone on constraint changes in skeleton editor
     verletSystem.collisions = &collisionConstraints;
     xIKNode  *bone   = xModelGr->spine.boneP;
     xVector3 *pos    = verletSystem.positionP,
@@ -42,6 +53,11 @@ void SkeletizedObj :: ResetVerletSystem()
         }
 }
 
+void SkeletizedObj :: DestroyVerletSystem()
+{
+    verletSystem.Free();
+}
+
 void SkeletizedObj :: UpdateVerletSystem()
 {
     xIKNode  *bone   = xModelGr->spine.boneP;
@@ -52,17 +68,7 @@ void SkeletizedObj :: UpdateVerletSystem()
     verletSystem.SwapPositions();
 }
 
-void SkeletizedObj :: Finalize ()
-{
-    ModelObj::Finalize();
-    if (actions.actions.size())
-    {
-        std::vector<xAction>::iterator iterF = actions.actions.begin(), iterE = actions.actions.end();
-        for (; iterF != iterE; ++iterF)
-            g_AnimationMgr.DeleteAnimation(iterF->hAnimation);
-        actions.actions.clear();
-    }
-}
+
 
 void SkeletizedObj :: AddAnimation(const char *fileName, xDWORD startTime, xDWORD endTime)
 {
@@ -72,9 +78,9 @@ void SkeletizedObj :: AddAnimation(const char *fileName, xDWORD startTime, xDWOR
     actions.actions.rbegin()->endTime = endTime;
 }
 
-void SkeletizedObj:: PreUpdate()
+void SkeletizedObj:: PreUpdate(float deltaTime)
 {
-    VerletBody::CalculateCollisions(this);
+    VerletBody::CalculateCollisions(this, deltaTime);
 }
 
 void SkeletizedObj :: Update(float deltaTime)

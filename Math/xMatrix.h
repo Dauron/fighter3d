@@ -192,5 +192,5 @@ xMatrix  operator * (xFLOAT f, const xMatrix &m);
 xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up);
 inline xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up, const xVector3 &center)
 {
-    return xMatrixFromVectors(forward, up).preTranslateT(-center);
+    return xMatrixFromVectors(forward, up).postTranslateT(-center);
 }

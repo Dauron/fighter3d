@@ -192,7 +192,7 @@ bool xVConstraintAngular :: Satisfy(xVerletSystem *system)
     xVector3 up    = system->locationMatrix.preTransformV(xQuaternion::rotate(qParent, bone.pointE-bone.pointB)).normalize();
     xVector3 front = system->locationMatrix.preTransformV(xQuaternion::rotate(qParent, xVector3::Create(0,1,0)));
 
-    xMatrix  transf       = xMatrixFromVectors( front, up, pRootE );
+    xMatrix  transf       = xMatrixFromVectors( front, up, - pRootE ).invert();
     xVector3 position     = transf.preTransformP( p );
     xVector3 positionNorm = xVector3::Normalize( position );
 
@@ -237,7 +237,7 @@ bool xVConstraintAngular :: Satisfy(xVerletSystem *system)
 bool xVConstraintAngular :: Test(const xVector3 &pRootB, const xVector3 &pRootE, const xVector3 &p,
                                  const xVector3 &up, const xVector3 &front) const
 {
-    xMatrix transf        = xMatrixFromVectors(front, up, pRootE);
+    xMatrix transf        = xMatrixFromVectors(front, up, -pRootE).invert();
     xVector3 position     = transf.preTransformP(p);
     xVector3 positionNorm = xVector3::Normalize( position );
 
@@ -341,6 +341,10 @@ xIVConstraint * xVConstraintCollision :: Load( FILE *file )
     return this;
 }
 
+// VERLET SOLVER
+const float xVerletSolver :: FRICTION_AIR = 0.5f;
+const float xVerletSolver :: GRAVITY      = 10.f;
+
 void xVerletSolver :: SatisfyConstraints()
 {
     for (xBYTE pass_n = passesC; pass_n; --pass_n)
@@ -378,7 +382,7 @@ void xVerletSolver :: Verlet()
     xVector3 *pC = system->positionP;
     xVector3 *pO = system->positionOldP;
     xVector3 *a  = system->accelerationP;
-    xFLOAT    timeStepSqr = timeStep*timeStep;
+    xFLOAT    timeStepSqr = system->timeStep*system->timeStep;
 
     if (system->accelerationP)
         for (xWORD i = system->particleC; i; --i, ++pC, ++pO, ++a)
@@ -386,6 +390,26 @@ void xVerletSolver :: Verlet()
     else
         for (xWORD i = system->particleC; i; --i, ++pC, ++pO, ++a)
             *pO = *pC /*+ 0.9f * (*pC - *pO)*/;
+
+    system->SwapPositions();
+}
+
+void xVerletSolver :: VerletFull()
+{
+    xVector3 *pC = system->positionP;
+    xVector3 *pO = system->positionOldP;
+    xVector3 *a  = system->accelerationP;
+    xFLOAT    timeStepSqr = system->timeStep*system->timeStep;
+    xFLOAT    frictionInv = 1.f - (FRICTION_AIR * system->timeStep);
+    if (system->timeStepPrev > 0.f)
+        frictionInv *= system->timeStep / system->timeStepPrev;
+
+    if (system->accelerationP)
+        for (xWORD i = system->particleC; i; --i, ++pC, ++pO, ++a)
+            *pO = *pC + frictionInv * (*pC - *pO) + *a * timeStepSqr;
+    else
+        for (xWORD i = system->particleC; i; --i, ++pC, ++pO, ++a)
+            *pO = *pC + frictionInv * (*pC - *pO);
 
     system->SwapPositions();
 }
