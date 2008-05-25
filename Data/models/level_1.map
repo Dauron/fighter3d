@@ -16,8 +16,9 @@ position	0	0	10
 fastm	crate_fst.3dx
 model	crate.3dx
 skip rotation    0  45  45
-skip position	-3.75 -3.75 0.75
-position	-3.5 -3.5 0.5
+skip position	-4 -3.75 0.75
+skip position	-4 -3.5 0.5
+position	-4 -4 1
 velocity	7	0	0
 physical	0
 locked	0

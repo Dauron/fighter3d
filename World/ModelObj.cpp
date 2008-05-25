@@ -5,10 +5,11 @@ void ModelObj :: Initialize (const char *gr_filename, const char *ph_filename, b
 {
     Type = Model_Rigid;
     collisionInfo = NULL;
-    mLocationMatrixPrev = mLocationMatrix;
+    MX_ModelToWorld_prev = MX_ModelToWorld;
+    xMatrix::Invert(MX_ModelToWorld, MX_WorldToModel);
+
     mass               = !locked ? 1.f : 100000000.f;
     resilience         = 0.2f;
-    gravityAccumulator = 1.f;
     this->phantom = phantom;
     this->physical = physicalNotLocked;
     this->locked   = !physicalNotLocked;
@@ -18,8 +19,8 @@ void ModelObj :: Initialize (const char *gr_filename, const char *ph_filename, b
 
     modelInstanceGr.Zero();
     modelInstancePh.Zero();
-    modelInstanceGr.location = mLocationMatrix;
-    modelInstancePh.location = mLocationMatrix;
+    modelInstanceGr.location = MX_ModelToWorld;
+    modelInstancePh.location = MX_ModelToWorld;
 
     hModelGraphics = g_ModelMgr.GetModel(gr_filename);
     Model3dx *mdl  = g_ModelMgr.GetModel(hModelGraphics);
@@ -140,73 +141,73 @@ void ModelObj :: CreateVerletSystem()
 {
     verletSystem.Free();
     verletSystem.Init(4);
-    verletSystem.constraintsP = new xIVConstraint*[6];
-    verletSystem.constraintsC = 6;
-    verletSystem.collisions = &collisionConstraints;
-    verletSystem.constraintsLenEql = NULL;
+    verletSystem.C_constraints = new xIVConstraint*[6];
+    verletSystem.I_constraints = 6;
+    verletSystem.C_collisions = &collisionConstraints;
+    verletSystem.C_lengthConst = NULL;
 
     xVConstraintLengthEql *constr;
-    verletSystem.constraintsP[0] = constr = new xVConstraintLengthEql();
+    verletSystem.C_constraints[0] = constr = new xVConstraintLengthEql();
     constr->particleA = 0;
     constr->particleB = 1;
     constr->restLength = constr->restLengthSqr = 1;
 
-    verletSystem.constraintsP[1] = constr = new xVConstraintLengthEql();
+    verletSystem.C_constraints[1] = constr = new xVConstraintLengthEql();
     constr->particleA = 0;
     constr->particleB = 2;
     constr->restLength = constr->restLengthSqr = 1;
 
-    verletSystem.constraintsP[2] = constr = new xVConstraintLengthEql();
+    verletSystem.C_constraints[2] = constr = new xVConstraintLengthEql();
     constr->particleA = 0;
     constr->particleB = 3;
     constr->restLength = constr->restLengthSqr = 1;
 
     xFLOAT sqrt2 = sqrtf(2.f);
-    verletSystem.constraintsP[3] = constr = new xVConstraintLengthEql();
+    verletSystem.C_constraints[3] = constr = new xVConstraintLengthEql();
     constr->particleA = 1;
     constr->particleB = 2;
     constr->restLengthSqr = 2;
     constr->restLength    = sqrt2;
 
-    verletSystem.constraintsP[4] = constr = new xVConstraintLengthEql();
+    verletSystem.C_constraints[4] = constr = new xVConstraintLengthEql();
     constr->particleA = 1;
     constr->particleB = 3;
     constr->restLengthSqr = 2;
     constr->restLength    = sqrt2;
 
-    verletSystem.constraintsP[5] = constr = new xVConstraintLengthEql();
+    verletSystem.C_constraints[5] = constr = new xVConstraintLengthEql();
     constr->particleA = 2;
     constr->particleB = 3;
     constr->restLengthSqr = 2;
     constr->restLength    = sqrt2;
 
-    verletSystem.positionP[0] = verletSystem.positionOldP[0] = mLocationMatrix.preTransformP( xVector3::Create(0,0,0) );
-    verletSystem.positionP[1] = verletSystem.positionOldP[1] = mLocationMatrix.preTransformP( xVector3::Create(1,0,0) );
-    verletSystem.positionP[2] = verletSystem.positionOldP[2] = mLocationMatrix.preTransformP( xVector3::Create(0,1,0) );
-    verletSystem.positionP[3] = verletSystem.positionOldP[3] = mLocationMatrix.preTransformP( xVector3::Create(0,0,1) );
+    verletSystem.P_current[0] = verletSystem.P_previous[0] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(0,0,0) );
+    verletSystem.P_current[1] = verletSystem.P_previous[1] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(1,0,0) );
+    verletSystem.P_current[2] = verletSystem.P_previous[2] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(0,1,0) );
+    verletSystem.P_current[3] = verletSystem.P_previous[3] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(0,0,1) );
 
-    verletSystem.weightP[0] = verletSystem.weightP[1] = verletSystem.weightP[2] = verletSystem.weightP[3]
-        = 4.f / mass;
+    verletSystem.M_weight_Inv[0] = verletSystem.M_weight_Inv[1] =
+        verletSystem.M_weight_Inv[2] = verletSystem.M_weight_Inv[3] = 4.f / mass;
 
-    verletSystem.accelerationP[0].zero();
-    verletSystem.accelerationP[1].zero();
-    verletSystem.accelerationP[2].zero();
-    verletSystem.accelerationP[3].zero();
+    verletSystem.A_forces[0].zero();
+    verletSystem.A_forces[1].zero();
+    verletSystem.A_forces[2].zero();
+    verletSystem.A_forces[3].zero();
 }
 
 void ModelObj :: DestroyVerletSystem()
 {
-    if (verletSystem.constraintsP)
-        delete[] verletSystem.constraintsP;
+    if (verletSystem.C_constraints)
+        delete[] verletSystem.C_constraints;
     verletSystem.Free();
 }
 
 void ModelObj :: UpdateVerletSystem()
 {
-    verletSystem.positionOldP[0] = mLocationMatrix.preTransformP( xVector3::Create(0,0,0) );
-    verletSystem.positionOldP[1] = mLocationMatrix.preTransformP( xVector3::Create(1,0,0) );
-    verletSystem.positionOldP[2] = mLocationMatrix.preTransformP( xVector3::Create(0,1,0) );
-    verletSystem.positionOldP[3] = mLocationMatrix.preTransformP( xVector3::Create(0,0,1) );
+    verletSystem.P_previous[0] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(0,0,0) );
+    verletSystem.P_previous[1] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(1,0,0) );
+    verletSystem.P_previous[2] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(0,1,0) );
+    verletSystem.P_previous[3] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(0,0,1) );
     verletSystem.SwapPositions();
 }
 
@@ -277,9 +278,9 @@ void ModelObj::CollisionInfo_Fill(xElement *elem, xCollisionHierarchyBoundsRoot 
     }
 
     xVector4 *iterS = modelInstancePh.elementInstanceP[elem->id].verticesP, *iterD = eci.verticesP;
-    xMatrix   transf = elem->matrix * mLocationMatrix;
+    xMatrix   MX_ElementToWorld = elem->matrix * MX_ModelToWorld;
     for (int i = eci.verticesC; i; --i, ++iterS, ++iterD)
-        iterD->init(transf.preTransformP(iterS->vector3), 1.f);
+        iterD->init(MX_ElementToWorld.preTransformP(iterS->vector3), 1.f);
 
     // Fill collision bounding boxes
     xElement_CalcCollisionHierarchyBox(eci.verticesP, &elem->collisionData, &eci);
@@ -351,12 +352,12 @@ void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     xVector3 lUAxis = xVector3::CrossProduct(lFAxis, lRAxis);
 
     // Build view-transformation matrix
-    xMatrix lViewMatrix;
-    lViewMatrix.row0.vector3 = lRAxis; lViewMatrix.row0.w = 0.f;
-    lViewMatrix.row1.vector3 = lUAxis; lViewMatrix.row1.w = 0.f;
-    lViewMatrix.row2.vector3 = lFAxis; lViewMatrix.row2.w = 0.f;
-    lViewMatrix.row3.zeroQ();
-    lViewMatrix.postTranslate(-light->position).transpose();
+    xMatrix MX_WorldToView;
+    MX_WorldToView.row0.vector3 = lRAxis; MX_WorldToView.row0.w = 0.f;
+    MX_WorldToView.row1.vector3 = lUAxis; MX_WorldToView.row1.w = 0.f;
+    MX_WorldToView.row2.vector3 = lFAxis; MX_WorldToView.row2.w = 0.f;
+    MX_WorldToView.row3.zeroQ();
+    MX_WorldToView.postTranslate(-light->position).transpose();
 
     // Find the horizontal and vertical angular spreads to find out FOV and aspect ratio
     float RxMax = 0.f, RyMax = 0.f;
@@ -366,7 +367,7 @@ void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
         xVector4 *iter = ci->verticesP;
         for (int j=ci->verticesC; j; --j, ++iter)
         {
-            xVector4 v = lViewMatrix * *iter;
+            xVector4 v = MX_WorldToView * *iter;
             v.z = 1.f / v.z;
             v.x *= v.z; v.y *= v.z;
 
@@ -404,12 +405,12 @@ void ModelObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     mtxBlockerToLight.row1.init(0.f, YProj, 0.f, 0.f);
     mtxBlockerToLight.row2.init(0.f, 0.f, (ZFar+ZNear)/(ZNear-ZFar), -1.f);
     mtxBlockerToLight.row3.init(0.f, 0.f, 2.f*ZFar*ZNear/(ZNear-ZFar), 0.f);
-    mtxBlockerToLight.preMultiply(lViewMatrix).preMultiply(mLocationMatrix);
+    mtxBlockerToLight.preMultiply(MX_WorldToView).preMultiply(MX_ModelToWorld);
 
     // Projection matrix for computing UVs on the receiver object
     mtxReceiverUVMatrix.row0.init(XProj*0.5f, 0.f, 0.f, 0.f);
     mtxReceiverUVMatrix.row1.init(0.f, YProj*0.5f, 0.f, 0.f);
     mtxReceiverUVMatrix.row2.init(-0.5f, -0.5f, (ZFar+ZNear)/(ZNear-ZFar), -1.f);
     mtxReceiverUVMatrix.row3.init(0.f, 0.f, 2.f*ZFar*ZNear/(ZNear-ZFar), 0.f);
-    mtxReceiverUVMatrix.preMultiply(lViewMatrix);
+    mtxReceiverUVMatrix.preMultiply(MX_WorldToView);
 }

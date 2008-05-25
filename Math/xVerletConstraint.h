@@ -4,6 +4,27 @@
 #include "xMath.h"
 #include <vector>
 
+/*
+
+ T_     time
+ S_     distance
+ V_     velocity
+ A_     acceleration
+ M_     mass
+
+ P_     point, position
+ N_     normal vector
+ NW_    vector (scaled normal)
+ MX_    matrix
+
+ W_     weight, scale, amount
+
+ I_     integer counter
+
+ C_     constraint
+
+*/
+
 struct xVerletSystem;
 
 struct xIVConstraint {
@@ -117,85 +138,85 @@ typedef std::vector<xVConstraintCollision> xVConstraintCollisionVector;
 struct xSkeleton;
 struct xVerletSystem
 {
-    xFLOAT    timeStep;
-    xFLOAT    timeStepPrev;
-    xWORD     particleC;
+    xFLOAT    T_step;
+    xFLOAT    T_step_Old;
+    xWORD     I_particles;
 
-    xVector3 *positionP;     // current positions
-    xVector3 *positionOldP;  // previous positions
-    xVector3 *accelerationP; // force accumulators
-    xFLOAT   *weightP;       // force accumulators
+    xVector3 *P_current;    // current positions
+    xVector3 *P_previous;   // previous positions
+    xVector3 *A_forces;     // force accumulators
+    xFLOAT   *M_weight_Inv; // inverted particle masses
 
-    xVConstraintLengthEql *constraintsLenEql;
-    xIVConstraint        **constraintsP;
-    xWORD                  constraintsC;
-    xSkeleton             *spine;
-    xMatrix                locationMatrix;
-    xMatrix                locationMatrixIT;
+    xVConstraintLengthEql       *C_lengthConst;
+    xIVConstraint              **C_constraints;
+    xWORD                        I_constraints;
+    xVConstraintCollisionVector *C_collisions;
 
-    xVConstraintCollisionVector *collisions;
+    xMatrix                      MX_ModelToWorld;
+    xMatrix                      MX_WorldToModel_T;
+    xSkeleton                   *spine;
 
     xVerletSystem()
     {
-        positionP     = NULL;
-        positionOldP  = NULL;
-        accelerationP = NULL;
-        weightP       = NULL;
-        locationMatrix.identity();
-        locationMatrixIT.identity();
+        P_current    = NULL;
+        P_previous   = NULL;
+        A_forces     = NULL;
+        M_weight_Inv = NULL;
+        MX_ModelToWorld.identity();
+        MX_WorldToModel_T.identity();
     }
 
     void Init(xWORD numParticles)
     {
-        particleC = numParticles;
+        I_particles = numParticles;
 
-        positionP     = new xVector3[particleC];
-        positionOldP  = new xVector3[particleC];
-        accelerationP = new xVector3[particleC];
-        weightP       = new xFLOAT[particleC];
-        xFLOAT *weight = weightP;
-        for (int i = particleC; i; --i, ++weight) *weight = 1.f;
+        P_current    = new xVector3[I_particles];
+        P_previous   = new xVector3[I_particles];
+        A_forces     = new xVector3[I_particles];
+        M_weight_Inv = new xFLOAT  [I_particles];
+        xFLOAT *M_iter = M_weight_Inv;
+        for (xWORD i = I_particles; i; --i, ++M_iter) *M_iter = 1.f;
 
-        constraintsC       = 0;
-        constraintsP       = NULL;
-        constraintsLenEql  = NULL;
-        collisions         = NULL;
+        I_constraints  = 0;
+        C_constraints  = NULL;
+        C_lengthConst  = NULL;
+        C_collisions   = NULL;
 
-        timeStep           = 0;
-        timeStepPrev       = 0;
+        T_step           = 0;
+        T_step_Old       = 0;
     }
 
     void Free()
     {
-        particleC   = 0;
-        if (positionP)     delete[] positionP;
-        if (positionOldP)  delete[] positionOldP;
-        if (accelerationP) delete[] accelerationP;
-        if (weightP)       delete[] weightP;
-        positionP     = NULL;
-        positionOldP  = NULL;
-        accelerationP = NULL;
-        weightP       = NULL;
-        constraintsC       = 0;
-        constraintsP       = NULL;
-        constraintsLenEql  = NULL;
-        collisions         = NULL;
+        I_particles = 0;
+        if (P_current)    delete[] P_current;
+        if (P_previous)   delete[] P_previous;
+        if (A_forces)     delete[] A_forces;
+        if (M_weight_Inv) delete[] M_weight_Inv;
+        P_current    = NULL;
+        P_previous   = NULL;
+        A_forces     = NULL;
+        M_weight_Inv = NULL;
+        I_constraints = 0;
+        C_constraints = NULL;
+        C_lengthConst = NULL;
+        C_collisions  = NULL;
     }
 
     void SwapPositions()
     {
-        xVector3 *swp = positionP;
-        positionP = positionOldP;
-        positionOldP = swp;
-        timeStepPrev = timeStep;
+        xVector3 *swp = P_current;
+        P_current = P_previous;
+        P_previous = swp;
+        T_step_Old = T_step;
     }
 };
 
 class xVerletSolver
 {
 public:
-    xVector3       gravity;
-    xBYTE          passesC;
+    xVector3       A_gravity;
+    xBYTE          I_passes;
 
     xVerletSystem *system;
 
@@ -205,8 +226,8 @@ public:
 public:
     void Init(xVerletSystem *system)
     {
-        passesC      = 1;
-        gravity.zero();
+        I_passes = 1;
+        A_gravity.zero();
 
         this->system = system;
     }

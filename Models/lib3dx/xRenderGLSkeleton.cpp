@@ -229,8 +229,6 @@ void RenderConstraint ( const xSkeleton &spine, const xMatrix *bonesM, const xVe
 
 void xRenderGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWORD selBoneId )
 {
-    if (model.spine.boneC)
-    {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -240,24 +238,43 @@ void xRenderGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWOR
         glPushMatrix();
         glMultMatrixf(&instance.location.x0);
 
-        g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones(instance.bonesC, instance.bonesM, instance.bonesQ, NULL, false);
+        if (model.spine.boneC)
+        {
+            g_AnimSkeletal.BeginAnimation();
+            g_AnimSkeletal.SetBones(instance.bonesC, instance.bonesM, instance.bonesQ, NULL, false);
 
-        glColor4f(1.0f,1.0f,0.0f,1.0f);
-        glBegin(GL_TRIANGLES);
-        RenderBone(model.spine.boneP, 0, selBoneId);
-        glEnd();
+            glColor4f(1.0f,1.0f,0.0f,1.0f);
+            glBegin(GL_TRIANGLES);
+            RenderBone(model.spine.boneP, 0, selBoneId);
+            glEnd();
 
-        g_AnimSkeletal.EndAnimation();
+            g_AnimSkeletal.EndAnimation();
 
-        RenderConstraint(model.spine, instance.bonesM, instance.bonesQ);
+            RenderConstraint(model.spine, instance.bonesM, instance.bonesQ);
+        }
+        else
+        {
+            glTranslatef(instance.center.x,instance.center.y,instance.center.z);
+            glBegin(GL_LINES);
+                glColor4f(1.f,0.f,0.f,1.f);
+                glVertex3f(0,0,0);
+                glVertex3f(1.f,0,0);
+
+                glColor3f(0.f,1.f,0.f);
+                glVertex3f(0,0,0);
+                glVertex3f(0,1.f,0);
+
+                glColor3f(0.f,0.f,1.f);
+                glVertex3f(0,0,0);
+                glVertex3f(0,0,1.f);
+            glEnd();
+        }
 
         glPopMatrix();
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
         glDisable(GL_COLOR_MATERIAL);
-    }
 }
 
 // Bone / constraint selection

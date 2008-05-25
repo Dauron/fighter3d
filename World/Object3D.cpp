@@ -2,19 +2,19 @@
 
 Object3D::Object3D ()
 {
-    mLocationMatrix.identity();
+    MX_ModelToWorld.identity();
 }
 
 Object3D::Object3D (xFLOAT x, xFLOAT y, xFLOAT z)
 {
-    mLocationMatrix.identity();
+    MX_ModelToWorld.identity();
     Translate(x, y, z);
 }
 
 Object3D::Object3D (xFLOAT x, xFLOAT y, xFLOAT z,
                     xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
 {
-    mLocationMatrix.identity();
+    MX_ModelToWorld.identity();
     Rotate(rotX, rotY, rotZ);
     Translate(x, y, z);
 }
@@ -26,7 +26,7 @@ void Object3D::Translate(xFLOAT x, xFLOAT y, xFLOAT z)
     matrT.x3 = x;
     matrT.y3 = y;
     matrT.z3 = z;
-    mLocationMatrix *= matrT;
+    MX_ModelToWorld *= matrT;
     LocationChanged();
 }
 
@@ -44,7 +44,7 @@ void Object3D::Rotate(xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
         matrZ.x1 = sinz;
         matrZ.y0 = -sinz;
 
-        mLocationMatrix *= matrZ;
+        MX_ModelToWorld *= matrZ;
     }
 
     if (rotY)
@@ -59,7 +59,7 @@ void Object3D::Rotate(xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
         matrY.z0 = siny;
         matrY.x2 = -siny;
 
-        mLocationMatrix *= matrY;
+        MX_ModelToWorld *= matrY;
     }
 
     if (rotX)
@@ -74,7 +74,7 @@ void Object3D::Rotate(xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
         matrX.y2 = sinx;
         matrX.z1 = -sinx;
 
-        mLocationMatrix *= matrX;
+        MX_ModelToWorld *= matrX;
     }
     LocationChanged();
 }

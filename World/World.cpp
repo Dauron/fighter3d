@@ -215,11 +215,11 @@ void World:: Load(const char *mapFileName)
                 {
                     float x,y,z;
                     sscanf(buffer, "velocity\t%f\t%f\t%f", &x,&y,&z);
-                    xVector3 *a = model->verletSystem.accelerationP;
+                    xVector3 *A_iter = model->verletSystem.A_forces;
                     xFLOAT TIME_STEP_INV = 1.f / TIME_STEP;
                     xVector3 speed; speed.init(x*TIME_STEP_INV, y*TIME_STEP_INV, z*TIME_STEP_INV);
-                    for (xWORD i = model->verletSystem.particleC; i; --i, ++a)
-                        *a = speed;
+                    for (xWORD i = model->verletSystem.I_particles; i; --i, ++A_iter)
+                        *A_iter = speed;
                     continue;
                 }
                 if (StartsWith(buffer, "physical"))

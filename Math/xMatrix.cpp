@@ -133,8 +133,8 @@ xMatrix &xMatrix::transpose()
 // Invert the xMatrix
 xMatrix &xMatrix::invert()
 {
-    xMatrix a(*this);
-    xMatrix b(xMatrix::Identity());
+    xMatrix &a = *this;
+    xMatrix  b; b.identity();
 
     unsigned int r, c;
     unsigned int cc;
@@ -274,9 +274,9 @@ xVector4 xMatrixToQuaternion(const xMatrix &m)
 xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up)
 {
     /* Side = forward x up */
-    xVector3 &side = xVector3::CrossProduct(forward, up).normalize();
+    xVector3 &side     = xVector3::CrossProduct(forward, up).normalize();
     /* Recompute up as: forward = side x up */
-    xVector3 forward2 = xVector3::CrossProduct(up, side).normalize();
+    xVector3 &forward2 = xVector3::CrossProduct(up, side).normalize();
     /* Fill matrix */
     xMatrix transformation;
     transformation.x0 = side.x;     transformation.x1 = side.y;     transformation.x2 = side.z;

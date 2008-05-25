@@ -36,12 +36,8 @@ public:
     xVConstraintCollisionVector collisionConstraints;
     xVerletSystem               verletSystem;
 
-    xMatrix        mLocationMatrixPrev;
-    xVector3       collisionNorm;
-    xVector3       collisionVelo;
-    xVector3       collisionCent;
-    xVector3       penetrationCorrection;
-    float          gravityAccumulator; // slowly increase gravity, to avoid vibrations
+    xMatrix        MX_WorldToModel;
+    xMatrix        MX_ModelToWorld_prev;
 
     xRenderGL      renderer;
     xModelInstance modelInstanceGr;
@@ -94,9 +90,10 @@ protected:
     void CollisionInfo_Render (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
 
     virtual void LocationChanged() {
+        xMatrix::Invert(MX_ModelToWorld, MX_WorldToModel);
         UpdateVerletSystem();
         UpdateVerletSystem();
-        memset(verletSystem.accelerationP, 0, sizeof(xVector3)*verletSystem.particleC);
+        memset(verletSystem.A_forces, 0, sizeof(xVector3)*verletSystem.I_particles);
     }
 
     virtual void CreateVerletSystem();
@@ -183,7 +180,7 @@ protected:
     {
         xModelGr = g_ModelMgr.GetModel(hModelGraphics)->model;
         xModelPh = g_ModelMgr.GetModel(hModelPhysical)->model;
-        modelInstancePh.location = modelInstanceGr.location = mLocationMatrix;
+        modelInstancePh.location = modelInstanceGr.location = MX_ModelToWorld;
     }
 
     void CopySpine(const xSkeleton &src, xSkeleton &dst)

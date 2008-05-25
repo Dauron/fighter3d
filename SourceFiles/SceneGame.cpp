@@ -477,7 +477,10 @@ bool SceneGame::Render()
             GLShader::SetLightType(xLight_NONE);
             GLShader::Start();
             for ( i = begin ; i != end ; ++i )
-                (*i)->renderer.RenderSkeleton(*(*i)->GetModelGr(), (*i)->modelInstanceGr, xWORD_MAX);
+            {
+                ModelObj &model = **i;
+                model.renderer.RenderSkeleton(*model.GetModelGr(), model.modelInstanceGr, xWORD_MAX);
+            }
             GLShader::Suspend();
         }
         else

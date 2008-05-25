@@ -178,6 +178,11 @@ union xMatrix {
         xMatrix ret(m);
         return ret.invert();
     }
+    static xMatrix &Invert(const xMatrix &src, xMatrix &dst)
+    {
+        dst = src;
+        return dst.invert();
+    }
 };
 
 xVector3 operator * (const xMatrix &a,  const xVector3 &b);

@@ -29,27 +29,27 @@ void SkeletizedObj :: CreateVerletSystem()
 {
     verletSystem.Free();
     verletSystem.Init(xModelGr->spine.boneC);
-    verletSystem.collisions = &collisionConstraints;
-    xIKNode  *bone   = xModelGr->spine.boneP;
-    xVector3 *pos    = verletSystem.positionP,
-             *posOld = verletSystem.positionOldP,
-             *a      = verletSystem.accelerationP;
-    xFLOAT   *weight = verletSystem.weightP;
-    xMatrix  *mtx    = modelInstanceGr.bonesM;
+    verletSystem.C_collisions = &collisionConstraints;
+    xIKNode  *bone    = xModelGr->spine.boneP;
+    xVector3 *P_cur   = verletSystem.P_current,
+             *P_old   = verletSystem.P_previous,
+             *A_iter  = verletSystem.A_forces;
+    xFLOAT   *M_iter  = verletSystem.M_weight_Inv;
+    xMatrix  *MX_bone = modelInstanceGr.bonesM;
 
-    if (mtx)
-        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++a, ++mtx, ++weight)
+    if (MX_bone)
+        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++P_cur, ++P_old, ++A_iter, ++M_iter, ++MX_bone)
         {
-            *pos = *posOld = mLocationMatrix.preTransformP( mtx->postTransformP(bone->pointE) );
-            *weight = 1 / bone->weight;
-            a->zero();
+            *P_old = *P_cur = MX_ModelToWorld.preTransformP( MX_bone->postTransformP(bone->pointE) );
+            *M_iter = 1 / bone->weight;
+            A_iter->zero();
         }
     else
-        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++a, ++weight)
+        for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++P_cur, ++P_old, ++A_iter, ++M_iter)
         {
-            *pos = *posOld = mLocationMatrix.preTransformP(bone->pointE);
-            *weight = 1 / bone->weight;
-            a->zero();
+            *P_old = *P_cur = MX_ModelToWorld.preTransformP( bone->pointE );
+            *M_iter = 1 / bone->weight;
+            A_iter->zero();
         }
 }
 
@@ -60,11 +60,11 @@ void SkeletizedObj :: DestroyVerletSystem()
 
 void SkeletizedObj :: UpdateVerletSystem()
 {
-    xIKNode  *bone   = xModelGr->spine.boneP;
-    xVector3 *pos    = verletSystem.positionOldP;
-    xMatrix  *mtx    = modelInstanceGr.bonesM;
-    for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++pos, ++mtx)
-        *pos   = mLocationMatrix.preTransformP( mtx->postTransformP(bone->pointE) );
+    xIKNode  *bone    = xModelGr->spine.boneP;
+    xVector3 *P_old   = verletSystem.P_previous;
+    xMatrix  *MX_bone = modelInstanceGr.bonesM;
+    for (int i = xModelGr->spine.boneC; i; --i, ++bone, ++P_old, ++MX_bone)
+        *P_old   = MX_ModelToWorld.preTransformP( MX_bone->postTransformP(bone->pointE) );
     verletSystem.SwapPositions();
 }
 

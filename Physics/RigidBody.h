@@ -6,9 +6,32 @@
 class RigidBody
 {
 public:
-    static float CalcPenetrationDepth(ModelObj *model, xVector3 &planeP, xVector3 &planeN);
-    static void  CalculateCollisions(ModelObj *model, float deltaTime);
-    static void  CalculateMovement(ModelObj *model, float deltaTime);
+    struct Contribution
+    {
+        xFLOAT contrib[4];
+    };
+
+    static Contribution GetParticleContribution(const xVector3 &N_plane_2,
+                                                const xVector3 *P_current,
+                                                const xVector3 &P_collision,
+                                                const xVector3 &P_collision_Local);
+    static Contribution GetParticleContribution(const xVector3 &P_collision_Local);
+    static void GetParticleSpeeds(xVector3 *V_speed, const xVector3 *P_current, const xVector3 *P_previous,
+                             xFLOAT T_step_SqrInv)
+    {
+        if (T_step_SqrInv > 0.f)
+        {
+            V_speed[0] = (P_current[0] - P_previous[0]) * T_step_SqrInv;
+            V_speed[1] = (P_current[1] - P_previous[1]) * T_step_SqrInv;
+            V_speed[2] = (P_current[2] - P_previous[2]) * T_step_SqrInv;
+            V_speed[3] = (P_current[3] - P_previous[3]) * T_step_SqrInv;
+        }
+        else
+            memset (V_speed, 0, sizeof(xVector3)*4);
+    }
+
+    static void  CalculateCollisions(ModelObj *model, float T_delta);
+    static void  CalculateMovement(ModelObj *model, float T_delta);
 };
 
 #endif

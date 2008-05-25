@@ -12,7 +12,7 @@ class Object3D
         virtual void RenderObject(bool transparent, const xFieldOfView &FOV) = 0;
 
     public:
-        xMatrix mLocationMatrix;
+        xMatrix MX_ModelToWorld;
 
         virtual ~Object3D() {}
 

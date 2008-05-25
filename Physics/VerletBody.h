@@ -6,20 +6,21 @@
 class VerletBody
 {
 public:
-    static void  CalculateCollisions(SkeletizedObj *model, float deltaTime);
-    static void  CalculateMovement(SkeletizedObj *model, float deltaTime);
+    static void  CalculateCollisions(SkeletizedObj *model, float T_delta);
+    static void  CalculateMovement(SkeletizedObj *model, float T_delta);
 
-    static xVector3 CalcCollisionSpeed( const xVector3 triangle[3], const xVector3 &collisionP,
+    static xVector3 GetCollisionSpeed( const xVector3 P_face[3], const xVector3 &P_collision,
                              const xElement &elem, const xFace &face,
                              const xVerletSystem &system );
 };
 
 
-struct TriangleWeights
+struct FaceWeights
 {
-    xFLOAT3 weight;
-    xFLOAT  Pmax;
+    xFLOAT3  S_vert;
+    xFLOAT   S_max;
+    xVector3 P_max;
 };
-TriangleWeights CalcPenetrationDepth(const xVector3 triangle[3], const xVector3 &planeP, const xVector3 &planeN);
+FaceWeights CalcPenetrationDepth(const xVector3 P_face[3], const xVector3 &P_plane, const xVector3 &N_plane);
 
 #endif

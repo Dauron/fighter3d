@@ -28,12 +28,12 @@ union xVector3 {
 //        memcpy(this, &source, sizeof(xVector3));
 //        return *this;
 //    }
-    void ToArray(xFLOAT3 arr)
-    {
+    void ToArray(xFLOAT3 arr) const {
         memcpy(arr, this, sizeof(xFLOAT3));
     }
 
     xFLOAT length() const {
+        if (isZero()) return 0.f;
         xFLOAT sqr = x*x + y*y + z*z;
         return sqr != 1.f ? sqrtf(sqr) : 1.f;
     }
@@ -105,10 +105,13 @@ union xVector3 {
         return b <= a;
     }
 
-    bool nearlyEqual (const xVector3 &vec) {
+    bool nearlyEqual (const xVector3 &vec) const {
         return fabs(x - vec.x) < EPSILON2 &&
                fabs(y - vec.y) < EPSILON2 &&
                fabs(z - vec.z) < EPSILON2;
+    }
+    bool isZero() const {
+        return (x == 0 && y == 0 && z == 0);
     }
     static xVector3 Normalize(const xVector3 &a) {
         xVector3 res = a;

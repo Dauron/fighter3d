@@ -762,29 +762,28 @@ void SceneSkeleton::MouseMove(int X, int Y)
 
                 vSystem.Free();
                 vSystem.Init(spine.boneC);
-                vSystem.constraintsLenEql = spine.boneConstrP;
-                vSystem.constraintsC = spine.constraintsC;
-                vSystem.constraintsP = spine.constraintsP;
+                vSystem.C_lengthConst = spine.boneConstrP;
+                vSystem.I_constraints = spine.constraintsC;
+                vSystem.C_constraints = spine.constraintsP;
                 vSystem.spine = &spine;
                 vEngine.Init(&vSystem);
-                vEngine.passesC = 10;
+                vEngine.I_passes = 10;
 
                 xIKNode  *bone = spine.boneP;
-                xVector3 *pos = vSystem.positionP, *posOld = vSystem.positionOldP;
-                xFLOAT   *weight = vSystem.weightP;
-                xMatrix  *mtx = Model.modelInstanceGr.bonesM;
-                for (int i = spine.boneC; i; --i, ++bone, ++pos, ++posOld, ++mtx, ++weight)
+                xVector3 *P_cur = vSystem.P_current, *P_old = vSystem.P_previous;
+                xFLOAT   *M_iter = vSystem.M_weight_Inv;
+                xMatrix  *MX_bone = Model.modelInstanceGr.bonesM;
+                for (int i = spine.boneC; i; --i, ++bone, ++P_cur, ++P_old, ++MX_bone, ++M_iter)
                 {
-                    *pos = *posOld = mtx->postTransformP(bone->pointE);
-                    *weight = 1 / bone->weight;
+                    *P_cur  = *P_old = MX_bone->postTransformP(bone->pointE);
+                    *M_iter = 1 / bone->weight;
                 }
 
-                vSystem.weightP[0] = 0.f;
-                vSystem.weightP[Selection.Bone->id] = 1.0f;
-                vSystem.positionP[Selection.Bone->id] = Get3dPos(X, Y, vSystem.positionP[Selection.Bone->id]);
+                vSystem.M_weight_Inv[0] = 0.f;
+                vSystem.P_current[Selection.Bone->id] = Get3dPos(X, Y, vSystem.P_current[Selection.Bone->id]);
                 vEngine.SatisfyConstraints();
 
-                spine.CalcQuats(vSystem.positionP, 0, xMatrix::Identity());
+                spine.CalcQuats(vSystem.P_current, 0, xMatrix::Identity());
             }
             Model.CalculateSkeleton();                                     // refresh model in GPU
         }

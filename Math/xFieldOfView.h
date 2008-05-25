@@ -32,7 +32,7 @@ public:
         Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, FrontClip);
         Corners3D[4].zero();
 
-        xMatrix mtxViewToWorld = xMatrix::Invert(ViewTransform);
+        xMatrix mtxViewToWorld; xMatrix::Invert(ViewTransform, mtxViewToWorld);
         Corners3D[0] = mtxViewToWorld.preTransformP(Corners3D[0]);
         Corners3D[1] = mtxViewToWorld.preTransformP(Corners3D[1]);
         Corners3D[2] = mtxViewToWorld.preTransformP(Corners3D[2]);
