@@ -275,7 +275,9 @@ void GLShader :: Load()
 
     slPointADS.Plain.Load("Point_DS_noTex.vert", "Point_ADS_noTex.frag");
     slPointADS.Textured.Load("Point_DS_Tex.vert", "Point_ADS_Tex.frag");
-    slPointADS.PlainSkeletal.Load("Point_DS_noTex_Skel.vert", "Point_ADS_noTex.frag");
+    //slPointADS.PlainSkeletal.Load("Point_DS_noTex_Skel.vert", "Point_ADS_noTex.frag");
+    // ATI compiler workaround
+    slPointADS.PlainSkeletal.Load("Point_DS_Tex_Skel.vert", "Point_ADS_noTex.frag");
     slPointADS.TexturedSkeletal.Load("Point_DS_Tex_Skel.vert", "Point_ADS_Tex.frag");
 
     slSpotA.Plain.Load("Spot_A_noTex.vert", "Spot_A_noTex.frag");

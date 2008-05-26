@@ -11,10 +11,10 @@ bool Application::Initialize(char *title, unsigned int width, unsigned int heigh
     if (!m_scene)
         throw "The scene cannot be null";
 
-    bool error = m_window->Initialize(title, width, height, fullscreen);
+    bool success = m_window->Initialize(title, width, height, fullscreen);
     if (OnApplicationInitialize) OnApplicationInitialize(this);
-    error |= m_scene->Initialize(0, 0, width, height);
-    return error;
+    success |= m_scene->Initialize(0, 0, width, height);
+    return success;
 }
 
 bool Application::SetCurrentScene(Scene* scene, bool destroyPrev)
