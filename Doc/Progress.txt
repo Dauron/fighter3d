@@ -1,0 +1,25 @@
+R19 - Poprawiona fizyka cia³ sztywnych (wyliczanie i uwzglêdnianie g³êbokoœci przebicia)
+R20 - Zastosowanie uproszczonych modeli 3d do przetwarzania fizyki
+R21 - Poprawione wyliczanie grup cieniowania
+R22 - Poprawa dzia³ania fizyki cia³a sztywnego (próba wyeliminowania drgañ spowodowanych
+   sta³¹ si³¹ dzia³aj¹c¹ w kierunku kolizji - rozwi¹zanie tylko dla si³y grawitacji)
+R23 - Wczytywanie map + mapa Dojo
+R24 - PrzeŸroczystoœci, dwustronne materia³y oraz cienie
+R25 - Niebo, optymalizacje cieni cz.1
+R26 - Dodanie sprawdzania pola widzenia (xFieldOfView). Rozdzielenie list i VBO na instancje (xElementInstance).
+R27 - Wstêp do shadow volumes, multipass lights
+R28 - Shadow Volumes prawie ok - dodaæ kilka optymalizacji i poprawiæ dziwny b³¹d przy ZFail
+R29 - Shadow Volumes ok, ale trzeba bêdzie jeszcze dodaæ kilka optymalizacji
+R30 - CaptureInput
+R31 - Porz¹dki
+R32 - Synchro do Linuxa, wstêpne optymalizacje Shadow Volumes, na razie mo¿na tak zostawiæ
+R33 - Wyspecjalizowane shadery dla ró¿nych typów œwiate³
+R34 - Dojo pre-final, porz¹dki w ModelObj i xRender
+R35 - xIKNode i IKEngine - wstêp
+R36 - Silnik ca³kuj¹cy Verlet'a
+R37 - Silnik ca³kuj¹cy Verlet'a - dodawanie ograniczeñ do modelu; Optymalizacje renderingu;
+   Rozbudowa formatu plików z mapami
+R38 - Zastosowanie silnika Verlet'a w rozgrywce - fizyka szkieletu 1
+R39 - Ograniczenia k¹towe dla silnika Verlet'a
+R40 - Zastosowanie silnika Verlet'a w rozgrywce - fizyka szkieletu 2 (vs. cia³o sztywne)
+R41 - Zastosowanie silnika Verlet'a w rozgrywce - Verlet dla cia³ sztywnych 1
