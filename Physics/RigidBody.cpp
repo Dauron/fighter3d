@@ -1,5 +1,5 @@
 #include "RigidBody.h"
-#include "VerletBody.h"
+#include "SkeletizedBody.h"
 
 RigidBody::Contribution RigidBody :: GetParticleContribution(const xVector3 &N_plane_2,
                                                              const xVector3 *P_current,
@@ -60,7 +60,7 @@ RigidBody::Contribution RigidBody :: GetParticleContribution(const xVector3 &P_c
 }
 
 
-void RigidBody :: CalculateCollisions(ModelObj *model, float T_delta)
+void RigidBody :: CalculateCollisions(RigidObj *model, float T_delta)
 {
     if (model->locked) return;
 
@@ -98,10 +98,10 @@ void RigidBody :: CalculateCollisions(ModelObj *model, float T_delta)
         for (int i = model->CollidedModels.size()-1; i >= 0; --i)
         {
             CollisionWithModel model_collision = model->CollidedModels[i];
-            ModelObj *model2 = model_collision.model2;
+            RigidObj *model2 = model_collision.model2;
             xMatrix  &MX_WorldToModel_2 = model2->MX_WorldToModel;
 
-            if (model2->Type != ModelObj::Model_Verlet && !model2->locked)
+            if (model2->Type != RigidObj::Model_Verlet && !model2->locked)
                 GetParticleSpeeds(V_speed_2, model2->verletSystem.P_current, model2->verletSystem.P_previous, T_step_SqrInv);
 
             xVector3 P_collision;   P_collision.zero();
@@ -129,8 +129,8 @@ void RigidBody :: CalculateCollisions(ModelObj *model, float T_delta)
                 N_mean_1 += N_plane_2;
                 N_mean_2 += N_plane_1;
 
-                if (!model2->locked && model2->Type == ModelObj::Model_Verlet)
-                    A_collision_2 += VerletBody::GetCollisionSpeed(collision.face2v, collision.colPoint,
+                if (!model2->locked && model2->Type == RigidObj::Model_Verlet)
+                    A_collision_2 += SkeletizedBody::GetCollisionSpeed(collision.face2v, collision.colPoint,
                         *collision.elem2, *collision.face2, model2->verletSystem);
             }
 
@@ -139,7 +139,7 @@ void RigidBody :: CalculateCollisions(ModelObj *model, float T_delta)
             P_collision   *= I_collCount_Inv;
             P_collision_1 *= I_collCount_Inv;
             P_collision_2 *= I_collCount_Inv;
-            if (!model2->locked && model2->Type == ModelObj::Model_Verlet)
+            if (!model2->locked && model2->Type == RigidObj::Model_Verlet)
                 A_collision_2 *= I_collCount_Inv * T_step_SqrInv / model->mass;
             N_mean_1.normalize();
             N_mean_2.normalize();
@@ -158,7 +158,7 @@ void RigidBody :: CalculateCollisions(ModelObj *model, float T_delta)
             // Force of the collision
             if (!model2->locked)
             {
-                if (model2->Type != ModelObj::Model_Verlet)
+                if (model2->Type != RigidObj::Model_Verlet)
                 {
                     xVector3 P_collision_2_Loc = MX_WorldToModel_2.preTransformP(P_collision_2) - model2->modelInstancePh.center;
                     Contribution W_particle_2 = GetParticleContribution(N_mean_2, model2->verletSystem.P_current,
@@ -222,13 +222,13 @@ void RigidBody :: CalculateCollisions(ModelObj *model, float T_delta)
     }
 }
 
-void RigidBody :: CalculateMovement(ModelObj *model, float T_delta)
+void RigidBody :: CalculateMovement(RigidObj *model, float T_delta)
 {
     model->CollidedModels.clear();
     if (model->locked) return;
 
     model->verletSystem.T_step = T_delta;
-    xVerletSolver engine;
+    VerletSolver engine;
     engine.Init(& model->verletSystem);
     engine.I_passes = 1;
     engine.VerletFull();

@@ -2,11 +2,11 @@
 #include "World.h"
 #include "../Utils/Filesystem.h"
 
-ModelObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
+RigidObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 {
     xVector3 rayEnd = rayPos + rayDir.normalize() * 1000.0f;
 
-    ModelObj *res = NULL;
+    RigidObj *res = NULL;
     xVector3  colPoint;
     float     colDist = 0.f, minDist = 0.f;
     bool      collided = false;
@@ -103,7 +103,7 @@ void World:: Load(const char *mapFileName)
         std::string dir = Filesystem::GetParentDir(mapFileName);
         char buffer[255];
         int  len;
-        ModelObj *model = NULL;
+        RigidObj *model = NULL;
         std::string fastModelFile;
 
         xLight light;
@@ -143,7 +143,7 @@ void World:: Load(const char *mapFileName)
                     mode = LoadMode_Model;
                     if (model != NULL)
                         objects.push_back(model);
-                    model = new ModelObj();
+                    model = new RigidObj();
                     fastModelFile.clear();
                     continue;
                 }
@@ -176,7 +176,7 @@ void World:: Load(const char *mapFileName)
                 if (StartsWith(buffer, "skybox"))
                 {
                     std::string modelFile = Filesystem::GetFullPath(dir + "/" + (buffer+7));
-                    skyBox = new ModelObj();
+                    skyBox = new RigidObj();
                     skyBox->Initialize(modelFile.c_str());
                     continue;
                 }

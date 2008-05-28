@@ -4,7 +4,7 @@
 #include "../Models/lib3dx/xUtils.h"
 #include <vector>
 
-class ModelObj;
+class RigidObj;
 
 struct Collisions
 {
@@ -20,7 +20,7 @@ struct Collisions
 
 struct CollisionWithModel
 {
-    ModelObj               *model2;
+    RigidObj               *model2;
     std::vector<Collisions> collisions;
 };
 

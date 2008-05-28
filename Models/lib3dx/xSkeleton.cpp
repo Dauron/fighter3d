@@ -36,7 +36,7 @@ void xSkeleton :: Clear()
     }
     if (C_constraints)
     {
-        xVConstraint **constr = C_constraints;
+        VConstraint **constr = C_constraints;
         for (; I_constraints; --I_constraints, ++constr)
             delete *constr;
         delete[] C_constraints;
@@ -75,13 +75,13 @@ void xSkeleton :: FillBoneConstraints()
     }
     if (I_bones)
     {
-        C_boneLength = new xVConstraintLengthEql[I_bones-1];
-        xVConstraintLengthEql *C_iter = C_boneLength;
+        C_boneLength = new VConstraintLengthEql[I_bones-1];
+        VConstraintLengthEql *C_iter = C_boneLength;
 
         xBone *bone = L_bones+1;
         for (int i = I_bones-1; i; --i, ++bone, ++C_iter)
         {
-            xVConstraintLengthEql &constraint = *C_iter;
+            VConstraintLengthEql &constraint = *C_iter;
             constraint.particleA     = bone->ID;
             constraint.particleB     = bone->ID_parent;
             constraint.restLength    = bone->S_length;
@@ -113,9 +113,9 @@ xSkeleton xSkeleton :: Clone() const
 
     if (this->I_constraints)
     {
-        res.C_constraints = new xVConstraint*[res.I_constraints];
-        xVConstraint **nodeS = this->C_constraints;
-        xVConstraint **nodeD = res.C_constraints;
+        res.C_constraints = new VConstraint*[res.I_constraints];
+        VConstraint **nodeS = this->C_constraints;
+        VConstraint **nodeD = res.C_constraints;
 
         for (int i = this->I_constraints; i; --i, ++nodeS, ++nodeD)
             (*nodeS)->CloneTo(*nodeD);
@@ -178,9 +178,9 @@ void xSkeleton :: Load( FILE *file )
     fread(&I_constraints, sizeof(xBYTE), 1, file);
     if (I_constraints)
     {
-        xVConstraint **C_iter = C_constraints = new xVConstraint*[I_constraints];
+        VConstraint **C_iter = C_constraints = new VConstraint*[I_constraints];
         for (int i = I_constraints; i; --i, ++C_iter)
-            *C_iter = xVConstraint::LoadType(file);
+            *C_iter = VConstraint::LoadType(file);
     }
     else
         C_constraints = NULL;
@@ -194,7 +194,7 @@ void xSkeleton :: Save( FILE *file ) const
         bone->Save(file);
 
     fwrite(&I_constraints, sizeof(xBYTE), 1, file);
-    xVConstraint **C_iter = C_constraints;
+    VConstraint **C_iter = C_constraints;
     for (int i = I_constraints; i; --i, ++C_iter)
         (*C_iter)->Save(file);
 }

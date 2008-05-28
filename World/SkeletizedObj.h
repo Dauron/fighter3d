@@ -1,21 +1,21 @@
 #ifndef __incl_SkeletizedObj_h
 #define __incl_SkeletizedObj_h
 
-#include "ModelObj.h"
+#include "RigidObj.h"
 #include "../Models/lib3dx/xAction.h"
 #include "../MotionCapture/CaptureInput.h"
 #include "../Multiplayer/NetworkInput.h"
 
-class SkeletizedObj : public ModelObj
+class SkeletizedObj : public RigidObj
 {
 public:
 
-    SkeletizedObj () : ModelObj(), verletQuaternions(NULL), ControlType(Control_AI) {}
+    SkeletizedObj () : RigidObj(), verletQuaternions(NULL), ControlType(Control_AI) {}
     SkeletizedObj (GLfloat x, GLfloat y, GLfloat z)
-      : ModelObj(x,y,z), verletQuaternions(NULL), ControlType(Control_AI) {}
+      : RigidObj(x,y,z), verletQuaternions(NULL), ControlType(Control_AI) {}
     SkeletizedObj (GLfloat x, GLfloat y, GLfloat z,
         GLfloat rotX, GLfloat rotY, GLfloat rotZ)
-      : ModelObj(x,y,z, rotX,rotY,rotZ), verletQuaternions(NULL), ControlType(Control_AI) {}
+      : RigidObj(x,y,z, rotX,rotY,rotZ), verletQuaternions(NULL), ControlType(Control_AI) {}
 
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL,
                              bool physicalNotLocked = false, bool phantom = true);

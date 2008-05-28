@@ -1,0 +1,23 @@
+/*
+
+ T_     time
+ S_     distance, length
+ V_     velocity
+ A_     acceleration
+ M_     mass
+ 
+ P_     point, position
+ N_     normal vector
+ NW_    vector (scaled normal)
+ MX_    matrix
+ QT_    quaternion
+ 
+ W_     weight, scale, amount
+
+ L_     list, table
+ I_     integer counter
+ ID_    identifier
+ FL_    flag
+ C_     constraint
+
+*/

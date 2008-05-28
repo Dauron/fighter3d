@@ -6,7 +6,7 @@
 
 #pragma warning(disable : 4996) // deprecated
 
-#include "../../OGL/Extensions/wglext.h"
+#include "../../Graphics/OGL/Extensions/wglext.h"
 
 bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen)
 {

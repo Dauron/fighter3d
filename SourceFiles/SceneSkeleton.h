@@ -3,14 +3,14 @@
 
 #include "../AppFramework/Scene.h"
 
-#include "../OGL/ISelectionProvider.h"
-#include "../OGL/GLButton.h"
-#include "../OGL/Fonts/FontMgr.h"
+#include "../Graphics/OGL/ISelectionProvider.h"
+#include "../Graphics/OGL/GLButton.h"
+#include "../Graphics/OGL/Fonts/FontMgr.h"
 
 #include "../Math/Cameras/CameraHuman.h"
 #include "../Math/Cameras/CameraFree.h"
 
-#include "../World/ModelObj.h"
+#include "../World/RigidObj.h"
 #include "../Models/lib3dx/xAnimation.h"
 
 #include <string>
@@ -51,10 +51,10 @@ class SceneSkeleton : public Scene, public ISelectionProvider
 
     Scene     * PrevScene;
     HFont       Font;
-    ModelObj    Model;
+    RigidObj    Model;
 
-    xVerletSystem vSystem;
-    xVerletSolver vEngine;
+    VerletSystem vSystem;
+    VerletSolver vEngine;
 
     char                              * KeyName_Accept;
     char                              * KeyName_Modify;

@@ -1,30 +1,30 @@
 #ifndef __incl_Text3d_h
 #define __incl_Text3d_h
 
-#include "../Object3D.h"
+#include "../BaseObj.h"
 #include "../../OpenGL/Fonts/FontMgr.h"
 #include <string>
 
-class Text3d : public Object3D
+class Text3d : public BaseObj
 {
 public:
-    Text3d (std::string text, HFont font) : Object3D(), Text(text), Font(font)
+    Text3d (std::string text, HFont font) : BaseObj(), Text(text), Font(font)
     { Initialize(); }
     Text3d (std::string text, HFont font, GLfloat x, GLfloat y, GLfloat z)
-      : Object3D(x,z,y), Text(text), Font(font)
+      : BaseObj(x,z,y), Text(text), Font(font)
     { Initialize(); }
     Text3d (std::string text, HFont font, GLfloat x, GLfloat y, GLfloat z,
          GLfloat rotX, GLfloat rotY, GLfloat rotZ)
-      : Object3D(x,z,y, rotX,rotZ,rotY), Text(text), Font(font)
+      : BaseObj(x,z,y, rotX,rotZ,rotY), Text(text), Font(font)
     { Initialize(); }
 
     virtual void SetPosition(GLfloat x, GLfloat y, GLfloat z)
     {
-        Object3D::SetPosition(x,z,y);
+        BaseObj::SetPosition(x,z,y);
     }
     virtual GLfloat *GetPosition()
     {
-        GLfloat *res = Object3D::GetPosition();
+        GLfloat *res = BaseObj::GetPosition();
         GLfloat tmp = res[3];
         res[2] = res[3];
         res[3] = tmp;
@@ -33,11 +33,11 @@ public:
 
     virtual void SetRotation(GLfloat rotX, GLfloat rotY, GLfloat rotZ)
     {
-        Object3D::SetRotation(rotX,rotZ,rotY);
+        BaseObj::SetRotation(rotX,rotZ,rotY);
     }
     virtual GLfloat *GetRotation()
     {
-        GLfloat *res = Object3D::GetRotation();
+        GLfloat *res = BaseObj::GetRotation();
         GLfloat tmp = res[3];
         res[2] = res[3];
         res[3] = tmp;

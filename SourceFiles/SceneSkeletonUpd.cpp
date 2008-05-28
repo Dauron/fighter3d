@@ -4,10 +4,10 @@
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
 #include "../Utils/Filesystem.h"
-#include "../Physics/Verlet/xVConstraintLengthEql.h"
-#include "../Physics/Verlet/xVConstraintLengthMin.h"
-#include "../Physics/Verlet/xVConstraintLengthMax.h"
-#include "../Physics/Verlet/xVConstraintAngular.h"
+#include "../Physics/Verlet/VConstraintLengthEql.h"
+#include "../Physics/Verlet/VConstraintLengthMin.h"
+#include "../Physics/Verlet/VConstraintLengthMax.h"
+#include "../Physics/Verlet/VConstraintAngular.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
@@ -540,9 +540,9 @@ void SceneSkeleton::MouseLUp(int X, int Y)
                     }
                     else
                     {
-                        xVConstraint** C_tmp = new xVConstraint*[spine.I_constraints-1];
-                        memcpy (C_tmp, spine.C_constraints, selectedConstr*sizeof(xVConstraint*));
-                        memcpy (C_tmp+selectedConstr, spine.C_constraints+selectedConstr+1, (spine.I_constraints-selectedConstr-1)*sizeof(xVConstraint*));
+                        VConstraint** C_tmp = new VConstraint*[spine.I_constraints-1];
+                        memcpy (C_tmp, spine.C_constraints, selectedConstr*sizeof(VConstraint*));
+                        memcpy (C_tmp+selectedConstr, spine.C_constraints+selectedConstr+1, (spine.I_constraints-selectedConstr-1)*sizeof(VConstraint*));
                         delete spine.C_constraints[selectedConstr];
                         delete[] spine.C_constraints;
                         spine.C_constraints = C_tmp;
@@ -874,7 +874,7 @@ void SceneSkeleton::GetConstraintParams()
         else
             len = Constraint.angles[Constraint.step];
 
-        xVConstraint *constr;
+        VConstraint *constr;
         if (Constraint.type == IC_BE_CreateConstrAng)
         {
             Constraint.angles[Constraint.step] = len;
@@ -886,7 +886,7 @@ void SceneSkeleton::GetConstraintParams()
                 return;
             }
 
-            xVConstraintAngular *res = new xVConstraintAngular();
+            VConstraintAngular *res = new VConstraintAngular();
             xBone *bone = Model.GetModelGr()->spine.L_bones + Constraint.boneA;
             xBone *root;
             if (bone->ID_parent != 0)
@@ -927,7 +927,7 @@ void SceneSkeleton::GetConstraintParams()
         else
         if (Constraint.type == IC_BE_CreateConstrEql)
         {
-            xVConstraintLengthEql *res = new xVConstraintLengthEql();
+            VConstraintLengthEql *res = new VConstraintLengthEql();
             res->particleA     = Constraint.boneA;
             res->particleB     = Constraint.boneB;
             res->restLength    = len;
@@ -937,7 +937,7 @@ void SceneSkeleton::GetConstraintParams()
         else
         if (Constraint.type == IC_BE_CreateConstrMin)
         {
-            xVConstraintLengthMin *res = new xVConstraintLengthMin();
+            VConstraintLengthMin *res = new VConstraintLengthMin();
             res->particleA     = Constraint.boneA;
             res->particleB     = Constraint.boneB;
             res->minLength    = len;
@@ -947,7 +947,7 @@ void SceneSkeleton::GetConstraintParams()
         else
         if (Constraint.type == IC_BE_CreateConstrMax)
         {
-            xVConstraintLengthMax *res = new xVConstraintLengthMax();
+            VConstraintLengthMax *res = new VConstraintLengthMax();
             res->particleA     = Constraint.boneA;
             res->particleB     = Constraint.boneB;
             res->maxLength    = len;
@@ -961,13 +961,13 @@ void SceneSkeleton::GetConstraintParams()
         if (!spine.I_constraints)
         {
             spine.I_constraints = 1;
-            spine.C_constraints = new xVConstraint*[1];
+            spine.C_constraints = new VConstraint*[1];
             spine.C_constraints[0] = constr;
         }
         else
         {
-            xVConstraint** C_tmp = new xVConstraint*[spine.I_constraints+1];
-            memcpy (C_tmp, spine.C_constraints, spine.I_constraints*sizeof(xVConstraint*));
+            VConstraint** C_tmp = new VConstraint*[spine.I_constraints+1];
+            memcpy (C_tmp, spine.C_constraints, spine.I_constraints*sizeof(VConstraint*));
             C_tmp[spine.I_constraints] = constr;
             delete[] spine.C_constraints;
             spine.C_constraints = C_tmp;

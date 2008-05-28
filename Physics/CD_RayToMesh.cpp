@@ -193,7 +193,7 @@ bool CD_RayToMesh::CollideElements(xCollisionHierarchyBoundsRoot *&ci, xElement 
     return res;
 }
 
-bool CD_RayToMesh::Collide(ModelObj *model,
+bool CD_RayToMesh::Collide(RigidObj *model,
                            xVector3 &rayB, xVector3 &rayE,
                            xVector3 &colPoint, float &colDist)
 {

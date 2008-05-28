@@ -2,7 +2,7 @@
 
 #include "../AppFramework/Input/InputMgr.h"
 #include "../Utils/Filesystem.h"
-#include "../OGL/GLShader.h"
+#include "../Graphics/OGL/GLShader.h"
 
 SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName)
 {

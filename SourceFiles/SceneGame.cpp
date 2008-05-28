@@ -6,10 +6,10 @@
 #include "../AppFramework/Input/InputMgr.h"
 #include "../Math/Cameras/CameraHuman.h"
 
-#include "../OGL/GLShader.h"
-#include "../OGL/Extensions/EXT_stencil_wrap.h"
-#include "../OGL/Extensions/EXT_stencil_two_side.h"
-#include "../OGL/Extensions/ARB_multisample.h"
+#include "../Graphics/OGL/GLShader.h"
+#include "../Graphics/OGL/Extensions/EXT_stencil_wrap.h"
+#include "../Graphics/OGL/Extensions/EXT_stencil_two_side.h"
+#include "../Graphics/OGL/Extensions/ARB_multisample.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
@@ -205,7 +205,7 @@ bool SceneGame::Update(float deltaTime)
         glMatrixMode(GL_MODELVIEW);
         DefaultCamera->LookAtMatrix(FOV.ViewTransform);
         glLoadMatrixf(&FOV.ViewTransform.x0);
-        ModelObj *obj = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
+        RigidObj *obj = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
             g_Application.SetCurrentScene(new SceneSkeleton(/*this*/ &g_Application.CurrentScene(),
                 obj->GetModelGr()->fileName, obj->GetModelPh()->fileName), false);
@@ -224,7 +224,7 @@ bool SceneGame::Update(float deltaTime)
         rayDir = rayDir * modelView;
         xVector3 rayPos = (xVector4(0.0f,0.0f,0.0f,1.0f)*modelView).vector3;
 
-        ModelObj *obj = world.CollideWithRay(rayPos, -rayDir);
+        RigidObj *obj = world.CollideWithRay(rayPos, -rayDir);
         if (obj)
             g_Application.SetCurrentScene(new SceneSkeleton(this, obj->GetName()), false);
 */
@@ -480,7 +480,7 @@ bool SceneGame::Render()
             GLShader::Start();
             for ( i = begin ; i != end ; ++i )
             {
-                ModelObj &model = **i;
+                RigidObj &model = **i;
                 model.renderer.RenderSkeleton(*model.GetModelGr(), model.modelInstanceGr, xWORD_MAX);
             }
             GLShader::Suspend();
@@ -606,7 +606,7 @@ void SceneGame :: RenderSelect(const xFieldOfView *FOV)
     World::xObjectVector::iterator iter = world.objects.begin(), end = world.objects.end();
     for ( ; iter != end ; ++iter ) {
         glLoadName(++objectID);
-        ModelObj &mdl = **iter;
+        RigidObj &mdl = **iter;
         mdl.renderer.RenderVertices(*mdl.GetModelGr(), mdl.modelInstanceGr, Renderer::smModel);
     }
 }

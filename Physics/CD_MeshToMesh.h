@@ -1,7 +1,7 @@
 #ifndef __incl_Physics_CD_MeshToMesh_h
 #define __incl_Physics_CD_MeshToMesh_h
 
-#include "../World/ModelObj.h"
+#include "../World/RigidObj.h"
 
 class CD_MeshToMesh
 {
@@ -9,8 +9,8 @@ class CD_MeshToMesh
 #define determinant(vA, vB, vC)                     (vA->x-vC->x)*(vB->y-vC->y)-(vA->y-vC->y)*(vB->x-vC->x)
 #define sgn(a)                                      ((a) > 0 ? 1 : ( (a) < 0 ? -1 : 0 ));
 
-    ModelObj *model1;
-    ModelObj *model2;
+    RigidObj *model1;
+    RigidObj *model2;
 
     CollisionWithModel *collidedModel1;
     CollisionWithModel *collidedModel2;
@@ -34,7 +34,7 @@ class CD_MeshToMesh
 
 public:
 
-    bool Collide(ModelObj *model1, ModelObj *model2)
+    bool Collide(RigidObj *model1, RigidObj *model2)
     {
         xCollisionHierarchyBoundsRoot *ci1 = model1->GetCollisionInfo()-1;
         xCollisionHierarchyBoundsRoot *ci2 = model2->GetCollisionInfo()-1;

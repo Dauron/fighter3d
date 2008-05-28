@@ -1,11 +1,11 @@
 #include "SkeletizedObj.h"
-#include "../Physics/VerletBody.h"
+#include "../Physics/SkeletizedBody.h"
 
 void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filename,
                                   bool physicalNotLocked, bool phantom)
 {
     forceNotStatic = true;
-    ModelObj::Initialize(gr_filename, ph_filename);
+    RigidObj::Initialize(gr_filename, ph_filename);
     Type = Model_Verlet;
 
     resilience = 0.2f;
@@ -13,7 +13,7 @@ void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filena
 
 void SkeletizedObj :: Finalize ()
 {
-    ModelObj::Finalize();
+    RigidObj::Finalize();
     if (actions.actions.size())
     {
         std::vector<xAction>::iterator iterF = actions.actions.begin(), iterE = actions.actions.end();
@@ -80,12 +80,12 @@ void SkeletizedObj :: AddAnimation(const char *fileName, xDWORD startTime, xDWOR
 
 void SkeletizedObj:: PreUpdate(float deltaTime)
 {
-    VerletBody::CalculateCollisions(this, deltaTime);
+    SkeletizedBody::CalculateCollisions(this, deltaTime);
 }
 
 void SkeletizedObj :: Update(float deltaTime)
 {
-    VerletBody::CalculateMovement(this, deltaTime);
+    SkeletizedBody::CalculateMovement(this, deltaTime);
     CollidedModels.clear();
 
     xVector4 *bones = NULL, *bones2 = NULL;
@@ -101,8 +101,8 @@ void SkeletizedObj :: Update(float deltaTime)
     }
     if (ControlType == Control_CaptureInput)
         bones2 = g_CaptureInput.GetTransformations();
-    if (ControlType == Control_NetworkInput)
-        bones2 = g_NetworkInput.GetTransformations();
+    //if (ControlType == Control_NetworkInput)
+    //    bones2 = g_NetworkInput.GetTransformations();
 
     if (bones2)
         if (bones)

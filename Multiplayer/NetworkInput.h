@@ -1,12 +1,9 @@
 #ifndef __incl_MotionCapture_NetworkInput_h
 #define __incl_MotionCapture_NetworkInput_h
 
-#include "../Utils/Singleton.h"
 #include "../Models/lib3dx/xSkeleton.h"
 
-#define g_NetworkInput NetworkInput::GetSingleton()
-
-class NetworkInput : public Singleton<NetworkInput>
+class NetworkInput
 {
 private:
     const xSkeleton *spine;
@@ -39,11 +36,6 @@ public:
 
     NetworkInput() {}
    ~NetworkInput() {}
-
-private:
-     // disable copy constructor & assignment operator
-    NetworkInput(const CaptureInput&) {}
-    NetworkInput& operator=(const CaptureInput&) { return *this; }
 };
 
 #endif

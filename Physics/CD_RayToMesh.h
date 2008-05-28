@@ -1,7 +1,7 @@
 #ifndef __incl_Physics_CDRayToMesh_h
 #define __incl_Physics_CDRayToMesh_h
 
-#include "../World/ModelObj.h"
+#include "../World/RigidObj.h"
 
 class CD_RayToMesh
 {
@@ -26,7 +26,7 @@ class CD_RayToMesh
 
 public:
 
-    bool Collide(ModelObj *model,
+    bool Collide(RigidObj *model,
                  xVector3 &rayB, xVector3 &rayE,
                  xVector3 &colPoint, float &colDist);
 };

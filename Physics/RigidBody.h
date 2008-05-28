@@ -1,7 +1,7 @@
 #ifndef __incl_Physics_RigidBody_h
 #define __incl_Physics_RigidBody_h
 
-#include "../World/ModelObj.h"
+#include "../World/RigidObj.h"
 
 class RigidBody
 {
@@ -30,8 +30,8 @@ public:
             memset (V_speed, 0, sizeof(xVector3)*4);
     }
 
-    static void  CalculateCollisions(ModelObj *model, float T_delta);
-    static void  CalculateMovement(ModelObj *model, float T_delta);
+    static void  CalculateCollisions(RigidObj *model, float T_delta);
+    static void  CalculateMovement(RigidObj *model, float T_delta);
 };
 
 #endif

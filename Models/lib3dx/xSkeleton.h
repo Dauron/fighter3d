@@ -2,7 +2,7 @@
 #define __incl_lib3dx_xSkeleton_h
 
 #include "../../Math/xMath.h"
-#include "../../Physics/Verlet/xVConstraintLengthEql.h"
+#include "../../Physics/Verlet/VConstraintLengthEql.h"
 #include "xBone.h"
 
 struct xSkeleton
@@ -10,8 +10,8 @@ struct xSkeleton
     xBone *L_bones;
     xBYTE  I_bones;
 
-    xVConstraintLengthEql *C_boneLength;
-    xVConstraint         **C_constraints;
+    VConstraintLengthEql  *C_boneLength;
+    VConstraint          **C_constraints;
     xBYTE                  I_constraints;
 
     void      Clear();

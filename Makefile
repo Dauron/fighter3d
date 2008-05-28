@@ -5,17 +5,20 @@ OUTPUT = fighter
 OUTPUTDBG = fighter_dbg
 SOURCE = ./Config.cpp \
          ./App\ Framework/*.cpp \
-         ./App\ Framework/GL/*.cpp \
+         ./App\ Framework/OGL/*.cpp \
          ./App\ Framework/Input/*.cpp \
-         ./GLExtensions/*.cpp \
+         ./Graphics/*.cpp \
+         ./Graphics/OGL/*.cpp \
+         ./Graphics/OGL/Extensions/*.cpp \
+         ./Graphics/OGL/Fonts/*.cpp \
+         ./Graphics/OGL/Render/*.cpp \
+         ./Graphics/OGL/Textures/*.cpp \
          ./Math/*.cpp \
          ./Math/Cameras/*.cpp \
          ./Models/*.cpp \
          ./Models/lib3dx/*.cpp \
-         ./OpenGL/*.cpp \
-         ./OpenGL/Fonts/*.cpp \
-         ./OpenGL/Textures/*.cpp \
          ./Physics/*.cpp \
+         ./Physics/Verlet/*.cpp \
          ./Source\ Files/*.cpp \
          ./Utils/*.cpp \
          ./World/*.cpp

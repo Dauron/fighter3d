@@ -1,18 +1,18 @@
 #ifndef __incl_Crate_h
 #define __incl_Crate_h
 
-#include "../Object3D.h"
+#include "../BaseObj.h"
 #include "../../OpenGL/Textures/TextureMgr.h"
 
-class Crate : public Object3D
+class Crate : public BaseObj
 {
 public:
-      Crate () : Object3D() {}
+      Crate () : BaseObj() {}
       Crate (GLfloat x, GLfloat y, GLfloat z)
-          : Object3D(x,y,z+0.64f) {}
+          : BaseObj(x,y,z+0.64f) {}
       Crate (GLfloat x, GLfloat y, GLfloat z,
              GLfloat rotX, GLfloat rotY, GLfloat rotZ)
-          : Object3D(x,y,z+0.64f, rotX,rotY,rotZ) {}
+          : BaseObj(x,y,z+0.64f, rotX,rotY,rotZ) {}
 
       ~Crate ()
       {
@@ -21,11 +21,11 @@ public:
 
       virtual void SetPosition(GLfloat x, GLfloat y, GLfloat z)
       {
-          Object3D::SetPosition(x,y,z+0.64f);
+          BaseObj::SetPosition(x,y,z+0.64f);
       }
       virtual GLfloat *GetPosition()
       {
-          GLfloat *res = Object3D::GetPosition();
+          GLfloat *res = BaseObj::GetPosition();
           res[2] -= 0.64f;
           return res;
       }

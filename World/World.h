@@ -8,12 +8,12 @@
 class World
 {
 public:
-    typedef std::vector<ModelObj*> xObjectVector;
+    typedef std::vector<RigidObj*> xObjectVector;
 
     xObjectVector objects;
     xLightVector  lights;
 
-    ModelObj *skyBox;
+    RigidObj *skyBox;
 
 private:
     CD_MeshToMesh cd_MeshToMesh;
@@ -23,7 +23,7 @@ public:
 
     World( void ) : skyBox(NULL) {}
 
-    ModelObj *CollideWithRay(xVector3 rayPos, xVector3 rayDir);
+    RigidObj *CollideWithRay(xVector3 rayPos, xVector3 rayDir);
 
     void Initialize ();
     void Update     (float deltaTime);

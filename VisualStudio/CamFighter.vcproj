@@ -506,244 +506,6 @@
 			</Filter>
 		</Filter>
 		<Filter
-			Name="OGL"
-			>
-			<File
-				RelativePath="..\OGL\GLAnimSkeletal.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\OGL\GLAnimSkeletal.h"
-				>
-			</File>
-			<File
-				RelativePath="..\OGL\GLButton.h"
-				>
-			</File>
-			<File
-				RelativePath="..\OGL\GLShader.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\OGL\GLShader.h"
-				>
-			</File>
-			<File
-				RelativePath="..\OGL\ISelectionProvider.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\OGL\ISelectionProvider.h"
-				>
-			</File>
-			<File
-				RelativePath="..\OGL\ogl.h"
-				>
-			</File>
-			<File
-				RelativePath="..\OGL\Utils.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						ObjectFile="$(IntDir)\$(InputName)1.obj"
-						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\OGL\Utils.h"
-				>
-			</File>
-			<Filter
-				Name="Textures"
-				>
-				<File
-					RelativePath="..\OGL\Textures\BMPFile.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Textures\ImageFile.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Textures\Texture.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Textures\Texture.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Textures\TextureMgr.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Textures\TextureMgr.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Textures\TGAFile.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Fonts"
-				>
-				<File
-					RelativePath="..\OGL\Fonts\FontMgr.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Fonts\FontMgr.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Fonts\GLFont.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Fonts\GLFont.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Render"
-				>
-				<File
-					RelativePath="..\OGL\Render\RendererGL.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Render\RendererGL.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Render\RendererGLAmbient.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Render\RendererGLDepth.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Render\RendererGLDiffuse.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Render\RendererGLShadow.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Render\RendererGLShadowV.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Render\RendererGLSkeleton.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Extensions"
-				>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_fragment_shader.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_fragment_shader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_multisample.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_multisample.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_multitexture.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_multitexture.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_shader_objects.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_shader_objects.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_vertex_buffer_object.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_vertex_buffer_object.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_vertex_shader.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\ARB_vertex_shader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\EXT_stencil_two_side.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\EXT_stencil_two_side.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\EXT_stencil_wrap.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\EXT_stencil_wrap.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\EXT_texture3D.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\EXT_texture3D.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\GLExtensions.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\GLExtensions.h"
-					>
-				</File>
-				<File
-					RelativePath="..\OGL\Extensions\wglext.h"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
 			Name="Utils"
 			>
 			<File
@@ -875,19 +637,19 @@
 			Name="World"
 			>
 			<File
-				RelativePath="..\World\ModelObj.cpp"
+				RelativePath="..\World\BaseObj.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\World\ModelObj.h"
+				RelativePath="..\World\BaseObj.h"
 				>
 			</File>
 			<File
-				RelativePath="..\World\Object3D.cpp"
+				RelativePath="..\World\RigidObj.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\World\Object3D.h"
+				RelativePath="..\World\RigidObj.h"
 				>
 			</File>
 			<File
@@ -1151,70 +913,70 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Physics\VerletBody.cpp"
+				RelativePath="..\Physics\SkeletizedBody.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Physics\VerletBody.h"
+				RelativePath="..\Physics\SkeletizedBody.h"
 				>
 			</File>
 			<Filter
 				Name="Verlet"
 				>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraint.cpp"
+					RelativePath="..\Physics\Verlet\VConstraint.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraint.h"
+					RelativePath="..\Physics\Verlet\VConstraint.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintAngular.cpp"
+					RelativePath="..\Physics\Verlet\VConstraintAngular.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintAngular.h"
+					RelativePath="..\Physics\Verlet\VConstraintAngular.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintCollision.cpp"
+					RelativePath="..\Physics\Verlet\VConstraintCollision.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintCollision.h"
+					RelativePath="..\Physics\Verlet\VConstraintCollision.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintLengthEql.cpp"
+					RelativePath="..\Physics\Verlet\VConstraintLengthEql.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintLengthEql.h"
+					RelativePath="..\Physics\Verlet\VConstraintLengthEql.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintLengthMax.cpp"
+					RelativePath="..\Physics\Verlet\VConstraintLengthMax.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintLengthMax.h"
+					RelativePath="..\Physics\Verlet\VConstraintLengthMax.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintLengthMin.cpp"
+					RelativePath="..\Physics\Verlet\VConstraintLengthMin.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVConstraintLengthMin.h"
+					RelativePath="..\Physics\Verlet\VConstraintLengthMin.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVerletSolver.cpp"
+					RelativePath="..\Physics\Verlet\VerletSolver.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Physics\Verlet\xVerletSolver.h"
+					RelativePath="..\Physics\Verlet\VerletSolver.h"
 					>
 				</File>
 			</Filter>
@@ -1344,6 +1106,244 @@
 				RelativePath="..\Graphics\ShadowVolume.h"
 				>
 			</File>
+			<Filter
+				Name="OGL"
+				>
+				<File
+					RelativePath="..\Graphics\OGL\GLAnimSkeletal.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GLAnimSkeletal.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GLButton.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GLShader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GLShader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\ISelectionProvider.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\ISelectionProvider.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\ogl.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\Utils.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\Utils.h"
+					>
+				</File>
+				<Filter
+					Name="Extensions"
+					>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_fragment_shader.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_fragment_shader.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_multisample.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_multisample.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_multitexture.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_multitexture.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_shader_objects.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_shader_objects.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_vertex_buffer_object.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_vertex_buffer_object.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_vertex_shader.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\ARB_vertex_shader.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\EXT_stencil_two_side.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\EXT_stencil_two_side.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\EXT_stencil_wrap.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\EXT_stencil_wrap.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\EXT_texture3D.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\EXT_texture3D.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\GLExtensions.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\GLExtensions.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Extensions\wglext.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Fonts"
+					>
+					<File
+						RelativePath="..\Graphics\OGL\Fonts\FontMgr.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Fonts\FontMgr.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Fonts\GLFont.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Fonts\GLFont.h"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Renderer"
+					>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGL.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGL.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGLAmbient.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGLDepth.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGLDiffuse.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGLShadowM.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGLShadowV.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGLSkeleton.cpp"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="Textures"
+					>
+					<File
+						RelativePath="..\Graphics\OGL\Textures\BMPFile.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Textures\ImageFile.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Textures\Texture.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Textures\Texture.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Textures\TextureMgr.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Textures\TextureMgr.h"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Textures\TGAFile.cpp"
+						>
+					</File>
+				</Filter>
+			</Filter>
 		</Filter>
 		<File
 			RelativePath="..\Config.cpp"
