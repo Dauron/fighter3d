@@ -113,7 +113,7 @@ void SkeletizedObj :: Update(float deltaTime)
         else
             bones = bones2;
 
-    if (!bones)
+    if (false && !bones)
     {
         bones = new xVector4[modelInstanceGr.bonesC];
         for (int i = 0; i < modelInstanceGr.bonesC; ++i)

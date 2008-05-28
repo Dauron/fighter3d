@@ -35,8 +35,13 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient.xyzw);
 
     /************************** PREPARE LST  ****************************/
-    xDWORD &listID    = transparent ? elem->renderData.gpuMain.listIDTransp : elem->renderData.gpuMain.listID;
-    xDWORD &listIDTex = transparent ? elem->renderData.gpuMain.listIDTexTransp : elem->renderData.gpuMain.listIDTex;
+    xDWORD &listID    = elem->skeletized
+        ? transparent ? instance.gpuMain.listIDTransp : instance.gpuMain.listID
+        : transparent ? elem->renderData.gpuMain.listIDTransp : elem->renderData.gpuMain.listID;
+    xDWORD &listIDTex = elem->skeletized
+        ? transparent ? instance.gpuMain.listIDTexTransp : instance.gpuMain.listIDTex
+        : transparent ? elem->renderData.gpuMain.listIDTexTransp : elem->renderData.gpuMain.listIDTex;
+    xGPURender::Mode &mode = elem->skeletized ? instance.mode : elem->renderData.mode;
     bool textured = false;
 
     if (elem->skeletized)
@@ -44,7 +49,7 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
 
     if (!listID)
     {
-        elem->renderData.mode = xGPURender::LIST;
+        mode = xGPURender::LIST;
         glNewList(listID = glGenLists(1), GL_COMPILE);
 
         if (elem->skeletized) {
@@ -168,11 +173,13 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
     xColor ambient; ambient.zeroQ();
     xLightVector::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
+    {
         if (iterL->elementReceivesLight(center, instance.bsRadius))
         {
             ambient.vector3 += iterL->ambient.vector3;
             ++lightsC;
         }
+    }
     if (!lightsC) return;
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient.xyzw);
 

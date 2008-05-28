@@ -15,7 +15,7 @@ softness	0.3
 position	0	0	10
 
 # red
-[light]
+[skip light]
 type	SPOT
 att_const	1
 att_linear	0.0004
@@ -28,7 +28,7 @@ spot_cut	45
 spot_att	1
 
 # night sky
-[light]
+[skip light]
 type	INFINITE
 color	0.05	0.05	0.05
 softness	0.8
@@ -94,37 +94,39 @@ mass	60
 shadows 1
 
 [skeletized]
-fastm	human2_fst.3dx
-model	human2.3dx
-rotation	0	0	170
-position	-0.3	-3.2	-0.2
-physical	0
-phantom	0
-mass	70
-shadows 1
+skip fastm	human2_fst.3dx
+model	human2_fst2.3dx
+rotation  0 0 170
+position  -0.3 -3.2 -0.2
+physical  1
+locked	  0
+phantom   0
+mass      70
+shadows   0
 animation	anims/human/yoko-geri2.ska	4000	5300
 animation	anims/human/garda.ska	0	0
 
 [skeletized]
-fastm	human2_fst.3dx
-model	human2.3dx
-position	-0.5	-1.5	-0.2
-physical	0
-phantom	0
-mass	70
-shadows 1
+skip fastm	human2_fst.3dx
+model	human2_fst.3dx
+position  -0.5 -2 -0.2
+physical  1
+locked	  0
+phantom	  0
+mass	  70
+shadows   0
 animation	anims/human/garda.ska	0	4700
 animation	anims/human/skulony.ska	4700	4700
 animation	anims/human/kiwa_sie.ska	4700	4700
 
 [skeletized]
-fastm	human2_fst.3dx
-model	human2.3dx
+skip fastm	human2_fst.3dx
+model	human2_fst.3dx
 position	4.5	-1.5	-0.2
 physical	0
 phantom	0
 mass	70
-shadows 1
+shadows 0
 camera_controled
 
 

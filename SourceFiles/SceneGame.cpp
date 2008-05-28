@@ -276,6 +276,7 @@ bool SceneGame::Render()
         m_Font2 = g_FontMgr.GetFont("Courier New", 15);
 
     static xLight dayLight;
+    static xLightVector dayLightVec;
 
     if (Config::Initialize)
     {
@@ -286,14 +287,17 @@ bool SceneGame::Render()
     if (dayLight.id == 0)
     {
         dayLight.create();
-        dayLight.modified = true;
         dayLight.turned_on = true;
         dayLight.color.init(0.9f, 0.9f, 1.f, 1.f);
         dayLight.softness = 0.4f;
-        dayLight.position.init(-20.f, 20.f, 100.f);
-        dayLight.type = xLight_INFINITE;
-        dayLight.attenuationLinear = 0.f;
-        dayLight.attenuationSquare = 0.f;
+        //dayLight.position.init(-20.f, 20.f, 100.f);
+        dayLight.position.init(0.f, 0.f, 10.f);
+        dayLight.type = xLight_POINT;
+        dayLight.attenuationConst  = 0.9f;
+        dayLight.attenuationLinear = 0.005f;
+        dayLight.attenuationSquare = 0.0005f;
+        dayLight.update();
+        dayLightVec.push_back(dayLight);
     }
 
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
@@ -472,7 +476,7 @@ bool SceneGame::Render()
             glDisable(GL_LIGHT0);
             for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
             GLShader::Suspend();
-
+/*
             GLShader::EnableTexturing(xState_Disable);
             GLShader::SetLightType(xLight_NONE);
             GLShader::Start();
@@ -482,20 +486,24 @@ bool SceneGame::Render()
                 model.renderer.RenderSkeleton(*model.GetModelGr(), model.modelInstanceGr, xWORD_MAX);
             }
             GLShader::Suspend();
+*/
         }
         else
         {
             ////// RENDER GLOBAL AMBIENT PASS
-            dayLight.update();
 
             //if (GLExtensions::Exists_ARB_Multisample)
             //    glEnable(GL_MULTISAMPLE_ARB);
+            glEnable   (GL_DEPTH_TEST);
             glDepthMask(1);
-            glDepthFunc(GL_LEQUAL);
+            glDepthFunc(GL_LESS);
+            glEnable   (GL_CULL_FACE);
+            glCullFace (GL_BACK);
             glColorMask(1,1,1,1);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false);
+            glDisable(GL_BLEND);
             glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
+            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(dayLightVec, FOV, false);
 
             ////// RENDER SHADOWS AND LIGHTS
             glDepthMask(0);
@@ -527,7 +535,7 @@ bool SceneGame::Render()
                 GLShader::Suspend();
                 for ( i = begin ; i != end ; ++i )
                     if ((*i)->castsShadows)
-                        (*i)->RenderShadowVolume(dayLight, FOV);
+                        (*i)->RenderShadowVolume(*dayLightVec.begin(), FOV);
             }
 
             ////// ILLUMINATION PASS
@@ -544,9 +552,9 @@ bool SceneGame::Render()
             glEnable(GL_BLEND);                 // add light contribution to frame buffer
             glBlendFunc(GL_ONE, GL_ONE);
             GLShader::EnableTexturing(xState_Enable);
-            SetLight(*light, false, true, true);
+            SetLight(dayLight, false, true, true);
             glEnable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) (*i)->RenderDiffuse(dayLight, FOV, false);
+            for ( i = begin ; i != end ; ++i ) (*i)->RenderDiffuse(*dayLightVec.begin(), FOV, false);
 
             dayLight.modified = false;
 
@@ -560,7 +568,7 @@ bool SceneGame::Render()
             GLShader::EnableTexturing(xState_Enable);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
             glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
+            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(dayLightVec, FOV, true);
             GLShader::Suspend();
         }
     else

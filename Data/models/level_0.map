@@ -34,7 +34,7 @@ mass        20
 
 [skeletized]
 skip fastm	human2_fst.3dx
-model	human2_fst.3dx
+model	human2_fst2.3dx
 rotation    0 0 170
 position    -0.3 -3.1 -0.2
 physical    1
@@ -55,6 +55,7 @@ locked      0
 phantom     0
 mass        70
 shadows     0
+skip animation	anims/human/stoi.ska 0 0
 skip animation	anims/human/garda.ska	0	4700
 skip animation	anims/human/skulony.ska	4700	4700
 skip animation	anims/human/kiwa_sie.ska	4700	4700

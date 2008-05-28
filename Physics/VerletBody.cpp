@@ -144,13 +144,12 @@ void VerletBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                         A_collision_2  = V_speed_2[0] * W_particle_2.contrib[0] + V_speed_2[1] * W_particle_2.contrib[1] +
                                          V_speed_2[2] * W_particle_2.contrib[2] + V_speed_2[3] * W_particle_2.contrib[3];
                         A_collision -= A_collision_2;
-                        //A_collision_2  = MX_WorldToModel_1.preTransformV(A_collision_2 * (model2->mass / model->mass));
                     }
                     else
                     if (T_step_SqrInv > 0.f)
                     {
                         A_collision_2 = VerletBody::GetCollisionSpeed(collision.face2v, collision.colPoint,
-                            *collision.elem2, *collision.face2, model2->verletSystem) * T_step_SqrInv;
+                            *collision.elem2, *collision.face2, model2->verletSystem) * T_step_SqrInv * 20;
                         A_collision -= A_collision_2;
                         //A_collision_2 = MX_WorldToModel_1.preTransformV(A_collision_2 * (model2->mass / model->mass));
                     }
@@ -195,7 +194,7 @@ void VerletBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                     constr.planeD = -(P_plane.x*N_collision.x + P_plane.y*N_collision.y + P_plane.z*N_collision.z);
                     model->collisionConstraints.push_back(constr);
 
-                    //model->verletSystem.positionP[bi] = P_plane;
+                    model->verletSystem.P_current[bi] = P_plane;
                 }
             }
         }
@@ -235,36 +234,33 @@ void VerletBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
         return;
     }
 
-    //if (model->verletWeight > 0.f)
-    {
-        xSkeleton &spine = model->GetModelGr()->spine;
-        model->verletSystem.C_constraints = spine.constraintsP;
-        model->verletSystem.I_constraints = spine.constraintsC;
-        model->verletSystem.C_lengthConst = spine.boneConstrP;
-        model->verletSystem.spine = &spine;
-        model->verletSystem.MX_ModelToWorld   = model->MX_ModelToWorld;
-        model->verletSystem.MX_WorldToModel_T = model->MX_WorldToModel;
-        model->verletSystem.MX_WorldToModel_T.transpose();
-        model->verletSystem.T_step = T_delta;
+    xSkeleton &spine = model->GetModelGr()->spine;
+    model->verletSystem.C_constraints = spine.constraintsP;
+    model->verletSystem.I_constraints = spine.constraintsC;
+    model->verletSystem.C_lengthConst = spine.boneConstrP;
+    model->verletSystem.spine = &spine;
+    model->verletSystem.MX_ModelToWorld   = model->MX_ModelToWorld;
+    model->verletSystem.MX_WorldToModel_T = model->MX_WorldToModel;
+    model->verletSystem.MX_WorldToModel_T.transpose();
+    model->verletSystem.T_step = T_delta;
 
-        xVerletSolver engine;
-        engine.Init(& model->verletSystem);
-        engine.I_passes = 5;
-        engine.Verlet();
-        engine.SatisfyConstraints();
+    xVerletSolver engine;
+    engine.Init(& model->verletSystem);
+    engine.I_passes = 10;
+    engine.Verlet();
+    engine.SatisfyConstraints();
 
-        spine.CalcQuats(model->verletSystem.P_current, 0, model->verletSystem.MX_WorldToModel_T);
+    spine.CalcQuats(model->verletSystem.P_current, 0, model->verletSystem.MX_WorldToModel_T);
 
-        if (!model->verletQuaternions)
-            model->verletQuaternions = new xVector4[spine.boneC];
-        spine.QuatsToArray(model->verletQuaternions);
+    if (!model->verletQuaternions)
+        model->verletQuaternions = new xVector4[spine.boneC];
+    spine.QuatsToArray(model->verletQuaternions);
 
-        model->MX_ModelToWorld.postTranslateT(spine.boneP->quaternion.vector3);
-        xMatrix::Invert(model->MX_ModelToWorld, model->MX_WorldToModel);
-        spine.boneP->quaternion.zeroQ();
-        model->verletQuaternions[0].zeroQ();
+    model->MX_ModelToWorld.postTranslateT(model->verletSystem.P_current[0]-model->verletSystem.P_previous[0]);
+    xMatrix::Invert(model->MX_ModelToWorld, model->MX_WorldToModel);
+    spine.boneP->quaternion.zeroQ();
+    model->verletQuaternions[0].zeroQ();
 
-        model->verletWeight -= T_delta;
-    }
+    model->verletWeight -= T_delta;
     model->verletWeight = max(0.0f, model->verletWeight);
 }
