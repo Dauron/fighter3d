@@ -10,7 +10,7 @@ void Camera::SetCamera (xFLOAT eyex, xFLOAT eyey, xFLOAT eyez,
 }
 
 // Based on MESA
-void Camera::LookAtMatrix(xMatrix &viewTransform)
+void Camera::LookAtMatrix(xMatrix &MX_ModelToView)
 {
     /* Forward = center - eye */
     xVector3 forward = (center - eye).normalize();
@@ -19,10 +19,10 @@ void Camera::LookAtMatrix(xMatrix &viewTransform)
     /* Recompute up as: up = side x forward */
     xVector3 up2 = xVector3::CrossProduct(side, forward).normalize();
     /* Fill matrix */
-    viewTransform.x0 = side.x;     viewTransform.x1 = side.y;     viewTransform.x2 = side.z;
-    viewTransform.y0 = up2.x;      viewTransform.y1 = up2.y;      viewTransform.y2 = up2.z;
-    viewTransform.z0 = -forward.x; viewTransform.z1 = -forward.y; viewTransform.z2 = -forward.z;
-    viewTransform.w0 = viewTransform.w1 = viewTransform.w2 = 0.f;
-    viewTransform.row3.zeroQ();
-    viewTransform.preTranslateT(-eye);
+    MX_ModelToView.x0 = side.x;     MX_ModelToView.x1 = side.y;     MX_ModelToView.x2 = side.z;
+    MX_ModelToView.y0 = up2.x;      MX_ModelToView.y1 = up2.y;      MX_ModelToView.y2 = up2.z;
+    MX_ModelToView.z0 = -forward.x; MX_ModelToView.z1 = -forward.y; MX_ModelToView.z2 = -forward.z;
+    MX_ModelToView.w0 = MX_ModelToView.w1 = MX_ModelToView.w2 = 0.f;
+    MX_ModelToView.row3.zeroQ();
+    MX_ModelToView.preTranslateT(-eye);
 }

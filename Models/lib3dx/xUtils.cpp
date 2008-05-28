@@ -1,49 +1,5 @@
 #include "xUtils.h"
 
-xSkinnedData xElement_GetSkinnedElement(const xElement *elem, const xMatrix *bones)
-{
-    xWORD     count  = elem->renderData.verticesC;
-    xBYTE    *srcV   = (xBYTE *) elem->renderData.verticesP;
-    xVector3 *srcN   = elem->renderData.normalP;
-    xDWORD stride = elem->skeletized
-        ? (elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
-        : (elem->textured ? sizeof(xVertexTex)     : sizeof(xVertex));
-
-    xSkinnedData dst;
-    dst.verticesP = new xVector3[count];
-    dst.normalsP  = new xVector3[count];
-    xVector3 *itrV = dst.verticesP;
-    xVector3 *itrN = dst.normalsP;
-
-    if (elem->skeletized)
-        for (int i = count; i > 0; --i, ++itrV, ++itrN, srcV += stride, ++srcN)
-        {
-            xVertexSkel *vert = (xVertexSkel *)srcV;
-
-            xVector4 vec;  vec.init(* (xVector3 *)vert->pos, 1.f);
-            xVector4 nor;  nor.init(* srcN, 0.f);
-            xMatrix  bone;
-
-            itrV->init(0.f, 0.f, 0.f);
-            itrN->init(0.f, 0.f, 0.f);
-            for (int b=0; b<4; ++b)
-            {
-                int   i = (int) floor(vert->bone[b]);
-                float w = (vert->bone[b] - i)*10;
-                bone = bones[i] * w;
-                *itrV  += (bone * vec).vector3;
-                *itrN  += (bone * nor).vector3;
-            }
-        }
-    else
-    {
-        for (int i = count; i > 0; --i, ++itrV, srcV += stride)
-            *itrV = *(xVector3 *)srcV;
-        memcpy(dst.normalsP, elem->renderData.normalP, sizeof(xVector3)*count);
-    }
-    return dst;
-}
-
 void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, const bool *boneMods,
                                    xElementInstance &instance)
 {
@@ -195,7 +151,6 @@ xVector3 xModel_GetBounds(xModelInstance &instance)
     return res;
 }
 
-#include "xSkeleton.h"
 #include <vector>
 #include <algorithm>
 

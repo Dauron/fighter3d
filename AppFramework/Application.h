@@ -1,7 +1,7 @@
 #ifndef __incl_Application_h
 #define __incl_Application_h
 
-#include "GL/GLWindow.h"
+#include "OGL/GLWindow.h"
 #include "../Utils/Singleton.h"
 #include "Scene.h"
 

@@ -44,10 +44,17 @@ struct xElement {
     xElement  *ById     ( xBYTE eid );
     xBYTE      CountAll ();
 
-    void Free();
-    void FillShadowEdges();
-    void CalculateSmoothVertices();
+    size_t     GetVertexStride() {
+        return skeletized
+            ? (textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
+            : (textured ? sizeof(xVertexTex) : sizeof(xVertex));
+    }
 
+    void         FillShadowEdges();
+    void         CalculateSmoothVertices();
+    xSkinnedData GetSkinnedVertices(const xMatrix *bones) const;
+
+           void      Free();
            void      Save( FILE *file, const xModel *xmodel );
     static xElement *Load( FILE *file, xModel *xmodel, bool createCollisionInfo );
 };

@@ -1,5 +1,5 @@
 [general]
-skybox	night.3dx
+skip skybox	night.3dx
 
 # LIGHTS
 
@@ -21,7 +21,7 @@ position    0 0 -0.21
 physical    0
 phantom     0
 
-[model]
+[skip model]
 fastm	crate_fst.3dx
 model	crate.3dx
 skip rotation    0 45 0
@@ -33,8 +33,9 @@ mass        20
 #
 
 [skeletized]
-skip fastm	human2_fst.3dx
-model	human2_fst2.3dx
+fastm	human2_fst.3dx
+skip model	human2_fst2.3dx
+model	human2.3dx
 rotation    0 0 170
 position    -0.3 -3.1 -0.2
 physical    1
@@ -45,7 +46,7 @@ shadows     0
 animation	anims/human/yoko-geri2.ska	4000	5300
 animation	anims/human/garda.ska	0	0
 
-[skip skeletized]
+[skeletized]
 skip fastm	human2_fst.3dx
 model	human2_fst.3dx
 #position   -0.5 -1.5 -0.2
@@ -59,3 +60,4 @@ skip animation	anims/human/stoi.ska 0 0
 skip animation	anims/human/garda.ska	0	4700
 skip animation	anims/human/skulony.ska	4700	4700
 skip animation	anims/human/kiwa_sie.ska	4700	4700
+

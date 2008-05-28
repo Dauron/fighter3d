@@ -256,3 +256,50 @@ void      xElement :: Save(FILE *file, const xModel *xmodel)
     if (xmodel->saveCollisionData)
         this->collisionData.Save(file, this);
 }
+
+/////// SKIN VERTICES
+
+xSkinnedData xElement :: GetSkinnedVertices(const xMatrix *bones) const
+{
+    xWORD     count  = renderData.verticesC;
+    xBYTE    *srcV   = (xBYTE *) renderData.verticesP;
+    xVector3 *srcN   = renderData.normalP;
+
+    xSkinnedData dst;
+    dst.verticesP = new xVector3[count];
+    dst.normalsP  = new xVector3[count];
+    xVector3 *itrV = dst.verticesP;
+    xVector3 *itrN = dst.normalsP;
+
+    if (skeletized)
+    {
+        xDWORD stride = textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+        for (int i = count; i > 0; --i, ++itrV, ++itrN, srcV += stride, ++srcN)
+        {
+            xVertexSkel *vert = (xVertexSkel *)srcV;
+
+            xVector4 vec;  vec.init(* (xVector3 *)vert->pos, 1.f);
+            xVector4 nor;  nor.init(* srcN, 0.f);
+            xMatrix  bone;
+
+            itrV->init(0.f, 0.f, 0.f);
+            itrN->init(0.f, 0.f, 0.f);
+            for (int b=0; b<4; ++b)
+            {
+                int   i = (int) floor(vert->bone[b]);
+                float w = (vert->bone[b] - i)*10;
+                bone = bones[i] * w;
+                *itrV  += (bone * vec).vector3;
+                *itrN  += (bone * nor).vector3;
+            }
+        }
+    }
+    else
+    {
+        xDWORD stride = textured ? sizeof(xVertexTex) : sizeof(xVertex);
+        for (int i = count; i > 0; --i, ++itrV, srcV += stride)
+            *itrV = *(xVector3 *)srcV;
+        memcpy(dst.normalsP, renderData.normalP, sizeof(xVector3)*count);
+    }
+    return dst;
+}

@@ -23,19 +23,19 @@ public:
 
     xVector4 * GetTransformations()
     {
-        xVector4 *trans = new xVector4[spine->boneC];
+        xVector4 *QT_bones = new xVector4[spine->I_bones];
 
-        // kwaternion trans[0] nie opisuje obrotu, a przesuniêcie ca³ego modelu, pozosta³e to obroty w formacie
+        // kwaternion QT_bones[0] nie opisuje obrotu, a przesuniêcie ca³ego modelu, pozosta³e to obroty w formacie
         // x = axis.x * sin(alpha/2)
         // y = axis.y * sin(alpha/2)
         // z = axis.z * sin(alpha/2)
         // w = cos(alpha/2)
         // oœ Z wskazuje do góry
 
-        for (int i=0; i < spine->boneC; ++i)
-            trans[i].zeroQ(); // no rotation
+        for (int i=0; i < spine->I_bones; ++i)
+            QT_bones[i].zeroQ(); // no rotation
 
-        return trans;
+        return QT_bones;
     }
 
     CaptureInput() {}

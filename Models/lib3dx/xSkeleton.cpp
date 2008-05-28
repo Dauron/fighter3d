@@ -3,89 +3,89 @@
 
 /* xSkeleton */
 
-void xSkeleton :: QuatsToArray  (xVector4 *qarray) const
+void xSkeleton :: QuatsToArray  (xVector4 *QT_array) const
 {
-    xIKNode *node = boneP;
-    xVector4 *quat = qarray;
-    for (int i = boneC; i; --i, ++node, ++quat)
-        *quat = node->quaternion;
+    const xBone *bone = L_bones;
+    xVector4 *quat = QT_array;
+    for (int i = I_bones; i; --i, ++bone, ++quat)
+        *quat = bone->QT_rotation;
 }
 
-void xSkeleton :: QuatsFromArray(const xVector4 *qarray)
+void xSkeleton :: QuatsFromArray(const xVector4 *QT_array)
 {
-    xIKNode *node = boneP;
-    const xVector4 *quat = qarray;
-    for (int i = boneC; i; --i, ++node, ++quat)
-        node->quaternion = *quat;
+    xBone *bone = L_bones;
+    const xVector4 *quat = QT_array;
+    for (int i = I_bones; i; --i, ++bone, ++quat)
+        bone->QT_rotation = *quat;
 }
 
 void xSkeleton :: Clear()
 {
-    if (boneP)
+    if (I_bones)
     {
-        xIKNode *node = boneP;
-        for (; boneC; --boneC, ++node)
-            node->Clear();
-        delete[] boneP;
-        boneP = NULL;
+        xBone *bone = L_bones;
+        for (; I_bones; --I_bones, ++bone)
+            bone->Clear();
+        delete[] L_bones;
+        L_bones = NULL;
     }
-    if (boneConstrP)
+    if (C_boneLength)
     {
-        delete[] boneConstrP;
-        boneConstrP = NULL;
+        delete[] C_boneLength;
+        C_boneLength = NULL;
     }
-    if (constraintsP)
+    if (C_constraints)
     {
-        xIVConstraint **constr = constraintsP;
-        for (; constraintsC; --constraintsC, ++constr)
+        xVConstraint **constr = C_constraints;
+        for (; I_constraints; --I_constraints, ++constr)
             delete *constr;
-        delete[] constraintsP;
-        constraintsP = NULL;
+        delete[] C_constraints;
+        C_constraints = NULL;
     }
 }
 
-void xSkeleton :: CalcQuats(const xVector3 *pos, xBYTE boneId, xMatrix parentMtxInv)
+void xSkeleton :: CalcQuats(const xVector3 *P_current, xBYTE ID_bone, xMatrix MX_parent_Inv)
 {
-    xIKNode &bone = boneP[boneId];
-    xVector3 endN = parentMtxInv.postTransformP(pos[boneId]);
+    xBone   &bone   = L_bones[ID_bone];
+    xVector3 P_endN = MX_parent_Inv.postTransformP(P_current[ID_bone]);
 
-    if (boneId)
+    if (ID_bone)
     {
-        bone.quaternion = xQuaternion::getRotation(bone.pointE, endN, bone.pointB);
+        bone.QT_rotation = xQuaternion::getRotation(bone.P_end, P_endN, bone.P_begin);
         xVector4 quat;
-        quat.init(-bone.quaternion.vector3, bone.quaternion.w);
-        parentMtxInv.preMultiply(xMatrixFromQuaternion(quat).preTranslate(bone.pointB).postTranslate(-bone.pointB));
+        quat.init(-bone.QT_rotation.vector3, bone.QT_rotation.w);
+        MX_parent_Inv.preMultiply(xMatrixFromQuaternion(quat).preTranslate(bone.P_begin).postTranslate(-bone.P_begin));
     }
     else
     {
-        bone.quaternion.init(endN - bone.pointE, 1.f);
-        parentMtxInv.preMultiply(xMatrixTranslate(-bone.quaternion.x, -bone.quaternion.y, -bone.quaternion.z));
+        bone.QT_rotation.init(P_endN - bone.P_end, 1.f);
+        MX_parent_Inv.preMultiply(xMatrixTranslate(-bone.QT_rotation.x, -bone.QT_rotation.y, -bone.QT_rotation.z));
     }
 
-    for (int i = 0; i < bone.joinsEC; ++i)
-        CalcQuats(pos, bone.joinsEP[i], parentMtxInv);
+    for (int i = 0; i < bone.I_kids; ++i)
+        CalcQuats(P_current, bone.ID_kids[i], MX_parent_Inv);
 }
 
 void xSkeleton :: FillBoneConstraints()
 {
-    if (boneConstrP)
+    if (C_boneLength)
     {
-        delete[] boneConstrP;
-        boneConstrP = NULL;
+        delete[] C_boneLength;
+        C_boneLength = NULL;
     }
-    if (boneC)
+    if (I_bones)
     {
-        boneConstrP = new xVConstraintLengthEql[boneC-1];
-        xVConstraintLengthEql *constrIter = boneConstrP;
+        C_boneLength = new xVConstraintLengthEql[I_bones-1];
+        xVConstraintLengthEql *C_iter = C_boneLength;
 
-        xIKNode *bone = boneP+1;
-        for (int i = boneC-1; i; --i, ++bone, ++constrIter)
+        xBone *bone = L_bones+1;
+        for (int i = I_bones-1; i; --i, ++bone, ++C_iter)
         {
-            xVConstraintLengthEql &constraint = *constrIter;
-            constraint.particleA = bone->id;
-            constraint.particleB = bone->joinsBP[0];
-            constraint.restLengthSqr = bone->curLengthSq;
-            constraint.restLength = sqrt(bone->curLengthSq);
+            xVConstraintLengthEql &constraint = *C_iter;
+            constraint.particleA     = bone->ID;
+            constraint.particleB     = bone->ID_parent;
+            constraint.restLength    = bone->S_length;
+            constraint.restLengthSqr = bone->S_lengthSqr;
         }
     }
 }
@@ -93,196 +93,210 @@ void xSkeleton :: FillBoneConstraints()
 xSkeleton xSkeleton :: Clone() const
 {
     xSkeleton res;
-    res.boneC        = this->boneC;
-    res.constraintsC = this->constraintsC;
+    res.I_bones       = this->I_bones;
+    res.I_constraints = this->I_constraints;
 
-    if (this->boneP)
+    if (this->L_bones)
     {
-        res.boneP = new xIKNode[res.boneC];
-        const xIKNode *nodeS = this->boneP;
-        xIKNode       *nodeD = res.boneP;
+        res.L_bones = new xBone[res.I_bones];
+        const xBone *boneS = this->L_bones;
+        xBone       *boneD = res.L_bones;
 
-        for (int i = this->boneC; i; --i, ++nodeS, ++nodeD)
-            nodeS->CloneTo(*nodeD);
+        for (int i = this->I_bones; i; --i, ++boneS, ++boneD)
+            boneS->CloneTo(*boneD);
     }
     else
-        res.boneP = NULL;
+        res.L_bones = NULL;
 
+    res.C_boneLength  = NULL;
     res.FillBoneConstraints();
 
-    if (this->constraintsP)
+    if (this->I_constraints)
     {
-        res.constraintsP = new xIVConstraint*[res.constraintsC];
-        xIVConstraint **nodeS = this->constraintsP;
-        xIVConstraint **nodeD = res.constraintsP;
+        res.C_constraints = new xVConstraint*[res.I_constraints];
+        xVConstraint **nodeS = this->C_constraints;
+        xVConstraint **nodeD = res.C_constraints;
 
-        for (int i = this->constraintsC; i; --i, ++nodeS, ++nodeD)
+        for (int i = this->I_constraints; i; --i, ++nodeS, ++nodeD)
             (*nodeS)->CloneTo(*nodeD);
     }
     else
-        res.constraintsP = NULL;
+        res.C_constraints = NULL;
 
     return res;
 }
 
 void xSkeleton :: ResetQ()
 {
-    xIKNode *node = this->boneP;
-    for (int i = this->boneC; i; --i, ++node)
-        node->quaternion.zeroQ();
+    xBone *bone = this->L_bones;
+    for (int i = this->I_bones; i; --i, ++bone)
+        bone->QT_rotation.zeroQ();
 }
 
-xIKNode * xSkeleton :: BoneAdd(xBYTE parentId, xVector3 ending)
+xBone * xSkeleton :: BoneAdd(xBYTE ID_parent, xVector3 P_end)
 {
-    int cnt = this->boneC;
+    int I_bones = this->I_bones;
 
-    xIKNode *bones = new xIKNode[cnt+1];
-    memcpy(bones, this->boneP, sizeof(xIKNode)*cnt);
+    xBone *bones = new xBone[I_bones+1];
+    memcpy(bones, this->L_bones, sizeof(xBone)*I_bones);
 
-    ++(this->boneC);
-    delete[] this->boneP;
-    this->boneP = bones;
+    ++(this->I_bones);
+    delete[] this->L_bones;
+    this->L_bones = bones;
 
-    xIKNode &parent = this->boneP[parentId];
-    parent.JoinEAdd(cnt);
-    xIKNode &newBone = this->boneP[cnt];
+    xBone &parent = this->L_bones[ID_parent];
+    parent.KidAdd(I_bones);
+    xBone &newBone = this->L_bones[I_bones];
     newBone.Zero();
-    newBone.JoinBAdd(parentId);
-
-    newBone.id = cnt;
-    newBone.pointB = parent.pointE;
-    newBone.destination = newBone.pointE = ending;
-    newBone.curLengthSq = newBone.maxLengthSq = newBone.minLengthSq = (ending-newBone.pointB).lengthSqr();
+    newBone.ID = I_bones;
+    newBone.ID_parent   = ID_parent;
+    newBone.P_begin     = parent.P_end;
+    newBone.P_end       = P_end;
+    newBone.S_lengthSqr = (P_end - newBone.P_begin).lengthSqr();
+    newBone.S_length    = sqrt(newBone.S_lengthSqr);
 
     FillBoneConstraints();
 
     return &newBone;
 }
 
+
 void xSkeleton :: Load( FILE *file )
 {
-    fread(&boneC, sizeof(xBYTE), 1, file);
-    boneP = new xIKNode[boneC];
-    xIKNode *node = boneP;
-    for (int i = boneC; i; --i, ++node)
-        node->Load(file);
+    fread(&I_bones, sizeof(xBYTE), 1, file);
+    if (I_bones)
+    {
+        xBone *bone = L_bones = new xBone[I_bones];
+        for (int i = I_bones; i; --i, ++bone)
+            bone->Load(file);
+    }
+    else
+        L_bones = NULL;
 
     FillBoneConstraints();
 
-    fread(&constraintsC, sizeof(xBYTE), 1, file);
-    constraintsP = new xIVConstraint*[constraintsC];
-    xIVConstraint **constr = constraintsP;
-    for (int i = constraintsC; i; --i, ++constr)
-        *constr = xIVConstraint::LoadType(file);
+    fread(&I_constraints, sizeof(xBYTE), 1, file);
+    if (I_constraints)
+    {
+        xVConstraint **C_iter = C_constraints = new xVConstraint*[I_constraints];
+        for (int i = I_constraints; i; --i, ++C_iter)
+            *C_iter = xVConstraint::LoadType(file);
+    }
+    else
+        C_constraints = NULL;
 }
 
 void xSkeleton :: Save( FILE *file ) const
 {
-    fwrite(&boneC, sizeof(xBYTE), 1, file);
-    xIKNode *node = boneP;
-    for (int i = boneC; i; --i, ++node)
-        node->Save(file);
+    fwrite(&I_bones, sizeof(xBYTE), 1, file);
+    xBone *bone = L_bones;
+    for (int i = I_bones; i; --i, ++bone)
+        bone->Save(file);
 
-    fwrite(&constraintsC, sizeof(xBYTE), 1, file);
-    xIVConstraint **constr = constraintsP;
-    for (int i = constraintsC; i; --i, ++constr)
-        (*constr)->Save(file);
+    fwrite(&I_constraints, sizeof(xBYTE), 1, file);
+    xVConstraint **C_iter = C_constraints;
+    for (int i = I_constraints; i; --i, ++C_iter)
+        (*C_iter)->Save(file);
 }
 
 /* MATRICES */
-void   _xBoneCalculateMatrices(const xIKNode *boneP, xBYTE boneId, xModelInstance &instance)
+void   _xBoneCalculateMatrices(const xBone *L_bones, xBYTE ID_bone, xModelInstance &instance)
 {
-    const xIKNode *bone = boneP + boneId;
-    xMatrix *boneDst = instance.bonesM + boneId;
-    bool    *modDst  = instance.bonesMod + boneId;
+    const xBone &bone        = L_bones[ID_bone];
+    xMatrix     &MX_bone     = instance.bonesM[ID_bone];
+    bool        &FL_modified = instance.bonesMod[ID_bone];
 
-    xMatrix newMat;
-    if (bone->joinsBC)
+    xMatrix MX_new;
+    if (bone.ID)
     {
-        xMatrix *parent = instance.bonesM + bone->joinsBP[0];
-        newMat = *parent * xMatrixFromQuaternion(bone->quaternion).preTranslate(bone->pointB).postTranslate(-bone->pointB);
+        xMatrix &MX_parent = instance.bonesM[bone.ID_parent];
+        MX_new = MX_parent * xMatrixFromQuaternion(bone.QT_rotation).preTranslate(bone.P_begin).postTranslate(-bone.P_begin);
     }
     else
-        newMat = xMatrixTranslate(bone->quaternion.vector3.xyz);
-    *modDst  = *boneDst != newMat;
-    *boneDst = newMat;
+        MX_new = xMatrixTranslate(bone.QT_rotation.vector3.xyz);
+    FL_modified = MX_bone != MX_new;
+    MX_bone = MX_new;
 
-    xBYTE *cbone = bone->joinsEP;
-    for (int i = bone->joinsEC; i; --i, ++cbone)
-        _xBoneCalculateMatrices(boneP, *cbone, instance);
+    xBYTE *ID_iter = bone.ID_kids;
+    for (int i = bone.I_kids; i; --i, ++ID_iter)
+        _xBoneCalculateMatrices(L_bones, *ID_iter, instance);
 }
 void    xBoneCalculateMatrices(const xSkeleton &spine, xModelInstance *instance)
 {
-    instance->bonesC = spine.boneC;
-    if (!spine.boneC)
+    instance->bonesC = spine.I_bones;
+    if (!spine.I_bones)
     {
         if (instance->bonesM)   { delete[] instance->bonesM;   instance->bonesM = NULL; }
         if (instance->bonesMod) { delete[] instance->bonesMod; instance->bonesMod = NULL; }
         return;
     }
-    if (!instance->bonesM)   instance->bonesM   = new xMatrix[spine.boneC];
-    if (!instance->bonesMod) instance->bonesMod = new bool[spine.boneC];
-    _xBoneCalculateMatrices(spine.boneP, 0, *instance);
+    if (!instance->bonesM)   instance->bonesM   = new xMatrix[spine.I_bones];
+    if (!instance->bonesMod) instance->bonesMod = new bool[spine.I_bones];
+    _xBoneCalculateMatrices(spine.L_bones, 0, *instance);
 }
 
-void   _xBoneCalculateQuats(const xIKNode *boneP, xBYTE boneId, xModelInstance &instance)
+void   _xBoneCalculateQuats(const xBone *L_bones, xBYTE ID_bone, xModelInstance &instance)
 {
-    const xIKNode *bone = boneP + boneId;
-    xVector4 *boneDst = instance.bonesQ + boneId*2;
-    *(boneDst+0) = bone->quaternion;
-    if (bone->joinsBC)
-        (boneDst+1)->init(bone->pointB, bone->joinsBP[0]);
+    const xBone &bone    = L_bones[ID_bone];
+    xVector4    *QT_bone = instance.bonesQ + ID_bone*2;
+    QT_bone[0] = bone.QT_rotation;
+    if (bone.ID)
+        QT_bone[1].init(bone.P_begin, bone.ID_parent);
     else
-        (boneDst+1)->init(bone->quaternion.vector3, -1.f);
-    xBYTE *cbone = bone->joinsEP;
-    for (int i = bone->joinsEC; i; --i, ++cbone)
-        _xBoneCalculateQuats(boneP, *cbone, instance);
+        QT_bone[1].init(bone.QT_rotation.vector3, -1.f);
+
+    xBYTE *ID_iter = bone.ID_kids;
+    for (int i = bone.I_kids; i; --i, ++ID_iter)
+        _xBoneCalculateQuats(L_bones, *ID_iter, instance);
 }
 void    xBoneCalculateQuats(const xSkeleton &spine, xModelInstance *instance)
 {
-    instance->bonesC = spine.boneC;
-    if (!spine.boneC)
+    instance->bonesC = spine.I_bones;
+    if (!spine.I_bones)
     {
         if (instance->bonesQ)   { delete[] instance->bonesQ;   instance->bonesQ = NULL; }
         return;
     }
-    if (!instance->bonesQ) instance->bonesQ = new xVector4[spine.boneC*2];
-    _xBoneCalculateQuats(spine.boneP, 0, *instance);
+    if (!instance->bonesQ) instance->bonesQ = new xVector4[spine.I_bones*2];
+    _xBoneCalculateQuats(spine.L_bones, 0, *instance);
 }
 
-bool   _xBoneCalculateQuatForVerlet(const xIKNode *boneP, xBYTE destId, xBYTE boneId, xVector4 &quatPar, xVector4 &quatCur)
+bool   _xBoneCalculateQuatForVerlet(const xBone *L_bones, xBYTE ID_last, xBYTE ID_bone,
+                                    xVector4 &QT_parent, xVector4 &QT_current)
 {
-    const xIKNode *bone = boneP + boneId;
+    const xBone &bone = L_bones[ID_bone];
 
-    if (bone->id == destId)
+    if (bone.ID == ID_last)
     {
-        quatCur = bone->quaternion;
-        if (!bone->joinsBP[0])
+        QT_current = bone.QT_rotation;
+        if (bone.ID_parent == 0)
         {
-            const xIKNode *par;
-            if (boneP->joinsEP[0] == boneId)
-                par = boneP + boneP->joinsEP[1];
+            const xBone *parent;
+            if (L_bones->ID_kids[0] == ID_bone)
+                parent = L_bones + L_bones->ID_kids[1];
             else
-                par = boneP + boneP->joinsEP[0];
-            quatPar.init(par->quaternion.vector3, par->quaternion.w);
+                parent = L_bones + L_bones->ID_kids[0];
+            QT_parent.init(parent->QT_rotation.vector3, parent->QT_rotation.w);
         }
         else
-            quatPar.zeroQ();
+            QT_parent.zeroQ();
 
         return true;
     }
 
-    xBYTE *cbone = bone->joinsEP;
-    for (int i = bone->joinsEC; i; --i, ++cbone)
-        if (_xBoneCalculateQuatForVerlet(boneP, destId, *cbone, quatPar, quatCur))
+    xBYTE *ID_iter = bone.ID_kids;
+    for (int i = bone.I_kids; i; --i, ++ID_iter)
+        if (_xBoneCalculateQuatForVerlet(L_bones, ID_last, *ID_iter, QT_parent, QT_current))
         {
-            if (boneId)
-                quatPar = xQuaternion::product(bone->quaternion, quatPar);
+            if (ID_bone)
+                QT_parent = xQuaternion::product(bone.QT_rotation, QT_parent);
             return true;
         }
     return false;
 }
-void    xBoneCalculateQuatForVerlet(const xSkeleton &spine, xBYTE destId, xVector4 &quatPar, xVector4 &quatCur)
+void    xBoneCalculateQuatForVerlet(const xSkeleton &spine, xBYTE ID_last,
+                                    xVector4 &QT_parent, xVector4 &QT_current)
 {
-    _xBoneCalculateQuatForVerlet(spine.boneP, destId, 0, quatPar, quatCur);
+    _xBoneCalculateQuatForVerlet(spine.L_bones, ID_last, 0, QT_parent, QT_current);
 }
+

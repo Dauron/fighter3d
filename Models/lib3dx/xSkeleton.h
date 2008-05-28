@@ -1,29 +1,29 @@
-#ifndef __incl_lib3dx_xBone_h
-#define __incl_lib3dx_xBone_h
+#ifndef __incl_lib3dx_xSkeleton_h
+#define __incl_lib3dx_xSkeleton_h
 
 #include "../../Math/xMath.h"
-#include "../../Math/xVerletConstraint.h"
-#include "xIKNode.h"
+#include "../../Physics/Verlet/xVConstraintLengthEql.h"
+#include "xBone.h"
 
 struct xSkeleton
 {
-    xIKNode *boneP;
-    xBYTE    boneC;
+    xBone *L_bones;
+    xBYTE  I_bones;
 
-    xVConstraintLengthEql *boneConstrP;
-    xIVConstraint        **constraintsP;
-    xBYTE                  constraintsC;
+    xVConstraintLengthEql *C_boneLength;
+    xVConstraint         **C_constraints;
+    xBYTE                  I_constraints;
 
     void      Clear();
     xSkeleton Clone() const;
     void      ResetQ();
 
-    void      CalcQuats(const xVector3 *pos, xBYTE boneId, xMatrix parentMtxInv);
+    void      CalcQuats(const xVector3 *P_current, xBYTE ID_bone, xMatrix MX_parent_Inv);
     void      FillBoneConstraints();
-    xIKNode  *BoneAdd(xBYTE parentId, xVector3 ending);
+    xBone    *BoneAdd(xBYTE ID_parent, xVector3 P_end);
 
-    void QuatsToArray  (xVector4 *qarray) const;
-    void QuatsFromArray(const xVector4 *qarray);
+    void QuatsToArray  (xVector4 *QT_array) const;
+    void QuatsFromArray(const xVector4 *QT_array);
 
     void Load( FILE *file );
     void Save( FILE *file ) const;
@@ -34,6 +34,7 @@ struct xModelInstance;
 void    xBoneCalculateMatrices (const xSkeleton &spine, xModelInstance *instance);
 void    xBoneCalculateQuats    (const xSkeleton &spine, xModelInstance *instance);
 
-void    xBoneCalculateQuatForVerlet(const xSkeleton &spine, xBYTE destId, xVector4 &quatPar, xVector4 &quatCur);
+void    xBoneCalculateQuatForVerlet(const xSkeleton &spine, xBYTE ID_last,
+                                    xVector4 &QT_parent, xVector4 &QT_current);
 
 #endif

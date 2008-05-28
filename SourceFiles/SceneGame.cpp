@@ -1,16 +1,15 @@
-#include "../AppFramework/System.h"
-#include <GL/gl.h>
 #include "SceneGame.h"
 #include "SceneConsole.h"
 #include "SceneSkeleton.h"
-#include "../AppFramework/Input/InputMgr.h"
-#include "../AppFramework/Application.h"
-#include "../Math/Cameras/CameraHuman.h"
-#include "../OpenGL/GLAnimSkeletal.h"
 
-#include "../GLExtensions/EXT_stencil_wrap.h"
-#include "../GLExtensions/EXT_stencil_two_side.h"
-#include "../GLExtensions/ARB_multisample.h"
+#include "../AppFramework/Application.h"
+#include "../AppFramework/Input/InputMgr.h"
+#include "../Math/Cameras/CameraHuman.h"
+
+#include "../OGL/GLShader.h"
+#include "../OGL/Extensions/EXT_stencil_wrap.h"
+#include "../OGL/Extensions/EXT_stencil_two_side.h"
+#include "../OGL/Extensions/ARB_multisample.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
@@ -67,7 +66,6 @@ bool SceneGame::InitGL()
 bool SceneGame::Invalidate()
 {
     world.Invalidate();
-
     return true;
 }
 
@@ -207,7 +205,7 @@ bool SceneGame::Update(float deltaTime)
         glMatrixMode(GL_MODELVIEW);
         DefaultCamera->LookAtMatrix(FOV.ViewTransform);
         glLoadMatrixf(&FOV.ViewTransform.x0);
-        ModelObj *obj = world.Select(&FOV, g_InputMgr.mouseX, g_InputMgr.mouseY);
+        ModelObj *obj = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
             g_Application.SetCurrentScene(new SceneSkeleton(/*this*/ &g_Application.CurrentScene(),
                 obj->GetModelGr()->fileName, obj->GetModelPh()->fileName), false);
@@ -598,4 +596,22 @@ bool SceneGame::Render()
     glFlush();
     //glFinish();
     return true;
+}
+
+////// ISelectionProvider
+
+void SceneGame :: RenderSelect(const xFieldOfView *FOV)
+{
+    int objectID = -1;
+    World::xObjectVector::iterator iter = world.objects.begin(), end = world.objects.end();
+    for ( ; iter != end ; ++iter ) {
+        glLoadName(++objectID);
+        ModelObj &mdl = **iter;
+        mdl.renderer.RenderVertices(*mdl.GetModelGr(), mdl.modelInstanceGr, Renderer::smModel);
+    }
+}
+
+unsigned int SceneGame::CountSelectable()
+{
+    return world.objects.size();
 }

@@ -5,7 +5,6 @@
 #include "../Models/lib3dx/xAction.h"
 #include "../MotionCapture/CaptureInput.h"
 #include "../Multiplayer/NetworkInput.h"
-#include "../Math/xVerletConstraint.h"
 
 class SkeletizedObj : public ModelObj
 {

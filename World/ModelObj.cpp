@@ -122,8 +122,8 @@ void ModelObj :: VerticesChanged(bool free)
 
 void ModelObj :: CalculateSkeleton()
 {
-    if (!xModelGr->spine.boneC) return;
-    if (xModelGr->spine.boneC != modelInstanceGr.bonesC)
+    if (!xModelGr->spine.I_bones) return;
+    if (xModelGr->spine.I_bones != modelInstanceGr.bonesC)
     {
         modelInstanceGr.ClearSkeleton();
         if (!modelInstanceGr.bonesC) // skeleton was added, so refresh VBO data
@@ -141,7 +141,7 @@ void ModelObj :: CreateVerletSystem()
 {
     verletSystem.Free();
     verletSystem.Init(4);
-    verletSystem.C_constraints = new xIVConstraint*[6];
+    verletSystem.C_constraints = new xVConstraint*[6];
     verletSystem.I_constraints = 6;
     verletSystem.C_collisions = &collisionConstraints;
     verletSystem.C_lengthConst = NULL;

@@ -132,4 +132,10 @@ struct xRenderData
     xGPUPointers       gpuMain;
 };
 
+struct xSkinnedData
+{
+    xVector3 *verticesP;
+    xVector3 *normalsP;
+};
+
 #endif

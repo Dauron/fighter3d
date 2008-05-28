@@ -56,11 +56,11 @@ void _xElement_SkeletonAdd(xElement *elem)
 
 void  xModel :: SkeletonAdd()
 {
-    if (!this->spine.boneC)
+    if (!this->spine.I_bones)
     {
-        this->spine.boneC = 1;
-        this->spine.boneP = new xIKNode[1];
-        this->spine.boneP->Zero();
+        this->spine.I_bones = 1;
+        this->spine.L_bones = new xBone[1];
+        this->spine.L_bones->Zero();
 
         for (xElement *last = this->kidsP; last; last = last->nextP)
             _xElement_SkeletonAdd(last);
@@ -68,11 +68,11 @@ void  xModel :: SkeletonAdd()
 }
 
 /* BONES */
-void  _xBoneDelete_CorrectElementIds(xElement *elem, xWORD deleteId, xWORD parentId, xWORD topId)
+void  _xBoneDelete_CorrectElementIds(xElement *elem, xWORD ID_delete, xWORD ID_parent, xWORD ID_top)
 {
     xElement *last = elem->kidsP;
     for (; last; last = last->nextP)
-        _xBoneDelete_CorrectElementIds(last, deleteId, parentId, topId);
+        _xBoneDelete_CorrectElementIds(last, ID_delete, ID_parent, ID_top);
 
     if (elem->skeletized)
     {
@@ -89,21 +89,21 @@ void  _xBoneDelete_CorrectElementIds(xElement *elem, xWORD deleteId, xWORD paren
                 int i2 = (int) floor(vert->b2);
                 int i3 = (int) floor(vert->b3);
 
-                if (i0 == deleteId) vert->b0 += -i0 + parentId; // vertices from deleted bone are reassigned to parent
+                if (i0 == ID_delete) vert->b0 += -i0 + ID_parent; // vertices from deleted bone are reassigned to parent
                 else
-                if (i0 == topId)    vert->b0 += -i0 + deleteId; // vertices from top bone are reassigned to its new id
+                if (i0 == ID_top)    vert->b0 += -i0 + ID_delete; // vertices from top bone are reassigned to its new id
 
-                if (i1 == deleteId) vert->b1 += -i1 + parentId; // vertices from deleted bone are reassigned to parent
+                if (i1 == ID_delete) vert->b1 += -i1 + ID_parent; // vertices from deleted bone are reassigned to parent
                 else
-                if (i1 == topId)    vert->b1 += -i1 + deleteId; // vertices from top bone are reassigned to its new id
+                if (i1 == ID_top)    vert->b1 += -i1 + ID_delete; // vertices from top bone are reassigned to its new id
 
-                if (i2 == deleteId) vert->b2 += -i2 + parentId; // vertices from deleted bone are reassigned to parent
+                if (i2 == ID_delete) vert->b2 += -i2 + ID_parent; // vertices from deleted bone are reassigned to parent
                 else
-                if (i2 == topId)    vert->b2 += -i2 + deleteId; // vertices from top bone are reassigned to its new id
+                if (i2 == ID_top)    vert->b2 += -i2 + ID_delete; // vertices from top bone are reassigned to its new id
 
-                if (i3 == deleteId) vert->b3 += -i3 + parentId; // vertices from deleted bone are reassigned to parent
+                if (i3 == ID_delete) vert->b3 += -i3 + ID_parent; // vertices from deleted bone are reassigned to parent
                 else
-                if (i3 == topId)    vert->b3 += -i3 + deleteId; // vertices from top bone are reassigned to its new id
+                if (i3 == ID_top)    vert->b3 += -i3 + ID_delete; // vertices from top bone are reassigned to its new id
 
                 i0 = (int) floor(vert->b0);
                 i1 = (int) floor(vert->b1);
@@ -149,42 +149,47 @@ void  _xBoneDelete_CorrectElementIds(xElement *elem, xWORD deleteId, xWORD paren
     }
 }
 
-void   xModel :: BoneDelete(xBYTE boneId)
+void   xModel :: BoneDelete(xBYTE ID_bone)
 {
-    xIKNode &bone   = spine.boneP[boneId];
+    xBone &bone = spine.L_bones[ID_bone];
 
-    if (bone.joinsBC) {                                   // cannot delete spine root
-        xIKNode &parent = spine.boneP[bone.joinsBP[0]];
+    if (ID_bone) {                                   // cannot delete spine root
+        xBone &parent = spine.L_bones[bone.ID_parent];
 
-        parent.JoinEDelete(boneId);
+        parent.KidDelete(ID_bone);
 
-        xBYTE *joinId = bone.joinsBP;
-        for (int i = bone.joinsBC; i; --i, ++joinId)
-            spine.boneP[*joinId].JoinBReplace(boneId, parent.id);
-
-        int lastId = spine.boneC-1;
-        if (boneId != lastId) // if it is not the bone with the last id,
-        {                     //   then we have to correct largest id (= count)
-            bone = spine.boneP[lastId];
-            bone.id = boneId;
-
-            joinId = bone.joinsBP;
-            for (int i = bone.joinsBC; i; --i, ++joinId)
-                spine.boneP[*joinId].JoinBReplace(lastId, boneId);
-            joinId = bone.joinsEP;
-            for (int i = bone.joinsEC; i; --i, ++joinId)
-                spine.boneP[*joinId].JoinEReplace(lastId, boneId);
+        xBYTE *ID_iter = bone.ID_kids;
+        for (int i = bone.I_kids; i; --i, ++ID_iter)
+        {
+            parent.KidAdd(*ID_iter);
+            xBone &kid = spine.L_bones[*ID_iter];
+            kid.ID_parent   = parent.ID;
+            kid.P_begin     = parent.P_end;
+            kid.S_lengthSqr = (kid.P_end-kid.P_begin).lengthSqr();
+            kid.S_length    = sqrt(kid.S_lengthSqr);
         }
 
-        --(spine.boneC);
-        xIKNode *bones = new xIKNode[spine.boneC];
-        memcpy(bones, spine.boneP, sizeof(xIKNode)*spine.boneC);
-        delete[] spine.boneP;
-        spine.boneP = bones;
+        xWORD ID_last = spine.I_bones-1, ID_parent = bone.ID_parent;
+        if (ID_bone != ID_last) // if it is not the bone with the last id,
+        {                       //   then we have to correct largest id (= count)
+            bone = spine.L_bones[ID_last];
+            bone.ID = ID_bone;
+
+            spine.L_bones[bone.ID_parent].KidReplace(ID_last, ID_bone);
+            ID_iter = bone.ID_kids;
+            for (int i = bone.I_kids; i; --i, ++ID_iter)
+                spine.L_bones[*ID_iter].ID_parent = ID_bone;
+        }
+
+        --(spine.I_bones);
+        xBone *bones = new xBone[spine.I_bones];
+        memcpy(bones, spine.L_bones, sizeof(xBone)*spine.I_bones);
+        delete[] spine.L_bones;
+        spine.L_bones = bones;
 
         xElement *last = this->kidsP;
         for (; last; last = last->nextP)
-            _xBoneDelete_CorrectElementIds(last, boneId, parent.id, lastId);
+            _xBoneDelete_CorrectElementIds(last, ID_bone, ID_parent, ID_last);
 
         spine.FillBoneConstraints();
     }
@@ -320,7 +325,7 @@ void   xModel :: Save()
         }
 
         // are the bones defined?
-        bool skeletized = this->spine.boneC;
+        bool skeletized = this->spine.I_bones;
         fwrite(&skeletized, sizeof(bool), 1, file);
         if (skeletized)
             this->spine.Save(file);

@@ -2,6 +2,7 @@
 
 #include "../AppFramework/Input/InputMgr.h"
 #include "../Utils/Filesystem.h"
+#include "../OGL/GLShader.h"
 
 SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName)
 {
@@ -80,17 +81,19 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
 
     xModel *modelGr = Model.GetModelGr();
     xModel *modelPh = Model.GetModelPh();
-    if (!modelPh->spine.boneC && modelGr->spine.boneC)
+    if (!modelPh->spine.I_bones && modelGr->spine.I_bones)
     {
         modelPh->SkeletonAdd(); //   add skeleton to model
         Model.CopySpineToPhysical();
     }
     else
-    if (!modelGr->spine.boneC && modelPh->spine.boneC)
+    if (!modelGr->spine.I_bones && modelPh->spine.I_bones)
     {
         modelGr->SkeletonAdd(); //   add skeleton to model
         Model.CopySpineToGraphics();
     }
+    else
+        Model.CopySpineToGraphics();
     modelGr->spine.ResetQ();
     Model.CalculateSkeleton();
 
@@ -275,7 +278,7 @@ bool SceneSkeleton::Render()
 
     xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
     xModelInstance &modelInstance = (State.DisplayPhysical) ? Model.modelInstancePh : Model.modelInstanceGr;
-    xRender        &render        = Model.renderer;
+    Renderer       &render        = Model.renderer;
 
     render.RenderModel(model, modelInstance, false, FOV);
     render.RenderModel(model, modelInstance, true, FOV);
@@ -286,11 +289,11 @@ bool SceneSkeleton::Render()
     GLShader::Start();
 
     if (EditMode == emSelectVertex)
-        render.RenderVertices(model, modelInstance, xRender::smNone, Selection.ElementId, &Selection.Vertices);
+        render.RenderVertices(model, modelInstance, Renderer::smNone, Selection.ElementId, &Selection.Vertices);
     if (State.ShowBonesAlways || EditMode == emSelectBone || EditMode == emCreateBone ||
         EditMode == emCreateConstraint_Node || EditMode == emCreateConstraint_Params ||
         EditMode == emInputWght  || (EditMode == emAnimateBones && !State.HideBonesOnAnim))
-        render.RenderSkeleton(model, modelInstance, Selection.Bone ? Selection.Bone->id : xWORD_MAX);
+        render.RenderSkeleton(model, modelInstance, Selection.Bone ? Selection.Bone->ID : xWORD_MAX);
 
     GLShader::Suspend();
 
@@ -388,9 +391,9 @@ bool SceneSkeleton::Render()
             }
         else
         if (Constraint.type == IC_BE_CreateConstrWeight)
-            pFont->PrintF(5.f, 25, 0.f, "Weight: (%2.2f) %s", Constraint.length, InputState.String.c_str());
+            pFont->PrintF(5.f, 25, 0.f, "Weight: (%2.2f) %s", Constraint.M_weight, InputState.String.c_str());
         else
-            pFont->PrintF(5.f, 25, 0.f, "Length: (%2.2f) %s", Constraint.length, InputState.String.c_str());
+            pFont->PrintF(5.f, 25, 0.f, "Length: (%2.2f) %s", Constraint.S_length, InputState.String.c_str());
         pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | Input parameters of the constraint");
     }
     else if (EditMode == emSelectElement)
@@ -462,7 +465,7 @@ bool SceneSkeleton::Render()
             pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : %d", Skin.BoneWeight[i].id, Skin.BoneWeight[i].weight);
         }
         if (EditMode == emInputWght)
-            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : (%d) %s", Selection.Bone->id, 100 - sum, InputState.String.c_str());
+            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : (%d) %s", Selection.Bone->ID, 100 - sum, InputState.String.c_str());
     }
 
     glFlush();
@@ -523,7 +526,7 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 {
     xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
     xModelInstance &modelInstance = (State.DisplayPhysical) ? Model.modelInstancePh : Model.modelInstanceGr;
-    xRender        &render        = Model.renderer;
+    Renderer       &render        = Model.renderer;
 
     if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
         EditMode == emSelectBone || EditMode == emAnimateBones)
@@ -533,19 +536,19 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
             render.RenderSkeletonSelection(model, modelInstance, false);
     else
     if (EditMode == emSelectElement)
-        render.RenderVertices(model, modelInstance, xRender::smElement);
+        render.RenderVertices(model, modelInstance, Renderer::smElement);
     else
     if (EditMode == emSelectVertex)
-        render.RenderVertices(model, modelInstance, xRender::smVertex, Selection.ElementId);
+        render.RenderVertices(model, modelInstance, Renderer::smVertex, Selection.ElementId);
 }
 unsigned int SceneSkeleton::CountSelectable()
 {
     if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
         EditMode == emSelectBone || EditMode == emAnimateBones)
         if (EditMode == emCreateBone && State.CurrentAction == IC_BE_DeleteConstr)
-            return Model.GetModelGr()->spine.constraintsC;
+            return Model.GetModelGr()->spine.I_constraints;
         else
-            return Model.GetModelGr()->spine.boneC;
+            return Model.GetModelGr()->spine.I_bones;
     else
     if (EditMode == emSelectElement)
         if (State.DisplayPhysical)
@@ -575,14 +578,14 @@ std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)
     return ISelectionProvider::Select(NULL, X, Y, W, H);
 }
 
-xIKNode *SceneSkeleton::SelectBone(int X, int Y)
+xBone *SceneSkeleton::SelectBone(int X, int Y)
 {
     std::vector<xDWORD> *sel = SelectCommon(X, Y);
 
     if (sel && sel->size()) {
         GLuint id = sel->back();
         delete sel;
-        return Model.GetModelGr()->spine.boneP + id;
+        return Model.GetModelGr()->spine.L_bones + id;
     }
     delete sel;
     return NULL;

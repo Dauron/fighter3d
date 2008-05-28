@@ -3,12 +3,6 @@
 
 #include "xModel.h"
 
-struct xSkinnedData
-{
-    xVector3 *verticesP;
-    xVector3 *normalsP;
-};
-
 struct xCollisionHierarchyBounds
 {
     xBox           bounding;
@@ -25,7 +19,6 @@ struct xCollisionHierarchyBoundsRoot : public xCollisionHierarchyBounds
     xDWORD                      verticesC;
 };
 
-xSkinnedData xElement_GetSkinnedElement(const xElement *elem, const xMatrix *bones);
 void         xModel_SkinElementInstance(const xModel *model, xModelInstance &instance);
 xVector3     xModel_GetBounds(xModelInstance &instance);
 

@@ -1,7 +1,9 @@
 #include "../AppFramework/Application.h"
-#include "SceneGame.h"
 #include "../Utils/Debug.h"
 #include "../Utils/Filesystem.h"
+#include "../OGL/GLShader.h"
+
+#include "SceneGame.h"
 
 void OnApplicationInitialize(Application* sender);
 void OnApplicationInvalidate(Application* sender);
@@ -72,9 +74,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 #include "../AppFramework/Input/InputMgr.h"
 #include "../MotionCapture/CaptureInput.h"
-#include "../OpenGL/Textures/TextureMgr.h"
-#include "../OpenGL/Fonts/FontMgr.h"
-#include "../OpenGL/GLAnimSkeletal.h"
+#include "../OGL/Textures/TextureMgr.h"
+#include "../OGL/Fonts/FontMgr.h"
+#include "../OGL/GLAnimSkeletal.h"
 #include "../Models/ModelMgr.h"
 #include "../Models/lib3dx/xAnimationMgr.h"
 

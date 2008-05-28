@@ -4,7 +4,7 @@
 #include <string>
 #include "../Math/xMath.h"
 #include "../AppFramework/Scene.h"
-#include "../OpenGL/Fonts/FontMgr.h"
+#include "../OGL/Fonts/FontMgr.h"
 
 class SceneConsole : public Scene
 {

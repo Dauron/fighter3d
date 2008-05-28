@@ -105,7 +105,7 @@ void VerletBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
         std::vector<Collisions>::iterator C_iter, C_end;
 
         xSkeleton &spine   = model->GetModelGr()->spine;
-        xFLOAT   *W_bones  = new xFLOAT[spine.boneC];
+        xFLOAT   *W_bones  = new xFLOAT[spine.I_bones];
         xVector3 *A_forces = model->verletSystem.A_forces;
         std::vector<xVector3> A_dampings;
 
@@ -163,7 +163,7 @@ void VerletBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                 FaceWeights W_penetration = ::CalcPenetrationDepth(collision.face1v, collision.colPoint, N_collision);
                 // Bone contribution
                 xElement &elem = *collision.elem1;
-                memset(W_bones, 0, spine.boneC * sizeof(xFLOAT));
+                memset(W_bones, 0, spine.I_bones * sizeof(xFLOAT));
                 xDWORD stride = elem.textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
                 for (int pi = 0; pi < 3; ++pi)
                 {
@@ -235,9 +235,9 @@ void VerletBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
     }
 
     xSkeleton &spine = model->GetModelGr()->spine;
-    model->verletSystem.C_constraints = spine.constraintsP;
-    model->verletSystem.I_constraints = spine.constraintsC;
-    model->verletSystem.C_lengthConst = spine.boneConstrP;
+    model->verletSystem.C_constraints = spine.C_constraints;
+    model->verletSystem.I_constraints = spine.I_constraints;
+    model->verletSystem.C_lengthConst = spine.C_boneLength;
     model->verletSystem.spine = &spine;
     model->verletSystem.MX_ModelToWorld   = model->MX_ModelToWorld;
     model->verletSystem.MX_WorldToModel_T = model->MX_WorldToModel;
@@ -253,12 +253,12 @@ void VerletBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
     spine.CalcQuats(model->verletSystem.P_current, 0, model->verletSystem.MX_WorldToModel_T);
 
     if (!model->verletQuaternions)
-        model->verletQuaternions = new xVector4[spine.boneC];
+        model->verletQuaternions = new xVector4[spine.I_bones];
     spine.QuatsToArray(model->verletQuaternions);
 
     model->MX_ModelToWorld.postTranslateT(model->verletSystem.P_current[0]-model->verletSystem.P_previous[0]);
     xMatrix::Invert(model->MX_ModelToWorld, model->MX_WorldToModel);
-    spine.boneP->quaternion.zeroQ();
+    spine.L_bones->QT_rotation.zeroQ();
     model->verletQuaternions[0].zeroQ();
 
     model->verletWeight -= T_delta;

@@ -1,8 +1,7 @@
-#include "lib3dx/xImport.h"
-#include "../Utils/Utils.h"
-#include "../OpenGL/Textures/TextureMgr.h"
-
 #include "Model3dx.h"
+
+#include "lib3dx/xImport.h"
+#include "../OGL/Textures/TextureMgr.h"
 
 bool Model3dx :: Load ( const char *name )
 {

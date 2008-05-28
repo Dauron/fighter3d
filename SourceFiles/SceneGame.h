@@ -2,13 +2,13 @@
 #define __incl_SceneGame_h
 
 #include "../AppFramework/Scene.h"
-#include "../Math/Cameras/CameraHuman.h"
-#include "../World/World.h"
-#include "../OpenGL/GLShader.h"
-#include "../OpenGL/Fonts/FontMgr.h"
 #include "../Math/xFieldOfView.h"
+#include "../Math/Cameras/CameraHuman.h"
+#include "../OGL/Fonts/FontMgr.h"
+#include "../OGL/ISelectionProvider.h"
+#include "../World/World.h"
 
-class SceneGame : public Scene
+class SceneGame : public Scene, private ISelectionProvider
 {
   public:
     Camera *DefaultCamera;
@@ -43,6 +43,17 @@ class SceneGame : public Scene
     HFont          m_Font2;
 
     xFieldOfView   FOV;
+
+    virtual void RenderSelect(const xFieldOfView *FOV);
+    virtual unsigned int CountSelectable();
+
+    ModelObj *Select(int X, int Y)
+    {
+        std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(&FOV, X, Y);
+        return objectIDs == NULL ? NULL : world.objects[objectIDs->back()];
+    }
+
+
 };
 
 #endif

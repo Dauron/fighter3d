@@ -2,14 +2,13 @@
 #define __incl_ModelObj_h
 
 #include "Object3D.h"
-#include "../Math/xLight.h"
 #include "../Models/ModelMgr.h"
-#include "../Models/lib3dx/xSkeleton.h"
-#include "../Models/lib3dx/xRenderGL.h"
 #include "../Physics/CollisionInfo.h"
+#include "../Physics/Verlet/xVerletSolver.h"
+#include "../OGL/Render/xRenderGL.h"
+
 #include <algorithm>
-#include "../OpenGL/GLShader.h"
-#include "../OpenGL/Textures/TextureMgr.h"
+
 
 struct xForce
 {
@@ -185,7 +184,7 @@ protected:
 
     void CopySpine(const xSkeleton &src, xSkeleton &dst)
     {
-        if (src.boneP != dst.boneP)
+        if (src.L_bones != dst.L_bones)
         {
             dst.Clear();
             dst = src.Clone();

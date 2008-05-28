@@ -24,7 +24,7 @@ struct xModel {
     bool       opaque;       // Are there opaque faces?
 
     void   Free();
-    void   BoneDelete( xBYTE boneId );
+    void   BoneDelete( xBYTE ID_bone );
     void   SkeletonAdd();
     void   SkeletonReset();
 

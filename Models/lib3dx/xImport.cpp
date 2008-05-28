@@ -3,8 +3,6 @@
 #include <cassert>
 #include <fstream>
 #include <vector>
-#include "xSkeleton.h"
-#include "xUtils.h"
 
 #ifdef WIN32
 
@@ -79,7 +77,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
         {
             elem->facesC = mesh->faces;
             elem->verticesC = mesh->points;
-            elem->skeletized = xmodel->spine.boneC != 0;
+            elem->skeletized = xmodel->spine.I_bones != 0;
 
             assert(!mesh->texels || mesh->points == mesh->texels);
 
@@ -232,8 +230,8 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
     xmodel->texturesInited = false;
     xmodel->transparent = false;
     xmodel->opaque = false;
-    xmodel->spine.boneC = 0;
-    xmodel->spine.boneP = NULL;
+    xmodel->spine.I_bones = 0;
+    xmodel->spine.L_bones = NULL;
     xmodel->saveCollisionData = true;
     xmodel->fileName = 0;
     xmodel->saveCollisionData = true;

@@ -1,18 +1,19 @@
 #ifndef __incl_SceneSkeleton_h
 #define __incl_SceneSkeleton_h
 
-#include <string>
 #include "../AppFramework/Scene.h"
-#include "../OpenGL/ISelectionProvider.h"
 
-#include "../OpenGL/Fonts/FontMgr.h"
+#include "../OGL/ISelectionProvider.h"
+#include "../OGL/GLButton.h"
+#include "../OGL/Fonts/FontMgr.h"
+
 #include "../Math/Cameras/CameraHuman.h"
 #include "../Math/Cameras/CameraFree.h"
-#include "../World/ModelObj.h"
 
-#include "../OpenGL/GLButton.h"
+#include "../World/ModelObj.h"
 #include "../Models/lib3dx/xAnimation.h"
-#include "../Math/xVerletConstraint.h"
+
+#include <string>
 
 class SceneSkeleton : public Scene, public ISelectionProvider
 {
@@ -87,7 +88,8 @@ class SceneSkeleton : public Scene, public ISelectionProvider
             xBYTE  boneB;
             xLONG  type;
             union {
-                xFLOAT length;
+                xFLOAT M_weight;
+                xFLOAT S_length;
                 struct {
                     xFLOAT maxX;
                     xFLOAT minX;
@@ -123,7 +125,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
 
     // Selected objects
     struct _Selection {
-        xIKNode           * Bone;
+        xBone             * Bone;
         xElement          * Element;
         xWORD               ElementId;
         std::vector<xDWORD> Vertices;
@@ -159,7 +161,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     virtual void         RenderSelect   (const xFieldOfView *FOV);
     virtual unsigned int CountSelectable();
     std::vector<xDWORD> *SelectCommon  (int X, int Y, int W = 1, int H = 1);
-    xIKNode             *SelectBone    (int X, int Y);
+    xBone               *SelectBone    (int X, int Y);
     xWORD                SelectElement (int X, int Y);
 
 };
