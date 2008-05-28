@@ -5,7 +5,7 @@
 #include "../Models/ModelMgr.h"
 #include "../Physics/CollisionInfo.h"
 #include "../Physics/Verlet/xVerletSolver.h"
-#include "../OGL/Render/xRenderGL.h"
+#include "../OGL/Render/RendererGL.h"
 
 #include <algorithm>
 
@@ -38,7 +38,7 @@ public:
     xMatrix        MX_WorldToModel;
     xMatrix        MX_ModelToWorld_prev;
 
-    xRenderGL      renderer;
+    RendererGL      renderer;
     xModelInstance modelInstanceGr;
     xModelInstance modelInstancePh;
 

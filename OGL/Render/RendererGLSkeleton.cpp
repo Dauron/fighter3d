@@ -1,4 +1,4 @@
-#include "xRenderGL.h"
+#include "RendererGL.h"
 #include "../GLAnimSkeletal.h"
 #include "../../Physics/Verlet/xVConstraintLengthEql.h"
 #include "../../Physics/Verlet/xVConstraintLengthMin.h"
@@ -221,7 +221,7 @@ void RenderConstraint ( const xSkeleton &spine, const xMatrix *MX_bones, const x
 }
 
 
-void xRenderGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWORD ID_selBone )
+void RendererGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWORD ID_selBone )
 {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
@@ -344,7 +344,7 @@ void RenderConstraintSelection ( const xSkeleton &spine, const xMatrix *MX_bones
     glPopAttrib();
 }
 
-void xRenderGL :: RenderSkeletonSelection ( xModel &model, xModelInstance &instance, bool selectConstraint )
+void RendererGL :: RenderSkeletonSelection ( xModel &model, xModelInstance &instance, bool selectConstraint )
 {
     if (model.spine.I_bones)
     {

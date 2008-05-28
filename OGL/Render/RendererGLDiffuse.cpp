@@ -1,4 +1,4 @@
-#include "xRenderGL.h"
+#include "RendererGL.h"
 #include "../GLAnimSkeletal.h"
 
 /********************************* diffuse model ************************************/
@@ -79,7 +79,7 @@ void RenderElementDiffuseLST(bool transparent, const xFieldOfView &FOV, const xL
                 continue;
             }
             if (faceL->materialP != m_currentMaterial)
-                xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
+                RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
         if (!textured && elem->renderData.normalP) glDisableClientState(GL_NORMAL_ARRAY);
@@ -113,7 +113,7 @@ void RenderElementDiffuseLST(bool transparent, const xFieldOfView &FOV, const xL
             if (!faceL->materialP || !faceL->materialP->texture.htex)
                 continue;
             if (faceL->materialP != m_currentMaterial)
-                xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
+                RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
 
         }
@@ -176,7 +176,7 @@ void RenderElementDiffuseVBO(bool transparent, const xFieldOfView &FOV, const xL
 
     /************************* INIT VBO ****************************/
     if (elem->renderData.mode == xGPURender::NONE)
-        xRenderGL::InitVBO(elem);
+        RendererGL::InitVBO(elem);
 
     /************************* LOAD VERTICES ****************************/
     glPushMatrix();
@@ -223,7 +223,7 @@ void RenderElementDiffuseVBO(bool transparent, const xFieldOfView &FOV, const xL
             continue;
         if (faceL->materialP != m_currentMaterial)
         {
-            xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
+            RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
             if (elem->skeletized) g_AnimSkeletal.SetBones  (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, true);
         }
         glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
@@ -242,7 +242,7 @@ void RenderElementDiffuseVBO(bool transparent, const xFieldOfView &FOV, const xL
     glPopMatrix();
 }
 
-void xRenderGL :: RenderDiffuse(xModel &model, xModelInstance &instance, const xLight &light,
+void RendererGL :: RenderDiffuse(xModel &model, xModelInstance &instance, const xLight &light,
                               bool transparent, const xFieldOfView &FOV)
 {
     if ((transparent  && !model.transparent) ||

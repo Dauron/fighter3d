@@ -1,9 +1,9 @@
-#include "xRenderGL.h"
+#include "RendererGL.h"
 #include "../GLAnimSkeletal.h"
 #include "../Textures/TextureMgr.h"
 
 /********************************* common private ************************************/
-void xRenderGL :: InitVBO (xElement *elem)
+void RendererGL :: InitVBO (xElement *elem)
 {
     if (elem->renderData.mode == xGPURender::NONE)
     {
@@ -31,7 +31,7 @@ void xRenderGL :: InitVBO (xElement *elem)
     }
 }
 
-void xRenderGL :: InitTextures(xModel &model)
+void RendererGL :: InitTextures(xModel &model)
 {
     if (!model.texturesInited)
     for (xMaterial *mat = model.materialP; mat; mat = mat->nextP)
@@ -48,7 +48,7 @@ void xRenderGL :: InitTextures(xModel &model)
     model.texturesInited = true;
 }
 
-void xRenderGL::SetMaterial(xColor color, xMaterial *mat, bool toggleShader)
+void RendererGL::SetMaterial(xColor color, xMaterial *mat, bool toggleShader)
 {
     if (mat)
     {
@@ -157,7 +157,7 @@ void RenderElementFacesVBO(
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     /************************* INIT VBO ****************************/
     if (elem->renderData.mode == xGPURender::NONE)
-        xRenderGL::InitVBO(elem);
+        RendererGL::InitVBO(elem);
 
     /************************* LOAD VERTICES ****************************/
     glPushMatrix();
@@ -267,7 +267,7 @@ void RenderElementFacesLST(
     glPopMatrix();
 }
 
-void xRenderGL :: RenderFaces( xModel &model, xModelInstance &instance,
+void RendererGL :: RenderFaces( xModel &model, xModelInstance &instance,
                                xWORD                 selectedElement,
                                std::vector<xDWORD> * facesToRender)
 {
@@ -305,7 +305,7 @@ void RenderElementVerticesVBO(
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     /************************* INIT VBO ****************************/
     if (elem->renderData.mode == xGPURender::NONE)
-        xRenderGL::InitVBO(elem);
+        RendererGL::InitVBO(elem);
 
     if (selectionMode == Renderer::smElement)
         glLoadName(elem->id);
@@ -450,7 +450,7 @@ void RenderElementVerticesLST(
     glPopMatrix();
 }
 
-void xRenderGL :: RenderVertices( xModel &model, xModelInstance &instance,
+void RendererGL :: RenderVertices( xModel &model, xModelInstance &instance,
                                   SelectionMode         selectionMode,
                                   xWORD                 selectedElement,
                                   std::vector<xDWORD> * selectedVertices)
@@ -557,7 +557,7 @@ void RenderModelLST(bool transparent, const xFieldOfView &FOV,
                 continue;
             }
             if (faceL->materialP != m_currentMaterial)
-                xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
+                RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
         if (!textured && elem->renderData.normalP) glDisableClientState(GL_NORMAL_ARRAY);
@@ -591,7 +591,7 @@ void RenderModelLST(bool transparent, const xFieldOfView &FOV,
             if (!faceL->materialP || !faceL->materialP->texture.htex)
                 continue;
             if (faceL->materialP != m_currentMaterial)
-                xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
+                RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -645,7 +645,7 @@ void RenderModelVBO(bool transparent, const xFieldOfView &FOV,
 
     /************************* INIT VBO ****************************/
     if (elem->renderData.mode == xGPURender::NONE)
-        xRenderGL::InitVBO(elem);
+        RendererGL::InitVBO(elem);
 
     /************************* LOAD VERTICES ****************************/
     glPushMatrix();
@@ -692,7 +692,7 @@ void RenderModelVBO(bool transparent, const xFieldOfView &FOV,
             continue;
         if (faceL->materialP != m_currentMaterial)
         {
-            xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
+            RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
             if (elem->skeletized) g_AnimSkeletal.SetBones  (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, true);
         }
         glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
@@ -711,7 +711,7 @@ void RenderModelVBO(bool transparent, const xFieldOfView &FOV,
     glPopMatrix();
 }
 
-void xRenderGL :: RenderModel(xModel &model, xModelInstance &instance,
+void RendererGL :: RenderModel(xModel &model, xModelInstance &instance,
                               bool transparent, const xFieldOfView &FOV)
 {
     if ((transparent  && !model.transparent) ||

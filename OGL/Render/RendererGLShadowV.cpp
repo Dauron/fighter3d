@@ -1,4 +1,4 @@
-#include "xRenderGL.h"
+#include "RendererGL.h"
 
 #include "../../Config.h"
 #include "../../Graphics/ShadowVolume.h"
@@ -581,7 +581,7 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
     glPopMatrix();
 }
 /*****************************     COMMON     *********************************/
-void xRenderGL :: RenderShadowVolume(xModel &model, xModelInstance &instance, xLight &light, xFieldOfView &FOV)
+void RendererGL :: RenderShadowVolume(xModel &model, xModelInstance &instance, xLight &light, xFieldOfView &FOV)
 {
     glPushMatrix();
     glMultMatrixf(&instance.location.x0);

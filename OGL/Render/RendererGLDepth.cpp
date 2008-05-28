@@ -1,4 +1,4 @@
-#include "xRenderGL.h"
+#include "RendererGL.h"
 #include "../GLAnimSkeletal.h"
 
 /********************************* vertices && element selections ************************************/
@@ -79,7 +79,7 @@ void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
 
     /************************* INIT VBO ****************************/
     if (instance.mode == xGPURender::NONE)
-        xRenderGL::InitVBO(elem);
+        RendererGL::InitVBO(elem);
 
     /************************* LOAD VERTICES ****************************/
     glPushMatrix();
@@ -123,7 +123,7 @@ void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
     glPopMatrix();
 }
 
-void xRenderGL :: RenderDepth( xModel &model, xModelInstance &instance,
+void RendererGL :: RenderDepth( xModel &model, xModelInstance &instance,
                                bool transparent, const xFieldOfView &FOV )
 {
     if ((transparent  && !model.transparent) ||

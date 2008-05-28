@@ -4,10 +4,10 @@
 #include "../../Graphics/Renderer.h"
 #include "../Extensions/ARB_vertex_buffer_object.h"
 
-class xRenderGL : public Renderer
+class RendererGL : public Renderer
 {
   public:
-    virtual ~xRenderGL() {}
+    virtual ~RendererGL() {}
 
     bool       UseVBO;
     bool       UseList;
@@ -38,7 +38,7 @@ class xRenderGL : public Renderer
     virtual void CreateShadowMapTexture( xModel &model, xModelInstance &instance, xDWORD &shadowMapTexId,
                                          xWORD width, xMatrix &mtxBlockerToLight );
 
-    xRenderGL() : UseVBO(GLExtensions::Exists_ARB_VertexBufferObject), UseList(true) {};
+    RendererGL() : UseVBO(GLExtensions::Exists_ARB_VertexBufferObject), UseList(true) {};
 
     virtual void InvalidateGraphics(xModel &model, xModelInstance &instance)
     {

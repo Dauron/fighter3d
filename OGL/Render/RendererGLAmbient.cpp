@@ -1,4 +1,4 @@
-#include "xRenderGL.h"
+#include "RendererGL.h"
 #include "../GLAnimSkeletal.h"
 
 /********************************* ambient model ************************************/
@@ -84,7 +84,7 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
                 continue;
             }
             if (faceL->materialP != m_currentMaterial)
-                xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
+                RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
         if (!textured && elem->renderData.normalP) glDisableClientState(GL_NORMAL_ARRAY);
@@ -118,7 +118,7 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
             if (!faceL->materialP || !faceL->materialP->texture.htex)
                 continue;
             if (faceL->materialP != m_currentMaterial)
-                xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
+                RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
             glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
         }
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -185,7 +185,7 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
 
     /************************* INIT VBO ****************************/
     if (elem->renderData.mode == xGPURender::NONE)
-        xRenderGL::InitVBO(elem);
+        RendererGL::InitVBO(elem);
 
     /************************* LOAD VERTICES ****************************/
     glPushMatrix();
@@ -225,7 +225,7 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
             continue;
         if (faceL->materialP != m_currentMaterial)
         {
-            xRenderGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
+            RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
             if (elem->skeletized) g_AnimSkeletal.SetBones  (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, true);
         }
         glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
@@ -242,7 +242,7 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
     glPopMatrix();
 }
 
-void xRenderGL :: RenderAmbient(xModel &model, xModelInstance &instance, const xLightVector &lights,
+void RendererGL :: RenderAmbient(xModel &model, xModelInstance &instance, const xLightVector &lights,
                               bool transparent, const xFieldOfView &FOV)
 {
     if ((transparent  && !model.transparent) ||

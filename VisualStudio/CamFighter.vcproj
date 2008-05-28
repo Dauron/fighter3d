@@ -621,6 +621,38 @@
 			<Filter
 				Name="Render"
 				>
+				<File
+					RelativePath="..\OGL\Render\RendererGL.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\OGL\Render\RendererGL.h"
+					>
+				</File>
+				<File
+					RelativePath="..\OGL\Render\RendererGLAmbient.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\OGL\Render\RendererGLDepth.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\OGL\Render\RendererGLDiffuse.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\OGL\Render\RendererGLShadow.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\OGL\Render\RendererGLShadowV.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\OGL\Render\RendererGLSkeleton.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Extensions"
