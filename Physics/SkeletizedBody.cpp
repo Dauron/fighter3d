@@ -10,7 +10,7 @@ FaceWeights CalcPenetrationDepth(const xVector3 P_face[3], const xVector3 &P_pla
     xVector3 W_face;
     FaceWeights W_res;
     W_res.P_max.zero();
-    xBYTE I_points_max = 0;
+    xFLOAT W_points_max = 0;
 
     for (int i = 0; i < 3; ++i)
     {
@@ -19,12 +19,14 @@ FaceWeights CalcPenetrationDepth(const xVector3 P_face[3], const xVector3 &P_pla
         if (S_cur > 0.f)
         {
             W_face.xyz[i] = (P_face[i] - P_plane).lengthSqr();
-            if (S_cur > S_max) { S_max = S_cur; W_res.P_max += P_face[i]; ++I_points_max; };
+            W_points_max += S_cur;
+            W_res.P_max += S_cur * P_face[i];
+            if (S_cur > S_max) S_max = S_cur;
         }
         else
             W_face.xyz[i] = 0.f;
     }
-    if (I_points_max) W_res.P_max /= I_points_max;
+    if (W_points_max) W_res.P_max /= W_points_max;
     else              W_res.P_max = P_plane;
 
     xFLOAT W_scale = (W_face.x + W_face.y + W_face.z);

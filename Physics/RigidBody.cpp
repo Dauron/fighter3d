@@ -14,11 +14,7 @@ RigidBody::Contribution RigidBody :: GetParticleContribution(const xVector3 &N_p
     W_part.w *= W_part.w;
     W_part.w *= W_part.w;
     W_part.w *= W_part.w;
-    xFLOAT W_scale = 1.f / (W_part.x + W_part.y + W_part.z + W_part.w);
-    W_part.x *= W_scale;
-    W_part.y *= W_scale;
-    W_part.z *= W_scale;
-    W_part.w *= W_scale;
+    W_part /= W_part.x + W_part.y + W_part.z + W_part.w;
 
     xMatrix  &MX_WorldToX = xMatrixFromVectors(P_current[1] - P_current[0], N_plane_2).invert();
     xMatrix  &MX_WorldToY = xMatrixFromVectors(P_current[2] - P_current[0], N_plane_2).invert();
@@ -27,6 +23,7 @@ RigidBody::Contribution RigidBody :: GetParticleContribution(const xVector3 &N_p
     if (MX_WorldToX.preTransformP(P_collision_Rel).y < 0) W_part.x = -W_part.x;
     if (MX_WorldToY.preTransformP(P_collision_Rel).y < 0) W_part.y = -W_part.y;
     if (MX_WorldToZ.preTransformP(P_collision_Rel).y < 0) W_part.z = -W_part.z;
+
     Contribution W_res;
     W_res.contrib[0] = W_part.w; W_res.contrib[1] = W_part.x; W_res.contrib[2] = W_part.y; W_res.contrib[3] = W_part.z;
     return W_res;
@@ -35,6 +32,7 @@ RigidBody::Contribution RigidBody :: GetParticleContribution(const xVector3 &N_p
 RigidBody::Contribution RigidBody :: GetParticleContribution(const xVector3 &P_collision_Local)
 {
     xVector4 W_part;
+
     W_part.w = P_collision_Local.lengthSqr();
     W_part.x = P_collision_Local.y*P_collision_Local.y + P_collision_Local.z*P_collision_Local.z;
     W_part.y = P_collision_Local.x*P_collision_Local.x + P_collision_Local.z*P_collision_Local.z;
@@ -44,16 +42,14 @@ RigidBody::Contribution RigidBody :: GetParticleContribution(const xVector3 &P_c
     if (W_part.y > 0.f) W_part.y = W_scale / W_part.y;
     if (W_part.z > 0.f) W_part.z = W_scale / W_part.z;
     if (W_part.w > 0.f) W_part.w = W_scale / W_part.w;
-    W_scale = 1 / (W_part.x + W_part.y + W_part.z + W_part.w);
-    W_part.x *= W_scale;
-    W_part.y *= W_scale;
-    W_part.z *= W_scale;
-    W_part.w *= W_scale;
-
-    if (P_collision_Local.x < 0.f) W_part.x = -W_part.x;
-    if (P_collision_Local.y < 0.f) W_part.y = -W_part.y;
-    if (P_collision_Local.z < 0.f) W_part.z = -W_part.z;
-
+    W_part /= W_part.x + W_part.y + W_part.z + W_part.w;
+    /*
+    W_part.x = P_collision_Local.x;
+    W_part.y = P_collision_Local.y;
+    W_part.z = P_collision_Local.z;
+    W_part.w = 0.f;
+    W_part /= fabs(W_part.x) + fabs(W_part.y) + fabs(W_part.z) + fabs(W_part.w);
+    */
     Contribution W_res;
     W_res.contrib[0] = W_part.w; W_res.contrib[1] = W_part.x; W_res.contrib[2] = W_part.y; W_res.contrib[3] = W_part.z;
     return W_res;
@@ -232,7 +228,6 @@ void RigidBody :: CalculateMovement(RigidObj *model, float T_delta)
     engine.Init(& model->verletSystem);
     engine.I_passes = 1;
     engine.VerletFull();
-    //model->verletSystem.M_weight[0] = 0.f;
     engine.SatisfyConstraints();
 
     model->MX_ModelToWorld_prev = model->MX_ModelToWorld;
