@@ -1,0 +1,49 @@
+\section{Symulacja fizyki}
+
+Posiadaj¹c wiedzê o si³ach oddzia³uj¹cych na obiekty oraz kolizjach do których dosz³o, mo¿na przejœæ do symulacji ruchu. Przyk³adowym podejœciem mo¿e byæ otwarcie podrêcznika do fizyki i zastosowanie przedstawionych w nim wzorów opisuj¹cych ruch.
+
+Stosuj¹c opis dynamiczny na poziomie modelu jako ca³oœci, nale¿a³oby uwzglêdniæ w algorytmie takie wielkoœci jak pozycja, prêdkoœæ, masa obiektu, a tak¿e dzia³aj¹ce nañ si³y. Model taki jest w najprostszym przypadku cia³em sztywnym, nie mo¿na wiêc równie¿ zapomnieæ o opisuj¹cych ruch obrotowy momencie bezw³adnoœci oraz momencie si³y. Gdy zechcemy symulowaæ cia³a odkszta³calne, takie jak materia³y, powierzchnie elastyczne, b¹dŸ roœliny, nasz algorytm rozroœnie siê jeszcze bardziej.
+
+\subsection{Ca³kowanie Verlet'a}
+
+Alternatywne podejœcie do symulacji zachowania siê cia³ fizycznych zastosowano po raz pierwszy w grze \textit{Hitman: Codename 47}. Rozwi¹zanie to przedstawi³ w swym artykule dyrektor do spraw  badañ i rozwoju w firmie IO Interactive, Thomas Jakobsen \cite{JAKOB}. Polega ono na rozbiciu obiektu na zbiór punktów materialnych i rozpatrywaniu ruchu ka¿dego punktu osobno. Ponadto, w celu poprawy stabilnoœci algorytmu, zrezygnowano z przechowywania prêdkoœci cz¹steczki. W efekcie ka¿da cz¹steczka opisywana jest przez cztery wielkoœci fizyczne: pozycjê, pozycjê w poprzedniej klatce (wymagana do wyliczenia faktycznej prêdkoœci), masê oraz wypadkowe przyœpieszenie cz¹steczki. Ca³y opis ruchu pojedynczego punktu materialnego sprowadza siê do nastêpuj¹cego wzoru:
+\begin{equation}
+x_{t+1} = 2 * x_{t} - x_{t-1} + a * \Delta t^{2}
+\end{equation}
+Podejœcie to nazywa siê ca³kowaniem Verlet'a i jest szeroko wykorzystywane w symulacji dynamiki molekularnej. Prêdkoœæ cia³a zaszyta jest w tym wzorze pod postaci¹ ró¿nicy po³o¿enia w w sta³ej jednostce czasu:  $x_{t} - x_{t-1}$.
+
+\subsection{Nak³adanie ograniczeñ na punkty materialne}
+
+Za pomoc¹ chmury niezale¿nych punktów materialnych, mo¿emy opisaæ co najwy¿ej silnik cz¹steczkowy. Jeœli jednak chcielibyœmy by nasze cz¹steczki opisywa³y bardziej z³o¿one cia³a, musimy na³o¿yæ na nie ograniczenia.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=1\textwidth]{../../Images/SDM_constraint.png}
+  \caption{Kolejne kroki procesu spe³niania ograniczeñ.}
+\end{figure}
+
+W podejœciu przedstawionym przez Jakobsena zbiór ograniczeñ na³o¿onych na system spe³niany jest poprzez relaksacjê. Proces ten postaram siê opisaæ na przyk³adzie dwóch cz¹steczek opisuj¹cych sztywny prêt. Odleg³oœæ miêdzy tymi cz¹steczkami musi byæ sta³a. Dodatkowo prêt nie powinien przebiæ ¿adnego innego obiektu. Na rysunku 3a widzimy sytuacjê w której to drugie ograniczenie zosta³o naruszone. Prêt przechodzi przez œcianê reprezentowan¹ przez przerywan¹ liniê. W pojedynczym kroku symulacji, przez zadan¹ iloœæ iteracji, silnik bêdzie po kolei spe³nia³ ka¿de z ograniczeñ. W ramach spe³niania tego ograniczenia, punkt który przebi³ œcianê zosta³ rzutowany na poprawn¹ pozycjê. Spe³nienie tego ograniczenia naruszy³o jednak ograniczenie drugie – cz¹steczki znalaz³y siê zbyt blisko siebie (rys. 3b). Aby spe³niæ ten warunek, punkty musz¹ zostaæ rozsuniête – spowoduje to jednak ponowne przebicie œciany (rys. 3c). W kolejnych iteracjach relaksacji ograniczenia bêd¹ naruszane w coraz mniejszym stopniu, a¿ w koñcu wszystkie zostan¹ spe³nione.
+
+Co interesuj¹ce, w pojedynczej klatce symulacji nie musimy doprowadzaæ do spe³nienia wszystkich ograniczeñ. Korygowanie pozycji cz¹steczek mo¿e byæ kontynuowane w kolejnych klatkach.
+
+\subsection{Symulacja cia³ odkszta³calnych}
+
+Aby opisaæ zachowanie cia³ odkszta³calnych, takich jak ubrania b¹dŸ roœliny, wystarczy ka¿dy wierzcho³ek siatki modelu symulowaæ jako pojedynczy punkt materialny. Na punkty te powinny zostaæ na³o¿one warunki zachowania sta³ej odleg³oœci pokrywaj¹ce siê z krawêdziami trójk¹tów siatki. Dla uzyskania ³adnej animacji takich cia³ wystarczy tylko pojedyncza iteracja relaksacji na klatkê symulacji.
+
+\subsection{Symulacja cia³ sztywnych}
+
+Najprostszym sposobem na przedstawienie cia³a sztywnego, jest zastosowanie takiego samego podejœcia jak dla cia³ odkszta³calnych, lecz z na³o¿eniem ograniczeñ sta³ej odleg³oœci na wszystkie pary wierzcho³ków. Wydajniejszym podejœciem jest jednak opisanie ca³ego cia³a sztywnego z wykorzystaniem jedynie czterech punktów materialnych po³¹czonych ograniczeniami sta³ej odleg³oœci. Ustawienie tych cz¹stek w konfiguracji np. czworoœcianu foremnego zapewni 6 stopni swobody, a wiêc dok³adnie tyle, ile posiada cia³o sztywne. W zale¿noœci od sposobu ustawienia cz¹steczek, cia³o bêdzie mia³o ró¿ny moment bezw³adnoœci.
+
+Jedynym problemem jaki pozostaje do rozwi¹zania jest roz³o¿enie  si³y przy³o¿onej do pewnego punktu (np. punktu kolizji) na si³y sk³adowe dzia³aj¹ce na poszczególne cz¹steczki. Dowolny punkt w przestrzeni mo¿e byæ przedstawiony jako liniowa interpolacja punktów materialnych które symulujemy. Korzystaj¹c z parametrów tej interpolacji mo¿emy dokonaæ operacji odwrotnej by proporcjonalnie roz³o¿yæ si³ê pomiêdzy wszystkie cz¹steczki.
+
+\subsection{Fizyka szkieletu}
+
+Silnik oparty na ca³kowaniu Verlet'a bardzo dobrze nadaje siê równie¿ do symulowania fizyki cia³ posiadaj¹cych szkielet. Wystarczy stawy przedstawiæ jako punkty materialne, a koœci jako warunki zachowania sta³ej odleg³oœci. Dodatkowo nale¿y dodaæ ograniczenia k¹towe, które uniemo¿liwi¹ 'wykrêcanie stawów'. Dobrym rozwi¹zaniem ograniczaj¹cym przecinanie siê koœci postaci (silnik fizyczny rozpatruje tylko kolizje z innymi modelami), jest dodanie warunków minimalnej odleg³oœci pomiêdzy takimi stawami jak kolana i kostki stóp.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.4\textwidth]{../../Images/Gameplay/editor_constraints.jpg}
+  \caption{Szkielet z na³o¿onymi ograniczeniami k¹towymi.}
+\end{figure}
+
+W przeciwieñstwie do innych typów obiektów, cz¹steczki reprezentuj¹ce stawy musz¹ byæ napêdzane nie tylko samym procesem ca³kowania Verlet'a, ale równie¿ przez zewnêtrzne Ÿród³a ruchu, takie jak animacje przygotowane przez artystów. Rozwi¹zaniem problemu mo¿e byæ algorytm, który bêdzie miesza³ zewnêtrzn¹ animacjê z wynikiem dzia³ania ca³kowania. Waga ka¿dego ze Ÿróde³ powinna byæ zmienna. Jeœli np. model zostanie uderzony z du¿¹ si³¹, to kontrolê powinien przej¹æ silnik Verlet'a. W pozosta³ych sytuacjach wiêksz¹ wagê powinno siê przyk³adaæ do 'woli' postaci, czyli animacji narzuconych przez logikê gry.

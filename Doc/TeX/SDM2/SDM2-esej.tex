@@ -1,0 +1,33 @@
+\documentclass[a4paper,onecolumn,10pt]{article}
+
+\usepackage[polish]{babel}
+\usepackage[cp1250]{inputenc}
+
+
+%% Aby uzyskaæ dobre polskie czcionki w PDF i Postscript:
+\usepackage{tgtermes,tgcursor}
+%%\usepackage[QX]{fontenc}
+\usepackage[T1]{fontenc}
+
+%% W³¹czenie dodatkowych pakietów. epsfig w³¹cza te¿ graphicx i graphics.
+\usepackage{fancyhdr}
+\usepackage{fancyvrb}
+\usepackage{epsfig}
+\usepackage{color}
+
+\begin{document}
+\bibliographystyle{alpha}
+\pagestyle{fancy}
+%%\fancyhead[LE,RO]{}
+%%\fancyhead[RE,LO]{\leftmark}
+
+\input{part01.tex}
+\input{part02.tex}
+\input{part03.tex}
+\input{bib.tex}
+
+%%\nocite{*}
+%%\bibliography{sdm2-esej}
+
+\end{document}
+

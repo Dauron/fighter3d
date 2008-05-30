@@ -1,0 +1,54 @@
+\section{Detekcja kolizji}
+
+\subsection{Wstêp}
+
+Detekcja kolizji jest niezbêdnym elementem ka¿dego symulatora fizyki. Nie maj¹c informacji o zachodz¹cych zderzeniach, symulator nie móg³by na nie zareagowaæ. Obiekty porusza³yby siê w 'œwiecie duchów', przenikaj¹c siê nawzajem. Ruch by³by jedynie skutkiem zaszytych w silniku si³, takich jak np. si³a ci¹¿enia. Obserwowanie takiego œwiata nie by³o by ani pouczaj¹cym, ani zajmuj¹cym widowiskiem.
+
+W wyniku detekcji kolizji silnik fizyczny otrzymuje informacje które umo¿liwiaj¹ symulacjê oddzia³ywañ miêdzy cia³ami. Dziêki tej wiedzy mo¿emy przenieœæ siê ze 'œwiata duchów' do œwiata materialnego. Detektory najczêœciej wykrywaj¹ kolizje na jeden z dwóch sposobów: metod¹ \textit{a priori} b¹dŸ \textit{a posteriori}\cite{WIKI_CD}.
+
+W metodzie \textit{a posteriori} silnik porusza symulacjê o pewien ma³y krok do przodu, a nastêpnie sprawdza, czy istniej¹ obiekty które przecinaj¹ siê. W ka¿dym kroku symulacji tworzona jest lista przecinaj¹cych siê obiektów. Na bazie tej listy poprawiane s¹ pozycje i trajektorie ruchu koliduj¹cych obiektów. Nazwa metody bierze siê st¹d, i¿ najczêœciej symulator przeskoczy moment zaistnienia kolizji i dopiero po jej zaistnieniu podejmuje akcjê.
+
+Odmiennym podejœciem cechuje siê metoda \textit{a priori}. W metodzie tej algorytm detekcji kolizji musi potrafiæ przewidzieæ dok³adne trajektorie obiektów. Wykorzystuj¹c tê wiedzê, mo¿e precyzyjnie okreœliæ moment zderzenia, dziêki czemu cia³a nigdy siê nie przetn¹. Momenty kolizji znane s¹ jeszcze przed przemieszczeniem cia³. Niestety kosztem tej wiedzy jest du¿e skomplikowanie numeryczne algorytmu.
+
+Przewag¹ metody \textit{a posteriori} jest mo¿liwoœæ logicznego rozdzielenia algorytmu fizycznego od detektora kolizji. Detektor nie musi mieæ wiedzy o zmiennych fizycznych opisuj¹cych ruch obiektów oraz o rodzajach materia³ów z których s¹ wykonane. Problemem tej metody jest jednak etap poprawiania niezgodnych z fizyk¹ pozycji obiektów, przez co metoda \textit{a priori} cechuje du¿o wiêksz¹ dok³adnoœci¹ i stabilnoœci¹ symulacji.
+
+Specjalnym przypadkiem do rozpatrzenia jest stan spoczynku. Je¿eli odleg³oœæ oraz ruch dwóch obiektów wzglêdem siebie jest poni¿ej pewnego progu, cia³a powinny przejœæ w stan spoczynku, z którego zostan¹ wyrwane dopiero pod dzia³aniem nowej si³y.
+
+\subsection{Algorytm detekcji kolizji}
+
+Oczywistym podejœciem do detekcji kolizji jest sprawdzenie kolizji miêdzy wszystkim parami symulowanych obiektów. Poniewa¿ modele 3d sk³adaj¹ siê ze zbioru trójk¹tów, detekcja kolizji sprowadza siê do sprawdzenia czy nie dosz³o do przeciêcia trójk¹tów jednego z obiektów z trójk¹tami drugiego. Powsta³o wiele ró¿nych algorytmów badaj¹cych czy dosz³o do przeciêcia dwóch trójk¹tów.
+
+Jako bazê detektora wybra³em algorytm 'Fast Triangle-Triangle Intersection Test' autorstwa Oliviera Devillers oraz Philippe'a Guigue z INRIA \cite{RR4488}. Algorytm ten w pierwszym kroku sprawdza czy trójk¹ty przecinaj¹ wzajemnie p³aszczyzny na których le¿¹. Jest to niezbêdny warunek by mog³o dojœæ do kolizji. Je¿eli istnieje potencjalna kolizja, wystarczy przeprowadziæ cztery kolejne testy by uzyskaæ ostateczne rozstrzygniêcie.
+
+Algorytmy wykrywania przecinaj¹cych siê trójk¹tów s¹ obecnie uproszczone do granic mo¿liwoœci. Modele obiektów sk³adaj¹ siê najczêœciej z co najmniej kilkuset trójk¹tów, a modele postaci mog¹ byæ zbudowane nawet z kilku milionów trójk¹tów. Jak ³atwo wyliczyæ, sprawdzenie kolizji zachodz¹cej miêdzy dwoma modelami mo¿e wymagaæ przeprowadzenia od dziesi¹tek tysiêcy do milionów testów kolizji trójk¹tów. Grafika komputerowa umo¿liwia wykorzystanie sztuczek zwi¹zanych z mapowaniem modelu, które umo¿liwiaj¹ ograniczenie iloœci wierzcho³ków bez wyraŸnej straty na jakoœci wizualnej. Kolejn¹ technik¹ obni¿aj¹c¹ iloœæ wierzcho³ków jest przygotowanie dla detektora kolizji modelu fizycznego, bêd¹cego uproszczon¹ wersj¹ modelu pokazywanego na ekranie. Pozwala to na opisanie modelu postaci za pomoc¹ jedynie kilkudziesiêciu do kilkuset wierzcho³ków. Nadal daje to jednak kilka tysiêcy testów dla tylko jednej pary obiektów.
+
+W celu ograniczenia iloœci wymaganych testów kolizji trójk¹tów, stosuje siê kilka technik umo¿liwiaj¹cych przycinanie zbioru potencjalnych trójk¹tów mog¹cych wejœæ w kolizjê z innym obiektem, a tak¿e przycinanie zbioru obiektów które mog¹ siê ze sob¹ przeci¹æ.
+
+\subsection{Hierarchie bry³ otaczaj¹cych}
+
+Technika ta polega na podziale obiektu na hierarchiczne drzewo mniejszych elementów. Ka¿dy wêze³ drzewa zawiera informacjê o otaczaj¹cej go bryle. Bry³¹ t¹ najczêœciej s¹ sfery, szeœciany b¹dŸ walce.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../../Images/Web/Octree2.png}
+  \caption{Hierarchiczny podzia³ przestrzeni (na przyk³adzie Drzewa Ósemkowego).}
+\end{figure}
+
+Je¿eli bry³a otaczaj¹ca dany wêze³ przecina siê z bry³¹ otaczaj¹c¹ wêze³ nale¿¹cy do innego obiektu, to oznacza, ¿e wystêpuje potencjalna kolizja obiektów. Aby j¹ rozstrzygn¹æ, nale¿y sprawdziæ czy zachodz¹ kolizje miêdzy bry³ami otaczaj¹cymi wêz³y ni¿szego rzêdu. Jeœli algorytm dojdzie do najni¿szego rzêdu hierarchii bry³ otaczaj¹cych, bêdzie musia³ dokonaæ testu kolizji miêdzy trójk¹tami nale¿¹cymi do tych najmniejszych wêz³ów w hierarchii. Dziêki zastosowaniu tej techniki ju¿ pierwszy test mo¿e wykluczyæ kolizjê miêdzy obiektami. Co wiêcej, wszystkie testy przeprowadzane w wêz³ach drzewa operuj¹ na prostych bry³ach geometrycznych, pozwalaj¹cych na  efektywne sprawdzenie czy zachodzi kolizja. Dopiero test najni¿szego rzêdu wymaga badania kolizji miêdzy trójk¹tami, jednak¿e jest ich na tym poziomie tylko od kilku do kilkunastu dla ka¿dego z wêz³ów.
+
+Projektuj¹c detektor, warto siê równie¿ zastanowiæ, jak wielk¹ precyzjê wykrywania kolizji wymaga nasza symulacja. Prawdopodobnie mo¿emy ca³kowicie zrezygnowaæ z testowania kolizji miêdzy trójk¹tami, gdy¿ wystarczy nam przybli¿enie zapewnione przez hierarchiê bry³ otaczaj¹cych.
+
+\subsection{Wybór obiektów mog¹cych kolidowaæ}
+
+Z³o¿ona scena 3d mo¿e sk³adaæ siê z bardzo du¿ej iloœci obiektów. Obiekt poruszaj¹cy siê np. na scenie rozgrywaj¹cej siê w mieszkaniu mo¿e wejœæ w kolizjê z du¿¹ iloœci¹ obiektów. Mog¹ to byæ zarówno drobne modele przedstawiaj¹ce np. ksi¹¿ki, ale te¿ obiekty znaczniejszych rozmiarów przedstawiaj¹ce meble i œciany. Sprawdzanie czy poruszaj¹cy siê obiekt wchodzi w kolizjê z wszystkim modelami w scenie niepotrzebnie mno¿y iloœæ przeprowadzanych testów, wp³ywaj¹c na znaczne obni¿enie szybkoœci detekcji kolizji. Jeœli postaæ znajduje siê w kuchni, to niema najmniejszego sensu sprawdzanie, czy przypadkiem nie zderzy³a siê z wann¹ mieszcz¹c¹ siê na drugim koñcu mieszkania. W celu wyeliminowania takich zbêdnych testów stosuje siê techniki podzia³u przestrzeni.
+
+Najbardziej uniwersalnym sposobem podzia³u przestrzeni jest zastosowanie drzewa BSP (Binary Space Partitioning - Binarny Podzia³ Przestrzeni). Ka¿dy wêze³ takiego drzewa dzieli opisywan¹ przez siebie przestrzeñ na dwie podprzestrzenie le¿¹ce po przeciwnych stronach pewnej hiperp³aszczyzny. Drzewo takie mo¿na zastosowaæ do podzia³u przestrzeni o dowolnej wymiarowoœci. Pozwala ono na bardzo szybkie odrzucenie obiektów znajduj¹cych siê poza rozpatrywan¹ podprzestrzeni¹.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../../Images/Web/Binary_space_partition.png}
+  \caption{Drzewo Binernego Podzia³u Przestrzeni.}
+\end{figure}
+
+Drzewo BSP dobrze nadaje siê do opisu zamkniêtych pomieszczeñ, jednak¿e otwarte przestrzenie lepiej opisuj¹ drzewa ósemkowe (lub czwórkowe dla przestrzeni dwuwymiarowych). Drzewa takie polegaj¹ na otoczeniu sceny szeœcianem, który jest nastêpnie dzielony na osiem mniejszych szeœcianów. Podzia³ taki zag³êbia siê rekurencyjnie, a¿ do osi¹gniêcia ustalonego kryterium - zadanej g³êbokoœci lub minimalnej iloœci obiektów w minimalnym szeœcianie. Obiekt przypisywany jest do minimalnego szeœcianu w którym mo¿e siê pomieœciæ oraz wewn¹trz którego znajduje siê jego œrodek ciê¿koœci. Wybieraj¹c obiekty które mog¹ wejœæ w kolizjê z danych modelem, nale¿y sprawdziæ wszystkie obiekty znajduj¹ce siê w jego szeœcianie (a wiêc i w jego szeœcianach ni¿szych rzêdów) oraz s¹siednie szeœciany. W praktyce sprawdzaj¹c szeœciany s¹siaduj¹ce, wystarczy przejrzeæ te le¿¹ce po stronie rosn¹cych wspó³rzêdnych - kolizje z pozosta³ymi s¹siadami zosta³y sprawdzone podczas badania kandydatów dla obiektów nale¿¹cych do tamtych podprzestrzeni.
+
