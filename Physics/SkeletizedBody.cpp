@@ -103,7 +103,6 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
 
     if (!model->CollidedModels.empty())
     {
-        model->verletWeight = 0.5f;
         std::vector<Collisions>::iterator C_iter, C_end;
 
         xSkeleton &spine   = model->GetModelGr()->spine;
@@ -133,12 +132,13 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
             {
                 Collisions &collision = *C_iter;
                 // Force of the resiliance
-                xVector3 A_collision = SkeletizedBody::GetCollisionSpeed(collision.face1v, collision.colPoint,
+                xVector3 A_collision_1 = SkeletizedBody::GetCollisionSpeed(collision.face1v, collision.colPoint,
                             *collision.elem1, *collision.face1, model->verletSystem) * T_step_SqrInv;
+                xVector3 A_collision_2; A_collision_2.zero();
+                xVector3 A_collision = A_collision_1;
                 // Force of the collision
                 if (!model2->locked)
                 {
-                    xVector3 A_collision_2; A_collision_2.zero();
                     if (model2->Type != RigidObj::Model_Verlet)
                     {
                         xVector3     P_collision_2 = MX_WorldToModel_2.preTransformP(collision.colPoint) - model2->modelInstancePh.center;
@@ -156,6 +156,24 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                         //A_collision_2 = MX_WorldToModel_1.preTransformV(A_collision_2 * (model2->mass / model->mass));
                     }
                     //A_total += A_collision_2;
+                }
+
+                xFLOAT W_collision = A_collision.length() * 0.0001f;
+                if (W_collision != 0.f)
+                {
+                    if (model->verletTime < W_collision)
+                    {
+                        model->verletTimeMaxInv = 1.f / W_collision;
+                        xFLOAT W_collision_2 = A_collision_2.length();
+                        //xFLOAT scale = W_collision_2 * model->verletTimeMaxInv * 0.0001f;
+                        //W_collision *= scale;
+                        if (A_collision_1.length() < W_collision_2)
+                        {
+                            W_collision *= 4.f;
+                            model->verletTimeMaxInv *= 0.5f;
+                        }
+                        model->verletTime = W_collision;
+                    }
                 }
                 // Collision normal
                 xVector3 N_collision = -xVector3::Normalize(A_collision);
@@ -263,6 +281,10 @@ void SkeletizedBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
     spine.L_bones->QT_rotation.zeroQ();
     model->verletQuaternions[0].zeroQ();
 
-    model->verletWeight -= T_delta;
-    model->verletWeight = max(0.0f, model->verletWeight);
+    if (model->verletTime != 0.f)
+        model->verletTime = max(0.f, model->verletTime-T_delta);
+    if (model->verletTime != 0.f)
+        model->verletWeight = 0.5f * model->verletTime * model->verletTimeMaxInv;
+    else
+        model->verletWeight = 0.f;
 }

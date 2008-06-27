@@ -111,6 +111,14 @@ bool SceneConsole::Update(float deltaTime)
         }
         return true;
     }
+    else
+    if (im.GetInputStateAndClear(IC_Reject))
+    {
+        Scene *tmp = prevScene;
+        prevScene = NULL;
+        g_Application.SetCurrentScene(tmp);
+        return true;
+    }
 
     if (overlayClock)
     {
@@ -122,13 +130,6 @@ bool SceneConsole::Update(float deltaTime)
             im.enable = true;
     }
 
-    if (im.GetInputStateAndClear(IC_Reject))
-    {
-        Scene *tmp = prevScene;
-        prevScene = NULL;
-        g_Application.SetCurrentScene(tmp);
-    }
-    else
     if (im.GetInputStateAndClear(IC_FullScreen))
         g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
     else

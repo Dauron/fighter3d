@@ -30,6 +30,8 @@ public:
 
     xVector4 *verletQuaternions;
     xFLOAT        verletWeight;
+    xFLOAT        verletTime;
+    xFLOAT        verletTimeMaxInv;
 
     enum EControlType
     {

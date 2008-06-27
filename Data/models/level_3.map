@@ -116,8 +116,8 @@ phantom	  0
 mass	  70
 shadows   0
 animation	anims/human/garda.ska	0	4700
-animation	anims/human/skulony.ska	4700	4700
-animation	anims/human/kiwa_sie.ska	4700	4700
+skip animation	anims/human/skulony.ska	4700	4700
+skip animation	anims/human/kiwa_sie.ska	4700	4700
 
 [skeletized]
 skip fastm	human2_fst.3dx

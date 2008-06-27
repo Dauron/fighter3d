@@ -21,7 +21,7 @@ position    0 0 -0.21
 physical    0
 phantom     0
 
-[model]
+[skip model]
 fastm	crate_fst.3dx
 model	crate.3dx
 skip rotation    0 45 0
@@ -56,6 +56,7 @@ locked      0
 phantom     0
 mass        70
 shadows     0
+animation	anims/human/garda.ska
 skip animation	anims/human/stoi.ska 0 0
 skip animation	anims/human/garda.ska	0	4700
 skip animation	anims/human/skulony.ska	4700	4700

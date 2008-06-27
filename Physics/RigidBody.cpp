@@ -90,6 +90,7 @@ void RigidBody :: CalculateCollisions(RigidObj *model, float T_delta)
         A_forces_Inner[1] = A_forces[1];
         A_forces_Inner[2] = A_forces[2];
         A_forces_Inner[3] = A_forces[3];
+        memset(model->verletSystem.A_forces, 0, sizeof(xVector3)*model->verletSystem.I_particles);
 
         for (int i = model->CollidedModels.size()-1; i >= 0; --i)
         {
@@ -190,8 +191,9 @@ void RigidBody :: CalculateCollisions(RigidObj *model, float T_delta)
                 xVector3 NW_damp = N_mean_1 * Sign(W_particle_1.contrib[bi]);
                 A_dampings[bi].push_back(NW_damp);
 
-                xFLOAT W_Atotal = fabs(xVector3::DotProduct(N_mean_1, A_forces_Inner[bi]));
-                *A_iter = W_particle_1.contrib[bi] * (W_Atotal * N_mean_1 + A_total);
+                xFLOAT W_Atotal = fabs(xVector3::DotProduct(N_mean_1, A_forces_Inner[bi]))
+                    * 0.25 * min (V_speed_1[bi].length() * 0.1f, 4.f);
+                *A_iter += W_particle_1.contrib[bi] * (W_Atotal * N_mean_1 + A_total);
             }
         }
 
