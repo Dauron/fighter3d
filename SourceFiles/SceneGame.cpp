@@ -114,6 +114,7 @@ void SceneGame::Terminate()
     m_Font1 = HFont();
     g_FontMgr.DeleteFont(m_Font2);
     m_Font2 = HFont();
+    Scene::Terminate();
 }
 
 bool SceneGame::Update(float deltaTime)

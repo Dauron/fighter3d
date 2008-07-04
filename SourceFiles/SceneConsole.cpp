@@ -11,7 +11,7 @@
 
 bool SceneConsole::Initialize(int left, int top, unsigned int width, unsigned int height)
 {
-    prevScene->Initialize(left, top, width, height);
+    if (prevScene) prevScene->Initialize(left, top, width, height);
     Scene::Initialize(left, top, width, height);
 
     InitInputMgr();
@@ -27,15 +27,18 @@ bool SceneConsole::Initialize(int left, int top, unsigned int width, unsigned in
 
 void SceneConsole::Resize(int left, int top, unsigned int width, unsigned int height)
 {
-    prevScene->Resize(left, top, width, height);
-    Scene::Resize(left, top, width, height);
+    if (Initialized)
+    {
+        if (prevScene) prevScene->Resize(left, top, width, height);
+        Scene::Resize(left, top, width, height);
 
-    if (!g_FontMgr.IsHandleValid(font))
-        font = g_FontMgr.GetFont("Courier New", 12); // it takes about second to create a font
-    const GLFont* pFont = g_FontMgr.GetFont(font);
+        if (!g_FontMgr.IsHandleValid(font))
+            font = g_FontMgr.GetFont("Courier New", 12); // it takes about second to create a font
+        const GLFont* pFont = g_FontMgr.GetFont(font);
 
-    pageSize = (int)(height/2.0f/pFont->LineH()) - 3;
-    if (scroll_v > histLines-1-pageSize) scroll_v = histLines-1-pageSize;
+        pageSize = (int)(height/2.0f/pFont->LineH()) - 3;
+        if (scroll_v > histLines-1-pageSize) scroll_v = histLines-1-pageSize;
+    }
 }
 
 void SceneConsole::InitInputMgr()
@@ -70,6 +73,7 @@ void SceneConsole::Terminate()
         delete prevScene;
         prevScene = NULL;
     }
+    Scene::Terminate();
 }
 
 void SceneConsole::AppendConsole(std::string text)
@@ -114,9 +118,14 @@ bool SceneConsole::Update(float deltaTime)
     else
     if (im.GetInputStateAndClear(IC_Reject))
     {
-        Scene *tmp = prevScene;
-        prevScene = NULL;
-        g_Application.SetCurrentScene(tmp);
+        if (prevScene)
+        {
+            Scene *tmp = prevScene;
+            prevScene = NULL;
+            g_Application.SetCurrentScene(tmp);
+        }
+        else
+            g_Application.MainWindow().Terminate();
         return true;
     }
 
@@ -406,7 +415,7 @@ test  = ";
 
 bool SceneConsole::Render()
 {
-    prevScene->Render();
+    if (prevScene) prevScene->Render();
 
     GLint cHeight = Height/2;
 

@@ -108,7 +108,8 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
         xSkeleton &spine   = model->GetModelGr()->spine;
         xFLOAT   *W_bones  = new xFLOAT[spine.I_bones];
         xVector3 *A_forces = model->verletSystem.A_forces;
-        std::vector<xVector3> A_dampings;
+        std::vector<std::vector<xVector3>> A_dampings;
+        A_dampings.resize(spine.I_bones);
 
         xFLOAT T_step_SqrInv;
         if (model->verletSystem.T_step > 0.f)
@@ -151,7 +152,7 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                     if (T_step_SqrInv > 0.f)
                     {
                         A_collision_2 = SkeletizedBody::GetCollisionSpeed(collision.face2v, collision.colPoint,
-                            *collision.elem2, *collision.face2, model2->verletSystem) * T_step_SqrInv * 20;
+                            *collision.elem2, *collision.face2, model2->verletSystem) * T_step_SqrInv;
                         A_collision -= A_collision_2;
                         //A_collision_2 = MX_WorldToModel_1.preTransformV(A_collision_2 * (model2->mass / model->mass));
                     }
@@ -161,18 +162,31 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                 xFLOAT W_collision = A_collision.length() * 0.0001f;
                 if (W_collision != 0.f)
                 {
-                    if (model->verletTime < W_collision)
+                    if (model2->Type == RigidObj::Model_Verlet)
                     {
-                        model->verletTimeMaxInv = 1.f / W_collision;
-                        xFLOAT W_collision_2 = A_collision_2.length();
-                        //xFLOAT scale = W_collision_2 * model->verletTimeMaxInv * 0.0001f;
-                        //W_collision *= scale;
-                        if (A_collision_1.length() < W_collision_2)
+                        xFLOAT T_fix = W_collision * 10.f;
+                        if (T_fix > model->verletTime)
                         {
-                            W_collision *= 4.f;
-                            model->verletTimeMaxInv *= 0.5f;
+                            if (A_collision_1.length() < A_collision_2.length())
+                            {
+                                if (model->postHit == 0.f)
+                                {
+                                    model->verletTime = T_fix;
+                                    model->verletTimeMaxInv = 2.f / T_fix;
+                                }
+                            }
+                            else
+                                model->postHit = 5.f;
                         }
-                        model->verletTime = W_collision;
+                    }
+                    else
+                    {
+                        xFLOAT T_fix = W_collision * 0.01f;
+                        if (T_fix > model->verletTime)
+                        {
+                            model->verletTime = T_fix;
+                            model->verletTimeMaxInv = 1.f / T_fix;
+                        }
                     }
                 }
                 // Collision normal
@@ -185,6 +199,7 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                 xElement &elem = *collision.elem1;
                 memset(W_bones, 0, spine.I_bones * sizeof(xFLOAT));
                 xDWORD stride = elem.textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+                xFLOAT massSum = 0.f;
                 for (int pi = 0; pi < 3; ++pi)
                 {
                     xVertexSkel *vert = (xVertexSkel*) ( ((xBYTE*)elem.verticesP) + stride * (*collision.face1)[pi] );
@@ -193,19 +208,32 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                         int   bi = (int) floor(vert->bone[b]);
                         float bw = (vert->bone[b] - bi)*10;
                         if (bw < 0.01f) break;
-                        W_bones[bi] += bw * W_penetration.S_vert[pi];
+                        massSum += model->verletSystem.M_weight_Inv[bi];
+                        W_bones[bi] += bw * W_penetration.S_vert[pi] * model->verletSystem.M_weight_Inv[bi];
                     }
                 }
+                massSum = 1.f / massSum;
+                for (int b=0; b < spine.I_bones; ++b)
+                    W_bones[b] *= massSum;
+
                 // Dampings made by the collision & penetration correction
                 xVector3 NW_collision = N_collision / T_delta;
                 A_iter = A_forces;
-                A_dampings.push_back(N_collision);
+                //A_dampings.push_back(N_collision);
                 for (int bi = 0; bi < model->verletSystem.I_particles; ++bi, ++A_iter)
                 {
                     //xFLOAT forceN = xVector3::DotProduct(planeN, *a);
                     //if (forceN < 0.f) // damp force in the direction of collision (Fn = -Fc)
                     //    magnitude -= forceN;
-                    *A_iter += W_bones[bi] * NW_collision;
+                    if (W_bones[bi] != 0.f)
+                    {
+                        A_dampings[bi].push_back(N_collision);
+                    }
+
+                    //if (model2->Type == RigidObj::Model_Verlet)
+                    //    *A_iter += 40.f * W_bones[bi] * NW_collision;
+                    //else
+                        *A_iter += W_bones[bi] * NW_collision;
 
                     VConstraintCollision constr;
                     constr.particle = bi;
@@ -214,11 +242,12 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                     constr.planeD = -(P_plane.x*N_collision.x + P_plane.y*N_collision.y + P_plane.z*N_collision.z);
                     model->collisionConstraints.push_back(constr);
 
-                    model->verletSystem.P_current[bi] = P_plane;
+                    //model->verletSystem.P_current[bi] = P_plane;
                 }
             }
         }
 
+        /*
         std::vector<xVector3>::iterator NW_damp_iter, NW_damp_end = A_dampings.end();
         for (NW_damp_iter = A_dampings.begin(); NW_damp_iter != NW_damp_end; ++NW_damp_iter)
         {
@@ -236,6 +265,42 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
             }
         }
         A_dampings.clear();
+        */
+
+        A_iter = A_forces;
+        for (int bi = 0; bi < model->verletSystem.I_particles; ++bi, ++A_iter)
+        {
+            /*
+            xVector3 V_prev, V_curr;
+            if (T_step_SqrInv > 0.f)
+                V_prev = (model->verletSystem.P_current[bi] - model->verletSystem.P_previous[bi]) * T_step_SqrInv;
+            else
+                V_prev.zero();
+            V_curr = V_prev;
+            */
+            std::vector<xVector3>::iterator NW_damp_iter, NW_damp_end = A_dampings[bi].end();
+            for (NW_damp_iter = A_dampings[bi].begin(); NW_damp_iter != NW_damp_end; ++NW_damp_iter)
+            {
+                xVector3 N_damp = xVector3::Normalize(*NW_damp_iter);
+                xFLOAT S_len = A_iter->length();
+                if (S_len > 0.f)
+                {
+                    xFLOAT W_damp = xVector3::DotProduct(N_damp, *A_iter / S_len);
+                    if (W_damp < 0.f) // damp force in the direction of collision (Fn = -Fc)
+                        *A_iter -= W_damp * S_len * *NW_damp_iter;
+                }
+                /*xFLOAT S_len = V_curr.length();
+                if (S_len > 0.f)
+                {
+                    xFLOAT W_damp = xVector3::DotProduct(N_damp, V_curr / S_len);
+                    if (W_damp < 0.f) // damp force in the direction of collision (Fn = -Fc)
+                        V_curr -= W_damp * S_len * *NW_damp_iter;
+                }*/
+            }
+            //*A_iter += V_curr - V_prev;
+            A_dampings[bi].clear();
+        }
+        A_dampings.clear();
 
         delete[] W_bones;
     }
@@ -243,6 +308,8 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
 
 void SkeletizedBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
 {
+    bool collided = model->CollidedModels.size() > 0;
+
     model->CollidedModels.clear();
     if (model->locked)
     {
@@ -267,7 +334,7 @@ void SkeletizedBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
     VerletSolver engine;
     engine.Init(& model->verletSystem);
     engine.I_passes = 10;
-    engine.Verlet();
+    engine.VerletFull();
     engine.SatisfyConstraints();
 
     spine.CalcQuats(model->verletSystem.P_current, 0, model->verletSystem.MX_WorldToModel_T);
@@ -276,15 +343,17 @@ void SkeletizedBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
         model->verletQuaternions = new xVector4[spine.I_bones];
     spine.QuatsToArray(model->verletQuaternions);
 
-    model->MX_ModelToWorld.postTranslateT(model->verletSystem.P_current[0]-model->verletSystem.P_previous[0]);
-    xMatrix::Invert(model->MX_ModelToWorld, model->MX_WorldToModel);
-    spine.L_bones->QT_rotation.zeroQ();
-    model->verletQuaternions[0].zeroQ();
-
+    if (model->postHit != 0.f)
+        model->postHit = max(0.f, model->postHit-T_delta);
     if (model->verletTime != 0.f)
         model->verletTime = max(0.f, model->verletTime-T_delta);
     if (model->verletTime != 0.f)
         model->verletWeight = 0.5f * model->verletTime * model->verletTimeMaxInv;
     else
         model->verletWeight = 0.f;
+
+    model->MX_ModelToWorld.postTranslateT((model->verletSystem.P_current[0]-model->verletSystem.P_previous[0])*model->verletWeight);
+    xMatrix::Invert(model->MX_ModelToWorld, model->MX_WorldToModel);
+    spine.L_bones->QT_rotation.zeroQ();
+    model->verletQuaternions[0].zeroQ();
 }

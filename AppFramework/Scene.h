@@ -12,11 +12,12 @@ public:
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height)
     {
+        Initialized = true;
         Resize (left, top, width, height);
         return true;
     }
     virtual bool Invalidate() { return true; }
-    virtual void Terminate() {}
+    virtual void Terminate() { Initialized = false; }
     virtual bool Update(float deltaTime) = 0;
     virtual bool Render() = 0;
 
@@ -29,7 +30,7 @@ public:
         AspectRatio = ((float)width)/height;
     }
 
-    Scene() { sceneName = NULL; }
+    Scene() { sceneName = NULL; Initialized = false; }
     virtual ~Scene() {}
 
 protected:
@@ -38,6 +39,7 @@ protected:
     unsigned int Width;
     unsigned int Height;
     float        AspectRatio;
+    bool         Initialized;
 };
 
 #endif

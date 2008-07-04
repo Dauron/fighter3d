@@ -21,7 +21,7 @@ class SceneConsole : public Scene
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate() {
-        return prevScene->Invalidate();
+        return prevScene ? prevScene->Invalidate() : true;
     }
     virtual void Resize(int left, int top, unsigned int width, unsigned int height);
     virtual void Terminate();

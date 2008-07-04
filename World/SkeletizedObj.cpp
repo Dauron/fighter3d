@@ -11,6 +11,7 @@ void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filena
     resilience = 0.2f;
     verletTime = verletWeight = 0.f;
     verletTimeMaxInv = 1.f;
+    postHit = 0.f;
 }
 
 void SkeletizedObj :: Finalize ()

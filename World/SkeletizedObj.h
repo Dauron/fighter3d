@@ -32,6 +32,7 @@ public:
     xFLOAT        verletWeight;
     xFLOAT        verletTime;
     xFLOAT        verletTimeMaxInv;
+    xFLOAT        postHit;
 
     enum EControlType
     {
