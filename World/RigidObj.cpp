@@ -208,7 +208,7 @@ void RigidObj :: UpdateVerletSystem()
     verletSystem.P_previous[1] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(1,0,0) );
     verletSystem.P_previous[2] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(0,1,0) );
     verletSystem.P_previous[3] = MX_ModelToWorld.preTransformP( modelInstanceGr.center + xVector3::Create(0,0,1) );
-    verletSystem.SwapPositions();
+    //verletSystem.SwapPositions();
 }
 
 
@@ -309,19 +309,19 @@ void RenderCI(xCollisionHierarchy *ch, xCollisionHierarchyBounds *chb)
     {
         glBegin(GL_QUAD_STRIP);
         {
-            glVertex3f(chb->bounding.max.x, chb->bounding.max.y, chb->bounding.max.z);
-            glVertex3f(chb->bounding.max.x, chb->bounding.max.y, chb->bounding.min.z);
-            glVertex3f(chb->bounding.max.x, chb->bounding.min.y, chb->bounding.max.z);
-            glVertex3f(chb->bounding.max.x, chb->bounding.min.y, chb->bounding.min.z);
+            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_max.y, chb->bounding.P_max.z);
+            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_max.y, chb->bounding.P_min.z);
+            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_min.y, chb->bounding.P_max.z);
+            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_min.y, chb->bounding.P_min.z);
 
-            glVertex3f(chb->bounding.min.x, chb->bounding.min.y, chb->bounding.max.z);
-            glVertex3f(chb->bounding.min.x, chb->bounding.min.y, chb->bounding.min.z);
+            glVertex3f(chb->bounding.P_min.x, chb->bounding.P_min.y, chb->bounding.P_max.z);
+            glVertex3f(chb->bounding.P_min.x, chb->bounding.P_min.y, chb->bounding.P_min.z);
 
-            glVertex3f(chb->bounding.min.x, chb->bounding.max.y, chb->bounding.max.z);
-            glVertex3f(chb->bounding.min.x, chb->bounding.max.y, chb->bounding.min.z);
+            glVertex3f(chb->bounding.P_min.x, chb->bounding.P_max.y, chb->bounding.P_max.z);
+            glVertex3f(chb->bounding.P_min.x, chb->bounding.P_max.y, chb->bounding.P_min.z);
 
-            glVertex3f(chb->bounding.max.x, chb->bounding.max.y, chb->bounding.max.z);
-            glVertex3f(chb->bounding.max.x, chb->bounding.max.y, chb->bounding.min.z);
+            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_max.y, chb->bounding.P_max.z);
+            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_max.y, chb->bounding.P_min.z);
         }
         glEnd();
     }
@@ -356,7 +356,7 @@ void RigidObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     MX_WorldToView.row0.vector3 = lRAxis; MX_WorldToView.row0.w = 0.f;
     MX_WorldToView.row1.vector3 = lUAxis; MX_WorldToView.row1.w = 0.f;
     MX_WorldToView.row2.vector3 = lFAxis; MX_WorldToView.row2.w = 0.f;
-    MX_WorldToView.row3.zeroQ();
+    MX_WorldToView.row3.init(0.f,0.f,0.f,1.f);
     MX_WorldToView.postTranslate(-light->position).transpose();
 
     // Find the horizontal and vertical angular spreads to find out FOV and aspect ratio

@@ -117,7 +117,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
                     xLONG duration;
                 } KeyFrame;
                 // Bone rotation
-                xVector4 PreviousQuaternion;
+                xQuaternion PreviousQuaternion;
             };
             xAnimation * Instance;
         } Animation;

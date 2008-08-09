@@ -14,16 +14,16 @@ void RenderElementDiffuseLST(bool transparent, const xFieldOfView &FOV, const xL
 
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
-    instance.bbBox.TransformatedPoints(mtxTrasformation);
+    instance.bbBox.fillCornersTransformed(mtxTrasformation);
     xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
     if (!light.elementReceivesLight(center, instance.bsRadius)) return;
-    if (!light.elementReceivesDiffuseLight(FOV, instance.bbBox.points))
+    if (!light.elementReceivesDiffuseLight(FOV, instance.bbBox.P_corners))
     {
         ++Performance.CulledDiffuseElements;
         return;
     }
     if (!FOV.CheckSphere(center, instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.points))
+        !FOV.CheckBox(instance.bbBox.P_corners))
     {
         ++Performance.CulledElements;
         return;
@@ -159,16 +159,16 @@ void RenderElementDiffuseVBO(bool transparent, const xFieldOfView &FOV, const xL
 
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
-    instance.bbBox.TransformatedPoints(mtxTrasformation);
+    instance.bbBox.fillCornersTransformed(mtxTrasformation);
     xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
     if (!light.elementReceivesLight(center, instance.bsRadius)) return;
-    if (!light.elementReceivesDiffuseLight(FOV, instance.bbBox.points))
+    if (!light.elementReceivesDiffuseLight(FOV, instance.bbBox.P_corners))
     {
         ++Performance.CulledDiffuseElements;
         return;
     }
     if (!FOV.CheckSphere(center, instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
     {
         ++Performance.CulledElements;
         return;

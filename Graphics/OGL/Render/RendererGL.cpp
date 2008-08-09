@@ -506,15 +506,20 @@ void RenderModelLST(bool transparent, const xFieldOfView &FOV,
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
     if (!FOV.CheckSphere(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
     {
         ++Performance.CulledElements;
         return;
     }
 
     /************************** PREPARE LST  ****************************/
-    xDWORD &listID    = transparent ? elem->renderData.gpuMain.listIDTransp : elem->renderData.gpuMain.listID;
-    xDWORD &listIDTex = transparent ? elem->renderData.gpuMain.listIDTexTransp : elem->renderData.gpuMain.listIDTex;
+    xDWORD &listID    = elem->skeletized
+        ? transparent ? instance.gpuMain.listIDTransp : instance.gpuMain.listID
+        : transparent ? elem->renderData.gpuMain.listIDTransp : elem->renderData.gpuMain.listID;
+    xDWORD &listIDTex = elem->skeletized
+        ? transparent ? instance.gpuMain.listIDTexTransp : instance.gpuMain.listIDTex
+        : transparent ? elem->renderData.gpuMain.listIDTexTransp : elem->renderData.gpuMain.listIDTex;
+    xGPURender::Mode &mode = elem->skeletized ? instance.mode : elem->renderData.mode;
     bool textured = false;
 
     if (elem->skeletized)
@@ -522,7 +527,7 @@ void RenderModelLST(bool transparent, const xFieldOfView &FOV,
 
     if (!listID)
     {
-        elem->renderData.mode = xGPURender::LIST;
+        mode = xGPURender::LIST;
         glNewList(listID = glGenLists(1), GL_COMPILE);
 
         if (elem->skeletized) {
@@ -637,7 +642,7 @@ void RenderModelVBO(bool transparent, const xFieldOfView &FOV,
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
     if (!FOV.CheckSphere(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
     {
         ++Performance.CulledElements;
         return;

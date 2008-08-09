@@ -16,30 +16,27 @@ Jason Shankel
 #include "xMath.h"
 #include <cmath>
 
-xVector4 xQuaternion::getRotation(const xVector3 &srcV, const xVector3 &dstV)
+xQuaternion xQuaternion::getRotation(const xPoint3 &srcV, const xPoint3 &dstV)
 {
-    xVector4 quat;
-    xFLOAT cosang = xVector3::DotProduct(xVector3::Normalize(srcV), xVector3::Normalize(dstV));
-    if (cosang > 1.f) cosang = 1.f;
-    else
-    if (cosang < -1.f) cosang = -1.f;
-    if (cosang == -1.f)
-        quat.init(1.f,0.f,0.f,0.f);
-    else
-    {
-        xFLOAT hangle = acos(cosang) * 0.5f;
-        quat.vector3 = xVector3::CrossProduct(srcV, dstV).normalize() * sinf(hangle);
-        quat.w = cosf(hangle);
-    }
+    xFLOAT cosang = xPoint3::DotProduct(xPoint3::Normalize(srcV), xPoint3::Normalize(dstV));
+    if (cosang < -1.f + EPSILON2)
+        return xQuaternion::Create(1.f,0.f,0.f,0.f);
+    if (cosang > 1.f - EPSILON2)
+        return xQuaternion::Create(0.f,0.f,0.f,1.f);
+
+    xFLOAT hangle = acos(cosang) * 0.5f;
+    xQuaternion quat;
+    quat.vector3 = xPoint3::CrossProduct(srcV, dstV).normalize() * sinf(hangle);
+    quat.w = cosf(hangle);
     return quat;
 }
 
-xVector3 xQuaternion::rotate(const xVector4 &q, const xVector3 &p)
+xPoint3 xQuaternion::rotate(const xQuaternion &q, const xPoint3 &p)
 {
     //return (xVector3)QuaternionProduct(QuaternionProduct(q,(xVector4)p),(QuaternionComplement(q)));
-    xVector4 q_minus; q_minus.init(-q.x,-q.y,-q.z,q.w);
+    xQuaternion q_minus; q_minus.init(-q.x,-q.y,-q.z,q.w);
 
-    xVector4 ret;
+    xQuaternion ret;
     ret.w = - q.x*p.x - q.y*p.y - q.z*p.z;
     ret.x = q.y*p.z - q.z*p.y + q.w*p.x;
     ret.y = q.z*p.x - q.x*p.z + q.w*p.y;
@@ -48,14 +45,14 @@ xVector3 xQuaternion::rotate(const xVector4 &q, const xVector3 &p)
     return product(ret, q_minus).vector3;
 }
 
-xVector3 xQuaternion::rotate(const xVector4 &q, const xVector3 &p, const xVector3 &center)
+xPoint3 xQuaternion::rotate(const xQuaternion &q, const xPoint3 &p, const xPoint3 &center)
 {
-    xVector3 ret = p - center;
+    xPoint3 ret = p - center;
     ret = rotate(q, ret);
     return ret + center;
 }
 
-xVector3 xQuaternion::angularVelocity(const xVector4 &q)
+xVector3 xQuaternion::angularVelocity(const xQuaternion &q)
 {
     xVector3 res = q.vector3;
     res.normalize();
@@ -64,9 +61,9 @@ xVector3 xQuaternion::angularVelocity(const xVector4 &q)
 }
 
 // Quaternion product of two xVector4's
-xVector4 xQuaternion::product(const xVector4 &a, const xVector4 &b)
+xQuaternion xQuaternion::product(const xQuaternion &a, const xQuaternion &b)
 {
-  xVector4 ret;
+  xQuaternion ret;
   ret.w = a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z;
   ret.x = a.y*b.z - a.z*b.y + a.w*b.x + a.x*b.w;
   ret.y = a.z*b.x - a.x*b.z + a.w*b.y + a.y*b.w;
@@ -74,9 +71,9 @@ xVector4 xQuaternion::product(const xVector4 &a, const xVector4 &b)
   return ret;
 }
 
-xVector4 xQuaternion::interpolate(const xVector4 &q, xFLOAT weight)
+xQuaternion xQuaternion::interpolate(const xQuaternion &q, xFLOAT weight)
 {
-    xVector4 ret = q;
+    xQuaternion ret = q;
     if (q.w != 1.f)
     {
         float angleH = (q.w > 0) ? acos(q.w) : PI-acos(q.w);
@@ -88,9 +85,9 @@ xVector4 xQuaternion::interpolate(const xVector4 &q, xFLOAT weight)
     return ret;
 }
 
-xVector4 xQuaternion::interpolateFull(const xVector4 &q, xFLOAT weight)
+xQuaternion xQuaternion::interpolateFull(const xQuaternion &q, xFLOAT weight)
 {
-    xVector4 ret = q;
+    xQuaternion ret = q;
     if (q.w != 1.f)
     {
         float angleH = acos(q.w);
@@ -102,12 +99,12 @@ xVector4 xQuaternion::interpolateFull(const xVector4 &q, xFLOAT weight)
     return ret;
 }
 
-xVector4 xQuaternion::exp(const xVector4 &q)
+xQuaternion xQuaternion::exp(const xQuaternion &q)
 {
     float a = static_cast<float>(sqrt(q.x*q.x + q.y*q.y + q.z*q.z));
     float sina = static_cast<float>(sin(a));
     float cosa = static_cast<float>(cos(a));
-    xVector4 ret;
+    xQuaternion ret;
     ret.w = cosa;
     if(a > 0)
     {
@@ -122,11 +119,11 @@ xVector4 xQuaternion::exp(const xVector4 &q)
     return ret;
 }
 
-xVector4 xQuaternion::log(const xVector4 &q)
+xQuaternion xQuaternion::log(const xQuaternion &q)
 {
     float a    = static_cast<float>(acos(q.w));
     float sina = static_cast<float>(sin(a));
-    xVector4 ret;
+    xQuaternion ret;
     ret.w = 0;
     if (sina > 0)
     {
@@ -144,19 +141,18 @@ xVector4 xQuaternion::log(const xVector4 &q)
 /*
 Linear interpolation between two xVector4s
 */
-xVector4 xQuaternion::lerp(const xVector4 &q1,const xVector4 &q2,float t)
+xQuaternion xQuaternion::lerp(const xQuaternion &q1,const xQuaternion &q2,float t)
 {
-    return (q1 + t*(q2-q1)).normalize();
+    return xQuaternionCast ((q1 + t*(q2-q1)).normalize());
 }
 
 /*
 Spherical linear interpolation between two xVector4s
 */
-xVector4 xQuaternion::slerp(const xVector4 &q1,const xVector4 &q2,float t)
+xQuaternion xQuaternion::slerp(const xQuaternion &q1,const xQuaternion &q2,float t)
 {
-    xVector4 q3;
-    float dot;
-    dot = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w*q2.w;
+    xQuaternion q3;
+    float dot = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w*q2.w;
 
     /*
     dot = cos(theta)
@@ -165,11 +161,11 @@ xVector4 xQuaternion::slerp(const xVector4 &q1,const xVector4 &q2,float t)
     */
     if (dot < 0)
     {
-    dot = -dot;
-    q3 = -1*q2;
+        dot = -dot;
+        q3 = -1*q2;
     }
     else
-    q3 = q2;
+        q3 = q2;
 
     if (dot <= 0.99f)
     {
@@ -178,7 +174,7 @@ xVector4 xQuaternion::slerp(const xVector4 &q1,const xVector4 &q2,float t)
         sina = static_cast<float>(sin(angle));
         sinat = static_cast<float>(sin(angle*t));
         sinaomt = static_cast<float>(sin(angle*(1-t)));
-        return (q1*sinaomt+q3*sinat)/sina;
+        return xQuaternionCast ((q1*sinaomt+q3*sinat)/sina);
     }
     /*
     if the angle is small, use linear interpolation
@@ -189,7 +185,7 @@ xVector4 xQuaternion::slerp(const xVector4 &q1,const xVector4 &q2,float t)
 /*
 This version of slerp, used by squad, does not check for theta > 90.
 */
-xVector4 xQuaternion::slerpNoInvert(const xVector4 &q1,const xVector4 &q2,float t)
+xQuaternion xQuaternion::slerpNoInvert(const xQuaternion &q1,const xQuaternion &q2,float t)
 {
     float dot = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w*q2.w;
 
@@ -200,7 +196,7 @@ xVector4 xQuaternion::slerpNoInvert(const xVector4 &q1,const xVector4 &q2,float 
         sina = static_cast<float>(sin(angle));
         sinat = static_cast<float>(sin(angle*t));
         sinaomt = static_cast<float>(sin(angle*(1-t)));
-        return (q1*sinaomt+q2*sinat)/sina;
+        return xQuaternionCast ((q1*sinaomt+q2*sinat)/sina);
     }
     /*
     if the angle is small, use linear interpolation
@@ -211,9 +207,9 @@ xVector4 xQuaternion::slerpNoInvert(const xVector4 &q1,const xVector4 &q2,float 
 /*
 Spherical cubic interpolation
 */
-xVector4 xQuaternion::squad(const xVector4 &q1,const xVector4 &q2,const xVector4 &a,const xVector4 &b,float t)
+xQuaternion xQuaternion::squad(const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &a,const xQuaternion &b,float t)
 {
-    xVector4 c,d;
+    xQuaternion c,d;
     c = slerpNoInvert(q1,q2,t);
     d = slerpNoInvert(a,b,t);
     return slerpNoInvert(c,d,2*t*(1-t));
@@ -222,14 +218,22 @@ xVector4 xQuaternion::squad(const xVector4 &q1,const xVector4 &q2,const xVector4
 /*
 Given 3 xVector4s, qn-1,qn and qn+1, calculate a control point to be used in spline interpolation
 */
-xVector4 xQuaternion::spline(const xVector4 &qnm1,const xVector4 &qn,const xVector4 &qnp1)
+xQuaternion xQuaternion::spline(const xQuaternion &qnm1,const xQuaternion &qn,const xQuaternion &qnp1)
 {
-    xVector4 qni;
+    xQuaternion qni;
 
     qni.x = -qn.x;
     qni.y = -qn.y;
     qni.z = -qn.z;
     qni.w = qn.w;
 
-    return product( qn, exp((log(product(qni,qnm1))+log(product(qni,qnp1)))/-4) );
+    return xQuaternionCast ( product( qn,
+                                       exp(
+                                            xQuaternionCast (
+                                                             ( log(product(qni,qnm1)) + log(product(qni,qnp1)) )
+                                                             / -4
+                                                            )
+                                          )
+                                    )
+                           );
 }

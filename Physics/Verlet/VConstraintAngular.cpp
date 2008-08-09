@@ -2,49 +2,86 @@
 #include "VerletSolver.h"
 #include "../../Models/lib3dx/xSkeleton.h"
 
+xFLOAT FindGammaMax(xFLOAT a, xFLOAT b, xFLOAT tanAlpha, xFLOAT cosAlpha)
+{
+    if (cosAlpha > EPSILON)
+    {
+        if (a > EPSILON && b > EPSILON)
+        {
+            xFLOAT beta = atan ( tanAlpha * a / b );
+            xFLOAT cosBeta2 = cos(beta); cosBeta2 *= cosBeta2;
+            xFLOAT sinBeta2 = 1 - cosBeta2;
+            return sqrt( a*a*cosBeta2 + b*b*sinBeta2 );
+        }
+        return 0.f;
+    }
+    return a > EPSILON ? b : 0.f;
+}
+
 bool VConstraintAngular :: Satisfy(VerletSystem *system)
 {
     xVector3 &P_rootB = system->P_current[particleRootB];
     xVector3 &P_rootE = system->P_current[particleRootE];
     xVector3 &P_curr  = system->P_current[particle];
 
-    xVector4 QT_parent, QT_current;
+    xQuaternion QT_parent, QT_current;
     // OPTIMIZE: calc only needed quats
-    system->spine->CalcQuats(system->P_current, 0, system->MX_WorldToModel_T);
+    system->spine->CalcQuats(system->P_current, system->QT_boneSkew,
+                             0, system->MX_WorldToModel_T, xVector3::Create(0.f,0.f,0.f));
     xBoneCalculateQuatForVerlet(*system->spine, particle, QT_parent, QT_current);
     QT_current = xQuaternion::product(QT_parent, QT_current);
 
     xBone   &bone    = system->spine->L_bones[particle];
     xVector3 N_up    = system->MX_ModelToWorld.preTransformV(xQuaternion::rotate(QT_parent, bone.P_end-bone.P_begin)).normalize();
-    xVector3 N_front = system->MX_ModelToWorld.preTransformV(xQuaternion::rotate(QT_parent, xVector3::Create(0,1,0)));
+    xVector3 N_front = system->MX_ModelToWorld.preTransformV(xQuaternion::rotate(QT_current, bone.getFront()));
 
     xMatrix  MX_WorldToBone = xMatrixFromVectors( N_front, N_up, - P_rootE ).invert();
     xVector3 P_curr_Local   = MX_WorldToBone.preTransformP( P_curr );
     xVector3 N_curr_Local   = xVector3::Normalize( P_curr_Local );
 
-    xFLOAT alpha   = atan2(fabs(P_curr_Local.y), fabs(P_curr_Local.x));
-    xFLOAT scale   = 2*alpha * PI_inv;
-    xFLOAT betaMax;
-
-    if (P_curr_Local.x >= 0 && P_curr_Local.y >= 0)
-        betaMax = angleMaxY * scale + angleMaxX * (1.f - scale);
-    else if (P_curr_Local.x < 0 && P_curr_Local.y >= 0)
-        betaMax = angleMaxY * scale + angleMinX * (1.f - scale);
-    else if (P_curr_Local.x >= 0 && P_curr_Local.y < 0)
-        betaMax = angleMinY * scale + angleMaxX * (1.f - scale);
+    xFLOAT r_Inv = 1.f / sqrt(N_curr_Local.x*N_curr_Local.x+N_curr_Local.y*N_curr_Local.y);
+    xFLOAT cosAlpha = fabs(N_curr_Local.x)*r_Inv,
+           sinAlpha = fabs(N_curr_Local.y)*r_Inv,
+           tanAlpha;
+    if (cosAlpha > EPSILON)
+        tanAlpha = N_curr_Local.y / N_curr_Local.x;
     else
-        betaMax = angleMinY * scale + angleMinX * (1.f - scale);
+        tanAlpha = 0.f; // infinity, but don't care
 
-    xFLOAT cosMax = cos(betaMax);
+    xFLOAT L_gammaMax[4];
+    L_gammaMax[0] = FindGammaMax(angleMaxX, angleMaxY, tanAlpha, cosAlpha);
+    L_gammaMax[1] = FindGammaMax(angleMinX, angleMaxY, tanAlpha, cosAlpha);
+    L_gammaMax[2] = FindGammaMax(angleMaxX, angleMinY, tanAlpha, cosAlpha);
+    L_gammaMax[3] = FindGammaMax(angleMinX, angleMinY, tanAlpha, cosAlpha);
+    // MaxMax = 0, MinMax = 1, MaxMin = 2, MinMin = 3
+    int I_gamma = (P_curr_Local.x < 0) + 2 * (P_curr_Local.y < 0);
+
+    xFLOAT cosMax = cos(L_gammaMax[I_gamma]);
     if (N_curr_Local.z >= cosMax) return false;
 
-    xVector3 P_new_Local;
-    xFLOAT xy     = sin(betaMax);
-    P_new_Local.x = xy*cos(alpha);
-    P_new_Local.y = xy*sin(alpha);
-    P_new_Local.z = cosMax;
+    xFLOAT S_minFix_Sqr = xFLOAT_HUGE_POSITIVE;
+    xQuaternion QT_minFix; //QT_minFix.zeroQ();
 
-    xVector4 quat = xQuaternion::getRotation(N_curr_Local, P_new_Local);
+    for (int I_gamma = 0; I_gamma < 4; ++I_gamma)
+    {
+        // {0,1,2,3} => {0,1} => {0,2} => {-1,1} => {1,-1}
+        int xSign = - ((I_gamma % 2) * 2 - 1) ;
+        // {0,1,2,3} => {1,0} => {2,0} => {1,-1}
+        int ySign = (I_gamma < 2) * 2 - 1;
+
+        xVector3 P_new_Local;
+        xFLOAT xy     = sin(L_gammaMax[I_gamma]-DegToRad(1.f));
+        P_new_Local.x = xSign * xy * cosAlpha;
+        P_new_Local.y = ySign * xy * sinAlpha;
+        P_new_Local.z = cos(L_gammaMax[I_gamma]-DegToRad(1.f));
+
+        xFLOAT S_curFix_Sqr = (N_curr_Local - P_new_Local).lengthSqr();
+        if (S_curFix_Sqr < S_minFix_Sqr)
+        {
+            S_minFix_Sqr = S_curFix_Sqr;
+            QT_minFix = xQuaternion::getRotation(N_curr_Local, P_new_Local);
+        }
+    }
 
     xFLOAT w1 = system->M_weight_Inv[particle];
     xFLOAT w2 = system->M_weight_Inv[particleRootE];
@@ -52,11 +89,14 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     w1 /= (w1+w2);
     w2 = 1.f - w1;
 
-    xVector4 quatP = xQuaternion::interpolate(quat, w1);
-    xVector4 quatR = xQuaternion::interpolate(quat, w2);
+    xQuaternion QT_curr = xQuaternion::interpolate(QT_minFix, w1);
+    xQuaternion QT_root = xQuaternion::interpolate(QT_minFix, w2);
     xMatrix &MX_BoneToWorld = MX_WorldToBone.invert();
-    P_rootE = MX_BoneToWorld.preTransformP( xQuaternion::rotate(quatR, -P_curr_Local) + P_curr_Local );
-    P_curr  = MX_BoneToWorld.preTransformP( xQuaternion::rotate(quatP, P_curr_Local) );
+    P_rootE = MX_BoneToWorld.preTransformP( xQuaternion::rotate(QT_root, -P_curr_Local) + P_curr_Local );
+    P_curr  = MX_BoneToWorld.preTransformP( xQuaternion::rotate(QT_curr, P_curr_Local) );
+
+    //system->P_previous[particleRootE] = P_rootE;
+    //system->P_previous[particle] = P_curr;
 
     return true;
 }
@@ -67,20 +107,26 @@ bool VConstraintAngular :: Test(const xVector3 &P_rootB, const xVector3 &P_rootE
     xVector3 P_curr_Local  = MX_WorldToBone.preTransformP( P_curr );
     xVector3 N_curr_Local  = xVector3::Normalize( P_curr_Local );
 
-    xFLOAT alpha   = atan2(fabs(P_curr_Local.y), fabs(P_curr_Local.x));
-    xFLOAT scale   = 2*alpha * PI_inv;
-    xFLOAT betaMax;
+    xFLOAT r_Inv = 1.f / sqrt(N_curr_Local.x*N_curr_Local.x+N_curr_Local.y*N_curr_Local.y);
+    xFLOAT cosAlpha = fabs(N_curr_Local.x)*r_Inv,
+           sinAlpha = fabs(N_curr_Local.y)*r_Inv,
+           tanAlpha;
+    if (cosAlpha > EPSILON)
+        tanAlpha = N_curr_Local.y / N_curr_Local.x;
+    else
+        tanAlpha = 0.f; // infinity, but don't care
+    xFLOAT gammaMax;
 
     if (P_curr_Local.x >= 0 && P_curr_Local.y >= 0)
-        betaMax = angleMaxY * scale + angleMaxX * (1.f - scale);
+        gammaMax = FindGammaMax(angleMaxX, angleMaxY, tanAlpha, cosAlpha);
     else if (P_curr_Local.x < 0 && P_curr_Local.y >= 0)
-        betaMax = angleMaxY * scale + angleMinX * (1.f - scale);
+        gammaMax = FindGammaMax(angleMinX, angleMaxY, tanAlpha, cosAlpha);
     else if (P_curr_Local.x >= 0 && P_curr_Local.y < 0)
-        betaMax = angleMinY * scale + angleMaxX * (1.f - scale);
+        gammaMax = FindGammaMax(angleMaxX, angleMinY, tanAlpha, cosAlpha);
     else
-        betaMax = angleMinY * scale + angleMinX * (1.f - scale);
+        gammaMax = FindGammaMax(angleMinX, angleMinY, tanAlpha, cosAlpha);
 
-    xFLOAT cosMax = cos(betaMax);
+    xFLOAT cosMax = cos(gammaMax);
     if (N_curr_Local.z >= cosMax) return false;
 
     return true;

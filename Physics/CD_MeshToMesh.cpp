@@ -299,12 +299,12 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
         {
             ++Performance.CollidedPreTreeLevels;
 
-            if (chb1->bounding.min.x < chb2->bounding.max.x &&
-                chb1->bounding.max.x > chb2->bounding.min.x &&
-                chb1->bounding.min.y < chb2->bounding.max.y &&
-                chb1->bounding.max.y > chb2->bounding.min.y &&
-                chb1->bounding.min.z < chb2->bounding.max.z &&
-                chb1->bounding.max.z > chb2->bounding.min.z)
+            if (chb1->bounding.P_min.x < chb2->bounding.P_max.x &&
+                chb1->bounding.P_max.x > chb2->bounding.P_min.x &&
+                chb1->bounding.P_min.y < chb2->bounding.P_max.y &&
+                chb1->bounding.P_max.y > chb2->bounding.P_min.y &&
+                chb1->bounding.P_min.z < chb2->bounding.P_max.z &&
+                chb1->bounding.P_max.z > chb2->bounding.P_min.z)
             {
                 if (ch1->kidsP && ch2->kidsP)
                 {
@@ -333,13 +333,13 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                     xVector4 *a2 = ci1->verticesP + (**face1)[1];
                     xVector4 *a3 = ci1->verticesP + (**face1)[2];
 
-                    xBox faceB1;
-                    faceB1.min.x = min(a1->x, min(a2->x, a3->x));
-                    faceB1.min.y = min(a1->y, min(a2->y, a3->y));
-                    faceB1.min.z = min(a1->z, min(a2->z, a3->z));
-                    faceB1.max.x = max(a1->x, max(a2->x, a3->x));
-                    faceB1.max.y = max(a1->y, max(a2->y, a3->y));
-                    faceB1.max.z = max(a1->z, max(a2->z, a3->z));
+                    xBoxA faceB1;
+                    faceB1.P_min.x = min(a1->x, min(a2->x, a3->x));
+                    faceB1.P_min.y = min(a1->y, min(a2->y, a3->y));
+                    faceB1.P_min.z = min(a1->z, min(a2->z, a3->z));
+                    faceB1.P_max.x = max(a1->x, max(a2->x, a3->x));
+                    faceB1.P_max.y = max(a1->y, max(a2->y, a3->y));
+                    faceB1.P_max.z = max(a1->z, max(a2->z, a3->z));
 
                     for (int i2 = ch2->facesC; i2; --i2)
                     {
@@ -350,19 +350,19 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                         xVector4 *b2 = ci2->verticesP + (**face2)[1];
                         xVector4 *b3 = ci2->verticesP + (**face2)[2];
                         // Exclude elements that can't collide
-                        xBox faceB2;
-                        faceB2.max.x = max(b1->x, max(b2->x, b3->x));
-                        if (faceB1.min.x > faceB2.max.x) continue;
-                        faceB2.min.x = min(b1->x, min(b2->x, b3->x));
-                        if (faceB1.max.x < faceB2.min.x) continue;
-                        faceB2.max.y = max(b1->y, max(b2->y, b3->y));
-                        if (faceB1.min.y > faceB2.max.y) continue;
-                        faceB2.min.y = min(b1->y, min(b2->y, b3->y));
-                        if (faceB1.max.y < faceB2.min.y) continue;
-                        faceB2.max.z = max(b1->z, max(b2->z, b3->z));
-                        if (faceB1.min.z > faceB2.max.z) continue;
-                        faceB2.min.z = min(b1->z, min(b2->z, b3->z));
-                        if (faceB1.max.z < faceB2.min.z) continue;
+                        xBoxA faceB2;
+                        faceB2.P_max.x = max(b1->x, max(b2->x, b3->x));
+                        if (faceB1.P_min.x > faceB2.P_max.x) continue;
+                        faceB2.P_min.x = min(b1->x, min(b2->x, b3->x));
+                        if (faceB1.P_max.x < faceB2.P_min.x) continue;
+                        faceB2.P_max.y = max(b1->y, max(b2->y, b3->y));
+                        if (faceB1.P_min.y > faceB2.P_max.y) continue;
+                        faceB2.P_min.y = min(b1->y, min(b2->y, b3->y));
+                        if (faceB1.P_max.y < faceB2.P_min.y) continue;
+                        faceB2.P_max.z = max(b1->z, max(b2->z, b3->z));
+                        if (faceB1.P_min.z > faceB2.P_max.z) continue;
+                        faceB2.P_min.z = min(b1->z, min(b2->z, b3->z));
+                        if (faceB1.P_max.z < faceB2.P_min.z) continue;
 
                         ++Performance.CollidedTriangles;
 
@@ -406,12 +406,12 @@ bool CD_MeshToMesh:: Collide2(xCollisionHierarchyBoundsRoot *ci1, xCollisionHier
     bool res = false;
 
     if (elem2->verticesC && ci1->kids && ci2->kids &&
-        ci1->bounding.min.x < ci2->bounding.max.x &&
-        ci1->bounding.max.x > ci2->bounding.min.x &&
-        ci1->bounding.min.y < ci2->bounding.max.y &&
-        ci1->bounding.max.y > ci2->bounding.min.y &&
-        ci1->bounding.min.z < ci2->bounding.max.z &&
-        ci1->bounding.max.z > ci2->bounding.min.z)
+        ci1->bounding.P_min.x < ci2->bounding.P_max.x &&
+        ci1->bounding.P_max.x > ci2->bounding.P_min.x &&
+        ci1->bounding.P_min.y < ci2->bounding.P_max.y &&
+        ci1->bounding.P_max.y > ci2->bounding.P_min.y &&
+        ci1->bounding.P_min.z < ci2->bounding.P_max.z &&
+        ci1->bounding.P_max.z > ci2->bounding.P_min.z)
         res |= CheckOctreeLevel(ci1, ci2,
             elem1->collisionData.kidsP, elem2->collisionData.kidsP, ci1->kids, ci2->kids,
             elem1->collisionData.kidsC, elem2->collisionData.kidsC, elem1, elem2);

@@ -2,6 +2,9 @@
 #define __incl_lib3dx_xElementData_h
 
 #include "xMaterial.h"
+#include "../../Math/Figures/xBoxA.h"
+
+using namespace Math::Figures;
 
 struct xFaceList {
     xWORD      indexOffset; // first face in the facesP array
@@ -49,7 +52,7 @@ struct xCollisionHierarchy : xCollisionData
     void Load( FILE *file, xElement *elem );
     void Save( FILE *file, xElement *elem );
 
-    void Subdivide(const xElement *elem, float scale, int depth, const xBox &bounding);
+    void Subdivide(const xElement *elem, float scale, int depth, const xBoxA &bounding);
 };
 
 #endif

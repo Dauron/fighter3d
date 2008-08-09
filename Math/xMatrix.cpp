@@ -1,6 +1,5 @@
 #include "xMath.h"
 
-#define EPSILON     0.0000000001
 #define IsZero(a)   (fabs(a) <= EPSILON)
 
 // Multiply the xMatrix by another xMatrix
@@ -70,7 +69,7 @@ xMatrix &xMatrix::preTranslateT(const xVector3& pos)
 }
 
 // Transform point
-xVector3 xMatrix::postTransformP(const xVector3& point) const
+xPoint3 xMatrix::postTransformP(const xPoint3& point) const
 {
     xVector3 res;
     res.x = x0*point.x + y0*point.y + z0*point.z + w0;
@@ -81,7 +80,7 @@ xVector3 xMatrix::postTransformP(const xVector3& point) const
         res *= 1.f/w;
     return res;
 }
-xVector3 xMatrix::preTransformP(const xVector3& point) const
+xPoint3 xMatrix::preTransformP(const xPoint3& point) const
 {
     xVector3 res;
     res.x = x0*point.x + x1*point.y + x2*point.z + x3;
@@ -190,7 +189,7 @@ xMatrix &xMatrix::invert()
     return (*this = b);
 }
 
-xMatrix xMatrixFromQuaternion(xVector4 q)
+xMatrix xMatrixFromQuaternion(xQuaternion q)
 {
     float xx = q.x * q.x;
     float xy = q.x * q.y;
@@ -222,9 +221,9 @@ xMatrix xMatrixFromQuaternion(xVector4 q)
     return res;
 }
 
-xVector4 xMatrixToQuaternion(const xMatrix &m)
+xQuaternion xMatrixToQuaternion(const xMatrix &m)
 {
-    xVector4 q;
+    xQuaternion q;
     /*
     This code can be optimized for m[kW][kW] = 1, which
     should always be true.  This optimization is excluded
@@ -268,7 +267,7 @@ xVector4 xMatrixToQuaternion(const xMatrix &m)
     float inv = angle > PI*1.f/3.f ? Sign(q.w) : -1.f;
     xVector3 a = inv * q.vector3;
     a.normalize() *= sin(angle);
-    return xVector4::Create(a, cos(angle));
+    return xQuaternion::Create(a, cos(angle));
 }
 
 xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up)
@@ -283,7 +282,7 @@ xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up)
     transformation.y0 = forward2.x; transformation.y1 = forward2.y; transformation.y2 = forward2.z;
     transformation.z0 = up.x;       transformation.z1 = up.y;       transformation.z2 = up.z;
     transformation.w0 = transformation.w1 = transformation.w2 = 0.f;
-    transformation.row3.zeroQ();
+    transformation.row3.init(0.f,0.f,0.f,1.f);
     return transformation.transpose();
 }
 

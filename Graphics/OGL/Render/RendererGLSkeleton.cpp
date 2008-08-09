@@ -16,7 +16,7 @@ void RenderBoneCore ( const xBone &bone )
     xVector3 P_third  = P_fifth + xVector3::Orthogonal(NW_fifth).normalize() * 0.1f;
 
     float W_sin = sin(PI * 0.25f);
-    xVector4 QT_rot; QT_rot.init(NW_fifth.normalize() * sin(PI * 0.25f), cos(PI * 0.25f));
+    xQuaternion QT_rot; QT_rot.init(NW_fifth.normalize() * sin(PI * 0.25f), cos(PI * 0.25f));
 
     W_bone[0] = bone.ID + 0.1f;
     g_AnimSkeletal.SetBoneIdxWghts(W_bone);
@@ -55,9 +55,40 @@ void RenderBone ( const xBone *L_bones, xBYTE ID_bone, xWORD ID_selBone )
         RenderBone(L_bones, *ID_iter, ID_selBone);
 }
 
+xVector3 Ellipse(xFLOAT a, xFLOAT b, xFLOAT alpha)
+{
+    xFLOAT cosAlpha = cos(alpha);
+    xFLOAT sinAlpha;
+    xFLOAT gamma;
+
+    if (cosAlpha > EPSILON)
+    {
+        xFLOAT tanAlpha = tan(alpha);
+        sinAlpha = cosAlpha * tanAlpha;
+
+        if (a > EPSILON && b > EPSILON)
+        {
+            xFLOAT beta = atan ( tanAlpha * a / b );
+            xFLOAT cosBeta2 = cos(beta);
+                   cosBeta2 *= cosBeta2;
+            xFLOAT sinBeta2 = 1 - cosBeta2;
+            gamma = sqrt( a*a*cosBeta2 + b*b*sinBeta2 );
+        }
+        else
+            gamma = 0.f;
+    }
+    else
+    {
+        sinAlpha = 1.f;
+        gamma    = a > EPSILON ? b : 0.f;
+    }
+
+    xFLOAT radius   = sin(gamma);
+    return xVector3::Create(radius * 0.1f * cosAlpha, radius * 0.1f * sinAlpha, cos(gamma) * 0.1f);
+}
 
 void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *MX_bones,
-                             const xVector4 *QT_bones, const VConstraintAngular &C_angular)
+                             const xQuaternion *QT_bones, const VConstraintAngular &C_angular)
 {
     const xBone
         &boneRB = spine.L_bones[C_angular.particleRootB],
@@ -73,15 +104,15 @@ void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *MX_bones,
     if (C_angular.particleRootE)
     {
         N_up    = MX_bones[boneRE.ID].postTransformV(N_up);
-        N_front = MX_bones[boneRE.ID].postTransformV(xVector3::Create(0,1,0));
+        N_front = MX_bones[boneRE.ID].postTransformV(bone.getFront());
     }
     else
     {
         N_up    = xQuaternion::rotate(QT_bones[boneRB.ID*2], N_up);
-        N_front = xQuaternion::rotate(QT_bones[boneRB.ID*2], xVector3::Create(0,1,0));
+        N_front = xQuaternion::rotate(QT_bones[boneRB.ID*2], bone.getFront());
     }
 
-    xMatrix MX_BoneToWorld = xMatrixFromVectors(N_front, N_up);
+    xMatrix MX_BoneToWorld = xMatrixFromVectors(N_front, N_up).transpose();
 
     glBegin(GL_LINES);
     {
@@ -116,47 +147,73 @@ void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *MX_bones,
     }
     glEnd();
 
-    xVector3 v[8];
-    v[0].init(sin(C_angular.angleMaxX) * 0.1f, 0.f, cos(C_angular.angleMaxX) * 0.1);
-
-    xFLOAT angleH = (C_angular.angleMaxX + C_angular.angleMaxY) * 0.5f;
-    xFLOAT radius = sin(angleH);
-    v[1].init(radius * 0.0707f, radius * 0.0707f, cos(angleH) * 0.1f);
-
-    v[2].init(0.f, sin(C_angular.angleMaxY) * 0.1f, cos(C_angular.angleMaxY) * 0.1);
-
-    angleH = (C_angular.angleMinX + C_angular.angleMaxY) * 0.5f;
-    radius = sin(angleH);
-    v[3].init(-radius * 0.0707f, radius * 0.0707f, cos(angleH) * 0.1f);
-
-    v[4].init(sin(C_angular.angleMinX) * -0.1f, 0.f, cos(C_angular.angleMinX) * 0.1);
-
-    angleH = (C_angular.angleMinX + C_angular.angleMinY) * 0.5f;
-    radius = sin(angleH);
-    v[5].init(-radius * 0.0707f, -radius * 0.0707f, cos(angleH) * 0.1f);
-
-    v[6].init(0.f, sin(C_angular.angleMinY) * -0.1f, cos(C_angular.angleMinY) * 0.1);
-
-    angleH = (C_angular.angleMaxX + C_angular.angleMinY) * 0.5f;
-    radius = sin(angleH);
-    v[7].init(radius * 0.0707f, -radius * 0.0707f, cos(angleH) * 0.1f);
-
     glColor4f(0.0f,1.0f,1.0f,1.0f);
     glBegin(GL_TRIANGLE_FAN);
     {
         glVertex3fv(P_rootE.xyz);
-        for (int i=0; i<8; ++i)
+
+        xVector3 v;
+        v.init(sin(C_angular.angleMaxX) * 0.1f, 0.f, cos(C_angular.angleMaxX) * 0.1);
+        v = P_rootE + MX_BoneToWorld.postTransformV(v);
+        glVertex3fv(v.xyz);
+
+        int    stepsEnd = 10;
+        xFLOAT stepsInv = 1.f / stepsEnd;
+        for (int i = 1; i < stepsEnd; ++i)
         {
-            v[i] = P_rootE + MX_BoneToWorld.postTransformV(v[i]);
-            glVertex3fv(v[i].xyz);
+            xFLOAT alpha = i * stepsInv * 0.5f * PI;
+            v = P_rootE + MX_BoneToWorld.postTransformV( Ellipse(C_angular.angleMaxX, C_angular.angleMaxY, alpha) );
+            glVertex3fv(v.xyz);
         }
+
+        v.init(0.f, sin(C_angular.angleMaxY) * 0.1f, cos(C_angular.angleMaxY) * 0.1);
+        v = P_rootE + MX_BoneToWorld.postTransformV(v);
+        glVertex3fv(v.xyz);
+
+        for (int i = 1; i < stepsEnd; ++i)
+        {
+            xFLOAT alpha = i * stepsInv * 0.5f * PI;
+            v = Ellipse(C_angular.angleMaxY, C_angular.angleMinX, alpha);
+            xFLOAT swap = v.x; v.x = - v.y; v.y = swap;
+            v = P_rootE + MX_BoneToWorld.postTransformV( v );
+            glVertex3fv(v.xyz);
+        }
+
+        v.init(sin(C_angular.angleMinX) * -0.1f, 0.f, cos(C_angular.angleMinX) * 0.1);
+        v = P_rootE + MX_BoneToWorld.postTransformV(v);
+        glVertex3fv(v.xyz);
+
+        for (int i = 1; i < stepsEnd; ++i)
+        {
+            xFLOAT alpha = i * stepsInv * 0.5f * PI;
+            v = Ellipse(C_angular.angleMinX, C_angular.angleMinY, alpha);
+            v.x = -v.x; v.y = -v.y;
+            v = P_rootE + MX_BoneToWorld.postTransformV( v );
+            glVertex3fv(v.xyz);
+        }
+
+        v.init(0.f, sin(C_angular.angleMinY) * -0.1f, cos(C_angular.angleMinY) * 0.1);
+        v = P_rootE + MX_BoneToWorld.postTransformV(v);
+        glVertex3fv(v.xyz);
+
+        for (int i = 1; i < stepsEnd; ++i)
+        {
+            xFLOAT alpha = i * stepsInv * 0.5f * PI;
+            v = Ellipse(C_angular.angleMinY, C_angular.angleMaxX, alpha);
+            xFLOAT swap = v.x; v.x = v.y; v.y = -swap;
+            v = P_rootE + MX_BoneToWorld.postTransformV( v );
+            glVertex3fv(v.xyz);
+        }
+
         glColor4f(0.0f,0.5f,0.5f,1.0f);
-        glVertex3fv(v[0].xyz);
+        v.init(sin(C_angular.angleMaxX) * 0.1f, 0.f, cos(C_angular.angleMaxX) * 0.1);
+        v = P_rootE + MX_BoneToWorld.postTransformV(v);
+        glVertex3fv(v.xyz);
     }
     glEnd();
 }
 
-void RenderConstraint ( const xSkeleton &spine, const xMatrix *MX_bones, const xVector4 *QT_bones )
+void RenderConstraint ( const xSkeleton &spine, const xMatrix *MX_bones, const xQuaternion *QT_bones )
 {
     const xBone *boneA, *boneB;
     xFLOAT minL, maxL;
@@ -289,7 +346,7 @@ void RenderBoneSelection ( const xBone *L_bones, xBYTE ID_bone )
         RenderBoneSelection(L_bones, *ID_iter);
 }
 
-void RenderConstraintSelection ( const xSkeleton &spine, const xMatrix *MX_bones, const xVector4 *QT_bones )
+void RenderConstraintSelection ( const xSkeleton &spine, const xMatrix *MX_bones, const xQuaternion *QT_bones )
 {
     const xBone *boneA, *boneB;
 

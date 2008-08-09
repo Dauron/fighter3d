@@ -83,31 +83,31 @@ void xModel_SkinElementInstance(const xModel *model, xModelInstance &instance)
         _xModel_SkinElementInstance(celem, instance.elementInstanceP, instance.bonesM, instance.bonesMod);
 }
 
-xBox     _xBoundingBox(const xVector4 *vertexP, xWORD vertexC)
+xBoxA    _xBoundingBox(const xVector4 *vertexP, xWORD vertexC)
 {
-    xBox res;
+    xBoxA res;
     if (!vertexC)
     {
-        res.min.zero();
-        res.max.zero();
+        res.P_min.zero();
+        res.P_max.zero();
         return res;
     }
 
-    res.min = vertexP->vector3;
-    res.max = vertexP->vector3;
+    res.P_min = vertexP->vector3;
+    res.P_max = vertexP->vector3;
     --vertexC;
 
     for (; vertexC; --vertexC, ++vertexP)
     {
-        if (vertexP->x > res.max.x) res.max.x = vertexP->x;
+        if (vertexP->x > res.P_max.x) res.P_max.x = vertexP->x;
         else
-        if (vertexP->x < res.min.x) res.min.x = vertexP->x;
-        if (vertexP->y > res.max.y) res.max.y = vertexP->y;
+        if (vertexP->x < res.P_min.x) res.P_min.x = vertexP->x;
+        if (vertexP->y > res.P_max.y) res.P_max.y = vertexP->y;
         else
-        if (vertexP->y < res.min.y) res.min.y = vertexP->y;
-        if (vertexP->z > res.max.z) res.max.z = vertexP->z;
+        if (vertexP->y < res.P_min.y) res.P_min.y = vertexP->y;
+        if (vertexP->z > res.P_max.z) res.P_max.z = vertexP->z;
         else
-        if (vertexP->z < res.min.z) res.min.z = vertexP->z;
+        if (vertexP->z < res.P_min.z) res.P_min.z = vertexP->z;
     }
 
     return res;
@@ -117,15 +117,15 @@ void     _xElementInstance_GetBounds(xElementInstance &instance)
 {
     if (!instance.verticesC)
     {
-        instance.bbBox.min.zero();
-        instance.bbBox.max.zero();
+        instance.bbBox.P_min.zero();
+        instance.bbBox.P_max.zero();
         instance.bsCenter.zero();
         instance.bsRadius = 0.f;
         return;
     }
 
     instance.bbBox    = _xBoundingBox(instance.verticesP, instance.verticesC);
-    instance.bsCenter = (instance.bbBox.min + instance.bbBox.max) * 0.5f;
+    instance.bsCenter = (instance.bbBox.P_min + instance.bbBox.P_max) * 0.5f;
 
     xVector4 *iter = instance.verticesP;
     xFLOAT r = 0.f;
@@ -169,9 +169,9 @@ void xElement_FreeCollisionHierarchyBounds(xCollisionData *pcData, xCollisionHie
 void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                                         xCollisionData *pcData, xCollisionHierarchyBounds *pBound)
 {
-    xBox res;
-    res.max.x = -1000000000.f; res.max.y = -1000000000.f; res.max.z = -1000000000.f;
-    res.min.x =  1000000000.f; res.min.y =  1000000000.f; res.min.z =  1000000000.f;
+    xBoxA res;
+    res.P_max.x = -1000000000.f; res.P_max.y = -1000000000.f; res.P_max.z = -1000000000.f;
+    res.P_min.x =  1000000000.f; res.P_min.y =  1000000000.f; res.P_min.z =  1000000000.f;
 
     if (pcData->kidsP)
     {
@@ -191,12 +191,12 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
             if (hierarchy->kidsC)
               {
                 xElement_CalcCollisionHierarchyBox(vertices, hierarchy, bound);
-                if (bound->bounding.min.x < res.min.x) res.min.x = bound->bounding.min.x;
-                if (bound->bounding.min.y < res.min.y) res.min.y = bound->bounding.min.y;
-                if (bound->bounding.min.z < res.min.z) res.min.z = bound->bounding.min.z;
-                if (bound->bounding.max.x > res.max.x) res.max.x = bound->bounding.max.x;
-                if (bound->bounding.max.y > res.max.y) res.max.y = bound->bounding.max.y;
-                if (bound->bounding.max.z > res.max.z) res.max.z = bound->bounding.max.z;
+                if (bound->bounding.P_min.x < res.P_min.x) res.P_min.x = bound->bounding.P_min.x;
+                if (bound->bounding.P_min.y < res.P_min.y) res.P_min.y = bound->bounding.P_min.y;
+                if (bound->bounding.P_min.z < res.P_min.z) res.P_min.z = bound->bounding.P_min.z;
+                if (bound->bounding.P_max.x > res.P_max.x) res.P_max.x = bound->bounding.P_max.x;
+                if (bound->bounding.P_max.y > res.P_max.y) res.P_max.y = bound->bounding.P_max.y;
+                if (bound->bounding.P_max.z > res.P_max.z) res.P_max.z = bound->bounding.P_max.z;
             }
             else
             if (hierarchy->verticesP)
@@ -204,21 +204,21 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                 xWORD * iterV  = hierarchy->verticesP;
                 xWORD   vCount = hierarchy->verticesC;
 
-                xBox tmp;
+                xBoxA tmp;
 #ifndef WIN32
                 const xVector4 *vert = vertices + *iterV;
                 ++iterV; --vCount;
-                tmp.max.x = vert->x; tmp.max.y = vert->y; tmp.max.z = vert->z;
-                tmp.min.x = vert->x; tmp.min.y = vert->y; tmp.min.z = vert->z;
+                tmp.P_max.x = vert->x; tmp.P_max.y = vert->y; tmp.P_max.z = vert->z;
+                tmp.P_min.x = vert->x; tmp.P_min.y = vert->y; tmp.P_min.z = vert->z;
                 for (int j=vCount; j; --j, ++iterV)
                 {
                     vert = vertices + *iterV;
-                    if (vert->x < tmp.min.x) tmp.min.x = vert->x;
-                    if (vert->x > tmp.max.x) tmp.max.x = vert->x;
-                    if (vert->y < tmp.min.y) tmp.min.y = vert->y;
-                    if (vert->y > tmp.max.y) tmp.max.y = vert->y;
-                    if (vert->z < tmp.min.z) tmp.min.z = vert->z;
-                    if (vert->z > tmp.max.z) tmp.max.z = vert->z;
+                    if (vert->x < tmp.P_min.x) tmp.P_min.x = vert->x;
+                    if (vert->x > tmp.P_max.x) tmp.P_max.x = vert->x;
+                    if (vert->y < tmp.P_min.y) tmp.P_min.y = vert->y;
+                    if (vert->y > tmp.P_max.y) tmp.P_max.y = vert->y;
+                    if (vert->z < tmp.P_min.z) tmp.P_min.z = vert->z;
+                    if (vert->z > tmp.P_max.z) tmp.P_max.z = vert->z;
                 }
 #else
                 __asm // eax = tmp->?, ebx = iterV, ecx = vert, edx = vert->?
@@ -229,19 +229,19 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                     MOV cx, word ptr [ebx];
                     SHL ecx, 4; // =*16B
                     ADD ecx, vertices;
-                    // tmp.max.x = vert->x; tmp.max.y = vert->y; tmp.max.z = vert->z;
-                    // tmp.min.x = vert->x; tmp.min.y = vert->y; tmp.min.z = vert->z;
+                    // tmp.P_max.x = vert->x; tmp.P_max.y = vert->y; tmp.P_max.z = vert->z;
+                    // tmp.P_min.x = vert->x; tmp.P_min.y = vert->y; tmp.P_min.z = vert->z;
                     MOV edx, dword ptr [ecx];
-                    MOV tmp.max.x, edx;
-                    MOV tmp.min.x, edx;
+                    MOV tmp.P_max.x, edx;
+                    MOV tmp.P_min.x, edx;
                     ADD ecx, 4;
                     MOV edx, dword ptr [ecx];
-                    MOV tmp.max.y, edx;
-                    MOV tmp.min.y, edx;
+                    MOV tmp.P_max.y, edx;
+                    MOV tmp.P_min.y, edx;
                     ADD ecx, 4;
                     MOV edx, dword ptr [ecx];
-                    MOV tmp.max.z, edx;
-                    MOV tmp.min.z, edx;
+                    MOV tmp.P_max.z, edx;
+                    MOV tmp.P_min.z, edx;
 
                 LOOP_COPY:
                     DEC vCount;
@@ -255,73 +255,73 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                         SHL ecx, 4; // =*16B
                         ADD ecx, vertices;
 
-                        // if (vert->x > tmp.max.x) tmp.max.x = vert->x;
+                        // if (vert->x > tmp.P_max.x) tmp.P_max.x = vert->x;
                         MOV    edx, dword ptr [ecx];
 
-                        FLD    tmp.max.x;
+                        FLD    tmp.P_max.x;
                         FCOMP  dword ptr [ecx];
                         FNSTSW ax;
                         TEST   ah,5;
 
-                        MOV    eax, tmp.max.x;
+                        MOV    eax, tmp.P_max.x;
                         CMOVNP eax, edx;
-                        MOV    tmp.max.x, eax;
+                        MOV    tmp.P_max.x, eax;
 
-                        // if (vert->x < tmp.min.x) tmp.min.x = vert->x;
-                        FLD    tmp.min.x;
+                        // if (vert->x < tmp.P_min.x) tmp.P_min.x = vert->x;
+                        FLD    tmp.P_min.x;
                         FCOMP  dword ptr [ecx];
                         FNSTSW ax;
                         TEST   ah,41h;
 
-                        MOV    eax, tmp.min.x;
+                        MOV    eax, tmp.P_min.x;
                         CMOVE  eax, edx;
-                        MOV    tmp.min.x, eax;
+                        MOV    tmp.P_min.x, eax;
 
-                        // if (vert->y > tmp.max.y) tmp.max.y = vert->y;
+                        // if (vert->y > tmp.P_max.y) tmp.P_max.y = vert->y;
                         ADD    ecx, 4;
                         MOV    edx, dword ptr [ecx];
 
-                        FLD    tmp.max.y;
+                        FLD    tmp.P_max.y;
                         FCOMP  dword ptr [ecx];
                         FNSTSW ax;
                         TEST   ah,5;
 
-                        MOV    eax, tmp.max.y;
+                        MOV    eax, tmp.P_max.y;
                         CMOVNP eax, edx;
-                        MOV    tmp.max.y, eax;
+                        MOV    tmp.P_max.y, eax;
 
-                        // if (vert->y < tmp.min.y) tmp.min.y = vert->y;
-                        FLD    tmp.min.y;
+                        // if (vert->y < tmp.P_min.y) tmp.P_min.y = vert->y;
+                        FLD    tmp.P_min.y;
                         FCOMP  dword ptr [ecx];
                         FNSTSW ax;
                         TEST   ah,41h;
 
-                        MOV    eax, tmp.min.y;
+                        MOV    eax, tmp.P_min.y;
                         CMOVE  eax, edx;
-                        MOV    tmp.min.y, eax;
+                        MOV    tmp.P_min.y, eax;
 
-                        // if (vert->z > tmp.max.z) tmp.max.z = vert->z;
+                        // if (vert->z > tmp.P_max.z) tmp.P_max.z = vert->z;
                         ADD    ecx, 4;
                         MOV    edx, dword ptr [ecx];
 
-                        FLD    tmp.max.z;
+                        FLD    tmp.P_max.z;
                         FCOMP  dword ptr [ecx];
                         FNSTSW ax;
                         TEST   ah,5;
 
-                        MOV    eax, tmp.max.z;
+                        MOV    eax, tmp.P_max.z;
                         CMOVNP eax, edx;
-                        MOV    tmp.max.z, eax;
+                        MOV    tmp.P_max.z, eax;
 
-                        // if (vert->z > tmp.max.z) tmp.max.z = vert->z;
-                        FLD    tmp.min.z;
+                        // if (vert->z > tmp.P_max.z) tmp.P_max.z = vert->z;
+                        FLD    tmp.P_min.z;
                         FCOMP  dword ptr [ecx];
                         FNSTSW ax;
                         TEST   ah,41h;
 
-                        MOV    eax, tmp.min.z;
+                        MOV    eax, tmp.P_min.z;
                         CMOVE  eax, edx;
-                        MOV    tmp.min.z, eax;
+                        MOV    tmp.P_min.z, eax;
 
                         // LOOP_FINITO
                         JMP    LOOP_COPY;
@@ -329,59 +329,59 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                 }
 #endif
                 bound->bounding = tmp;
-                bound->center   = (tmp.min + tmp.max) * 0.5f;
-                bound->radius   = (tmp.min - bound->center).length();
-                if (tmp.min.x < res.min.x) res.min.x = tmp.min.x;
-                if (tmp.min.y < res.min.y) res.min.y = tmp.min.y;
-                if (tmp.min.z < res.min.z) res.min.z = tmp.min.z;
-                if (tmp.max.x > res.max.x) res.max.x = tmp.max.x;
-                if (tmp.max.y > res.max.y) res.max.y = tmp.max.y;
-                if (tmp.max.z > res.max.z) res.max.z = tmp.max.z;
+                bound->center   = (tmp.P_min + tmp.P_max) * 0.5f;
+                bound->radius   = (tmp.P_min - bound->center).length();
+                if (tmp.P_min.x < res.P_min.x) res.P_min.x = tmp.P_min.x;
+                if (tmp.P_min.y < res.P_min.y) res.P_min.y = tmp.P_min.y;
+                if (tmp.P_min.z < res.P_min.z) res.P_min.z = tmp.P_min.z;
+                if (tmp.P_max.x > res.P_max.x) res.P_max.x = tmp.P_max.x;
+                if (tmp.P_max.y > res.P_max.y) res.P_max.y = tmp.P_max.y;
+                if (tmp.P_max.z > res.P_max.z) res.P_max.z = tmp.P_max.z;
             }
             else
             if (hierarchy->facesP)
             {
-                xBox tmp;
-                tmp.max.x = -1000000000.f; tmp.max.y = -1000000000.f; tmp.max.z = -1000000000.f;
-                tmp.min.x =  1000000000.f; tmp.min.y =  1000000000.f; tmp.min.z =  1000000000.f;
+                xBoxA tmp;
+                tmp.P_max.x = -1000000000.f; tmp.P_max.y = -1000000000.f; tmp.P_max.z = -1000000000.f;
+                tmp.P_min.x =  1000000000.f; tmp.P_min.y =  1000000000.f; tmp.P_min.z =  1000000000.f;
 
                 xFace ** iterF = hierarchy->facesP;
-                xBox      iterB;
+                xBoxA    iterB;
                 for (int j=hierarchy->facesC; j; --j, ++iterF)
                 {
                     const xVector4 *v1 = vertices + (**iterF)[0];
                     const xVector4 *v2 = vertices + (**iterF)[1];
                     const xVector4 *v3 = vertices + (**iterF)[2];
 
-                    iterB.min.x = min(v1->x, min(v2->x, v3->x));
-                    iterB.min.y = min(v1->y, min(v2->y, v3->y));
-                    iterB.min.z = min(v1->z, min(v2->z, v3->z));
-                    iterB.max.x = max(v1->x, max(v2->x, v3->x));
-                    iterB.max.y = max(v1->y, max(v2->y, v3->y));
-                    iterB.max.z = max(v1->z, max(v2->z, v3->z));
+                    iterB.P_min.x = min(v1->x, min(v2->x, v3->x));
+                    iterB.P_min.y = min(v1->y, min(v2->y, v3->y));
+                    iterB.P_min.z = min(v1->z, min(v2->z, v3->z));
+                    iterB.P_max.x = max(v1->x, max(v2->x, v3->x));
+                    iterB.P_max.y = max(v1->y, max(v2->y, v3->y));
+                    iterB.P_max.z = max(v1->z, max(v2->z, v3->z));
 
-                    if (iterB.min.x < tmp.min.x) tmp.min.x = iterB.min.x;
-                    if (iterB.min.y < tmp.min.y) tmp.min.y = iterB.min.y;
-                    if (iterB.min.z < tmp.min.z) tmp.min.z = iterB.min.z;
-                    if (iterB.max.x > tmp.max.x) tmp.max.x = iterB.max.x;
-                    if (iterB.max.y > tmp.max.y) tmp.max.y = iterB.max.y;
-                    if (iterB.max.z > tmp.max.z) tmp.max.z = iterB.max.z;
+                    if (iterB.P_min.x < tmp.P_min.x) tmp.P_min.x = iterB.P_min.x;
+                    if (iterB.P_min.y < tmp.P_min.y) tmp.P_min.y = iterB.P_min.y;
+                    if (iterB.P_min.z < tmp.P_min.z) tmp.P_min.z = iterB.P_min.z;
+                    if (iterB.P_max.x > tmp.P_max.x) tmp.P_max.x = iterB.P_max.x;
+                    if (iterB.P_max.y > tmp.P_max.y) tmp.P_max.y = iterB.P_max.y;
+                    if (iterB.P_max.z > tmp.P_max.z) tmp.P_max.z = iterB.P_max.z;
                 }
 
                 bound->bounding = tmp;
-                bound->center   = (tmp.min + tmp.max) * 0.5f;
-                bound->radius   = (tmp.min - bound->center).length();
-                if (tmp.min.x < res.min.x) res.min.x = tmp.min.x;
-                if (tmp.min.y < res.min.y) res.min.y = tmp.min.y;
-                if (tmp.min.z < res.min.z) res.min.z = tmp.min.z;
-                if (tmp.max.x > res.max.x) res.max.x = tmp.max.x;
-                if (tmp.max.y > res.max.y) res.max.y = tmp.max.y;
-                if (tmp.max.z > res.max.z) res.max.z = tmp.max.z;
+                bound->center   = (tmp.P_min + tmp.P_max) * 0.5f;
+                bound->radius   = (tmp.P_min - bound->center).length();
+                if (tmp.P_min.x < res.P_min.x) res.P_min.x = tmp.P_min.x;
+                if (tmp.P_min.y < res.P_min.y) res.P_min.y = tmp.P_min.y;
+                if (tmp.P_min.z < res.P_min.z) res.P_min.z = tmp.P_min.z;
+                if (tmp.P_max.x > res.P_max.x) res.P_max.x = tmp.P_max.x;
+                if (tmp.P_max.y > res.P_max.y) res.P_max.y = tmp.P_max.y;
+                if (tmp.P_max.z > res.P_max.z) res.P_max.z = tmp.P_max.z;
             }
         }
     }
 
     pBound->bounding = res;
-    pBound->center   = (res.min + res.max) * 0.5f;
-    pBound->radius   = (res.min - pBound->center).length();
+    pBound->center   = (res.P_min + res.P_max) * 0.5f;
+    pBound->radius   = (res.P_min - pBound->center).length();
 }

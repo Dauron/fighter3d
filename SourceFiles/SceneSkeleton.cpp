@@ -417,16 +417,22 @@ bool SceneSkeleton::Render()
         pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Click: Select Bone");
     else if (EditMode == emInputWght)
         pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Type in Bone weight | %s: Accept", KeyName_Accept);
+
     else if (EditMode == emSelectAnimation || EditMode == emAnimateBones
-        || EditMode == emLoadAnimation)
-        pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
-    else if (EditMode == emEditAnimation)
+        || EditMode == emLoadAnimation || EditMode == emEditAnimation
+        || EditMode == emFrameParams || EditMode == emSaveAnimation)
     {
         pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
-        RenderProgressBar();
+        if (EditMode != emSelectAnimation && EditMode != emLoadAnimation)
+            if (AnimationName.size())
+                pFont->PrintF(150.f, Height - 20.f, 0.f, "Animation: %s", AnimationName.c_str());
+            else
+                pFont->PrintF(150.f, Height - 20.f, 0.f, "Animation: new animation");
     }
+
+    if (EditMode == emEditAnimation)
+        RenderProgressBar();
     else if (EditMode == emFrameParams) {
-        pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
         if (Animation.KeyFrame.step == 1)
             pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: (%d) %s", Animation.KeyFrame.freeze, InputState.String.c_str());
         else
@@ -437,7 +443,6 @@ bool SceneSkeleton::Render()
     }
     else if (EditMode == emSaveAnimation)
     {
-        pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
         if (AnimationName.size())
             pFont->PrintF(5.f, 25, 0.f, "Filename: (%s) %s", AnimationName.c_str(), InputState.String.c_str());
         else

@@ -10,7 +10,7 @@ void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filena
 
     resilience = 0.2f;
     verletTime = verletWeight = 0.f;
-    verletTimeMaxInv = 1.f;
+    verletTimeMaxInv = 0.0f;
     postHit = 0.f;
 }
 
@@ -34,24 +34,32 @@ void SkeletizedObj :: CreateVerletSystem()
     verletSystem.Init(xModelGr->spine.I_bones);
     verletSystem.C_collisions = &collisionConstraints;
     xBone    *bone    = xModelGr->spine.L_bones;
-    xVector3 *P_cur   = verletSystem.P_current,
-             *P_old   = verletSystem.P_previous,
-             *A_iter  = verletSystem.A_forces;
-    xFLOAT   *M_iter  = verletSystem.M_weight_Inv;
-    xMatrix  *MX_bone = modelInstanceGr.bonesM;
+    xPoint3  *P_cur   = verletSystem.P_current,
+             *P_old   = verletSystem.P_previous;
+    xVector3 *A_iter  = verletSystem.A_forces;
+    xQuaternion *QT_skew = verletSystem.QT_boneSkew;
+    xFLOAT      *M_iter  = verletSystem.M_weight_Inv;
+    bool        *FL_lock = verletSystem.FL_attached;
+    xMatrix     *MX_bone = modelInstanceGr.bonesM;
+    xQuaternion *QT_bone = modelInstanceGr.bonesQ;
 
     if (MX_bone)
-        for (int i = xModelGr->spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++A_iter, ++M_iter, ++MX_bone)
+        for (int i = xModelGr->spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++A_iter, ++M_iter, ++FL_lock,
+            ++MX_bone, QT_bone+=2)
         {
-            *P_old = *P_cur = MX_ModelToWorld.preTransformP( MX_bone->postTransformP(bone->P_end) );
-            *M_iter = 1 / bone->M_weight;
+            *P_old   = *P_cur = MX_ModelToWorld.preTransformP( MX_bone->postTransformP(bone->P_end) );
+            *QT_skew = bone->getSkew(*QT_bone);
+            *M_iter  = 1 / bone->M_weight;
+            *FL_lock = false;
             A_iter->zero();
         }
     else
-        for (int i = xModelGr->spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++A_iter, ++M_iter)
+        for (int i = xModelGr->spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++A_iter, ++M_iter, ++FL_lock)
         {
-            *P_old = *P_cur = MX_ModelToWorld.preTransformP( bone->P_end );
-            *M_iter = 1 / bone->M_weight;
+            *P_old   = *P_cur = MX_ModelToWorld.preTransformP( bone->P_end );
+            QT_skew->zeroQ();
+            *M_iter  = 1 / bone->M_weight;
+            *FL_lock = false;
             A_iter->zero();
         }
 }
@@ -63,12 +71,16 @@ void SkeletizedObj :: DestroyVerletSystem()
 
 void SkeletizedObj :: UpdateVerletSystem()
 {
-    xBone    *bone    = xModelGr->spine.L_bones;
-    xVector3 *P_old   = verletSystem.P_previous;
-    xMatrix  *MX_bone = modelInstanceGr.bonesM;
-    for (int i = xModelGr->spine.I_bones; i; --i, ++bone, ++P_old, ++MX_bone)
+    xBone       *bone    = xModelGr->spine.L_bones;
+    xPoint3     *P_old   = verletSystem.P_current;
+    xQuaternion *QT_skew = verletSystem.QT_boneSkew;
+    xMatrix     *MX_bone = modelInstanceGr.bonesM;
+    xQuaternion *QT_bone = modelInstanceGr.bonesQ;
+    for (int i = xModelGr->spine.I_bones; i; --i, ++bone, ++P_old, ++QT_skew, ++MX_bone, QT_bone+=2)
+    {
         *P_old   = MX_ModelToWorld.preTransformP( MX_bone->postTransformP(bone->P_end) );
-    verletSystem.SwapPositions();
+        *QT_skew = bone->getSkew(*QT_bone);
+    }
 }
 
 
@@ -91,7 +103,7 @@ void SkeletizedObj :: Update(float deltaTime)
     SkeletizedBody::CalculateMovement(this, deltaTime);
     CollidedModels.clear();
 
-    xVector4 *bones = NULL, *bones2 = NULL;
+    xQuaternion *bones = NULL, *bones2 = NULL;
 
     if (actions.actions.size())
     {
@@ -100,7 +112,7 @@ void SkeletizedObj :: Update(float deltaTime)
         actions.Update(delta);
         bones = actions.GetTransformations();
 
-        if (actions.progress > 10000) actions.progress = 0;
+        //if (actions.progress > 10000) actions.progress = 0;
     }
     if (ControlType == Control_CaptureInput)
         bones2 = g_CaptureInput.GetTransformations();
@@ -118,7 +130,7 @@ void SkeletizedObj :: Update(float deltaTime)
 
     if (false && !bones)
     {
-        bones = new xVector4[modelInstanceGr.bonesC];
+        bones = new xQuaternion[modelInstanceGr.bonesC];
         for (int i = 0; i < modelInstanceGr.bonesC; ++i)
             bones[i].zeroQ();
     }

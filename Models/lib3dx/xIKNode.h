@@ -20,8 +20,8 @@ struct xIKNode
     xBYTE     joinsEC;
 
     // mods
-    xVector4  quaternion;
-    xFLOAT    curLengthSq;
+    xQuaternion quaternion;
+    xFLOAT      curLengthSq;
 
     // constraints
     xFLOAT    minLengthSq;

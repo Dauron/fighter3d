@@ -12,7 +12,7 @@ void RenderShadowMapLST(xElement *elem, xModelInstance &modelInstance, const xFi
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
     if (!FOV.CheckSphere(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(elem->matrix * modelInstance.location)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(elem->matrix * modelInstance.location)) )
     {
         ++Performance.CulledElements;
         return;
@@ -56,7 +56,7 @@ void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance, const xFi
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
     if (!FOV.CheckSphere(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(elem->matrix * modelInstance.location)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(elem->matrix * modelInstance.location)) )
     {
         ++Performance.CulledElements;
         return;

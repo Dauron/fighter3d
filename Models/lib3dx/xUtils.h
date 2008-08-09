@@ -2,10 +2,13 @@
 #define __incl_xUtils_h
 
 #include "xModel.h"
+#include "../../Math/Figures/xBoxA.h"
+
+using namespace Math::Figures;
 
 struct xCollisionHierarchyBounds
 {
-    xBox           bounding;
+    xBoxA          bounding;
     xVector3       center;
     xFLOAT         radius;
     bool           sorted;

@@ -5,11 +5,11 @@ void       xActionSet :: Update(xDWORD deltaTime)
     this->progress += deltaTime;
 }
 
-xVector4 * xActionSet :: GetTransformations()
+xQuaternion * xActionSet :: GetTransformations()
 {
     std::vector<xAction>::iterator iterF = actions.begin(), iterE = actions.end();
 
-    xVector4* bones = NULL, *trans;
+    xQuaternion* bones = NULL, *trans;
     for (; iterF != iterE; ++iterF)
         if (iterF->startTime <= this->progress && (!iterF->endTime || iterF->endTime > this->progress))
         {

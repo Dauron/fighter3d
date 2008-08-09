@@ -14,8 +14,8 @@ struct xActionSet {
     std::vector<xAction> actions;
     xDWORD               progress;
 
-    void       Update(xDWORD deltaTime);
-    xVector4 * GetTransformations();
+    void          Update(xDWORD deltaTime);
+    xQuaternion * GetTransformations();
 
     xActionSet () : progress(0) {}
 };

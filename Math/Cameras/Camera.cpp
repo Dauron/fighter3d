@@ -23,6 +23,6 @@ void Camera::LookAtMatrix(xMatrix &MX_ModelToView)
     MX_ModelToView.y0 = up2.x;      MX_ModelToView.y1 = up2.y;      MX_ModelToView.y2 = up2.z;
     MX_ModelToView.z0 = -forward.x; MX_ModelToView.z1 = -forward.y; MX_ModelToView.z2 = -forward.z;
     MX_ModelToView.w0 = MX_ModelToView.w1 = MX_ModelToView.w2 = 0.f;
-    MX_ModelToView.row3.zeroQ();
+    MX_ModelToView.row3.init(0.f,0.f,0.f,1.f);
     MX_ModelToView.preTranslateT(-eye);
 }

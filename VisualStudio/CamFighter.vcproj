@@ -212,6 +212,14 @@
 				RelativePath="..\Source Files\SceneSkeletonUpd.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\Source Files\SceneTest.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Source Files\SceneTest.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Models"
@@ -980,6 +988,74 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Colliders"
+				>
+				<File
+					RelativePath="..\Physics\Colliders\AxisSpans.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\BoxOBoxO.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\BVHCollider.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\BVHCollider.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\CapsuleBoxO.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\CapsuleCapsule.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\CollisionInfo.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\CylinderCylinder.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\FigureCollider.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\FigureCollider.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\SphereBoxO.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\SphereCapsule.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\SphereCylinder.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\SphereMesh.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\SphereSphere.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\xBVHierarchy.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Math"
@@ -1006,6 +1082,10 @@
 			</File>
 			<File
 				RelativePath="..\Math\xMatrix.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Math\xPlane.h"
 				>
 			</File>
 			<File
@@ -1067,6 +1147,46 @@
 				</File>
 				<File
 					RelativePath="..\Math\Cameras\CameraHuman.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Figures"
+				>
+				<File
+					RelativePath="..\Math\Figures\xBoxA.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xBoxO.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xBoxO.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xCapsule.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xCylinder.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xCylinder.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xIFigure3d.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xMesh.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xSphere.h"
 					>
 				</File>
 			</Filter>

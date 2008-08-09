@@ -21,9 +21,9 @@ public:
     void Finalize()
     {}
 
-    xVector4 * GetTransformations()
+    xQuaternion * GetTransformations()
     {
-        xVector4 *QT_bones = new xVector4[spine->I_bones];
+        xQuaternion *QT_bones = new xQuaternion[spine->I_bones];
 
         // kwaternion QT_bones[0] nie opisuje obrotu, a przesuniêcie ca³ego modelu, pozosta³e to obroty w formacie
         // x = axis.x * sin(alpha/2)

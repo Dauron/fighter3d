@@ -38,7 +38,7 @@ void GLAnimSkeletal::EndAnimation()
     }
 }
 
-void GLAnimSkeletal::SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xVector4 *bonesQ,
+void GLAnimSkeletal::SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xQuaternion *bonesQ,
                               const xElement *element, bool VBO)
 {
     currSkeletalShader = (ShaderSkeletal*)GLShader::currShader;

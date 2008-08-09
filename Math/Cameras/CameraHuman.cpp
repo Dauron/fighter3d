@@ -69,7 +69,7 @@ void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         pitch = DegToRad (pitch)/2.f;
         xFLOAT s = sin(pitch);
         front.normalize();
-        xVector4 q; q.init(front.y*s, -front.x*s, 0.f, cos(pitch));
+        xQuaternion q; q.init(front.y*s, -front.x*s, 0.f, cos(pitch));
         a = xQuaternion::rotate(q, a);
         up = xQuaternion::rotate(q, up);
     }
@@ -80,7 +80,7 @@ void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         roll = DegToRad (roll)/2.f;
         xFLOAT s = sin(roll);
         front.normalize();
-        xVector4 q; q.init(front.x*s, front.y*s, front.z*s, cos(roll));
+        xQuaternion q; q.init(front.x*s, front.y*s, front.z*s, cos(roll));
         up = xQuaternion::rotate(q, up);
     }
 
@@ -106,13 +106,13 @@ void CameraHuman::Orbit(xFLOAT horz, xFLOAT vert)
         xFLOAT s = sin(vert);
         if (!IsZero(a.y))
         {
-            xVector4 q(s, -a.x/a.y * s, 0, cos(vert));
+            xQuaternion q(s, -a.x/a.y * s, 0, cos(vert));
             a = QuaternionRotate(q, a);
         }
         else
         if (!IsZero(a.x))
         {
-            xVector4 q(0, -Sign(a.x) * s, 0, cos(vert));
+            xQuaternion q(0, -Sign(a.x) * s, 0, cos(vert));
             a = QuaternionRotate(q, a);
         }*/
 

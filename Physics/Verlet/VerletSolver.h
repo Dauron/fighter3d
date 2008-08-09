@@ -14,10 +14,13 @@ struct VerletSystem
     xFLOAT    T_step_Old;
     xWORD     I_particles;
 
-    xVector3 *P_current;    // current positions
-    xVector3 *P_previous;   // previous positions
+    xPoint3  *P_current;    // current positions
+    xPoint3  *P_previous;   // previous positions
     xVector3 *A_forces;     // force accumulators
     xFLOAT   *M_weight_Inv; // inverted particle masses
+    xVector3 *NW_shift;     // last shift
+
+    bool     *FL_attached;  // is the particle attached to other object
 
     VConstraintLengthEql        *C_lengthConst;
     VConstraint                **C_constraints;
@@ -26,7 +29,9 @@ struct VerletSystem
 
     xMatrix                      MX_ModelToWorld;
     xMatrix                      MX_WorldToModel_T;
+
     xSkeleton                   *spine;
+    xQuaternion                 *QT_boneSkew;  // fronts of the particles needed for bone rotations
 
     VerletSystem()
     {
@@ -42,12 +47,22 @@ struct VerletSystem
     {
         I_particles = numParticles;
 
-        P_current    = new xVector3[I_particles];
-        P_previous   = new xVector3[I_particles];
+        P_current    = new xPoint3[I_particles];
+        P_previous   = new xPoint3[I_particles];
         A_forces     = new xVector3[I_particles];
         M_weight_Inv = new xFLOAT  [I_particles];
-        xFLOAT *M_iter = M_weight_Inv;
-        for (xWORD i = I_particles; i; --i, ++M_iter) *M_iter = 1.f;
+        QT_boneSkew  = new xQuaternion[I_particles];
+        NW_shift     = new xVector3[I_particles];
+        FL_attached  = new bool    [I_particles];
+        xFLOAT      *M_iter  = M_weight_Inv;
+        bool        *FL_lock = FL_attached;
+        xQuaternion *QT_skew = QT_boneSkew;
+        for (xWORD i = I_particles; i; --i, ++M_iter, ++FL_lock, ++QT_skew)
+        {
+            *M_iter  = 1.f;
+            *FL_lock = false;
+            QT_skew->zeroQ();
+        }
 
         I_constraints  = 0;
         C_constraints  = NULL;

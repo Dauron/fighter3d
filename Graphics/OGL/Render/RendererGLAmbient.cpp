@@ -16,14 +16,14 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
     xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
     if (!FOV.CheckSphere(center, instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
     {
         ++Performance.CulledElements;
         return;
     }
 
     int lightsC = 0;
-    xColor ambient; ambient.zeroQ();
+    xColor ambient; ambient.init(0.f,0.f,0.f,1.f);
     xLightVector::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
         if (iterL->elementReceivesLight(center, instance.bsRadius))
@@ -163,14 +163,14 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
     xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
     if (!FOV.CheckSphere(center, instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
     {
         ++Performance.CulledElements;
         return;
     }
 
     int lightsC = 0;
-    xColor ambient; ambient.zeroQ();
+    xColor ambient; ambient.init(0.f,0.f,0.f,0.f);
     xLightVector::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
     {

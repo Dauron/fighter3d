@@ -6,12 +6,12 @@
 
 struct xKeyFrame
 {
-    xVector4  *boneP;    // bone transformations of the current key frame
-    xWORD      freeze;   // ms of waiting before animation
-    xWORD      duration; // ms of animation duration
+    xQuaternion *boneP;    // bone transformations of the current key frame
+    xWORD        freeze;   // ms of waiting before animation
+    xWORD        duration; // ms of animation duration
 
-    xKeyFrame *prev;   // prev key frame
-    xKeyFrame *next;   // next key frame
+    xKeyFrame   *prev;   // prev key frame
+    xKeyFrame   *next;   // next key frame
 
     void LoadFromSkeleton(const xSkeleton &spine);
 };
@@ -63,19 +63,22 @@ struct xAnimation
 
     xAnimationInfo GetInfo();
 
-    xKeyFrame *InsertKeyFrame();
-    void       DeleteKeyFrame();
+    xKeyFrame   * InsertKeyFrame();
+    void          DeleteKeyFrame();
 
-    void       UpdatePosition();
-    xVector4 * GetTransformations();
-    void       SaveToSkeleton(xSkeleton &spine);
+    void          UpdatePosition();
+    xQuaternion * GetTransformations();
+    void          SaveToSkeleton(xSkeleton &spine);
 
-    bool       Save(const char *fileName);
-    bool       Load(const char *fileName);
+    bool          Save(const char *fileName);
+    bool          Load(const char *fileName);
 
-    static xVector4 * Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT progress, xWORD boneC);
-    static void       Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xVector4 *&bones);
-    static void       Average(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xFLOAT progress, xVector4 *&bones);
+    static xQuaternion * Interpolate(xQuaternion *pCurr, xQuaternion *pNext,
+                                     xFLOAT progress, xWORD boneC);
+    static void          Combine    (xQuaternion *pCurr, xQuaternion *pNext,
+                                     xWORD boneC, xQuaternion *&bones);
+    static void          Average    (xQuaternion *pCurr, xQuaternion *pNext,
+                                     xWORD boneC, xFLOAT progress, xQuaternion *&bones);
 };
 
 #endif

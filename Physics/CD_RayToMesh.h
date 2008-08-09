@@ -2,6 +2,9 @@
 #define __incl_Physics_CDRayToMesh_h
 
 #include "../World/RigidObj.h"
+#include "../Math/Figures/xBoxA.h"
+
+using namespace Math::Figures;
 
 class CD_RayToMesh
 {
@@ -14,8 +17,8 @@ class CD_RayToMesh
     float    collisionDist;
     bool     notCollided;
 
-    void RayCage(xBox &refBox, xBox &rayBox);
-    bool CollideBox(xBox &box);
+    void RayCage(xBoxA &refBox, xBoxA &rayBox);
+    bool CollideBox(xBoxA &box);
 
     bool IntersectTriangles(xVector4 *a1, xVector4 *a2, xVector4 *a3, xVector3 *crossing);
     bool CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,

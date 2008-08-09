@@ -25,13 +25,13 @@ void IKEngine :: ProcessNode(xIKNode *nodeArray, xBYTE nodeId, xMatrix *boneM)
 
     node.checked = true;
 
-    xVector4 quat; quat.zeroQ();
+    xQuaternion quat; quat.zeroQ();
 
     if (node.forcesValid && node.destination != node.pointET)
     {
         node.forcesValid = false;
         quat = xQuaternion::getRotation(node.pointET, node.destination, node.pointBT);
-        node.pointET = xQuaternion::rotate(quat, node.pointET, node.pointBT);
+        node.pointET    = xQuaternion::rotate(quat, node.pointET, node.pointBT);
         node.quaternion = xQuaternion::product(node.quaternion, quat);
         if (node.joinsBC)
             boneM[node.id] = boneM[node.joinsBP[0]] *
@@ -86,10 +86,10 @@ void IKEngine :: PropagateChangesForward(xIKNode *nodeArray, xBYTE nodeId, xMatr
             newPointE = node.pointET + slideAxis*sqrtf(next.curLengthSq);
         }
 
-        xVector4 quat  = xQuaternion::getRotation(oldPointE, newPointE, next.pointB);
-        next.pointET   = xQuaternion::rotate(quat, next.pointET, next.pointBT);
-        next.quaternion = xQuaternion::product(next.quaternion, quat);
-        boneM[next.id] = boneM[node.id] *
+        xQuaternion quat = xQuaternion::getRotation(oldPointE, newPointE, next.pointB);
+        next.pointET     = xQuaternion::rotate(quat, next.pointET, next.pointBT);
+        next.quaternion  = xQuaternion::product(next.quaternion, quat);
+        boneM[next.id]   = boneM[node.id] *
             xMatrixFromQuaternion(next.quaternion).preTranslate(next.pointB).postTranslate(-next.pointB);
 
         PropagateChangesForward(nodeArray, next.id, boneM, changeRoot);

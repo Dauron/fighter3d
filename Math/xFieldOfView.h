@@ -17,10 +17,10 @@ public:
     xFLOAT  FrontClip;
     xFLOAT  BackClip;
 
-    xVector3 EyePosition;
-    xMatrix  ViewTransform;
-    xVector3 Corners3D[5];
-    xPlane   Planes[5];
+    xPoint3 EyePosition;
+    xMatrix ViewTransform;
+    xPoint3 Corners3D[5];
+    xPlane  Planes[5];
 
     void update()
     {
@@ -39,11 +39,11 @@ public:
         Corners3D[3] = mtxViewToWorld.preTransformP(Corners3D[3]);
         Corners3D[4] = mtxViewToWorld.preTransformP(Corners3D[4]);
 
-        Planes[0].planeFromPoints(Corners3D[1], Corners3D[0], Corners3D[3]);
-        Planes[1].planeFromPoints(Corners3D[4], Corners3D[0], Corners3D[3]);
-        Planes[2].planeFromPoints(Corners3D[4], Corners3D[3], Corners3D[2]);
-        Planes[3].planeFromPoints(Corners3D[4], Corners3D[2], Corners3D[1]);
-        Planes[4].planeFromPoints(Corners3D[4], Corners3D[1], Corners3D[0]);
+        Planes[0].init(Corners3D[1], Corners3D[0], Corners3D[3]);
+        Planes[1].init(Corners3D[4], Corners3D[0], Corners3D[3]);
+        Planes[2].init(Corners3D[4], Corners3D[3], Corners3D[2]);
+        Planes[3].init(Corners3D[4], Corners3D[2], Corners3D[1]);
+        Planes[4].init(Corners3D[4], Corners3D[1], Corners3D[0]);
     }
 
     void init( xFLOAT angle, xFLOAT aspect, xFLOAT frontClip, xFLOAT backClip )
@@ -61,16 +61,16 @@ public:
         p1.y = -p1.z * (xFLOAT)tan( Angle * 0.5f );
         p1.x = p1.y * Aspect;
         p2.init(p1.x, -p1.y, p1.z);
-        LeftPlane.planeFromPoints(p0, p1, p2);
+        LeftPlane.init(p0, p1, p2);
 
         p1.y = -p1.y; p2.x = -p2.x;
-        TopPlane.planeFromPoints(p0, p1, p2);
+        TopPlane.init(p0, p1, p2);
 
         p1.x = -p1.x; p2.y = -p1.y;
-        RightPlane.planeFromPoints(p0, p1, p2);
+        RightPlane.init(p0, p1, p2);
 
         p1.y = -p1.y; p2.x = -p1.x;
-        BottomPlane.planeFromPoints(p0, p1, p2);
+        BottomPlane.init(p0, p1, p2);
     }
 
     bool CheckSphere(const xVector3 &sphereCenter, xFLOAT sphereRadius) const

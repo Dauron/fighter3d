@@ -90,8 +90,10 @@ protected:
     virtual void LocationChanged() {
         xMatrix::Invert(MX_ModelToWorld, MX_WorldToModel);
         UpdateVerletSystem();
+        verletSystem.SwapPositions();
         UpdateVerletSystem();
         memset(verletSystem.A_forces, 0, sizeof(xVector3)*verletSystem.I_particles);
+        memset(verletSystem.NW_shift, 0, sizeof(xVector3)*verletSystem.I_particles);
     }
 
     virtual void CreateVerletSystem();

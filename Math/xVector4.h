@@ -1,13 +1,13 @@
-union xVector4 {
-    xFLOAT4 xyzw;
-    xFLOAT4 col;
-    struct {
-        xFLOAT  x, y, z, w;
-    };
-    struct {
-        xFLOAT r, g, b, a;
-    };
-    struct {
+struct xVector4 {
+    union {
+        xFLOAT4 xyzw;
+        xFLOAT4 col;
+        struct {
+            xFLOAT  x, y, z, w;
+        };
+        struct {
+            xFLOAT r, g, b, a;
+        };
         xVector3 vector3;
     };
 
@@ -30,7 +30,6 @@ union xVector4 {
     xVector4       &init  (const xVector3 &src)                    { vector3 = src; w = 0.f;     return *this; }
     xVector4       &init  (const xFLOAT   *src)                    { memcpy(this, src, 4*sizeof(xFLOAT)); return *this; }
     xVector4       &zero  ()                                       { x = y = z = w = 0.f;        return *this; }
-    xVector4       &zeroQ ()                                       { x = y = z = 0.f; w = 1.f;   return *this; }
 
 
     // Array indexing
@@ -112,13 +111,6 @@ union xVector4 {
     static xFLOAT DotProduct(const xVector4 &a, const xVector4 &b)
     {
         return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;
-    }
-
-    xVector4 &planeFromPoints(const xVector3 &p0, const xVector3 &p1, const xVector3 &p2)
-    {
-        this->vector3 = xVector3::CrossProduct( p1-p0, p2-p0 ).normalize();
-        this->w = - xVector3::DotProduct( p0, this->vector3 );
-        return *this;
     }
 };
 

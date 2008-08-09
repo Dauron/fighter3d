@@ -100,7 +100,7 @@ void xCollisionData :: FreeKids()
 
 void CreateHierarchyFromVertices(const xElement                   *elem,
                                  xCollisionHierarchy              *baseHierarchy,
-                                 std::vector<xBox>                &cBoundings,
+                                 std::vector<xBoxA>               &cBoundings,
                                  std::vector<xCollisionHierarchy> &cHierarchy);
 
 void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
@@ -154,9 +154,9 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
             xWORD   *iterHV = hierarchy.verticesP = new xWORD[elem->verticesC];
             xFace  *iterF  = elem->facesP;
 
-            xBox bounding;
-            bounding.max.x = -1000000000.f; bounding.max.y = -1000000000.f; bounding.max.z = -1000000000.f;
-            bounding.min.x =  1000000000.f; bounding.min.y =  1000000000.f; bounding.min.z =  1000000000.f;
+            xBoxA bounding;
+            bounding.P_max.x = -1000000000.f; bounding.P_max.y = -1000000000.f; bounding.P_max.z = -1000000000.f;
+            bounding.P_min.x =  1000000000.f; bounding.P_min.y =  1000000000.f; bounding.P_min.z =  1000000000.f;
 
             for (int i = elem->facesC; i; --i, ++iterHF, ++iterF)
             {
@@ -173,12 +173,12 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
                 float maxy = max(v1->y, max(v2->y, v3->y));
                 float maxz = max(v1->z, max(v2->z, v3->z));
 
-                if (minx < bounding.min.x) bounding.min.x = minx;
-                if (miny < bounding.min.y) bounding.min.y = miny;
-                if (minz < bounding.min.z) bounding.min.z = minz;
-                if (maxx > bounding.max.x) bounding.max.x = maxx;
-                if (maxy > bounding.max.y) bounding.max.y = maxy;
-                if (maxz > bounding.max.z) bounding.max.z = maxz;
+                if (minx < bounding.P_min.x) bounding.P_min.x = minx;
+                if (miny < bounding.P_min.y) bounding.P_min.y = miny;
+                if (minz < bounding.P_min.z) bounding.P_min.z = minz;
+                if (maxx > bounding.P_max.x) bounding.P_max.x = maxx;
+                if (maxy > bounding.P_max.y) bounding.P_max.y = maxy;
+                if (maxz > bounding.P_max.z) bounding.P_max.z = maxz;
             }
 
             for (xDWORD i = 0; i < elem->verticesC; ++i, ++iterHV)
@@ -191,7 +191,7 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
         {
             this->kidsC = xmodel->spine.I_bones;
 
-            std::vector<xBox> cBoundings;
+            std::vector<xBoxA> cBoundings;
             cBoundings.resize(this->kidsC);
 
             xBYTE *iterV = src;
@@ -214,13 +214,13 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
                 bw = (vert->b3 - bi)*10;
                 if (bw > weight) { bone = bi; weight = bw; }
 
-                xBox &bounding = cBoundings[bone];
-                if (vert->x < bounding.min.x) bounding.min.x = vert->x;
-                if (vert->y < bounding.min.y) bounding.min.y = vert->y;
-                if (vert->z < bounding.min.z) bounding.min.z = vert->z;
-                if (vert->x > bounding.max.x) bounding.max.x = vert->x;
-                if (vert->y > bounding.max.y) bounding.max.y = vert->y;
-                if (vert->z > bounding.max.z) bounding.max.z = vert->z;
+                xBoxA &bounding = cBoundings[bone];
+                if (vert->x < bounding.P_min.x) bounding.P_min.x = vert->x;
+                if (vert->y < bounding.P_min.y) bounding.P_min.y = vert->y;
+                if (vert->z < bounding.P_min.z) bounding.P_min.z = vert->z;
+                if (vert->x > bounding.P_max.x) bounding.P_max.x = vert->x;
+                if (vert->y > bounding.P_max.y) bounding.P_max.y = vert->y;
+                if (vert->z > bounding.P_max.z) bounding.P_max.z = vert->z;
             }
 
             CreateHierarchyFromVertices(elem, NULL, cBoundings, cHierarchy);
@@ -248,11 +248,11 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
     }
 }
 
-void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int depth, const xBox &bounding)
+void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int depth, const xBoxA &bounding)
 {
-    float dx = bounding.max.x - bounding.min.x;
-    float dy = bounding.max.y - bounding.min.y;
-    float dz = bounding.max.z - bounding.min.z;
+    float dx = bounding.P_max.x - bounding.P_min.x;
+    float dy = bounding.P_max.y - bounding.P_min.y;
+    float dz = bounding.P_max.z - bounding.P_min.z;
     float d  = max (dx, max(dy, dz));
     float w  = d / scale;
     float wx = min (w, dx);
@@ -262,7 +262,7 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
     int   cy = (int)ceil(dy / wy);
     int   cz = (int)ceil(dz / wz);
 
-    std::vector<xBox> cBoundings;
+    std::vector<xBoxA> cBoundings;
     cBoundings.resize(cx*cy*cz);
 
     for (int ix = 0; ix < cx; ++ix)
@@ -270,13 +270,13 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
             for (int iz = 0; iz < cz; ++iz)
             {
                 int hrch = ix + cx * (iy + cy * iz);
-                xBox &cBounding = cBoundings[hrch];
-                cBounding.min.x = ix * wx + bounding.min.x;
-                cBounding.min.y = iy * wy + bounding.min.y;
-                cBounding.min.z = iz * wz + bounding.min.z;
-                cBounding.max.x = (ix+1 != cx) ? (ix+1) * wx + bounding.min.x : bounding.max.x;
-                cBounding.max.y = (iy+1 != cy) ? (iy+1) * wy + bounding.min.y : bounding.max.y;
-                cBounding.max.z = (iz+1 != cz) ? (iz+1) * wz + bounding.min.z : bounding.max.z;
+                xBoxA &cBounding = cBoundings[hrch];
+                cBounding.P_min.x = ix * wx + bounding.P_min.x;
+                cBounding.P_min.y = iy * wy + bounding.P_min.y;
+                cBounding.P_min.z = iz * wz + bounding.P_min.z;
+                cBounding.P_max.x = (ix+1 != cx) ? (ix+1) * wx + bounding.P_min.x : bounding.P_max.x;
+                cBounding.P_max.y = (iy+1 != cy) ? (iy+1) * wy + bounding.P_min.y : bounding.P_max.y;
+                cBounding.P_max.z = (iz+1 != cz) ? (iz+1) * wz + bounding.P_min.z : bounding.P_max.z;
             }
 
     std::vector<xCollisionHierarchy> cHierarchy;
@@ -324,7 +324,7 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
 
 void CreateHierarchyFromVertices(const xElement                   *elem,
                                  xCollisionHierarchy              *baseHierarchy,
-                                 std::vector<xBox>                &cBoundings,
+                                 std::vector<xBoxA>               &cBoundings,
                                  std::vector<xCollisionHierarchy> &cHierarchy)
 {
     std::vector<std::vector<xFace*> > cFaces;
@@ -344,7 +344,7 @@ void CreateHierarchyFromVertices(const xElement                   *elem,
         for (int i = 0; i < baseHierarchy->facesC; ++i, ++iterF)
             for (int j = cBoundings.size()-1; j >= 0 ; --j)
             {
-                const xBox &bounding = cBoundings[j];
+                const xBoxA &bounding = cBoundings[j];
                 const xVector3 *vert1 = (xVector3*) &((xVertex*) (src + stride*(**iterF)[0]))->pos;
                 const xVector3 *vert2 = (xVector3*) &((xVertex*) (src + stride*(**iterF)[1]))->pos;
                 const xVector3 *vert3 = (xVector3*) &((xVertex*) (src + stride*(**iterF)[2]))->pos;
@@ -374,7 +374,7 @@ void CreateHierarchyFromVertices(const xElement                   *elem,
         for (int i = 0; i < elem->facesC; ++i, ++iterF)
             for (int j = cBoundings.size()-1; j >= 0 ; --j)
             {
-                const xBox &bounding = cBoundings[j];
+                const xBoxA &bounding = cBoundings[j];
                 const xVector3 *vert1 = (xVector3*) &((xVertex*) (src + stride*(*iterF)[0]))->pos;
                 const xVector3 *vert2 = (xVector3*) &((xVertex*) (src + stride*(*iterF)[1]))->pos;
                 const xVector3 *vert3 = (xVector3*) &((xVertex*) (src + stride*(*iterF)[2]))->pos;

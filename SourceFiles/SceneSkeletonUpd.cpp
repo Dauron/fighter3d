@@ -756,7 +756,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
                 N_axis = (MX_bone.invert() * N_axis).normalize();                        // transform axis to the current coordinates
                 Selection.Bone->QT_rotation = xQuaternion::product(                      // get rotation quaternion
                     Selection.Bone->QT_rotation,
-                    xVector4::Create(N_axis * W_sinH, cos(W_angleH)) );
+                    xQuaternion::Create(N_axis * W_sinH, cos(W_angleH)) );
             }
             else
             {
@@ -771,13 +771,16 @@ void SceneSkeleton::MouseMove(int X, int Y)
                 vEngine.Init(&vSystem);
                 vEngine.I_passes = 10;
 
-                xBone    *bone    = spine.L_bones;
-                xVector3 *P_cur   = vSystem.P_current, *P_old = vSystem.P_previous;
-                xFLOAT   *M_iter  = vSystem.M_weight_Inv;
-                xMatrix  *MX_bone = Model.modelInstanceGr.bonesM;
-                for (int i = spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++MX_bone, ++M_iter)
+                xBone       *bone    = spine.L_bones;
+                xVector3    *P_cur   = vSystem.P_current, *P_old = vSystem.P_previous;
+                xQuaternion *QT_skew = vSystem.QT_boneSkew;
+                xFLOAT      *M_iter  = vSystem.M_weight_Inv;
+                xMatrix     *MX_bone = Model.modelInstanceGr.bonesM;
+                xQuaternion *QT_bone = Model.modelInstanceGr.bonesQ;
+                for (int i = spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++MX_bone, QT_bone+=2, ++M_iter)
                 {
                     *P_cur  = *P_old = MX_bone->postTransformP(bone->P_end);
+                    *QT_skew = bone->getSkew(*QT_bone);
                     *M_iter = 1 / bone->M_weight;
                 }
 
@@ -785,7 +788,8 @@ void SceneSkeleton::MouseMove(int X, int Y)
                 vSystem.P_current[Selection.Bone->ID] = Get3dPos(X, Y, vSystem.P_current[Selection.Bone->ID]);
                 vEngine.SatisfyConstraints();
 
-                spine.CalcQuats(vSystem.P_current, 0, xMatrix::Identity());
+                spine.CalcQuats(vSystem.P_current, vSystem.QT_boneSkew,
+                                0, xMatrix::Identity(), xVector3::Create(0.f,0.f,0.f));
             }
             Model.CalculateSkeleton();                                     // refresh model in GPU
         }
@@ -812,16 +816,16 @@ void SceneSkeleton::MouseMove(int X, int Y)
 }
 
 /*************************** 3D ****************************************/
-xVector3 SceneSkeleton::CastPoint(xVector3 P_ray, xVector3 P_plane)
+xVector3 SceneSkeleton::CastPoint(xPoint3 P_pointToCast, xPoint3 P_onPlane)
 {
     // get plane of ray intersection
-    xVector3 N_plane = (Cameras.Current->center - Cameras.Current->eye).normalize();
-    float W_plane = -xVector3::DotProduct(N_plane, P_plane);
-    float S_dist  = xVector3::DotProduct(N_plane, P_ray) + W_plane; // distance to plane
-    return P_ray - N_plane * S_dist;
+    xPlane PN_plane; PN_plane.init(
+                        (Cameras.Current->center - Cameras.Current->eye).normalize(),
+                        P_onPlane);
+    return PN_plane.castPoint(P_pointToCast);
 }
 
-xVector3 SceneSkeleton::Get3dPos(int X, int Y, xVector3 P_plane)
+xVector3 SceneSkeleton::Get3dPos(int X, int Y, xPoint3 P_onPlane)
 {
     float norm_x = 1.0f - (float)X/(Width/2.0f);
     float norm_y = (float)Y/(Height/2.0f) - 1.0f;
@@ -846,20 +850,12 @@ xVector3 SceneSkeleton::Get3dPos(int X, int Y, xVector3 P_plane)
         P_ray = (xVector4::Create(-scale *AspectRatio * norm_x,-scale * norm_y,0.0f,1.0f)*MX_ModelToView).vector3;
         N_ray.init(0.f, 0.f, 0.1f);
     }
-    //N_ray = N_ray * MX_ModelToView;
     N_ray = MX_ModelToView.preTransformV(N_ray);
 
     // get plane of ray intersection
-    xVector3 N_plane = (Cameras.Current->center - Cameras.Current->eye).normalize();
-    float W_plane = -xVector3::DotProduct(N_plane, P_plane);
-
-    const float W_cos = xVector3::DotProduct(N_plane, N_ray); // get cos between vectors
-    if (W_cos != 0) // if ray is not parallel to the plane (is not perpendicular to the plane normal)
-    {
-        float S_dist  = xVector3::DotProduct(N_plane, P_ray) + W_plane; // distance to plane
-        return P_ray - N_ray * (S_dist / W_cos);
-    }
-    return xVector3();
+    xPlane PN_plane; PN_plane.init(
+        (Cameras.Current->eye-Cameras.Current->center).normalize(), P_onPlane);
+    return PN_plane.intersectRay(P_ray, N_ray);
 }
 
 /************************* CONSTRAINTS ************************************/

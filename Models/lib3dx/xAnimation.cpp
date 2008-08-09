@@ -38,7 +38,7 @@ xAnimationInfo xAnimation::GetInfo()
 
 void           xAnimation::SaveToSkeleton(xSkeleton &spine)
 {
-    xVector4 *transf   = GetTransformations();
+    xQuaternion *transf   = GetTransformations();
     spine.QuatsFromArray(transf);
     delete[] transf;
 }
@@ -75,10 +75,10 @@ void           xAnimation::UpdatePosition()
     }
 }
 
-xVector4 *     xAnimation::GetTransformations()
+xQuaternion *     xAnimation::GetTransformations()
 {
-    xVector4 *bones = new xVector4[this->boneC];
-    xVector4 *pRes = bones;
+    xQuaternion *bones = new xQuaternion[this->boneC];
+    xQuaternion *pRes = bones;
 
     if (!this->frameCurrent)
     {
@@ -88,7 +88,7 @@ xVector4 *     xAnimation::GetTransformations()
     }
 
     xKeyFrame *fCurrent = this->frameCurrent;
-    xVector4  *pCurr    = fCurrent->boneP;
+    xQuaternion  *pCurr    = fCurrent->boneP;
 
     xLONG time = this->progress - fCurrent->freeze;
     if (time <= 0)                         // still freeze
@@ -103,9 +103,9 @@ xVector4 *     xAnimation::GetTransformations()
 
     if (fCurrent->next)
     {
-        xVector4 *pPCurr = fCurrent->prev ? fCurrent->prev->boneP : pCurr;
-        xVector4 *pNext = fCurrent->next->boneP;
-        xVector4 *pNNext = fCurrent->next->next ? fCurrent->next->next->boneP : pNext;
+        xQuaternion *pPCurr = fCurrent->prev ? fCurrent->prev->boneP : pCurr;
+        xQuaternion *pNext = fCurrent->next->boneP;
+        xQuaternion *pNNext = fCurrent->next->next ? fCurrent->next->next->boneP : pNext;
 
         for (int i = this->boneC; i; --i, ++pCurr, ++pNext, ++pRes, ++pPCurr, ++pNNext )
         {
@@ -117,10 +117,11 @@ xVector4 *     xAnimation::GetTransformations()
             }
             if (pCurr->w != 1.f && pNext->w != 1.f)
             {
-                xVector4 a = xQuaternion::spline(*pPCurr, *pCurr, *pNext);
-                xVector4 b = xQuaternion::spline(*pCurr, *pNext, *pNNext);
-                *pRes = xQuaternion::squad(*pCurr, *pNext, a, b, complement);
-                //*pRes = xQuaternion::slerp(*pCurr, *pNext, complement);
+                //xVector4 a = xQuaternion::spline(*pPCurr, *pCurr, *pNext);
+                //xVector4 b = xQuaternion::spline(*pCurr, *pNext, *pNNext);
+                //*pRes = xQuaternion::squad(*pCurr, *pNext, a, b, complement);
+
+                *pRes = xQuaternion::slerp(*pCurr, *pNext, complement);
                 /*
                 xFLOAT cosA = xVector4::DotProduct(*pCurr, *pNext);
                 if (cosA > 0.99f)
@@ -187,11 +188,11 @@ xVector4 *     xAnimation::GetTransformations()
     return bones;
 }
 
-xVector4 *     xAnimation::Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT progress, xWORD boneC)
+xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext, xFLOAT progress, xWORD boneC)
 {
 
-    xVector4 *bones = new xVector4[boneC];
-    xVector4 *pRes = bones;
+    xQuaternion *bones = new xQuaternion[boneC];
+    xQuaternion *pRes = bones;
 
     if (!pCurr)
     {
@@ -232,7 +233,7 @@ xVector4 *     xAnimation::Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT 
                 if (angle > PI/2)
                     angle = PI-angle;
 
-                xVector4 q = *pCurr *sin(angle*progress) + *pNext *sin(angle*complement);
+                xQuaternion q = xQuaternionCast (*pCurr *sin(angle*progress) + *pNext *sin(angle*complement));
                 *pRes = q / sin(angle);
                 continue;
             }
@@ -285,10 +286,10 @@ xVector4 *     xAnimation::Interpolate(xVector4 *pCurr, xVector4 *pNext, xFLOAT 
 
     return bones;
 }
-void           xAnimation::Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xVector4 *&bones)
+void           xAnimation::Combine(xQuaternion *pCurr, xQuaternion *pNext, xWORD boneC, xQuaternion *&bones)
 {
-    if (!bones) bones = new xVector4[boneC];
-    xVector4 *pRes = bones;
+    if (!bones) bones = new xQuaternion[boneC];
+    xQuaternion *pRes = bones;
 
     if (!pCurr)
     {
@@ -316,10 +317,10 @@ void           xAnimation::Combine(xVector4 *pCurr, xVector4 *pNext, xWORD boneC
     }
     return;
 }
-void           xAnimation::Average(xVector4 *pCurr, xVector4 *pNext, xWORD boneC, xFLOAT progress, xVector4 *&bones)
+void           xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD boneC, xFLOAT progress, xQuaternion *&bones)
 {
-    if (!bones) bones = new xVector4[boneC];
-    xVector4 *pRes = bones;
+    if (!bones) bones = new xQuaternion[boneC];
+    xQuaternion *pRes = bones;
 
     float complement = progress;
     progress = 1.f - progress;
@@ -361,7 +362,7 @@ xKeyFrame *    xAnimation::InsertKeyFrame()
         frameC = 1;
         kfNew->next     = NULL;
         kfNew->prev     = NULL;
-        kfNew->boneP    = new xVector4[boneC];
+        kfNew->boneP    = new xQuaternion[boneC];
         for (int i=0; i<boneC; ++i) kfNew->boneP[i].zeroQ();
 
         frameCurrent = frameP = kfNew;
@@ -380,7 +381,7 @@ xKeyFrame *    xAnimation::InsertKeyFrame()
 
     if (progress == frameCurrent->freeze + frameCurrent->duration)
     {
-        kfNew->boneP = new xVector4[boneC];
+        kfNew->boneP = new xQuaternion[boneC];
         if (kfNew->next)
             for (int i=0; i<boneC; ++i) kfNew->boneP[i] = kfNew->next->boneP[i];
         else
@@ -393,7 +394,7 @@ xKeyFrame *    xAnimation::InsertKeyFrame()
     }
     else if (progress == 0)
     {
-        kfNew->boneP = new xVector4[boneC];
+        kfNew->boneP = new xQuaternion[boneC];
         for (int i=0; i<boneC; ++i) kfNew->boneP[i] = frameCurrent->boneP[i];
 
         kfNew->next = frameCurrent;
@@ -476,7 +477,7 @@ bool           xAnimation::Save(const char *fileName)
         int cnt = this->frameC;
         for (xKeyFrame *frame = frameP; frame && cnt; frame = frame->next, --cnt)
         {
-            fwrite(frame->boneP,       sizeof(xVector4), this->boneC, file);
+            fwrite(frame->boneP,       sizeof(xQuaternion), this->boneC, file);
             fwrite(&(frame->freeze),   sizeof(frame->freeze), 1, file);
             fwrite(&(frame->duration), sizeof(frame->duration), 1, file);
         }
@@ -517,8 +518,8 @@ bool           xAnimation::Load(const char *fileName)
         {
             frame = new xKeyFrame();
             if (i == 0) this->frameP = frame;
-            frame->boneP = new xVector4[this->boneC];
-            fread(frame->boneP, sizeof(xVector4), this->boneC, file);
+            frame->boneP = new xQuaternion[this->boneC];
+            fread(frame->boneP, sizeof(xQuaternion), this->boneC, file);
             fread(&(frame->freeze),   sizeof(frame->freeze), 1, file);
             fread(&(frame->duration), sizeof(frame->duration), 1, file);
             if (i == frameNo-1) this->frameCurrent = frame;

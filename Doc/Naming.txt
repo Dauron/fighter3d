@@ -8,6 +8,7 @@
  
  P_     point, position
  N_     normal vector
+ PN_    plane
  NW_    vector (scaled normal)
  MX_    matrix
  QT_    quaternion

@@ -290,29 +290,29 @@ namespace ShadowVolume
         vieportCorners[3] = mtxWorldToObject.preTransformP(FOV.Corners3D[3]);
         xVector3 viewCenter = (vieportCorners[0] + vieportCorners[2]) * 0.5f;
 
-        occlusionPyramid[0].planeFromPoints(vieportCorners[0], vieportCorners[2], vieportCorners[1]);
+        occlusionPyramid[0].init(vieportCorners[0], vieportCorners[2], vieportCorners[1]);
 
         xVector3 lightPos;
         xVector3 lightDirection;
         if (light.type == xLight_INFINITE)
         {
             lightPos = mtxWorldToObject.preTransformV(light.position);
-            occlusionPyramid[1].planeFromPoints(vieportCorners[0] + lightPos, vieportCorners[0], vieportCorners[1] );
-            occlusionPyramid[2].planeFromPoints(vieportCorners[1] + lightPos, vieportCorners[1], vieportCorners[2] );
-            occlusionPyramid[3].planeFromPoints(vieportCorners[2] + lightPos, vieportCorners[2], vieportCorners[3] );
-            occlusionPyramid[4].planeFromPoints(vieportCorners[3] + lightPos, vieportCorners[3], vieportCorners[0] );
+            occlusionPyramid[1].init(vieportCorners[0] + lightPos, vieportCorners[0], vieportCorners[1] );
+            occlusionPyramid[2].init(vieportCorners[1] + lightPos, vieportCorners[1], vieportCorners[2] );
+            occlusionPyramid[3].init(vieportCorners[2] + lightPos, vieportCorners[2], vieportCorners[3] );
+            occlusionPyramid[4].init(vieportCorners[3] + lightPos, vieportCorners[3], vieportCorners[0] );
             lightDirection = -lightPos;
         }
         else
         {
             lightPos = mtxWorldToObject.preTransformP(light.position);
-            occlusionPyramid[1].planeFromPoints(lightPos, vieportCorners[0], vieportCorners[1] );
-            occlusionPyramid[2].planeFromPoints(lightPos, vieportCorners[1], vieportCorners[2] );
-            occlusionPyramid[3].planeFromPoints(lightPos, vieportCorners[2], vieportCorners[3] );
-            occlusionPyramid[4].planeFromPoints(lightPos, vieportCorners[3], vieportCorners[0] );
+            occlusionPyramid[1].init(lightPos, vieportCorners[0], vieportCorners[1] );
+            occlusionPyramid[2].init(lightPos, vieportCorners[1], vieportCorners[2] );
+            occlusionPyramid[3].init(lightPos, vieportCorners[2], vieportCorners[3] );
+            occlusionPyramid[4].init(lightPos, vieportCorners[3], vieportCorners[0] );
             lightDirection = viewCenter - lightPos;
             numPlanes++;
-            occlusionPyramid[5].init(lightDirection, -xVector3::DotProduct(lightDirection, lightPos) );
+            occlusionPyramid[5].init(lightDirection, lightPos);
         }
 
         if (xVector3::DotProduct(lightDirection, occlusionPyramid[0].vector3) > 0.f) // objectViewVector

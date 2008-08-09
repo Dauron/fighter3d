@@ -18,12 +18,13 @@ struct xSkeleton
     xSkeleton Clone() const;
     void      ResetQ();
 
-    void      CalcQuats(const xVector3 *P_current, xBYTE ID_bone, xMatrix MX_parent_Inv);
+    void      CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_boneSkew,
+                        xBYTE ID_bone, xMatrix MX_parent_Inv, xPoint3 P_end_parent);
     void      FillBoneConstraints();
-    xBone    *BoneAdd(xBYTE ID_parent, xVector3 P_end);
+    xBone    *BoneAdd(xBYTE ID_parent, xPoint3 P_end);
 
-    void QuatsToArray  (xVector4 *QT_array) const;
-    void QuatsFromArray(const xVector4 *QT_array);
+    void QuatsToArray  (xQuaternion *QT_array) const;
+    void QuatsFromArray(const xQuaternion *QT_array);
 
     void Load( FILE *file );
     void Save( FILE *file ) const;
@@ -35,6 +36,6 @@ void    xBoneCalculateMatrices (const xSkeleton &spine, xModelInstance *instance
 void    xBoneCalculateQuats    (const xSkeleton &spine, xModelInstance *instance);
 
 void    xBoneCalculateQuatForVerlet(const xSkeleton &spine, xBYTE ID_last,
-                                    xVector4 &QT_parent, xVector4 &QT_current);
+                                    xQuaternion &QT_parent, xQuaternion &QT_current);
 
 #endif

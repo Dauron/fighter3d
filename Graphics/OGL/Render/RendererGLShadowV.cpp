@@ -12,16 +12,16 @@ void CheckShadowVolumeInFrustum(const xMatrix &transformation, const xMatrix &tr
                                 bool &outModelInFrustum, bool &outExtrusionInFrustum, bool &outBackCapInFrustum)
 {
     outModelInFrustum = FOV.CheckSphere(transformation.preTransformP(instance.bsCenter), instance.bsRadius)
-        &&  FOV.CheckBox(instance.bbBox.TransformatedPoints(transformation));
+        &&  FOV.CheckBox(instance.bbBox.fillCornersTransformed(transformation));
 
     xVector4 bounds[16];
     for (int i = 0; i < 8; ++i)
-        bounds[i].init(instance.bbBox.points[i], 1.f);
+        bounds[i].init(instance.bbBox.P_corners[i], 1.f);
 
     if (light.type != xLight_INFINITE)
     {
         for (int i = 0; i < 8; ++i)
-            bounds[i+8].init ( instance.bbBox.points[i] - light.position, 0.f );
+            bounds[i+8].init ( instance.bbBox.P_corners[i] - light.position, 0.f );
 
         if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
             outBackCapInFrustum = outModelInFrustum || outBackCapInFrustum || FOV.CheckPoints(bounds + 8, 8);

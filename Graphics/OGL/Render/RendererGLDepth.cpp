@@ -16,7 +16,7 @@ void RenderElementDepthLST(
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
     if (!FOV.CheckSphere(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
     {
         ++Performance.CulledElements;
         return;
@@ -71,7 +71,7 @@ void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
     xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
     xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
     if (!FOV.CheckSphere(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.TransformatedPoints(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
     {
         ++Performance.CulledElements;
         return;

@@ -4,6 +4,7 @@
 #include "../Graphics/OGL/GLShader.h"
 
 #include "SceneGame.h"
+#include "SceneTest.h"
 
 void OnApplicationInitialize(Application* sender);
 void OnApplicationInvalidate(Application* sender);
@@ -23,8 +24,13 @@ int main( int argc, char **argv )
     game.OnApplicationInitialize = OnApplicationInitialize;
     game.OnApplicationInvalidate = OnApplicationInvalidate;
     game.OnApplicationTerminate  = OnApplicationTerminate;
-    if (!game.Initialize("Camera Fighter", 800, 600, false, new SceneGame()))
+#ifndef NDEBUG
+    if (!game.Initialize("Camera Fighter - Debug", 800, 600, false, new SceneTest()))
         return 1;
+#else
+    if (!game.Initialize("Camera Fighter", 800, 600, false, new SceneTest()))
+        return 1;
+#endif
     int res = game.Run();
     game.Terminate();
 

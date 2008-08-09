@@ -5,6 +5,9 @@
 #include "xVertex.h"
 #include "xElementData.h"
 #include "../../Math/xLight.h"
+#include "../../Math/Figures/xBoxA.h"
+
+using namespace Math::Figures;
 
 union xGPUPointers
 {
@@ -100,7 +103,7 @@ struct xElementInstance
     xGPUPointers      gpuMain;
     xShadowDataVector gpuShadows;
 
-    xBox     bbBox;
+    xBoxA    bbBox;
     xVector3 bsCenter;
     xFLOAT   bsRadius;
 

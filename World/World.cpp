@@ -267,7 +267,7 @@ void World:: Load(const char *mapFileName)
 
                 if (StartsWith(buffer, "animation"))
                 {
-                    int start, end;
+                    int start, end = -1;
                     char file[255];
                     sscanf(buffer, "animation\t%s\t%d\t%d", file, &start, &end);
                     std::string animFile = Filesystem::GetFullPath(dir + "/" + file);

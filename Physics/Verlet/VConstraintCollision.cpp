@@ -5,7 +5,7 @@ bool VConstraintCollision :: Satisfy(VerletSystem *system)
 {
     xVector3 &p = system->P_current[particle];
     xFLOAT dist = xVector3::DotProduct(planeN, p) + planeD;
-    if (dist > 0.f) return false;
+    if (dist > -EPSILON2) return false;
     p -= planeN * dist;
     return true;
 }

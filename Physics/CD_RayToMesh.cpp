@@ -2,82 +2,82 @@
 
 const float CD_RayToMesh::Epsilon = 0.01f;
 
-void CD_RayToMesh::RayCage(xBox &refBox, xBox &rayBox)
+void CD_RayToMesh::RayCage(xBoxA &refBox, xBoxA &rayBox)
 {
     float x = fabs(rayV.x), y = fabs(rayV.y), z = fabs(rayV.z);
     if (x >= y && x >= z)
     {
-        rayBox.max.x = refBox.max.x-rayB.x;
-        if (rayBox.max.x*rayV.x < 0) rayBox.max.x = 0;
-        float scale = rayBox.max.x / rayV.x;
-        rayBox.max.x = rayB.x + rayV.x * scale;
-        rayBox.max.y = rayB.y + rayV.y * scale;
-        rayBox.max.z = rayB.z + rayV.z * scale;
+        rayBox.P_max.x = refBox.P_max.x-rayB.x;
+        if (rayBox.P_max.x*rayV.x < 0) rayBox.P_max.x = 0;
+        float scale = rayBox.P_max.x / rayV.x;
+        rayBox.P_max.x = rayB.x + rayV.x * scale;
+        rayBox.P_max.y = rayB.y + rayV.y * scale;
+        rayBox.P_max.z = rayB.z + rayV.z * scale;
 
-        rayBox.min.x = refBox.min.x-rayB.x;
-        if (rayBox.min.x*rayV.x < 0) rayBox.min.x = 0;
-        scale = rayBox.min.x / rayV.x;
-        rayBox.min.x = rayB.x + rayV.x * scale;
-        rayBox.min.y = rayB.y + rayV.y * scale;
-        rayBox.min.z = rayB.z + rayV.z * scale;
+        rayBox.P_min.x = refBox.P_min.x-rayB.x;
+        if (rayBox.P_min.x*rayV.x < 0) rayBox.P_min.x = 0;
+        scale = rayBox.P_min.x / rayV.x;
+        rayBox.P_min.x = rayB.x + rayV.x * scale;
+        rayBox.P_min.y = rayB.y + rayV.y * scale;
+        rayBox.P_min.z = rayB.z + rayV.z * scale;
     }
     else if (y >= z)
     {
-        rayBox.max.y = refBox.max.y-rayB.y;
-        if (rayBox.max.y*rayV.y < 0) rayBox.max.y = 0;
-        float scale = rayBox.max.y / rayV.y;
-        rayBox.max.x = rayB.x + rayV.x * scale;
-        rayBox.max.y = rayB.y + rayV.y * scale;
-        rayBox.max.z = rayB.z + rayV.z * scale;
+        rayBox.P_max.y = refBox.P_max.y-rayB.y;
+        if (rayBox.P_max.y*rayV.y < 0) rayBox.P_max.y = 0;
+        float scale = rayBox.P_max.y / rayV.y;
+        rayBox.P_max.x = rayB.x + rayV.x * scale;
+        rayBox.P_max.y = rayB.y + rayV.y * scale;
+        rayBox.P_max.z = rayB.z + rayV.z * scale;
 
-        rayBox.min.y = refBox.min.y-rayB.y;
-        if (rayBox.min.y*rayV.y < 0) rayBox.min.y = 0;
-        scale = rayBox.min.y / rayV.y;
-        rayBox.min.x = rayB.x + rayV.x * scale;
-        rayBox.min.y = rayB.y + rayV.y * scale;
-        rayBox.min.z = rayB.z + rayV.z * scale;
+        rayBox.P_min.y = refBox.P_min.y-rayB.y;
+        if (rayBox.P_min.y*rayV.y < 0) rayBox.P_min.y = 0;
+        scale = rayBox.P_min.y / rayV.y;
+        rayBox.P_min.x = rayB.x + rayV.x * scale;
+        rayBox.P_min.y = rayB.y + rayV.y * scale;
+        rayBox.P_min.z = rayB.z + rayV.z * scale;
     }
     else
     {
-        rayBox.max.z = refBox.max.z-rayB.z;
-        if (rayBox.max.z*rayV.z < 0) rayBox.max.z = 0;
-        float scale = rayBox.max.z / rayV.z;
-        rayBox.max.x = rayB.x + rayV.x * scale;
-        rayBox.max.y = rayB.y + rayV.y * scale;
-        rayBox.max.z = rayB.z + rayV.z * scale;
+        rayBox.P_max.z = refBox.P_max.z-rayB.z;
+        if (rayBox.P_max.z*rayV.z < 0) rayBox.P_max.z = 0;
+        float scale = rayBox.P_max.z / rayV.z;
+        rayBox.P_max.x = rayB.x + rayV.x * scale;
+        rayBox.P_max.y = rayB.y + rayV.y * scale;
+        rayBox.P_max.z = rayB.z + rayV.z * scale;
 
-        rayBox.min.z = refBox.min.z-rayB.z;
-        if (rayBox.min.z*rayV.z < 0) rayBox.min.z = 0;
-        scale = rayBox.min.z / rayV.z;
-        rayBox.min.x = rayB.x + rayV.x * scale;
-        rayBox.min.y = rayB.y + rayV.y * scale;
-        rayBox.min.z = rayB.z + rayV.z * scale;
+        rayBox.P_min.z = refBox.P_min.z-rayB.z;
+        if (rayBox.P_min.z*rayV.z < 0) rayBox.P_min.z = 0;
+        scale = rayBox.P_min.z / rayV.z;
+        rayBox.P_min.x = rayB.x + rayV.x * scale;
+        rayBox.P_min.y = rayB.y + rayV.y * scale;
+        rayBox.P_min.z = rayB.z + rayV.z * scale;
     }
 
     xFLOAT swp;
-    if (rayBox.max.x < rayBox.min.x) { swp = rayBox.max.x; rayBox.max.x = rayBox.min.x; rayBox.min.x = swp; }
-    if (rayBox.max.y < rayBox.min.y) { swp = rayBox.max.y; rayBox.max.y = rayBox.min.y; rayBox.min.y = swp; }
-    if (rayBox.max.z < rayBox.min.z) { swp = rayBox.max.z; rayBox.max.z = rayBox.min.z; rayBox.min.z = swp; }
+    if (rayBox.P_max.x < rayBox.P_min.x) { swp = rayBox.P_max.x; rayBox.P_max.x = rayBox.P_min.x; rayBox.P_min.x = swp; }
+    if (rayBox.P_max.y < rayBox.P_min.y) { swp = rayBox.P_max.y; rayBox.P_max.y = rayBox.P_min.y; rayBox.P_min.y = swp; }
+    if (rayBox.P_max.z < rayBox.P_min.z) { swp = rayBox.P_max.z; rayBox.P_max.z = rayBox.P_min.z; rayBox.P_min.z = swp; }
 }
 
-bool CD_RayToMesh::CollideBox(xBox &box)
+bool CD_RayToMesh::CollideBox(xBoxA &box)
 {
-    if((rayB.x < box.min.x && rayE.x < box.min.x) ||
-       (rayB.x > box.max.x && rayE.x > box.max.x) ||
-       (rayB.y < box.min.y && rayE.y < box.min.y) ||
-       (rayB.y > box.max.y && rayE.y > box.max.y) ||
-       (rayB.z < box.min.z && rayE.z < box.min.z) ||
-       (rayB.z > box.max.z && rayE.z > box.max.z))
+    if((rayB.x < box.P_min.x && rayE.x < box.P_min.x) ||
+       (rayB.x > box.P_max.x && rayE.x > box.P_max.x) ||
+       (rayB.y < box.P_min.y && rayE.y < box.P_min.y) ||
+       (rayB.y > box.P_max.y && rayE.y > box.P_max.y) ||
+       (rayB.z < box.P_min.z && rayE.z < box.P_min.z) ||
+       (rayB.z > box.P_max.z && rayE.z > box.P_max.z))
        return false; // no possible crossing
 
-    xBox rayCage;
+    xBoxA rayCage;
     RayCage(box, rayCage);
-    if ((box.min.x - Epsilon > rayCage.max.x) ||
-        (box.max.x + Epsilon < rayCage.min.x) ||
-        (box.min.y - Epsilon > rayCage.max.y) ||
-        (box.max.y + Epsilon < rayCage.min.y) ||
-        (box.min.z - Epsilon > rayCage.max.z) ||
-        (box.max.z + Epsilon < rayCage.min.z))
+    if ((box.P_min.x - Epsilon > rayCage.P_max.x) ||
+        (box.P_max.x + Epsilon < rayCage.P_min.x) ||
+        (box.P_min.y - Epsilon > rayCage.P_max.y) ||
+        (box.P_max.y + Epsilon < rayCage.P_min.y) ||
+        (box.P_min.z - Epsilon > rayCage.P_max.z) ||
+        (box.P_max.z + Epsilon < rayCage.P_min.z))
         return false;
 
     return true;
@@ -152,13 +152,13 @@ bool CD_RayToMesh::CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,
                 xVector4 *a2 = ci->verticesP + (**face1)[1];
                 xVector4 *a3 = ci->verticesP + (**face1)[2];
                 // Exclude elements that can't collide
-                xBox faceB;
-                faceB.min.x = min(a1->x, min(a2->x, a3->x));
-                faceB.min.y = min(a1->y, min(a2->y, a3->y));
-                faceB.min.z = min(a1->z, min(a2->z, a3->z));
-                faceB.max.x = max(a1->x, max(a2->x, a3->x));
-                faceB.max.y = max(a1->y, max(a2->y, a3->y));
-                faceB.max.z = max(a1->z, max(a2->z, a3->z));
+                xBoxA faceB;
+                faceB.P_min.x = min(a1->x, min(a2->x, a3->x));
+                faceB.P_min.y = min(a1->y, min(a2->y, a3->y));
+                faceB.P_min.z = min(a1->z, min(a2->z, a3->z));
+                faceB.P_max.x = max(a1->x, max(a2->x, a3->x));
+                faceB.P_max.y = max(a1->y, max(a2->y, a3->y));
+                faceB.P_max.z = max(a1->z, max(a2->z, a3->z));
                 if (!CollideBox(faceB))
                     continue;
 

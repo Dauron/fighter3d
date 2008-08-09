@@ -28,7 +28,7 @@ public:
 
     xActionSet actions;
 
-    xVector4 *verletQuaternions;
+    xQuaternion  *verletQuaternions;
     xFLOAT        verletWeight;
     xFLOAT        verletTime;
     xFLOAT        verletTimeMaxInv;
@@ -41,10 +41,12 @@ public:
         Control_NetworkInput = 2
     } ControlType;
 
+    virtual void UpdateVerletSystem();
+
 protected:
     virtual void CreateVerletSystem();
     virtual void DestroyVerletSystem();
-    virtual void UpdateVerletSystem();
+
 };
 
 #endif

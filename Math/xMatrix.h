@@ -157,8 +157,8 @@ union xMatrix {
     xMatrix &postTranslateT(const xVector3& pos);
 
     // Transform point
-    xVector3 postTransformP(const xVector3& point) const;
-    xVector3 preTransformP(const xVector3& point) const;
+    xPoint3 postTransformP(const xPoint3& point) const;
+    xPoint3 preTransformP(const xPoint3& point) const;
     // Transform vector
     xVector3 postTransformV(const xVector3& vec) const;
     xVector3 preTransformV(const xVector3& vec) const;
@@ -194,7 +194,18 @@ xMatrix  operator * (const xMatrix &a, const xMatrix &b);
 xMatrix  operator * (const xMatrix &m, xFLOAT f);
 xMatrix  operator * (xFLOAT f, const xMatrix &m);
 
-xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up);
+bool operator == (const xMatrix &a, const xMatrix &b);
+bool operator != (const xMatrix &a, const xMatrix &b);
+
+xMatrix     xMatrixFromQuaternion(xQuaternion q);
+xQuaternion xMatrixToQuaternion(const xMatrix &m);
+xMatrix     xMatrixRotateRad(xFLOAT radX, xFLOAT radY, xFLOAT radZ);
+xMatrix     xMatrixTranslate(xFLOAT x, xFLOAT y, xFLOAT z);
+xMatrix     xMatrixTranslate(const xFLOAT3 xyz);
+xMatrix     xMatrixTranslateT(xFLOAT x, xFLOAT y, xFLOAT z);
+xMatrix     xMatrixTranslateT(const xFLOAT3 xyz);
+xMatrix     xMatrixFromVectors(const xVector3 &forward, const xVector3 &up);
+
 inline xMatrix xMatrixFromVectors(const xVector3 &forward, const xVector3 &up, const xVector3 &center)
 {
     return xMatrixFromVectors(forward, up).postTranslateT(-center);

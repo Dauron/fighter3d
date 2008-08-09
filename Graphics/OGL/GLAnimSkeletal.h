@@ -13,14 +13,14 @@ class GLAnimSkeletal : public Singleton<GLAnimSkeletal>
     bool      m_notForceCPU; // inverse of above - value is valid only between BeginAnimation() and EndAnimation()
 
     // temporary storage used by CPU algorithm between BeginAnimation() and EndAnimation()
-    const xMatrix  *sft_bonesM;
-    const xVector4 *sft_bonesQ;
-    GLsizei         sft_boneCount;
-    const GLfloat  *sft_boneIdxWghts;
-    GLsizei         sft_boneIdxStride;
-    bool            sft_boneIdxArray;
-    const xVector3 *sft_vertices;
-    const xVector3 *sft_normals;
+    const xMatrix     *sft_bonesM;
+    const xQuaternion *sft_bonesQ;
+    GLsizei            sft_boneCount;
+    const GLfloat     *sft_boneIdxWghts;
+    GLsizei            sft_boneIdxStride;
+    bool               sft_boneIdxArray;
+    const xVector3    *sft_vertices;
+    const xVector3    *sft_normals;
 
     ShaderSkeletal *currSkeletalShader;
 
@@ -33,7 +33,7 @@ public:
     void BeginAnimation();
     void EndAnimation();
 
-    void SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xVector4 *bonesQ,
+    void SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xQuaternion *bonesQ,
                               const xElement *element, bool VBO);
     void SetElement(const xElement *element, const xElementInstance *instance, bool VBO = false);
 

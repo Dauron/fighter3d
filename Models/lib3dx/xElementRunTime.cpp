@@ -27,7 +27,7 @@ void xElementInstance :: Zero()
     memset (&gpuMain, 0, sizeof(xGPUPointers));
     gpuShadows.clear();
 
-    memset (&bbBox, 0, sizeof(xBox));
+    memset (&bbBox, 0, sizeof(xBoxA));
     bsCenter.zero();
     bsRadius = 0;
 

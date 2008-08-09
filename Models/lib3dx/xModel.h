@@ -33,13 +33,13 @@ struct xModel {
 };
 
 struct xModelInstance {
-    xMatrix    location;
-    xVector3   center;
+    xMatrix       location;
+    xVector3      center;
 
-    xBYTE      bonesC;
-    xMatrix  * bonesM;
-    xVector4 * bonesQ;
-    bool     * bonesMod;
+    xBYTE         bonesC;
+    xMatrix     * bonesM;
+    xQuaternion * bonesQ;
+    bool        * bonesMod;
 
     xElementInstance  *elementInstanceP;
     xBYTE              elementInstanceC;
