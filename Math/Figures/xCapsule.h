@@ -31,6 +31,29 @@ namespace Math { namespace Figures {
             res->N_top    = MX_LocalToWorld.preTransformV(N_top);
             return res;
         }
+
+        PointPosition PointsClosestToPlane(const xVector3 &NW_plane, xPoint3 P_points[2]) const
+        {
+            xFLOAT   S_plane = NW_plane.length();
+            xVector3 N_plane = NW_plane / S_plane;
+            xFLOAT W_cos = xVector3::DotProduct(N_plane, N_top);
+
+            if (W_cos > -EPSILON && W_cos < EPSILON)
+            {
+                N_plane *= S_radius;
+                P_points[0] = P_center + N_top * S_top - N_plane;
+                P_points[1] = P_center - N_top * S_top - N_plane;
+                return POINT_NearEdge;
+            }
+            if (W_cos < 0.f)
+                P_points[1] = P_points[0] = P_center + N_top * S_top - N_plane * S_radius;
+            else
+                P_points[1] = P_points[0] = P_center - N_top * S_top - N_plane * S_radius;
+            return POINT_NearCorner;
+        }
+
+        virtual xFLOAT S_Radius_Sqr_Get() { return (S_top+S_radius)*(S_top+S_radius); }
+        virtual xFLOAT W_Volume_Get()     { return (1.333333333333333f * S_radius + 2.f * S_top ) * PI * S_radius * S_radius; }
     };
 
 } } // namespace Math.Figures

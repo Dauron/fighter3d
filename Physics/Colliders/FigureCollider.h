@@ -1,7 +1,6 @@
-#ifndef __incl_Physics_FigureCollider_h
-#define __incl_Physics_FigureCollider_h
+#ifndef __incl_Physics_Colliders_FigureCollider_h
+#define __incl_Physics_Colliders_FigureCollider_h
 
-#include "../../Math/Figures/xIFigure3d.h"
 #include "CollisionInfo.h"
 
 namespace Physics { namespace Colliders {
@@ -9,8 +8,8 @@ namespace Physics { namespace Colliders {
 
     struct FigureCollider {
 
-        bool          Test   (const xIFigure3d *figure1, const xIFigure3d *figure2);
-        CollisionInfo Collide(const xIFigure3d *figure1, const xIFigure3d *figure2);
+        bool   Test   (const xIFigure3d *figure1, const xIFigure3d *figure2);
+        xDWORD Collide(const xIFigure3d *figure1, const xIFigure3d *figure2, CollisionSet &cs);
 
     };
 

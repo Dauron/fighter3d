@@ -1,7 +1,7 @@
-#ifndef __incl_Physics_xBVHierarchy_h
-#define __incl_Physics_xBVHierarchy_h
+#ifndef __incl_Physics_Colliders_xBVHierarchy_h
+#define __incl_Physics_Colliders_xBVHierarchy_h
 
-#include "../../Math/Figures/xIFigure3d.h"
+#include "xIFigure3d.h"
 
 namespace Math { namespace Figures {
     using namespace ::Math::Figures;
@@ -9,27 +9,66 @@ namespace Math { namespace Figures {
     struct xBVHierarchy {
 
     private:
-        xIFigure3d   *FigureTransformed;
+        xIFigure3d    *FigureTransformed;
+        bool           FL_RawToLocal;
+        xMatrix        MX_RawToLocal;
+        xMatrix        MX_LocalToWorld;
+        xMatrix        MX_RawToWorld;
 
     public:
 
         xIFigure3d   *Figure;
-        xIFigure3d   *GetTransformed(const xMatrix &MX_FigToWorld)
+        xIFigure3d   *GetTransformed(const xMatrix &mx_LocalToWorld)
         {
             if (!FigureTransformed)
-                FigureTransformed = Figure->Transform(MX_FigToWorld);
+            {
+                MX_LocalToWorld = mx_LocalToWorld;
+                if (FL_RawToLocal)
+                    FigureTransformed = Figure->Transform(MX_RawToWorld = MX_RawToLocal * mx_LocalToWorld);
+                else
+                    FigureTransformed = Figure->Transform(MX_RawToWorld = mx_LocalToWorld);
+            }
             return FigureTransformed;
+        }
+        xIFigure3d   *GetTransformed()
+        {
+            return GetTransformed(MX_RawToLocal_Get());
+        }
+        void MX_LocalToFig_Set(const xMatrix &mx_RawToLocal)
+        {
+            if (mx_RawToLocal.isIdentity())
+                FL_RawToLocal = false;
+            else
+            {
+                FL_RawToLocal = true;
+                MX_RawToLocal = mx_RawToLocal;
+            }
+        }
+        const xMatrix &MX_RawToLocal_Get()
+        {
+            if (FL_RawToLocal)
+                return MX_RawToLocal;
+            return xMatrix::Identity();
+        }
+        const xMatrix &MX_LocalToWorld_Get()
+        {
+            return MX_LocalToWorld;
+        }
+        const xMatrix &MX_RawToWorld_Get()
+        {
+            return MX_RawToWorld;
         }
 
         xBYTE         I_items;
         xBVHierarchy *L_items;
 
-        void init(xIFigure3d *figure)
+        void init(xIFigure3d &figure)
         {
             I_items = 0;
             L_items = NULL;
-            Figure  = figure;
+            Figure  = &figure;
             FigureTransformed = NULL;
+            FL_RawToLocal = false;
         }
 
         void invalidateTransformation()
@@ -60,7 +99,7 @@ namespace Math { namespace Figures {
             }
         }
 
-        void add (xIFigure3d *figure)
+        void add (xIFigure3d &figure)
         {
             xBVHierarchy *L_temp = (xBVHierarchy *) new xBYTE[(I_items+1) * sizeof(xBVHierarchy)];
             if (I_items)

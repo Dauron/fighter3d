@@ -4,7 +4,7 @@
 
 ////////////////////////////// Sphere - Capsule
 
-bool          TestSphereCapsule (const xSphere &sp1, const xCapsule &cp2)
+bool   TestSphereCapsule (const xSphere &sp1, const xCapsule &cp2)
 {
     xFLOAT S_projection = xVector3::DotProduct(sp1.P_center - cp2.P_center, cp2.N_top);
     if (S_projection >  cp2.S_top) S_projection =  cp2.S_top;
@@ -19,7 +19,7 @@ bool          TestSphereCapsule (const xSphere &sp1, const xCapsule &cp2)
     return true;
 }
 
-CollisionInfo CollideSphereCapsule (const xSphere &sp1, const xCapsule &cp2)
+xDWORD CollideSphereCapsule (const xSphere &sp1, const xCapsule &cp2, CollisionSet &cset)
 {
     xFLOAT S_projection = xVector3::DotProduct(sp1.P_center - cp2.P_center, cp2.N_top);
     if (S_projection >  cp2.S_top) S_projection =  cp2.S_top;
@@ -31,11 +31,13 @@ CollisionInfo CollideSphereCapsule (const xSphere &sp1, const xCapsule &cp2)
     xFLOAT   S_center_dist = NW_correction.lengthSqr();
     xFLOAT   S_radius_dist = sp1.S_radius + cp2.S_radius;
 
-    if ( S_center_dist + EPSILON2 > S_radius_dist*S_radius_dist ) return CollisionInfo(false);
+    if ( S_center_dist + EPSILON2 > S_radius_dist*S_radius_dist ) return false;
 
     S_center_dist     = sqrt(S_center_dist);
     xVector3 N_center = NW_correction / S_center_dist;
-    return CollisionInfo(N_center * (S_radius_dist - S_center_dist),
-                         sp1.P_center - N_center * sp1.S_radius,
-                         P_closest    + N_center * cp2.S_radius);
+    cset.Add(CollisionInfo(sp1, cp2,
+                           N_center * (S_radius_dist - S_center_dist),
+                           sp1.P_center - N_center * sp1.S_radius,
+                           P_closest    + N_center * cp2.S_radius));
+    return 1;
 }

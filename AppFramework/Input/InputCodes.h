@@ -76,6 +76,19 @@
 #define IC_BE_CreateConstrAng IC_BE_Create+17
 #define IC_BE_CreateConstrWeight IC_BE_Create+18
 
-#define IC_LAST_CODE         IC_BE_CreateConstrWeight
+#define IC_TS_Pause           IC_BE_CreateConstrWeight+10
+#define IC_TS_Stop            IC_TS_Pause+1
+#define IC_TS_Test0           IC_TS_Pause+2
+#define IC_TS_Test1           IC_TS_Test0+1
+#define IC_TS_Test2           IC_TS_Test0+2
+#define IC_TS_Test3           IC_TS_Test0+3
+#define IC_TS_Test4           IC_TS_Test0+4
+#define IC_TS_Test5           IC_TS_Test0+5
+#define IC_TS_Test6           IC_TS_Test0+6
+#define IC_TS_Test7           IC_TS_Test0+7
+#define IC_TS_Test8           IC_TS_Test0+8
+#define IC_TS_Test9           IC_TS_Test0+9
+
+#define IC_LAST_CODE         IC_TS_Test9
 
 #endif

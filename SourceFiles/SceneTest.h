@@ -13,12 +13,23 @@
 #include "../Math/Figures/xCylinder.h"
 #include "../Math/Figures/xMesh.h"
 
+#include "../Physics/PhysicalFigure.h"
+
 class SceneTest : public Scene, private ISelectionProvider
 {
   public:
     Camera *DefaultCamera;
 
-    SceneTest() : DefaultCamera(NULL) { sceneName="[Test]"; };
+    SceneTest() : DefaultCamera(NULL)
+        , pf_sphere1(new ::Math::Figures::xSphere())
+        , pf_sphere2(new ::Math::Figures::xSphere())
+        , pf_capsule1(new ::Math::Figures::xCapsule())
+        , pf_capsule2(new ::Math::Figures::xCapsule())
+        , pf_cube1(new ::Math::Figures::xBoxO())
+        , pf_cube2(new ::Math::Figures::xBoxO())
+        , pf_mesh1(new ::Math::Figures::xMesh())
+        , pf_mesh2(new ::Math::Figures::xMesh())
+    { sceneName="[Test]"; };
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate();
@@ -34,21 +45,26 @@ class SceneTest : public Scene, private ISelectionProvider
 
   private:
 
-    ::Math::Figures::xIFigure3d *figures[7][2];
-    ::Math::Figures::xSphere     sphere1;
-    ::Math::Figures::xSphere     sphere2;
-    ::Math::Figures::xCapsule    capsule1;
-    ::Math::Figures::xCapsule    capsule2;
-    ::Math::Figures::xBoxO       cube1;
-    ::Math::Figures::xBoxO       cube2;
-    ::Math::Figures::xMesh       mesh1;
+    ::Physics::PhysicalFigure  pf_sphere1;
+    ::Physics::PhysicalFigure  pf_sphere2;
+    ::Physics::PhysicalFigure  pf_capsule1;
+    ::Physics::PhysicalFigure  pf_capsule2;
+    ::Physics::PhysicalFigure  pf_cube1;
+    ::Physics::PhysicalFigure  pf_cube2;
+    ::Physics::PhysicalFigure  pf_mesh1;
+    ::Physics::PhysicalFigure  pf_mesh2;
+    ::Physics::PhysicalFigure *figures[10][2];
 
     xDWORD  selected;
     xDWORD  selectedSub;
 
+    bool     FL_pause;
     bool     FL_mouse_down;
     xVector3 P_prevMouse;
+    xVector3 P_firstMouse;
+    xFLOAT   T_total;
 
+    void InitObjects();
     bool InitGL();
     void InitInputMgr();
 

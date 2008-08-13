@@ -20,5 +20,17 @@
  ID_    identifier
  FL_    flag
  C_     constraint
+ 
+ _Sqr   squared
+ _Inv   inversed
+ _Trsp  transposed
+ _Trfm  transformed
+ 
+ Comments:
+ NOTE:     intersting
+ OPTIMIZE: place for optimization
+ REWRITE:  temporary solution
+ TODO:     must be done
+ 
 
 */

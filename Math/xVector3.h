@@ -35,7 +35,7 @@ union xVector3 {
     xFLOAT length() const {
         if (isZero()) return 0.f;
         xFLOAT sqr = x*x + y*y + z*z;
-        return sqr != 1.f ? sqrtf(sqr) : 1.f;
+        return (sqr < 1.f - EPSILON || sqr > 1.f + EPSILON) ? sqrtf(sqr) : 1.f;
     }
     xFLOAT lengthSqr() const {
         return x*x + y*y + z*z;

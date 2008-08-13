@@ -30,13 +30,14 @@ static inline int   min(int   i1, int   i2) { return i1 > i2 ? i2 : i1; }
 #define xFLOAT_HUGE_POSITIVE    1000000000.f
 #define xFLOAT_HUGE_NEGATIVE   -1000000000.f
 #define EPSILON                 0.0000000001f
+#define EPSILON3                0.000001f
 #define EPSILON2                0.001f
 static inline bool IsZero(float f)   { return fabs(f) <= EPSILON; }
 
 static inline float Sign(float f)
 {
-    if (f > 0.f) return 1.f;
-    if (f < 0.f) return -1.f;
+    if (f > EPSILON) return 1.f;
+    if (f < -EPSILON) return -1.f;
     return 0.f;
 }
 
@@ -68,7 +69,5 @@ typedef xVector3 xPoint3;
 typedef xVector4 xColor;
 
 #include "xMatrix.h"
-
-#include "xTriangle.h"
 
 #endif

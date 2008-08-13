@@ -1,5 +1,5 @@
-#ifndef __incl_Physics_AxisSpans_h
-#define __incl_Physics_AxisSpans_h
+#ifndef __incl_Physics_Colliders_AxisSpans_h
+#define __incl_Physics_Colliders_AxisSpans_h
 
 #include "../../Math/Figures/xIFigure3d.h"
 
@@ -18,7 +18,8 @@ namespace Physics { namespace Colliders {
         AxisSpans &init(const xVector3 &N_axis)
         {
             this->N_axis = N_axis;
-            this->wrong = N_axis.lengthSqr() < EPSILON2;
+            if (!(this->wrong = N_axis.lengthSqr() < EPSILON2))
+                this->N_axis.normalize();
             return *this;
         }
 
@@ -55,6 +56,35 @@ namespace Physics { namespace Colliders {
             if (spans.wrong) return false;
             figure1.ComputeSpan(spans.N_axis, spans.P_min1, spans.P_max1, axis);
             figure2.ComputeSpan(spans.N_axis, spans.P_min2, spans.P_max2);
+            return spans.P_min1 + EPSILON2 > spans.P_max2 || spans.P_max1 < spans.P_min2 + EPSILON2;
+        }
+
+        static bool AxisNotOverlapClose(const xIFigure3d &figure1, const xIFigure3d &figure2,
+                                        AxisSpans &spans, int axis = -1)
+        {
+            if (spans.wrong) return false;
+            figure1.ComputeSpan(spans.N_axis, spans.P_min1, spans.P_max1, axis);
+            figure2.ComputeSpan(spans.N_axis, spans.P_min2, spans.P_max2);
+            return spans.P_min1 > spans.P_max2 + EPSILON2 || spans.P_max1 + EPSILON2 < spans.P_min2;
+        }
+
+        static bool AxisNotOverlap(const xIFigure3d &figure1, const xPoint3 &P_A,
+                                   const xPoint3 &P_B, const xPoint3 &P_C,
+                                   AxisSpans &spans, int axis = -1)
+        {
+            if (spans.wrong) return false;
+            figure1.ComputeSpan(spans.N_axis, spans.P_min1, spans.P_max1, axis);
+            xTriangle::ComputeSpan(P_A,P_B,P_C,spans.N_axis, spans.P_min2, spans.P_max2);
+            return spans.P_min1 + EPSILON2 > spans.P_max2 || spans.P_max1 < spans.P_min2 + EPSILON2;
+        }
+
+        static bool AxisNotOverlap(const xPoint3 &P_A, const xPoint3 &P_B, const xPoint3 &P_C,
+                                   const xIFigure3d &figure2,
+                                   AxisSpans &spans, int axis = -1)
+        {
+            if (spans.wrong) return false;
+            xTriangle::ComputeSpan(P_A,P_B,P_C,spans.N_axis, spans.P_min2, spans.P_max2, axis);
+            figure2.ComputeSpan(spans.N_axis, spans.P_min1, spans.P_max1);
             return spans.P_min1 + EPSILON2 > spans.P_max2 || spans.P_max1 < spans.P_min2 + EPSILON2;
         }
     };

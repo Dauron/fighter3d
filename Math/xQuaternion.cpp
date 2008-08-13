@@ -52,12 +52,22 @@ xPoint3 xQuaternion::rotate(const xQuaternion &q, const xPoint3 &p, const xPoint
     return ret + center;
 }
 
-xVector3 xQuaternion::angularVelocity(const xQuaternion &q)
+xVector3 xQuaternion::angularVelocity()
 {
-    xVector3 res = q.vector3;
+    xVector3 res = vector3;
+    if (w > 1.f)  w = 1.f;
+    else
+    if (w < -1.f) w = -1.f;
     res.normalize();
-    res *= acos(q.w);
+    res *= 2.f * acos(w);
     return res;
+}
+
+xQuaternion xQuaternion::angularVelocity(const xVector3 &omega)
+{
+    xFLOAT alpha = omega.length();
+    if (alpha < EPSILON) return xQuaternion::Create(0.f,0.f,0.f,1.f);
+    return xQuaternion::Create(omega * (sin(alpha * 0.5f) / alpha), cos(alpha * 0.5f));
 }
 
 // Quaternion product of two xVector4's
@@ -77,9 +87,8 @@ xQuaternion xQuaternion::interpolate(const xQuaternion &q, xFLOAT weight)
     if (q.w != 1.f)
     {
         float angleH = (q.w > 0) ? acos(q.w) : PI-acos(q.w);
-        float sinH   = sin(angleH);
         angleH *= weight;
-        ret.vector3 *= sin(angleH)/sinH;
+        ret.vector3.normalize() *= sin(angleH);
         ret.w = cos(angleH);
     }
     return ret;
@@ -91,9 +100,8 @@ xQuaternion xQuaternion::interpolateFull(const xQuaternion &q, xFLOAT weight)
     if (q.w != 1.f)
     {
         float angleH = acos(q.w);
-        float sinH   = sin(angleH);
         angleH *= weight;
-        ret.vector3 *= sin(angleH)/sinH;
+        ret.vector3.normalize() *= sin(angleH);
         ret.w = cos(angleH);
     }
     return ret;

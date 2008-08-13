@@ -140,9 +140,7 @@ union xMatrix {
 
     // Set xMatrix to the identity matrix
     xMatrix &identity() {
-        memset(this, 0, sizeof(xMatrix));
-        x0 = y1 = z2 = w3 = 1.0;
-        return *this;
+        return *this = Identity();
     }
     // Transpose the xMatrix
     xMatrix &transpose();
@@ -163,10 +161,17 @@ union xMatrix {
     xVector3 postTransformV(const xVector3& vec) const;
     xVector3 preTransformV(const xVector3& vec) const;
 
-    static xMatrix Identity()
+    static const xMatrix& Identity()
     {
-        xMatrix ret;
-        return ret.identity();
+        static bool    init = true;
+        static xMatrix ONE;
+        if (init)
+        {
+            init = false;
+            memset(&ONE, 0, sizeof(ONE));
+            ONE.x0 = ONE.y1 = ONE.z2 = ONE.w3 = 1.0;
+        }
+        return ONE;
     }
     static xMatrix Transpose(const xMatrix &m)
     {
@@ -182,6 +187,16 @@ union xMatrix {
     {
         dst = src;
         return dst.invert();
+    }
+
+    bool isIdentity() const
+    {
+        if (x0 != 1.f || y0 != 0.f || z0 != 0.f || w0 != 0.f ||
+            x1 != 0.f || y1 != 1.f || z1 != 0.f || w1 != 0.f ||
+            x2 != 0.f || y2 != 0.f || z2 != 1.f || w2 != 0.f ||
+            x3 != 0.f || y3 != 0.f || z3 != 0.f || w3 != 1.f)
+            return false;
+        return true;
     }
 };
 

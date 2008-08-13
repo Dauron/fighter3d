@@ -25,7 +25,8 @@ public:
     static xPoint3 rotate              (const xQuaternion &q, const xPoint3 &p);
     static xPoint3 rotate              (const xQuaternion &q, const xPoint3 &p, const xPoint3 &center);
 
-    static xVector3 angularVelocity    (const xQuaternion &q);
+    xVector3    angularVelocity();
+    static xQuaternion angularVelocity(const xVector3 &omega);
 
     static xQuaternion product         (const xQuaternion &a, const xQuaternion &b);
     static xQuaternion interpolate     (const xQuaternion &q, xFLOAT weight);

@@ -6,7 +6,7 @@
 
 #define set_if_less(val,min)    ((val) < min ? (min = (val)), true : false)
 
-bool          TestSphereBoxO (const xSphere &sp1, const xBoxO &bo2)
+bool   TestSphereBoxO (const xSphere &sp1, const xBoxO &bo2)
 {
     // Intersection test
     xFLOAT   S_radius_Sqr = sp1.S_radius * sp1.S_radius,
@@ -33,7 +33,7 @@ bool          TestSphereBoxO (const xSphere &sp1, const xBoxO &bo2)
     return true;
 }
 
-CollisionInfo CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2)
+xDWORD CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2, CollisionSet &cset)
 {
     // Intersection test
     xFLOAT   S_radius_Sqr = sp1.S_radius * sp1.S_radius,
@@ -57,7 +57,7 @@ CollisionInfo CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2)
             S_tmp       = S_extend + P_sphere;
             S_distance += S_tmp * S_tmp;
         }
-        if (S_distance + EPSILON2 >= S_radius_Sqr) return CollisionInfo(false);
+        if (S_distance + EPSILON2 >= S_radius_Sqr) return false;
     }
 
     // Intersection correction - sphere center outside the box
@@ -78,13 +78,15 @@ CollisionInfo CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2)
         xVector3 P_collision = bo2.P_center + N_collision;
         N_fix = sp1.P_center - P_collision;
         S_distance = N_fix.lengthSqr();
-        if (S_distance + EPSILON2 >= S_radius_Sqr) return CollisionInfo(false);
+        if (S_distance + EPSILON2 >= S_radius_Sqr) return false;
 
         S_distance = sqrt(S_distance);
         N_fix /= S_distance;
-        return CollisionInfo(N_fix * (sp1.S_radius - S_distance),
-                             sp1.P_center - N_fix * sp1.S_radius,
-                             P_collision);
+        cset.Add(CollisionInfo(sp1, bo2,
+                               N_fix * (sp1.S_radius - S_distance),
+                               sp1.P_center - N_fix * sp1.S_radius,
+                               P_collision));
+        return 1;
     }
     // Intersection correction - sphere center inside the box
     else
@@ -117,8 +119,11 @@ CollisionInfo CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2)
                 }
             }
         }
-        return CollisionInfo(N_fix * (sp1.S_radius + S_fix),
-                             sp1.P_center - N_fix * sp1.S_radius,
-                             sp1.P_center + N_fix * S_fix);
+
+        cset.Add(CollisionInfo(sp1, bo2,
+                               N_fix * (sp1.S_radius + S_fix),
+                               sp1.P_center - N_fix * sp1.S_radius,
+                               sp1.P_center + N_fix * S_fix));
+        return 1;
     }
 }

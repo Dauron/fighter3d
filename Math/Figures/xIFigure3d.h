@@ -9,7 +9,8 @@ namespace Math { namespace Figures {
         POINT_Inside     = 0,
         POINT_NearFace   = 1,
         POINT_NearEdge   = 2,
-        POINT_NearCorner = 3
+        POINT_NearCorner = 3,
+        POINT_FarAway    = 4
     };
 
     struct xIFigure3d
@@ -17,17 +18,23 @@ namespace Math { namespace Figures {
         enum xFigure3dType
         {
             Unset       = 0,
-            Sphere      = 1,
-            Capsule     = 2,
-            BoxAligned  = 3,
-            BoxOriented = 4,
-            Cylinder    = 5,
-            Mesh        = 6
+            Segment     = 1,
+            Sphere      = 2,
+            Capsule     = 3,
+            BoxAligned  = 4,
+            BoxOriented = 5,
+            Cylinder    = 6,
+            Triangle    = 7,
+            Mesh        = 8
         } Type;
 
         xVector3 P_center;
 
+        virtual xFLOAT S_Radius_Sqr_Get() = 0;
+        virtual xFLOAT W_Volume_Get() = 0;
+
         virtual void ComputeSpan(const xVector3 &N_axis, xFLOAT &P_min, xFLOAT &P_max, int axis = -1) const = 0;
+
         virtual xIFigure3d * Transform(const xMatrix  &MX_LocalToWorld) = 0;
 
         virtual void free(bool transformationOnly = false) {}

@@ -43,6 +43,9 @@ namespace Math { namespace Figures {
             res->N_top     = MX_LocalToWorld.preTransformV(N_top);
             return res;
         }
+
+        virtual xFLOAT S_Radius_Sqr_Get() { return S_top * S_top + S_radius * S_radius; }
+        virtual xFLOAT W_Volume_Get()     { return S_top * PI * S_radius * S_radius; }
     };
 
 } } // namespace Math.Figures

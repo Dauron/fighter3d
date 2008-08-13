@@ -1,5 +1,5 @@
-#ifndef __incl_Physics_CollisionInfo_h
-#define __incl_Physics_CollisionInfo_h
+#ifndef __incl_Physics_CollisionInfo_h_old
+#define __incl_Physics_CollisionInfo_h_old
 
 #include "../Models/lib3dx/xUtils.h"
 #include <vector>

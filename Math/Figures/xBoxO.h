@@ -55,7 +55,11 @@ namespace Math { namespace Figures {
             return res;
         }
 
-        PointPosition PointRelation(const xVector3 &P_capCenter, xVector3 &NW_closest) const;
+        PointPosition PointRelation(const xVector3 &P_test, xVector3 &NW_closest) const;
+        PointPosition PointsClosestToPlane(const xVector3 &NW_plane, xPoint3 P_points[4]) const ;
+
+        virtual xFLOAT S_Radius_Sqr_Get() { return S_top*S_top+S_side*S_side+S_front*S_front; }
+        virtual xFLOAT W_Volume_Get()     { return S_top * S_side * S_front * 8.f; }
     };
 
 } } // namespace Math.Figures

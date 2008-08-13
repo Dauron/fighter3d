@@ -2,6 +2,7 @@
 #define __incl_Math_xMesh_h
 
 #include "xIFigure3d.h"
+#include "xBoxA.h"
 
 namespace Math { namespace Figures {
     using namespace ::Math::Figures;
@@ -36,6 +37,49 @@ namespace Math { namespace Figures {
         {
             assert ( L_VertexData_Transf );
             return L_VertexData_Transf[I_VertesIndex];
+        }
+
+        xFLOAT   S_radius;
+        xVector3 NW_dims;
+        xPoint3  P_center;
+
+        void CalculateProperties()
+        {
+            xBoxA box = BoundingBox();
+            NW_dims = (box.P_max - box.P_min) * 0.5f;
+            S_radius = NW_dims.length();
+            P_center = box.P_min + NW_dims;
+        }
+
+        xBoxA BoundingBox()
+        {
+            xBoxA res;
+            if (!I_VertexCount)
+            {
+                res.P_min.zero();
+                res.P_max.zero();
+                return res;
+            }
+
+            res.P_max = res.P_min = *(xPoint3*) L_VertexData;
+            xDWORD vertexC = I_VertexCount - 1;
+            xBYTE *vertexP = L_VertexData + I_VertexStride;
+
+            for (; vertexC; --vertexC, vertexP += I_VertexStride)
+            {
+                xPoint3 &P = *(xPoint3*) vertexP;
+                if (P.x > res.P_max.x) res.P_max.x = P.x;
+                else
+                if (P.x < res.P_min.x) res.P_min.x = P.x;
+                if (P.y > res.P_max.y) res.P_max.y = P.y;
+                else
+                if (P.y < res.P_min.y) res.P_min.y = P.y;
+                if (P.z > res.P_max.z) res.P_max.z = P.z;
+                else
+                if (P.z < res.P_min.z) res.P_min.z = P.z;
+            }
+
+            return res;
         }
 
         xMeshData() : L_VertexData_Transf(NULL), FL_VertexIsTransf(NULL) { MX_LocalToWorld.identity(); }
@@ -116,9 +160,13 @@ namespace Math { namespace Figures {
             }
 
             xMesh *res = new xMesh();
+            //res->P_center = MX_LocalToWorld.preTransformP(res->P_center);
             *res = *this;
             return res;
         }
+
+        virtual xFLOAT S_Radius_Sqr_Get() { return MeshData->S_radius*MeshData->S_radius; }
+        virtual xFLOAT W_Volume_Get()     { return MeshData->NW_dims.x * MeshData->NW_dims.y * MeshData->NW_dims.z * 8.f; }
     };
 
 } } // namespace Math.Figures

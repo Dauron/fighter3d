@@ -26,6 +26,9 @@ namespace Math { namespace Figures {
             res->P_center = MX_LocalToWorld.preTransformP(P_center);
             return res;
         }
+
+        virtual xFLOAT S_Radius_Sqr_Get() { return S_radius*S_radius; }
+        virtual xFLOAT W_Volume_Get()     { return 1.333333333333333f * PI * S_radius * S_radius * S_radius; }
     };
 
 } } // namespace Math.Figures
