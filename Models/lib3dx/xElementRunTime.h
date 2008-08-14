@@ -61,28 +61,28 @@ struct xShadowData
     xGPUPointers       gpuLightPointers;
     xGPUShadowPointers gpuShadowPointers;
 
-    xBYTE            lightId;
+    xBYTE            ID_light;
     xShadowDataLevel zDataLevel;
 
-    xVector4 *verticesP;
-    xWORD    *indexP;
-    size_t    indexSize;
-    xWORD     sideC;
-    xWORD     frontC;
-    xWORD     backC;
+    xVector4 *L_vertices;
+    xWORD    *L_indices;
+    size_t    I_indices;
+    xWORD     I_sides;
+    xWORD     I_fronts;
+    xWORD     I_backs;
 
     void FreeData()
     {
-        if (verticesP) delete[] verticesP;
-        if (indexP)    delete[] indexP;
-        verticesP = NULL;
-        indexP    = NULL;
+        if (L_vertices) delete[] L_vertices;
+        if (L_indices)  delete[] L_indices;
+        L_vertices = NULL;
+        L_indices  = NULL;
     }
 
     void InvalidateData()
     {
-        if (indexP) delete[] indexP;
-        indexP = NULL;
+        if (L_indices) delete[] L_indices;
+        L_indices = NULL;
     }
 };
 
@@ -107,9 +107,9 @@ struct xElementInstance
     xVector3 bsCenter;
     xFLOAT   bsRadius;
 
-    xWORD     verticesC;
-    xVector4 *verticesP; // skinned
-    xVector3 *normalsP;  // skinned
+    xWORD     I_vertices;
+    xVector4 *L_vertices; // skinned
+    xVector3 *L_normals;  // skinned
 
     xShadowData &GetShadowData(xLight &light, xShadowData::xShadowDataLevel zLevel);
     void         Zero();
@@ -120,16 +120,16 @@ struct xElementInstance
 struct xRenderData
 {
     union {                  // smooth vertices
-        xVertex        *verticesP;
-        xVertexTex     *verticesTP;
-        xVertexSkel    *verticesSP;
-        xVertexTexSkel *verticesTSP;
+        xVertex        *L_vertices;
+        xVertexTex     *L_verticesT;
+        xVertexSkel    *L_verticesS;
+        xVertexTexSkel *L_verticesTS;
     };
-    xWORD              verticesC;
-    xVector3          *normalP; // smooth normals
-    xFace             *facesP;
+    xWORD              I_vertices;
+    xVector3          *L_normals; // smooth normals
+    xFace             *L_faces;
 
-    xVector3          *faceNormalsP;
+    xVector3          *L_face_normals;
 
     xGPURender::Mode   mode;
     xGPUPointers       gpuMain;
@@ -137,8 +137,8 @@ struct xRenderData
 
 struct xSkinnedData
 {
-    xVector3 *verticesP;
-    xVector3 *normalsP;
+    xVector3 *L_vertices;
+    xVector3 *L_normals;
 };
 
 #endif

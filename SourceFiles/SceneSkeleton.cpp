@@ -81,20 +81,20 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
 
     xModel *modelGr = Model.GetModelGr();
     xModel *modelPh = Model.GetModelPh();
-    if (!modelPh->spine.I_bones && modelGr->spine.I_bones)
+    if (!modelPh->Spine.I_bones && modelGr->Spine.I_bones)
     {
         modelPh->SkeletonAdd(); //   add skeleton to model
         Model.CopySpineToPhysical();
     }
     else
-    if (!modelGr->spine.I_bones && modelPh->spine.I_bones)
+    if (!modelGr->Spine.I_bones && modelPh->Spine.I_bones)
     {
         modelGr->SkeletonAdd(); //   add skeleton to model
         Model.CopySpineToGraphics();
     }
     else
         Model.CopySpineToGraphics();
-    modelGr->spine.ResetQ();
+    modelGr->Spine.ResetQ();
     Model.CalculateSkeleton();
 
     CurrentDirectory = Filesystem::GetFullPath("Data/models");
@@ -405,10 +405,10 @@ bool SceneSkeleton::Render()
             KeyName_Modify, KeyName_Accept);
         pFont->PrintF(5.f, Height-40.f, 0.f, "%d vertices selected", Selection.Vertices.size());
 
-        if (Selection.Element->skeletized && HoveredVert != xDWORD_MAX)
+        if (Selection.Element->FL_skeletized && HoveredVert != xDWORD_MAX)
         {
-            size_t stride = Selection.Element->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
-            xVertexSkel *vert = (xVertexSkel*)(((xBYTE*)Selection.Element->verticesP) + stride * HoveredVert);
+            size_t stride = Selection.Element->FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+            xVertexSkel *vert = (xVertexSkel*)(((xBYTE*)Selection.Element->L_vertices) + stride * HoveredVert);
             for (int i=0; i < 4 && fractf(vert->bone[i]) != 0.f; ++i)
                 pFont->PrintF(5.f, Height - 20.f * (i+3), 0.f, "Bone id%d : %d", (int)floorf(vert->bone[i]), (int)(fractf(vert->bone[i])*1000));
         }
@@ -487,15 +487,15 @@ void SceneSkeleton::RenderProgressBar()
     float y2 = y1-pHeight;
 
     xAnimationInfo info = Animation.Instance->GetInfo();
-    float scale = ((float)pWidth) / info.Duration;
+    float scale = ((float)pWidth) / info.T_duration;
 
-    xKeyFrame *frame = Animation.Instance->frameP;
-    xWORD cnt = Animation.Instance->frameC;
-    for(; frame && cnt; frame = frame->next, --cnt)
+    xKeyFrame *frame = Animation.Instance->L_frames;
+    xWORD cnt = Animation.Instance->I_frames;
+    for(; frame && cnt; frame = frame->Next, --cnt)
     {
         x1 = x3;
-        x2 = x1 + frame->freeze*scale;
-        x3 = x2 + frame->duration*scale;
+        x2 = x1 + frame->T_freeze*scale;
+        x3 = x2 + frame->T_duration*scale;
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -514,16 +514,16 @@ void SceneSkeleton::RenderProgressBar()
 
     glColor3f(1.f, 1.f, 1.f);
     glBegin(GL_LINES),
-        glVertex2f (x+info.Progress*scale, y1+2),
-        glVertex2f (x+info.Progress*scale, y2-3);
+        glVertex2f (x+info.T_progress*scale, y1+2),
+        glVertex2f (x+info.T_progress*scale, y2-3);
     glEnd();
 
     const GLFont* pFont = g_FontMgr.GetFont(Font);
     pFont->PrintF(5.f, Height-40.f, 0.f, "Frame: %d/%d | Progress: %d/%d (%d/%d)",
-        info.FrameNo, Animation.Instance->frameC,
-        info.Progress, info.Duration,
-        Animation.Instance->progress,
-        Animation.Instance->frameCurrent->freeze+Animation.Instance->frameCurrent->duration);
+        info.I_frameNo, Animation.Instance->I_frames,
+        info.T_progress, info.T_duration,
+        Animation.Instance->T_progress,
+        Animation.Instance->CurrentFrame->T_freeze+Animation.Instance->CurrentFrame->T_duration);
 }
 
 /************************** SELECTIONS *************************************/
@@ -551,18 +551,18 @@ unsigned int SceneSkeleton::CountSelectable()
     if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
         EditMode == emSelectBone || EditMode == emAnimateBones)
         if (EditMode == emCreateBone && State.CurrentAction == IC_BE_DeleteConstr)
-            return Model.GetModelGr()->spine.I_constraints;
+            return Model.GetModelGr()->Spine.I_constraints;
         else
-            return Model.GetModelGr()->spine.I_bones;
+            return Model.GetModelGr()->Spine.I_bones;
     else
     if (EditMode == emSelectElement)
         if (State.DisplayPhysical)
-            return Model.GetModelPh()->elementC;
+            return Model.GetModelPh()->I_elements;
         else
-            return Model.GetModelGr()->elementC;
+            return Model.GetModelGr()->I_elements;
     else
     if (EditMode == emSelectVertex)
-        return Selection.Element->verticesC;
+        return Selection.Element->I_vertices;
     return 0;
 }
 std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)
@@ -590,7 +590,7 @@ xBone *SceneSkeleton::SelectBone(int X, int Y)
     if (sel && sel->size()) {
         GLuint id = sel->back();
         delete sel;
-        return Model.GetModelGr()->spine.L_bones + id;
+        return Model.GetModelGr()->Spine.L_bones + id;
     }
     delete sel;
     return NULL;

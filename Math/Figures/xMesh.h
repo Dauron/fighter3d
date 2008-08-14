@@ -25,18 +25,19 @@ namespace Math { namespace Figures {
         xDWORD   I_VertexStride;
         xDWORD   I_VertexCount;
 
-        xPoint3 &GetVertex(xDWORD I_VertesIndex)
+        xPoint3 &GetVertex(xDWORD I_VertexIndex)
         {
-            return *(xPoint3*) (L_VertexData + I_VertesIndex * I_VertexStride);
+            return *(xPoint3*) (L_VertexData + I_VertexIndex * I_VertexStride);
         }
 
         xPoint3 *L_VertexData_Transf;
         bool    *FL_VertexIsTransf;
 
-        xPoint3 &GetVertexTransf(xDWORD I_VertesIndex)
+        xPoint3 &GetVertexTransf(xDWORD I_VertexIndex)
         {
             assert ( L_VertexData_Transf );
-            return L_VertexData_Transf[I_VertesIndex];
+            assert ( FL_VertexIsTransf[I_VertexIndex] );
+            return L_VertexData_Transf[I_VertexIndex];
         }
 
         xFLOAT   S_radius;

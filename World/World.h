@@ -4,29 +4,24 @@
 #include "SkeletizedObj.h"
 #include "../Physics/CD_MeshToMesh.h"
 #include "../Physics/CD_RayToMesh.h"
+#include "../Physics/PhysicalWorld.h"
 
-class World
+class World : public Physics::PhysicalWorld
 {
 public:
-    typedef std::vector<RigidObj*> xObjectVector;
-
-    xObjectVector objects;
-    xLightVector  lights;
+    ObjectVector objects;
+    xLightVector lights;
 
     RigidObj *skyBox;
-
-private:
-    CD_MeshToMesh cd_MeshToMesh;
-    CD_RayToMesh  cd_RayToMesh;
 
 public:
 
     World( void ) : skyBox(NULL) {}
 
-    RigidObj *CollideWithRay(xVector3 rayPos, xVector3 rayDir);
+    //RigidObj *CollideWithRay(xVector3 rayPos, xVector3 rayDir);
 
     void Initialize ();
-    void Update     (float deltaTime);
+    void Update     (float T_delta);
     void Finalize   ();
 
     void Invalidate()
@@ -35,7 +30,7 @@ public:
         for (light=begin; light!=end; ++light)
             light->modified = true;
 
-        xObjectVector::iterator model, beginM = objects.begin(), endM = objects.end();
+        ObjectVector::iterator model, beginM = objects.begin(), endM = objects.end();
         for (model=beginM; model!=endM; ++model)
             (*model)->Invalidate();
     }

@@ -6,57 +6,57 @@
 
 struct xKeyFrame
 {
-    xQuaternion *boneP;    // bone transformations of the current key frame
-    xWORD        freeze;   // ms of waiting before animation
-    xWORD        duration; // ms of animation duration
+    xQuaternion *QT_bones;   // bone transformations of the current key frame
+    xWORD        T_freeze;   // ms of waiting before animation
+    xWORD        T_duration; // ms of animation duration
 
-    xKeyFrame   *prev;   // prev key frame
-    xKeyFrame   *next;   // next key frame
+    xKeyFrame   *Prev;   // prev key frame
+    xKeyFrame   *Next;   // next key frame
 
     void LoadFromSkeleton(const xSkeleton &spine);
 };
 
 struct xAnimationInfo
 {
-    int FrameNo;
-    int Progress;
-    int Duration;
+    int I_frameNo;
+    int T_progress;
+    int T_duration;
 };
 
 struct xAnimation
 {
-    char      *name;
-    xWORD      boneC;    // no of bones per frame
-    xBYTE      priority; // higher priority matrices replace matrices of lower priority
+    char      *Name;
+    xWORD      I_bones;      // no of bones per frame
+    xBYTE      I_priority;   // higher priority matrices replace matrices of lower priority
 
-    xKeyFrame *frameP;   // key frame list or cycle
-    xWORD      frameC;   // no of key frames
+    xKeyFrame *L_frames;     // key frame list or cycle
+    xWORD      I_frames;     // no of key frames
 
-    xKeyFrame *frameCurrent; // current frame pointer
-    xLONG      progress;     // ms of progress of the current frame
+    xKeyFrame *CurrentFrame; // current frame pointer
+    xLONG      T_progress;   // ms of progress of the current frame
 
-    void Reset(xWORD boneC)
+    void Reset(xWORD I_bones)
     {
-        this->boneC  = boneC;
-        name         = NULL;
-        frameP       = NULL;
-        frameC       = 0;
-        frameCurrent = NULL;
-        progress     = 0;
+        this->I_bones  = I_bones;
+        Name           = NULL;
+        L_frames       = NULL;
+        I_frames       = 0;
+        CurrentFrame   = NULL;
+        T_progress     = 0;
         InsertKeyFrame();
     }
     void Unload()
     {
-        if (name)
-            delete[] name;
-        xKeyFrame *kfCur = frameP;
-        xWORD cnt = frameC;
+        if (Name)
+            delete[] Name;
+        xKeyFrame *kfCur = L_frames;
+        xWORD cnt = I_frames;
         while (kfCur && cnt)
         {
-            frameP = kfCur->next;
-            if (kfCur->boneP) delete[] kfCur->boneP;
+            L_frames = kfCur->Next;
+            if (kfCur->QT_bones) delete[] kfCur->QT_bones;
             delete kfCur;
-            kfCur = frameP;
+            kfCur = L_frames;
             --cnt;
         }
     }

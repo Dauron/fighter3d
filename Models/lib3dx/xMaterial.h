@@ -5,13 +5,13 @@
 #include "../../Math/xMath.h"
 
 struct xTexture {
-    char    *name;
+    char    *Name;
     xDWORD   htex;
 };
 
 struct xMaterial {
-    char    *name;
-    xBYTE    id;
+    char    *Name;
+    xBYTE    ID;
     xColor   ambient;
     xColor   diffuse;
     xColor   specular;
@@ -27,12 +27,12 @@ struct xMaterial {
 
     xTexture texture;
 
-    xMaterial *nextP; // next sibling
+    xMaterial *Next; // next sibling
 
     void Free();
 
     xMaterial *ByName( const char *materialName );
-    xMaterial *ById  ( xBYTE materialId );
+    xMaterial *ById  ( xBYTE ID_material );
 
            void       Save( FILE *file );
     static xMaterial *Load( FILE *file );

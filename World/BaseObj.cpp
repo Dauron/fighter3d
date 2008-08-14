@@ -12,7 +12,7 @@ BaseObj::BaseObj (xFLOAT x, xFLOAT y, xFLOAT z)
 }
 
 BaseObj::BaseObj (xFLOAT x, xFLOAT y, xFLOAT z,
-                    xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
+                  xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
 {
     MX_ModelToWorld.identity();
     Rotate(rotX, rotY, rotZ);

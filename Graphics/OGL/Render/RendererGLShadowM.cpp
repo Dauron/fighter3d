@@ -4,42 +4,42 @@
 /********************************* shadows ************************************/
 void RenderShadowMapLST(xElement *elem, xModelInstance &modelInstance, const xFieldOfView &FOV)
 {
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+    for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowMapLST(selem, modelInstance, FOV);
 
-    if (!elem->renderData.verticesC) return;
+    if (!elem->renderData.I_vertices) return;
 
-    xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
-    xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
+    xElementInstance &instance = modelInstance.L_elements[elem->ID];
+    xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
     if (!FOV.CheckSphere(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(elem->matrix * modelInstance.location)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld)) )
     {
         ++Performance.CulledElements;
         return;
     }
 
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.x0);
+    glMultMatrixf(&elem->MX_MeshToLocal.x0);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.x0);
+    glMultMatrixf(&elem->MX_MeshToLocal.x0);
 
-    if (elem->skeletized) {
+    if (elem->FL_skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, false);
+        g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
         g_AnimSkeletal.SetElement(elem, &instance);
     }
     else
     {
-        size_t stride = elem->textured ? sizeof(xVertexTex) : sizeof(xVertex);
-        glVertexPointer   ( 3, GL_FLOAT, stride, elem->renderData.verticesP );
-        glTexCoordPointer ( 3, GL_FLOAT, stride, elem->renderData.verticesP );
-        glNormalPointer   ( GL_FLOAT, sizeof(xVector3), elem->renderData.normalP );
+        size_t stride = elem->FL_textured ? sizeof(xVertexTex) : sizeof(xVertex);
+        glVertexPointer   ( 3, GL_FLOAT, stride, elem->renderData.L_vertices );
+        glTexCoordPointer ( 3, GL_FLOAT, stride, elem->renderData.L_vertices );
+        glNormalPointer   ( GL_FLOAT, sizeof(xVector3), elem->renderData.L_normals );
     }
 
-    glDrawElements(GL_TRIANGLES, 3*elem->facesC, GL_UNSIGNED_SHORT, elem->renderData.facesP);
+    glDrawElements(GL_TRIANGLES, 3*elem->I_faces, GL_UNSIGNED_SHORT, elem->renderData.L_faces);
 
-    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+    if (elem->FL_skeletized) g_AnimSkeletal.EndAnimation();
 
     glPopMatrix();
     glMatrixMode(GL_TEXTURE);
@@ -48,15 +48,15 @@ void RenderShadowMapLST(xElement *elem, xModelInstance &modelInstance, const xFi
 
 void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance, const xFieldOfView &FOV)
 {
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+    for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowMapVBO(selem, modelInstance, FOV);
 
-    if (!elem->renderData.verticesC) return;
+    if (!elem->renderData.I_vertices) return;
 
-    xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
-    xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
+    xElementInstance &instance = modelInstance.L_elements[elem->ID];
+    xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
     if (!FOV.CheckSphere(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(elem->matrix * modelInstance.location)) )
+        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld)) )
     {
         ++Performance.CulledElements;
         return;
@@ -65,20 +65,20 @@ void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance, const xFi
         RendererGL::InitVBO(elem);
 
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.x0);
+    glMultMatrixf(&elem->MX_MeshToLocal.x0);
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.x0);
+    glMultMatrixf(&elem->MX_MeshToLocal.x0);
 
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.vertexB );
-    if (elem->skeletized) {
+    if (elem->FL_skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, true);
+        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
         g_AnimSkeletal.SetElement(elem, &instance, true);
     }
     else
     {
-        size_t stride = elem->textured ? sizeof(xVertexTex) : sizeof(xVertex);
+        size_t stride = elem->FL_textured ? sizeof(xVertexTex) : sizeof(xVertex);
         glVertexPointer   (3, GL_FLOAT, stride, 0);
         glTexCoordPointer (3, GL_FLOAT, stride, 0);
         glBindBufferARB ( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.normalB );
@@ -87,12 +87,12 @@ void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance, const xFi
 
     /************************* RENDER FACES ****************************/
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.indexB );
-    glDrawElements  ( GL_TRIANGLES, 3*elem->facesC, GL_UNSIGNED_SHORT, 0);
+    glDrawElements  ( GL_TRIANGLES, 3*elem->I_faces, GL_UNSIGNED_SHORT, 0);
 
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB ( GL_ARRAY_BUFFER_ARB, 0 );
 
-    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+    if (elem->FL_skeletized) g_AnimSkeletal.EndAnimation();
 
     glPopMatrix();
     glMatrixMode(GL_TEXTURE);
@@ -114,17 +114,17 @@ void RendererGL :: RenderShadowMap(xModel &model, xModelInstance &instance,
     glBlendFunc(GL_DST_COLOR, GL_ZERO);
 
     glPushMatrix();
-    glMultMatrixf(&instance.location.x0);
+    glMultMatrixf(&instance.MX_LocalToWorld.x0);
     glMatrixMode(GL_TEXTURE);
     glPushMatrix();
-    xMatrix vMatrix = instance.location * shadowMap.receiverUVMatrix;
+    xMatrix vMatrix = instance.MX_LocalToWorld * shadowMap.receiverUVMatrix;
     glLoadMatrixf(&vMatrix.x0);
 
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
 
-    for (xElement *elem = model.kidsP; elem; elem = elem->nextP)
+    for (xElement *elem = model.L_kids; elem; elem = elem->Next)
         if (UseVBO)
             RenderShadowMapVBO(elem, instance, FOV);
         else
@@ -146,55 +146,55 @@ void RendererGL :: RenderShadowMap(xModel &model, xModelInstance &instance,
 /******************************* shadow maps **********************************/
 void RenderShadowMapTextureLST(xElement *elem, xModelInstance &modelInstance, bool transparent)
 {
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+    for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowMapTextureLST(selem, modelInstance, transparent);
 
-    if (!elem->renderData.verticesC
-        || (transparent && !elem->transparent)
-        || (!transparent && !elem->opaque)) return;
+    if (!elem->renderData.I_vertices
+        || (transparent && !elem->FL_transparent)
+        || (!transparent && !elem->FL_opaque)) return;
 
-    xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
+    xElementInstance &instance = modelInstance.L_elements[elem->ID];
 
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.matrix[0][0]);
+    glMultMatrixf(&elem->MX_MeshToLocal.matrix[0][0]);
 
-    if (elem->skeletized) {
+    if (elem->FL_skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, false);
+        g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
         g_AnimSkeletal.SetElement(elem, &instance);
     }
     else
     {
-        if (elem->textured)
-            glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), elem->renderData.verticesTP);
+        if (elem->FL_textured)
+            glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), elem->renderData.L_verticesT);
         else
-            glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), elem->renderData.verticesP);
+            glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), elem->renderData.L_vertices);
     }
 
-    xFaceList *faceL = elem->faceListP;
-    for(int i=elem->faceListC; i; --i, ++faceL)
+    xFaceList *faceL = elem->L_faceLists;
+    for(int i=elem->I_faceLists; i; --i, ++faceL)
     {
-        if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
-            (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
+        if ((transparent && (!faceL->Material || faceL->Material->transparency == 0.f)) ||
+            (!transparent && faceL->Material && faceL->Material->transparency > 0.f) )
             continue;
-        glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
+        glDrawElements(GL_TRIANGLES, 3*faceL->I_count, GL_UNSIGNED_SHORT, elem->renderData.L_faces+faceL->I_offset);
     }
 
-    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+    if (elem->FL_skeletized) g_AnimSkeletal.EndAnimation();
 
     glPopMatrix();
 }
 
 void RenderShadowMapTextureVBO(xElement *elem, xModelInstance &modelInstance, bool transparent)
 {
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+    for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowMapTextureVBO(selem, modelInstance, transparent);
 
-    if (!elem->renderData.verticesC
-        || (transparent  && !elem->transparent)
-        || (!transparent && !elem->opaque)) return;
+    if (!elem->renderData.I_vertices
+        || (transparent  && !elem->FL_transparent)
+        || (!transparent && !elem->FL_opaque)) return;
 
-    xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
+    xElementInstance &instance = modelInstance.L_elements[elem->ID];
 
     /************************* INIT VBO ****************************/
     if (instance.mode == xGPURender::NONE)
@@ -202,17 +202,17 @@ void RenderShadowMapTextureVBO(xElement *elem, xModelInstance &modelInstance, bo
 
     /************************* LOAD VERTICES ****************************/
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.matrix[0][0]);
+    glMultMatrixf(&elem->MX_MeshToLocal.matrix[0][0]);
 
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.vertexB );
-    if (elem->skeletized) {
+    if (elem->FL_skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, true);
+        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
         g_AnimSkeletal.SetElement(elem, &instance, true);
     }
     else
     {
-        if (elem->textured)
+        if (elem->FL_textured)
             glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), 0);
         else
             glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), 0);
@@ -220,30 +220,30 @@ void RenderShadowMapTextureVBO(xElement *elem, xModelInstance &modelInstance, bo
 
     /************************* RENDER FACES ****************************/
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.indexB );
-    xFaceList *faceL = elem->faceListP;
-    for(int i=elem->faceListC; i; --i, ++faceL)
+    xFaceList *faceL = elem->L_faceLists;
+    for(int i=elem->I_faceLists; i; --i, ++faceL)
     {
-        if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
-            (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
+        if ((transparent && (!faceL->Material || faceL->Material->transparency == 0.f)) ||
+            (!transparent && faceL->Material && faceL->Material->transparency > 0.f) )
             continue;
-        glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
+        glDrawElements(GL_TRIANGLES, 3*faceL->I_count, GL_UNSIGNED_SHORT, (void*)(faceL->I_offset*3*sizeof(xWORD)));
     }
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB ( GL_ARRAY_BUFFER_ARB, 0 );
 
-    if (elem->skeletized) g_AnimSkeletal.EndAnimation();
+    if (elem->FL_skeletized) g_AnimSkeletal.EndAnimation();
 
     glPopMatrix();
 }
 
 void RenderShadowMapTexture(xModel &model, xModelInstance &instance, bool transparent, bool useVBO)
 {
-    if ((transparent  && !model.transparent) ||
-        (!transparent && !model.opaque)) return;
+    if ((transparent  && !model.FL_transparent) ||
+        (!transparent && !model.FL_opaque)) return;
 
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    for (xElement *elem = model.kidsP; elem; elem = elem->nextP)
+    for (xElement *elem = model.L_kids; elem; elem = elem->Next)
         if (useVBO)
             RenderShadowMapTextureVBO(elem, instance, transparent);
         else

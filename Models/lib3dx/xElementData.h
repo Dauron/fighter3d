@@ -7,21 +7,21 @@
 using namespace Math::Figures;
 
 struct xFaceList {
-    xWORD      indexOffset; // first face in the facesP array
-    xWORD      indexCount;  // no of faces in the facesP array
+    xWORD      I_offset; // first face in the L_faces array
+    xWORD      I_count;  // no of faces in the L_faces array
 
-    bool       smooth;
-    xBYTE      materialId;
-    xMaterial *materialP;
+    bool       FL_smooth;
+    xBYTE      ID_material;
+    xMaterial *Material;
 };
 
 typedef xWORD3 xFace;
 
 struct xEdge {
-    xWORD face1;
-    xWORD face2;
-    xWORD vert1;
-    xWORD vert2;
+    xWORD ID_face_1;
+    xWORD ID_face_2;
+    xWORD ID_vert_1;
+    xWORD ID_vert_2;
 };
 
 struct xModel;
@@ -30,8 +30,8 @@ struct xCollisionHierarchy;
 
 struct xCollisionData
 {
-    xWORD                kidsC;
-    xCollisionHierarchy *kidsP;
+    xWORD                I_kids;
+    xCollisionHierarchy *L_kids;
 
     void Load( FILE *file, xElement *elem );
     void Save( FILE *file, xElement *elem );
@@ -44,10 +44,10 @@ struct xCollisionData
 
 struct xCollisionHierarchy : xCollisionData
 {
-    xWORD    facesC;
-    xFace ** facesP;
-    xWORD    verticesC;
-    xWORD *  verticesP;
+    xWORD    I_faces;
+    xFace ** L_faces;
+    xWORD    I_vertices;
+    xWORD *  L_vertices;
 
     void Load( FILE *file, xElement *elem );
     void Save( FILE *file, xElement *elem );

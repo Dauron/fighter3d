@@ -4,29 +4,29 @@
 xMaterial *xMaterial :: ByName(const char *materialName)
 {
     xMaterial *mat = this;
-    for (; mat; mat = mat->nextP)
-        if (!strcmp(materialName, mat->name))
+    for (; mat; mat = mat->Next)
+        if (!strcmp(materialName, mat->Name))
             break;
     return mat;
 }
 
-xMaterial *xMaterial :: ById(xBYTE materialId)
+xMaterial *xMaterial :: ById(xBYTE ID_material)
 {
     xMaterial *mat = this;
-    for (; mat; mat = mat->nextP)
-        if (materialId == mat->id)
+    for (; mat; mat = mat->Next)
+        if (ID_material == mat->ID)
             break;
     return mat;
 }
 
 void       xMaterial :: Free()
 {
-    if (this->name)
-        delete[] this->name;
+    if (this->Name)
+        delete[] this->Name;
     if (this->shader)
         delete[] this->shader;
-    if (this->texture.name)
-        delete[] this->texture.name;
+    if (this->texture.Name)
+        delete[] this->texture.Name;
     delete this;
 }
 
@@ -35,8 +35,8 @@ xMaterial *xMaterial :: Load(FILE *file)
     xMaterial *mat = new xMaterial();
     if (!mat) return NULL;
 
-    fread(&mat->name, sizeof(char*), 1, file);
-    fread(&mat->id, sizeof(xBYTE), 1, file);
+    fread(&mat->Name, sizeof(char*), 1, file);
+    fread(&mat->ID, sizeof(xBYTE), 1, file);
     fread(&mat->ambient,  sizeof(xColor), 1, file);
     fread(&mat->diffuse,  sizeof(xColor), 1, file);
     fread(&mat->specular,  sizeof(xColor), 1, file);
@@ -51,29 +51,29 @@ xMaterial *xMaterial :: Load(FILE *file)
     fread(&mat->use_wire_abs,  sizeof(bool), 1, file);
     fread(&mat->wire_size,  sizeof(xFLOAT), 1, file);
 
-    fread(&mat->texture.name,  sizeof(mat->texture.name), 1, file);
+    fread(&mat->texture.Name,  sizeof(mat->texture.Name), 1, file);
 
-    mat->nextP = NULL;
+    mat->Next = NULL;
     mat->texture.htex = 0;
 
-    if (mat->name)
+    if (mat->Name)
     {
-        size_t len = (size_t) mat->name;
-        mat->name = new char[len];
-        if (!(mat->name) ||
-            fread(mat->name, 1, len, file) != len)
+        size_t len = (size_t) mat->Name;
+        mat->Name = new char[len];
+        if (!(mat->Name) ||
+            fread(mat->Name, 1, len, file) != len)
         {
-            mat->texture.name = NULL;
+            mat->texture.Name = NULL;
             mat->Free();
             return NULL;
         }
     }
-    if (mat->texture.name)
+    if (mat->texture.Name)
     {
-        size_t len = (size_t) mat->texture.name;
-        mat->texture.name = new char[len];
-        if (!(mat->texture.name) ||
-            fread(mat->texture.name, 1, len, file) != len)
+        size_t len = (size_t) mat->texture.Name;
+        mat->texture.Name = new char[len];
+        if (!(mat->texture.Name) ||
+            fread(mat->texture.Name, 1, len, file) != len)
         {
             mat->Free();
             return NULL;
@@ -84,15 +84,15 @@ xMaterial *xMaterial :: Load(FILE *file)
 
 void       xMaterial :: Save(FILE *file)
 {
-    char *name = this->name;
-    char *tname = this->texture.name;
+    char *name = this->Name;
+    char *tname = this->texture.Name;
     if (name)
-        this->name = (char *) strlen(name)+1;
+        this->Name = (char *) strlen(name)+1;
     if (tname)
-        this->texture.name = (char *) strlen(tname)+1;
+        this->texture.Name = (char *) strlen(tname)+1;
 
-    fwrite(&this->name,            sizeof(char*), 1, file);
-    fwrite(&this->id,              sizeof(xBYTE), 1, file);
+    fwrite(&this->Name,            sizeof(char*), 1, file);
+    fwrite(&this->ID,              sizeof(xBYTE), 1, file);
     fwrite(&this->ambient,         sizeof(xColor), 1, file);
     fwrite(&this->diffuse,         sizeof(xColor), 1, file);
     fwrite(&this->specular,        sizeof(xColor), 1, file);
@@ -107,13 +107,13 @@ void       xMaterial :: Save(FILE *file)
     fwrite(&this->use_wire_abs,    sizeof(bool), 1, file);
     fwrite(&this->wire_size,       sizeof(xFLOAT), 1, file);
 
-    fwrite(&this->texture.name,    sizeof(char*), 1, file);
+    fwrite(&this->texture.Name,    sizeof(char*), 1, file);
 
     if (name)
-        fwrite(name, 1, (size_t)this->name, file);
+        fwrite(name, 1, (size_t)this->Name, file);
     if (tname)
-        fwrite(tname, 1, (size_t)this->texture.name, file);
+        fwrite(tname, 1, (size_t)this->texture.Name, file);
 
-    this->name = name;
-    this->texture.name = tname;
+    this->Name = name;
+    this->texture.Name = tname;
 }

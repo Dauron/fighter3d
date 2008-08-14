@@ -30,7 +30,7 @@ struct VerletSystem
     xMatrix                      MX_ModelToWorld;
     xMatrix                      MX_WorldToModel_T;
 
-    xSkeleton                   *spine;
+    xSkeleton                   *Spine;
     xQuaternion                 *QT_boneSkew;  // fronts of the particles needed for bone rotations
 
     VerletSystem()

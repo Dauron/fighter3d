@@ -10,8 +10,8 @@ struct Collisions
 {
     xElement *elem1;
     xElement *elem2;
-    xFace    *face1;
-    xFace    *face2;
+    xFace    *ID_face_1;
+    xFace    *ID_face_2;
 
     xVector3  face1v[3];
     xVector3  face2v[3];

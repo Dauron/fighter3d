@@ -133,24 +133,24 @@ bool CD_RayToMesh::CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci,
 {
     bool res = false;
     xVector3 colPoint;
-    xCollisionHierarchy *ch = pcd->kidsP;
+    xCollisionHierarchy *ch = pcd->L_kids;
 
-    for (int h1 = pcd->kidsC; h1; --h1, ++chb, ++ch)
+    for (int h1 = pcd->I_kids; h1; --h1, ++chb, ++ch)
     {
         if (CollideBox(chb->bounding))
         {
-            if (ch->kidsP)
+            if (ch->L_kids)
             {
                 res |= CheckOctreeLevel(ci, ch, chb->kids, elem);
                 continue;
             }
 
-            for (int i1 = ch->facesC; i1; --i1)
+            for (int i1 = ch->I_faces; i1; --i1)
             {
-                xFace **face1 = ch->facesP + ch->facesC - i1;
-                xVector4 *a1 = ci->verticesP + (**face1)[0];
-                xVector4 *a2 = ci->verticesP + (**face1)[1];
-                xVector4 *a3 = ci->verticesP + (**face1)[2];
+                xFace **ID_face_1 = ch->L_faces + ch->I_faces - i1;
+                xVector4 *a1 = ci->L_vertices + (**ID_face_1)[0];
+                xVector4 *a2 = ci->L_vertices + (**ID_face_1)[1];
+                xVector4 *a3 = ci->L_vertices + (**ID_face_1)[2];
                 // Exclude elements that can't collide
                 xBoxA faceB;
                 faceB.P_min.x = min(a1->x, min(a2->x, a3->x));
@@ -184,10 +184,10 @@ bool CD_RayToMesh::CollideElements(xCollisionHierarchyBoundsRoot *&ci, xElement 
 {
     bool res = false;
 
-    if (elem->verticesC && ci->kids && CollideBox(ci->bounding))
+    if (elem->I_vertices && ci->kids && CollideBox(ci->bounding))
         res |= CheckOctreeLevel(ci, &elem->collisionData, ci->kids, elem);
 
-    for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
+    for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
         res |= CollideElements(++ci, celem);
 
     return res;
@@ -206,7 +206,7 @@ bool CD_RayToMesh::Collide(RigidObj *model,
     notCollided = true;
 
     bool res = false;
-    for (xElement *elem = model->GetModelPh()->kidsP; elem; elem = elem->nextP)
+    for (xElement *elem = model->GetModelPh()->L_kids; elem; elem = elem->Next)
         res |= CollideElements(++ci, elem);
 
     colPoint = collisionPoint;

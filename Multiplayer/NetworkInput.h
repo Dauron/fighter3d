@@ -6,12 +6,12 @@
 class NetworkInput
 {
 private:
-    const xSkeleton *spine;
+    const xSkeleton *Spine;
 
 public:
     bool Initialize(const xSkeleton &spine)
     {
-        this->spine = &spine;
+        this->Spine = &spine;
         return true;
     }
     void Finalize()
@@ -19,7 +19,7 @@ public:
 
     xQuaternion * GetTransformations()
     {
-        xQuaternion *QT_bones = new xQuaternion[spine->I_bones];
+        xQuaternion *QT_bones = new xQuaternion[Spine->I_bones];
 
         // kwaternion QT_bones[0] nie opisuje obrotu, a przesuniêcie ca³ego modelu, pozosta³e to obroty w formacie
         // x = axis.x * sin(alpha/2)
@@ -28,7 +28,7 @@ public:
         // w = cos(alpha/2)
         // oœ Z wskazuje do góry
 
-        for (int i=0; i < spine->I_bones; ++i)
+        for (int i=0; i < Spine->I_bones; ++i)
             QT_bones[i].zeroQ(); // no rotation
 
         return QT_bones;

@@ -306,32 +306,32 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                 chb1->bounding.P_min.z < chb2->bounding.P_max.z &&
                 chb1->bounding.P_max.z > chb2->bounding.P_min.z)
             {
-                if (ch1->kidsP && ch2->kidsP)
+                if (ch1->L_kids && ch2->L_kids)
                 {
-                    res |= CheckOctreeLevel(ci1, ci2, ch1->kidsP, ch2->kidsP, chb1->kids, chb2->kids,
-                                            ch1->kidsC, ch2->kidsC, elem1, elem2);
+                    res |= CheckOctreeLevel(ci1, ci2, ch1->L_kids, ch2->L_kids, chb1->kids, chb2->kids,
+                                            ch1->I_kids, ch2->I_kids, elem1, elem2);
                     continue;
                 }
-                if (ch1->kidsP)
+                if (ch1->L_kids)
                 {
-                    res |= CheckOctreeLevel(ci1, ci2, ch1->kidsP, ch2, chb1->kids, chb2,
-                                            ch1->kidsC, 1, elem1, elem2);
+                    res |= CheckOctreeLevel(ci1, ci2, ch1->L_kids, ch2, chb1->kids, chb2,
+                                            ch1->I_kids, 1, elem1, elem2);
                     continue;
                 }
-                if (ch2->kidsP)
+                if (ch2->L_kids)
                 {
-                    res |= CheckOctreeLevel(ci1, ci2, ch1, ch2->kidsP, chb1, chb2->kids,
-                                            1, ch2->kidsC, elem1, elem2);
+                    res |= CheckOctreeLevel(ci1, ci2, ch1, ch2->L_kids, chb1, chb2->kids,
+                                            1, ch2->I_kids, elem1, elem2);
                     continue;
                 }
                 ++Performance.CollidedTreeLevels;
 
-                for (int i1 = ch1->facesC; i1; --i1)
+                for (int i1 = ch1->I_faces; i1; --i1)
                 {
-                    xFace **face1 = ch1->facesP + ch1->facesC - i1;
-                    xVector4 *a1 = ci1->verticesP + (**face1)[0];
-                    xVector4 *a2 = ci1->verticesP + (**face1)[1];
-                    xVector4 *a3 = ci1->verticesP + (**face1)[2];
+                    xFace **ID_face_1 = ch1->L_faces + ch1->I_faces - i1;
+                    xVector4 *a1 = ci1->L_vertices + (**ID_face_1)[0];
+                    xVector4 *a2 = ci1->L_vertices + (**ID_face_1)[1];
+                    xVector4 *a3 = ci1->L_vertices + (**ID_face_1)[2];
 
                     xBoxA faceB1;
                     faceB1.P_min.x = min(a1->x, min(a2->x, a3->x));
@@ -341,14 +341,14 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                     faceB1.P_max.y = max(a1->y, max(a2->y, a3->y));
                     faceB1.P_max.z = max(a1->z, max(a2->z, a3->z));
 
-                    for (int i2 = ch2->facesC; i2; --i2)
+                    for (int i2 = ch2->I_faces; i2; --i2)
                     {
                         ++Performance.CollidedTriangleBounds;
 
-                        xFace **face2 = ch2->facesP + ch2->facesC - i2;
-                        xVector4 *b1 = ci2->verticesP + (**face2)[0];
-                        xVector4 *b2 = ci2->verticesP + (**face2)[1];
-                        xVector4 *b3 = ci2->verticesP + (**face2)[2];
+                        xFace **ID_face_2 = ch2->L_faces + ch2->I_faces - i2;
+                        xVector4 *b1 = ci2->L_vertices + (**ID_face_2)[0];
+                        xVector4 *b2 = ci2->L_vertices + (**ID_face_2)[1];
+                        xVector4 *b3 = ci2->L_vertices + (**ID_face_2)[2];
                         // Exclude elements that can't collide
                         xBoxA faceB2;
                         faceB2.P_max.x = max(b1->x, max(b2->x, b3->x));
@@ -379,12 +379,12 @@ bool CD_MeshToMesh:: CheckOctreeLevel(xCollisionHierarchyBoundsRoot *ci1, xColli
                             }
 
                             Collisions cf;
-                            cf.face1 = *face1; cf.face2 = *face2;
+                            cf.ID_face_1 = *ID_face_1; cf.ID_face_2 = *ID_face_2;
                             cf.elem1 = elem1; cf.elem2 = elem2; cf.colPoint = colPoint;
                             cf.face1v[0] = a1->vector3; cf.face1v[1] = a2->vector3; cf.face1v[2] = a3->vector3;
                             cf.face2v[0] = b1->vector3; cf.face2v[1] = b2->vector3; cf.face2v[2] = b3->vector3;
                             collidedModel1->collisions.push_back(cf);
-                            cf.face1 = *face2; cf.face2 = *face1;
+                            cf.ID_face_1 = *ID_face_2; cf.ID_face_2 = *ID_face_1;
                             cf.elem1 = elem2; cf.elem2 = elem1;
                             cf.face1v[0] = b1->vector3; cf.face1v[1] = b2->vector3; cf.face1v[2] = b3->vector3;
                             cf.face2v[0] = a1->vector3; cf.face2v[1] = a2->vector3; cf.face2v[2] = a3->vector3;
@@ -405,7 +405,7 @@ bool CD_MeshToMesh:: Collide2(xCollisionHierarchyBoundsRoot *ci1, xCollisionHier
 {
     bool res = false;
 
-    if (elem2->verticesC && ci1->kids && ci2->kids &&
+    if (elem2->I_vertices && ci1->kids && ci2->kids &&
         ci1->bounding.P_min.x < ci2->bounding.P_max.x &&
         ci1->bounding.P_max.x > ci2->bounding.P_min.x &&
         ci1->bounding.P_min.y < ci2->bounding.P_max.y &&
@@ -413,10 +413,10 @@ bool CD_MeshToMesh:: Collide2(xCollisionHierarchyBoundsRoot *ci1, xCollisionHier
         ci1->bounding.P_min.z < ci2->bounding.P_max.z &&
         ci1->bounding.P_max.z > ci2->bounding.P_min.z)
         res |= CheckOctreeLevel(ci1, ci2,
-            elem1->collisionData.kidsP, elem2->collisionData.kidsP, ci1->kids, ci2->kids,
-            elem1->collisionData.kidsC, elem2->collisionData.kidsC, elem1, elem2);
+            elem1->collisionData.L_kids, elem2->collisionData.L_kids, ci1->kids, ci2->kids,
+            elem1->collisionData.I_kids, elem2->collisionData.I_kids, elem1, elem2);
 
-    for (xElement *celem2 = elem2->kidsP; celem2; celem2 = celem2->nextP)
+    for (xElement *celem2 = elem2->L_kids; celem2; celem2 = celem2->Next)
         res |= Collide2(ci1, ++ci2, elem1, celem2);
 
     return res;
@@ -429,11 +429,11 @@ bool CD_MeshToMesh:: Collide1(xCollisionHierarchyBoundsRoot *&ci1, xCollisionHie
     xCollisionHierarchyBoundsRoot *cci2 = ci2;
     bool res = false;
 
-    if (elem1->verticesC)
-        for (xElement *celem2 = elem2; celem2; celem2 = celem2->nextP)
+    if (elem1->I_vertices)
+        for (xElement *celem2 = elem2; celem2; celem2 = celem2->Next)
             res |= Collide2(ci1, ++cci2, elem1, celem2);
 
-    for (xElement *celem1 = elem1->kidsP; celem1; celem1 = celem1->nextP)
+    for (xElement *celem1 = elem1->L_kids; celem1; celem1 = celem1->Next)
         res |= Collide1(++ci1, ci2, celem1, elem2);
 
     return res;

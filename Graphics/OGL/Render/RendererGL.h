@@ -42,10 +42,10 @@ class RendererGL : public Renderer
 
     virtual void InvalidateGraphics(xModel &model, xModelInstance &instance)
     {
-        if (instance.elementInstanceP)
+        if (instance.L_elements)
         {
-            xBYTE cnt = instance.elementInstanceC;
-            for (xElementInstance *iter = instance.elementInstanceP; cnt; --cnt, ++iter)
+            xBYTE cnt = instance.I_elements;
+            for (xElementInstance *iter = instance.L_elements; cnt; --cnt, ++iter)
             {
                 iter->gpuMain.Invalidate();
                 iter->mode = xGPURender::NONE;
@@ -58,23 +58,23 @@ class RendererGL : public Renderer
                 }
             }
         }
-        for (xElement *celem = model.kidsP; celem; celem = celem->nextP)
+        for (xElement *celem = model.L_kids; celem; celem = celem->Next)
             InvalidateElementGraphics(celem);
     }
 
     virtual void FreeGraphics(xModel &model, xModelInstance &instance, bool freeShared = true)
     {
-        if (UseVBO) FreeVBORenderData(instance.elementInstanceP, instance.elementInstanceC);
-        else        FreeListRenderData(instance.elementInstanceP, instance.elementInstanceC);
+        if (UseVBO) FreeVBORenderData(instance.L_elements, instance.I_elements);
+        else        FreeListRenderData(instance.L_elements, instance.I_elements);
 
         if (freeShared)
-            for (xElement *celem = model.kidsP; celem; celem = celem->nextP)
+            for (xElement *celem = model.L_kids; celem; celem = celem->Next)
                 FreeElementGraphics(celem);
     }
 
     virtual void InvalidateBonePositions(xModelInstance &instance)
     {
-        if (!UseVBO) FreeListRenderData(instance.elementInstanceP, instance.elementInstanceC);
+        if (!UseVBO) FreeListRenderData(instance.L_elements, instance.I_elements);
     }
 
     static void InitVBO (xElement *elem);
@@ -87,7 +87,7 @@ class RendererGL : public Renderer
     {
         elem->renderData.gpuMain.Invalidate();
         elem->renderData.mode = xGPURender::NONE;
-        for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
+        for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
             InvalidateElementGraphics(celem);
     }
 
@@ -114,7 +114,7 @@ class RendererGL : public Renderer
             elem->renderData.mode = xGPURender::NONE;
         }
 
-        for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
+        for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
             FreeElementGraphics(celem);
     }
 

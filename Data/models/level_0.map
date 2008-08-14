@@ -21,7 +21,7 @@ position    0 0 -0.21
 physical    0
 phantom     0
 
-[skip model]
+[model]
 fastm	crate_fst.3dx
 model	crate.3dx
 skip rotation    0 45 0
@@ -32,7 +32,7 @@ phantom     0
 mass        20
 #
 
-[skeletized]
+[skip skeletized]
 fastm	human2_fst.3dx
 model	human2.3dx
 rotation    0 0 180

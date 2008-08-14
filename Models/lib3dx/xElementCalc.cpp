@@ -18,25 +18,25 @@ struct smoothVert {
 
 void xElement :: CalculateSmoothVertices ()
 {
-    size_t stride = this->skeletized
-        ? this->textured
+    size_t stride = this->FL_skeletized
+        ? this->FL_textured
         ? sizeof (xVertexTexSkel)
         : sizeof (xVertexSkel)
-        : this->textured
+        : this->FL_textured
         ? sizeof (xVertexTex)
         : sizeof (xVertex);
-    xBYTE *verticesIn = (xBYTE*) this->verticesP;
+    xBYTE *verticesIn = (xBYTE*) this->L_vertices;
 
-    this->renderData.faceNormalsP = new xVector3[this->facesC];
-    xVector3 *faceNormal = this->renderData.faceNormalsP;
+    this->renderData.L_face_normals = new xVector3[this->I_faces];
+    xVector3 *faceNormal = this->renderData.L_face_normals;
 
     //// assign smoothing groups to vertices
     std::vector<smoothVert>::iterator iterF, iterE, iterF2, iterE2;
     std::vector<std::vector<smoothVert> > vertices; // vertex_id->(smooth, normal)[]
-    vertices.resize(this->verticesC);
-    xDWORD *smooth = this->smoothP;
-    xFace *faceIn  = this->facesP;
-    for (int fP=this->facesC; fP; --fP, ++smooth, ++faceIn, ++faceNormal)
+    vertices.resize(this->I_vertices);
+    xDWORD *smooth = this->L_smooth;
+    xFace *faceIn  = this->L_faces;
+    for (int fP=this->I_faces; fP; --fP, ++smooth, ++faceIn, ++faceNormal)
     {
         xVector3 *v0 = (xVector3*)(verticesIn + (*faceIn)[0]*stride);
         xVector3 *v1 = (xVector3*)(verticesIn + (*faceIn)[1]*stride);
@@ -85,7 +85,7 @@ void xElement :: CalculateSmoothVertices ()
     }
 
     //// smooth normals for original vertex duplicates
-    xDWORD verticesC = this->verticesC;
+    xDWORD verticesC = this->I_vertices;
     std::vector<std::vector<smoothVert> >::iterator vertF = vertices.begin(), vertF2;
     std::vector<std::vector<smoothVert> >::iterator vertE = vertices.end();
     xBYTE *xvertI = verticesIn, *xvertI2;
@@ -158,22 +158,22 @@ void xElement :: CalculateSmoothVertices ()
                 iterF->vertexId = iterF->mergedWith->vertexId;
     }
 
-    this->renderData.verticesC = verticesC;
-    if (verticesC == this->verticesC)
+    this->renderData.I_vertices = verticesC;
+    if (verticesC == this->I_vertices)
     {
-        this->renderData.verticesP = this->verticesP;
-        this->renderData.facesP    = this->facesP;
+        this->renderData.L_vertices = this->L_vertices;
+        this->renderData.L_faces    = this->L_faces;
     }
     else
     {
-        this->renderData.verticesP = (xVertex*) new xBYTE[stride*verticesC];
-        memcpy(this->renderData.verticesP, this->verticesP, stride*this->verticesC);
-        this->renderData.facesP = new xFace[this->facesC];
+        this->renderData.L_vertices = (xVertex*) new xBYTE[stride*verticesC];
+        memcpy(this->renderData.L_vertices, this->L_vertices, stride*this->I_vertices);
+        this->renderData.L_faces = new xFace[this->I_faces];
         //// fill and correct faces
-        smooth  = this->smoothP;
-        faceIn  = this->facesP;
-        xFace *faceOut = this->renderData.facesP;
-        for (int fP=this->facesC; fP; --fP, ++smooth, ++faceIn, ++faceOut)
+        smooth  = this->L_smooth;
+        faceIn  = this->L_faces;
+        xFace *faceOut = this->renderData.L_faces;
+        for (int fP=this->I_faces; fP; --fP, ++smooth, ++faceIn, ++faceOut)
             for (int i=0; i<3; ++i)
             {
                 int  idx = (*faceOut)[i] = (*faceIn)[i];
@@ -188,12 +188,12 @@ void xElement :: CalculateSmoothVertices ()
             }
     }
 
-    this->renderData.normalP   = new xVector3[verticesC];
+    this->renderData.L_normals   = new xVector3[verticesC];
     //// duplicate vertices and fill normals
-    xBYTE    *verticesOut = ((xBYTE*) this->renderData.verticesP) + stride*this->verticesC;
-    xVector3 *normalP     = this->renderData.normalP;
-    xVector3 *normalP2    = this->renderData.normalP + this->verticesC;
-    for (vertF = vertices.begin(); vertF != vertE; ++vertF, verticesIn += stride, ++normalP)
+    xBYTE    *verticesOut = ((xBYTE*) this->renderData.L_vertices) + stride*this->I_vertices;
+    xVector3 *L_normals     = this->renderData.L_normals;
+    xVector3 *normalP2    = this->renderData.L_normals + this->I_vertices;
+    for (vertF = vertices.begin(); vertF != vertE; ++vertF, verticesIn += stride, ++L_normals)
     {
         if (!vertF->size()) continue;
         iterE = vertF->end();
@@ -206,17 +206,17 @@ void xElement :: CalculateSmoothVertices ()
                     *(normalP2++) = iterF->mnormal;
                 }
                 else
-                    *normalP = iterF->mnormal;
+                    *L_normals = iterF->mnormal;
     }
 }
 
 ////////////////////// Shadow Edges
 xMaterial *xFaceGetMaterial(const xElement *elem, int faceIdx)
 {
-    xFaceList *faceL = elem->faceListP;
-    for (int i=elem->faceListC; i; --i, ++faceL)
-        if (faceIdx - faceL->indexOffset < faceL->indexCount)
-            return faceL->materialP;
+    xFaceList *faceL = elem->L_faceLists;
+    for (int i=elem->I_faceLists; i; --i, ++faceL)
+        if (faceIdx - faceL->I_offset < faceL->I_count)
+            return faceL->Material;
     return NULL;
 }
 
@@ -235,27 +235,27 @@ void       xFaceTransparentOr2Sided(const xElement *elem, int faceIdx, bool &out
 
 void xElement :: FillShadowEdges ()
 {
-    xWORD edgesC = 3 * (this->facesC);
-    this->edgesP = new xEdge[edgesC << 1];
+    xWORD edgesC = 3 * (this->I_faces);
+    this->L_edges = new xEdge[edgesC << 1];
 
-    bool *flags = new bool[this->facesC*3];
-    memset(flags, 0, this->facesC*3);
+    bool *flags = new bool[this->I_faces*3];
+    memset(flags, 0, this->I_faces*3);
 
-    xFace *iterF1 = this->facesP, *iterF2;
+    xFace *iterF1 = this->L_faces, *iterF2;
     bool  *iterUsed1 = flags, *iterUsed2;
-    xEdge *iterE = this->edgesP;
+    xEdge *iterE = this->L_edges;
 
-    size_t stride = this->skeletized
-        ? this->textured
+    size_t stride = this->FL_skeletized
+        ? this->FL_textured
         ? sizeof (xVertexTexSkel)
         : sizeof (xVertexSkel)
-        : this->textured
+        : this->FL_textured
         ? sizeof (xVertexTex)
         : sizeof (xVertex);
-    xBYTE *verticesIn = (xBYTE*) this->verticesP;
+    xBYTE *verticesIn = (xBYTE*) this->L_vertices;
 
     xWORD cnt = 0;
-    for (int i = 0; i < this->facesC; ++i, ++iterF1, iterUsed1 += 3)
+    for (int i = 0; i < this->I_faces; ++i, ++iterF1, iterUsed1 += 3)
     {
         bool transp1;
         bool twoSide1;
@@ -265,19 +265,19 @@ void xElement :: FillShadowEdges ()
             if (!iterUsed1[e1])
             {
                 ++cnt;
-                iterE->vert1 = (*iterF1)[e1];
-                iterE->vert2 = (*iterF1)[(e1+1)%3];
-                iterE->face1 = i;
-                iterE->face2 = xWORD_MAX;
+                iterE->ID_vert_1 = (*iterF1)[e1];
+                iterE->ID_vert_2 = (*iterF1)[(e1+1)%3];
+                iterE->ID_face_1 = i;
+                iterE->ID_face_2 = xWORD_MAX;
                 iterUsed1[e1] = true;
-                xVector3 *vc1a = (xVector3 *)(verticesIn + stride* iterE->vert1);
-                xVector3 *vc1b = (xVector3 *)(verticesIn + stride* iterE->vert2);
+                xVector3 *vc1a = (xVector3 *)(verticesIn + stride* iterE->ID_vert_1);
+                xVector3 *vc1b = (xVector3 *)(verticesIn + stride* iterE->ID_vert_2);
 
                 iterF2    = iterF1 + 1;
                 iterUsed2 = iterUsed1 + 3;
                 bool found = false;
 
-                for (int j = i+1; j < this->facesC && !found; ++j, ++iterF2, iterUsed2+=3)
+                for (int j = i+1; j < this->I_faces && !found; ++j, ++iterF2, iterUsed2+=3)
                 {
                     bool transp2;
                     bool twoSide2;
@@ -296,23 +296,156 @@ void xElement :: FillShadowEdges ()
                             if ((*vc1a == *vc2a && *vc1b == *vc2b) ||
                                 (*vc1a == *vc2b && *vc1b == *vc2a) )
                             {
-                                iterE->face2 = j;
+                                iterE->ID_face_2 = j;
                                 iterUsed2[e2] = true;
                                 found = true;
                                 --edgesC;
                             }
                         }
                 }
-                if (iterE->face2 == xWORD_MAX)
+                if (iterE->ID_face_2 == xWORD_MAX)
                 {
-                    iterE->face2 = xWORD_MAX;
+                    iterE->ID_face_2 = xWORD_MAX;
                 }
                 ++iterE;
             }
     }
-    xEdge *tmp = this->edgesP;
-    this->edgesC = cnt;
-    this->edgesP = new xEdge[cnt];
-    memcpy(this->edgesP, tmp, cnt*sizeof(xEdge));
+    xEdge *tmp = this->L_edges;
+    this->I_edges = cnt;
+    this->L_edges = new xEdge[cnt];
+    memcpy(this->L_edges, tmp, cnt*sizeof(xEdge));
     delete[] tmp;
+}
+
+#include "../../Math/Figures/xBoxO.h"
+#include "../../Math/Figures/xMesh.h"
+using namespace Math::Figures;
+
+xBoxA xElement :: FillBVHNode(xCollisionHierarchy &CH_node,
+                              xBVHierarchy        &BVH_node,
+                              xMeshData           *MeshData)
+{
+    xBoxA boxA;
+
+    if (CH_node.I_kids)
+    {
+        boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
+        boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
+
+        BVH_node.init(*new xBoxO());
+        BVH_node.I_items = CH_node.I_kids;
+        BVH_node.L_items = new xBVHierarchy[BVH_node.I_items];
+
+        xBoxA boxAc;
+        xCollisionHierarchy *CH_kid  = CH_node.L_kids;
+        xBVHierarchy        *BVH_kid = BVH_node.L_items;
+        for (int i = CH_node.I_kids; i; --i, ++CH_kid, ++BVH_kid)
+        {
+            boxAc = FillBVHNode(*CH_kid, *BVH_kid, MeshData);
+            if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
+            if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
+            if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
+            if (boxAc.P_max.x > boxA.P_max.x) boxA.P_max.x = boxAc.P_max.x;
+            if (boxAc.P_max.y > boxA.P_max.y) boxA.P_max.y = boxAc.P_max.y;
+            if (boxAc.P_max.z > boxA.P_max.z) boxA.P_max.z = boxAc.P_max.z;
+        }
+
+        xVector3 NW_extends = (boxA.P_max - boxA.P_min) * 0.5f;
+        xBoxO &boxO = *(xBoxO*) BVH_node.Figure;
+        boxO.P_center = boxA.P_min + NW_extends;
+        boxO.S_side  = NW_extends.x;
+        boxO.S_front = NW_extends.y;
+        boxO.S_top   = NW_extends.z;
+        boxO.N_side.init(1.f, 0.f, 0.f);
+        boxO.N_front.init(0.f, 1.f, 0.f);
+        boxO.N_top.init(0.f, 0.f, 1.f);
+
+        return boxA;
+    }
+
+    BVH_node.I_items = 0;
+    BVH_node.L_items = NULL;
+
+    BVH_node.init(*new xMesh());
+    xMesh &mesh   = *(xMesh*) BVH_node.Figure;
+    mesh.MeshData = MeshData;
+    mesh.I_FaceIndices = CH_node.I_faces;
+    mesh.L_FaceIndices = new xDWORD[mesh.I_FaceIndices];
+    xDWORD *MF_iter = mesh.L_FaceIndices;
+    xFace **CF_iter = CH_node.L_faces;
+    for (xDWORD i = mesh.I_FaceIndices; i; --i, ++MF_iter, ++CF_iter)
+        *MF_iter = (*CF_iter - L_faces);// % MeshData->I_FaceStride;
+
+    boxA.P_max = boxA.P_min = MeshData->GetVertex(CH_node.L_vertices[0]);
+
+    mesh.I_VertexIndices = CH_node.I_vertices;
+    mesh.L_VertexIndices = new xDWORD[mesh.I_VertexIndices];
+    xDWORD *MV_iter = mesh.L_VertexIndices;
+    xWORD  *CV_iter = CH_node.L_vertices;
+    for (xDWORD i = mesh.I_VertexIndices; i; --i, ++MV_iter, ++CV_iter)
+    {
+        xPoint3 &P_tmp = MeshData->GetVertex(*MV_iter = *CV_iter);
+        if (P_tmp.x < boxA.P_min.x) boxA.P_min.x = P_tmp.x;
+        else
+        if (P_tmp.x > boxA.P_max.x) boxA.P_max.x = P_tmp.x;
+        if (P_tmp.y < boxA.P_min.y) boxA.P_min.y = P_tmp.y;
+        else
+        if (P_tmp.y > boxA.P_max.y) boxA.P_max.y = P_tmp.y;
+        if (P_tmp.z < boxA.P_min.z) boxA.P_min.z = P_tmp.z;
+        else
+        if (P_tmp.z > boxA.P_max.z) boxA.P_max.z = P_tmp.z;
+    }
+
+    return boxA;
+}
+
+xBoxA xElement :: FillBVH  ( xBVHierarchy *L_BVH )
+{
+    xBVHierarchy &BVH_node = L_BVH[ID];
+    BVH_node.init(*new xBoxO());
+
+    BVH_node.I_items = collisionData.I_kids;
+    BVH_node.L_items = new xBVHierarchy[BVH_node.I_items];
+
+    xMeshData *MeshData = new xMeshData();
+    MeshData->I_FaceCount    = I_faces;
+    MeshData->I_FaceStride   = sizeof(xFace);
+    MeshData->L_FaceData     = (xBYTE*) L_faces;
+    MeshData->I_VertexCount  = I_vertices;
+    MeshData->I_VertexStride = GetVertexStride();
+    MeshData->L_VertexData   = (xBYTE*) L_vertices;
+    MeshData->MX_MeshToLocal = MX_MeshToLocal;
+
+    xBoxA boxA, boxAc;
+    boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
+    boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
+
+    xCollisionHierarchy *CH_kid  = collisionData.L_kids;
+    xBVHierarchy        *BVH_kid = BVH_node.L_items;
+    for (int i = collisionData.I_kids; i; --i, ++CH_kid, ++BVH_kid)
+    {
+        boxAc = FillBVHNode(*CH_kid, *BVH_kid, MeshData);
+        if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
+        if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
+        if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
+        if (boxAc.P_max.x > boxA.P_max.x) boxA.P_max.x = boxAc.P_max.x;
+        if (boxAc.P_max.y > boxA.P_max.y) boxA.P_max.y = boxAc.P_max.y;
+        if (boxAc.P_max.z > boxA.P_max.z) boxA.P_max.z = boxAc.P_max.z;
+    }
+
+    xVector3 NW_extends = (boxA.P_max - boxA.P_min) * 0.5f;
+    xBoxO &boxO = *(xBoxO*) BVH_node.Figure;
+    boxO.P_center = boxA.P_min + NW_extends;
+    boxO.S_side  = NW_extends.x;
+    boxO.S_front = NW_extends.y;
+    boxO.S_top   = NW_extends.z;
+    boxO.N_side.init(1.f, 0.f, 0.f);
+    boxO.N_front.init(0.f, 1.f, 0.f);
+    boxO.N_top.init(0.f, 0.f, 1.f);
+
+    xElement *elem = L_kids;
+    for (; elem; elem = elem->Next)
+        elem->FillBVH( L_BVH );
+
+    return boxA;
 }

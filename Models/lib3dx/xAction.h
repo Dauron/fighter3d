@@ -6,18 +6,18 @@
 
 struct xAction {
     HAnimation hAnimation;
-    xDWORD     startTime;
-    xDWORD     endTime;
+    xDWORD     T_start;
+    xDWORD     T_end;
 };
 
 struct xActionSet {
-    std::vector<xAction> actions;
-    xDWORD               progress;
+    std::vector<xAction> L_actions;
+    xDWORD               T_progress;
 
-    void          Update(xDWORD deltaTime);
+    void          Update(xDWORD T_delta);
     xQuaternion * GetTransformations();
 
-    xActionSet () : progress(0) {}
+    xActionSet () : T_progress(0) {}
 };
 
 #endif

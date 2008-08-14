@@ -40,7 +40,7 @@ void xAnimationMgr :: DeleteAnimation( HAnimation hani )
         if (!ani->m_References)
         {
             // delete from index
-            m_NameIndex.erase( m_NameIndex.find( ani->name ) );
+            m_NameIndex.erase( m_NameIndex.find( ani->Name ) );
             // delete from db
             ani->Unload();
             m_HandleMgr.Release( hani );

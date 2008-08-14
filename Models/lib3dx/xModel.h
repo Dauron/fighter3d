@@ -5,44 +5,45 @@
 #include "xMaterial.h"
 #include "xElement.h"
 
-
 struct xModel {
-    char      *fileName;
+    char      *FileName;
 
-    xMaterial *materialP; // first material
-    xBYTE      materialC; // no of materials
+    xMaterial *L_material; // first material
+    xBYTE      I_material; // no of materials
 
-    xElement  *kidsP;     // model's elements
-    xBYTE      kidsC;     // model's elements
-    xBYTE      elementC;  // count of all kids
+    xElement  *L_kids;     // model's elements
+    xBYTE      I_kids;     // model's elements
+    xBYTE      I_elements; // count of all kids
 
-    xSkeleton  spine;
+    xSkeleton  Spine;
 
-    bool       texturesInited;
-    bool       saveCollisionData;
-    bool       transparent;  // Are there transparent faces?
-    bool       opaque;       // Are there opaque faces?
+    bool       FL_textures_loaded; // Are textures handles loaded from the TextureManager
+    bool       FL_save_bvh;        // Save bounding volumes hierarchy?
+    bool       FL_transparent;     // Are there any transparent faces?
+    bool       FL_opaque;          // Are there any opaque faces?
 
     void   Free();
     void   BoneDelete( xBYTE ID_bone );
     void   SkeletonAdd();
     void   SkeletonReset();
 
+    void CreateBVH(Math::Figures::xBVHierarchy &BVH_node);
+
     static xModel *Load( const char *fileName, bool createCollisionInfo = true );
            void    Save();
 };
 
 struct xModelInstance {
-    xMatrix       location;
-    xVector3      center;
+    xMatrix       MX_LocalToWorld;
+    xPoint3       P_center;
 
-    xBYTE         bonesC;
-    xMatrix     * bonesM;
-    xQuaternion * bonesQ;
-    bool        * bonesMod;
+    xBYTE         I_bones;
+    xMatrix     * MX_bones;
+    xQuaternion * QT_bones;
+    bool        * FL_modified;
 
-    xElementInstance  *elementInstanceP;
-    xBYTE              elementInstanceC;
+    xElementInstance  *L_elements;
+    xBYTE              I_elements;
 
     void Zero();
     void ZeroElements();

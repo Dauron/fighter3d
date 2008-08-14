@@ -6,7 +6,7 @@ namespace ShadowVolume
     void ExtrudePoints (const xElement *elem, bool infiniteL, const xVector3 &lightPos,
                         xShadowData &shadowData)
     {
-        xVector4 *dest = shadowData.verticesP + elem->verticesC;
+        xVector4 *dest = shadowData.L_vertices + elem->I_vertices;
 
         if (infiniteL)
         {
@@ -14,8 +14,8 @@ namespace ShadowVolume
             return;
         }
 
-        xVector4 *src  = shadowData.verticesP;
-        for (int i = elem->verticesC; i; --i, ++src, ++dest)
+        xVector4 *src  = shadowData.L_vertices;
+        for (int i = elem->I_vertices; i; --i, ++src, ++dest)
             dest->init(src->vector3 - lightPos, 0.f);
     }
 
@@ -23,39 +23,39 @@ namespace ShadowVolume
                        const xShadowData &shadowData, bool *&backFaces)
     {
         if (backFaces == NULL)
-            backFaces = new bool[elem->facesC];
+            backFaces = new bool[elem->I_faces];
 
         bool     *dest = backFaces;
-        xFace    *face = elem->facesP;
-        xVector4 *extrVerticesP = shadowData.verticesP + elem->verticesC;
-        xFaceList *iterL = elem->faceListP;
-        xWORD      maxOffset = iterL->indexOffset+iterL->indexCount-1;
+        xFace    *face = elem->L_faces;
+        xVector4 *extrVerticesP = shadowData.L_vertices + elem->I_vertices;
+        xFaceList *iterL = elem->L_faceLists;
+        xWORD      maxOffset = iterL->I_offset+iterL->I_count-1;
 
         if (infiniteL)
         {
             xVector3 lightDir = extrVerticesP->vector3;
-            if (elem->skeletized)
+            if (elem->FL_skeletized)
             {
                 xVector3 faceNormal;
-                for (int i = 0; i < elem->facesC; ++i, ++face, ++dest)
+                for (int i = 0; i < elem->I_faces; ++i, ++face, ++dest)
                 {
-                    if (i > maxOffset) { ++iterL; maxOffset = iterL->indexOffset+iterL->indexCount-1; }
-                    if (iterL->materialP && iterL->materialP->two_sided)
+                    if (i > maxOffset) { ++iterL; maxOffset = iterL->I_offset+iterL->I_count-1; }
+                    if (iterL->Material && iterL->Material->two_sided)
                         *dest = true;
                     else
                     {
-                        faceNormal = instance.normalsP[(*face)[0]] + instance.normalsP[(*face)[1]] + instance.normalsP[(*face)[2]];
+                        faceNormal = instance.L_normals[(*face)[0]] + instance.L_normals[(*face)[1]] + instance.L_normals[(*face)[2]];
                         *dest = xVector3::DotProduct(lightDir, faceNormal) > 0;
                     }
                 }
             }
             else
             {
-                xVector3 *faceNormal = elem->renderData.faceNormalsP;
-                for (int i = 0; i < elem->facesC; ++i, ++face, ++faceNormal, ++dest)
+                xVector3 *faceNormal = elem->renderData.L_face_normals;
+                for (int i = 0; i < elem->I_faces; ++i, ++face, ++faceNormal, ++dest)
                 {
-                    if (i > maxOffset) { ++iterL; maxOffset = iterL->indexOffset+iterL->indexCount-1; }
-                    if (iterL->materialP && iterL->materialP->two_sided)
+                    if (i > maxOffset) { ++iterL; maxOffset = iterL->I_offset+iterL->I_count-1; }
+                    if (iterL->Material && iterL->Material->two_sided)
                         *dest = true;
                     else
                         *dest = xVector3::DotProduct(lightDir, *faceNormal) > 0;
@@ -64,28 +64,28 @@ namespace ShadowVolume
         }
         else
         {
-            if (elem->skeletized)
+            if (elem->FL_skeletized)
             {
                 xVector3 faceNormal;
-                for (int i = 0; i < elem->facesC; ++i, ++face, ++dest)
+                for (int i = 0; i < elem->I_faces; ++i, ++face, ++dest)
                 {
-                    if (i > maxOffset) { ++iterL; maxOffset = iterL->indexOffset+iterL->indexCount-1; }
-                    if (iterL->materialP && iterL->materialP->two_sided)
+                    if (i > maxOffset) { ++iterL; maxOffset = iterL->I_offset+iterL->I_count-1; }
+                    if (iterL->Material && iterL->Material->two_sided)
                         *dest = true;
                     else
                     {
-                        faceNormal = instance.normalsP[(*face)[0]] + instance.normalsP[(*face)[1]] + instance.normalsP[(*face)[2]];
+                        faceNormal = instance.L_normals[(*face)[0]] + instance.L_normals[(*face)[1]] + instance.L_normals[(*face)[2]];
                         *dest = xVector3::DotProduct((extrVerticesP + *face[0])->vector3, faceNormal) > 0;
                     }
                 }
             }
             else
             {
-                xVector3 *faceNormal = elem->renderData.faceNormalsP;
-                for (int i = 0; i < elem->facesC; ++i, ++face, ++faceNormal, ++dest)
+                xVector3 *faceNormal = elem->renderData.L_face_normals;
+                for (int i = 0; i < elem->I_faces; ++i, ++face, ++faceNormal, ++dest)
                 {
-                    if (i > maxOffset) { ++iterL; maxOffset = iterL->indexOffset+iterL->indexCount-1; }
-                    if (iterL->materialP && iterL->materialP->two_sided)
+                    if (i > maxOffset) { ++iterL; maxOffset = iterL->I_offset+iterL->I_count-1; }
+                    if (iterL->Material && iterL->Material->two_sided)
                         *dest = true;
                     else
                         *dest = xVector3::DotProduct((extrVerticesP + (*face)[0])->vector3, *faceNormal) > 0;
@@ -100,27 +100,27 @@ namespace ShadowVolume
     void GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeBackCap,
                                 const bool *facingFlag, xShadowData &shadowData)
     {
-        shadowData.sideC = 0;
-        shadowData.frontC = 0;
-        shadowData.backC = 0;
-        if (shadowData.indexP) delete[] shadowData.indexP;
+        shadowData.I_sides = 0;
+        shadowData.I_fronts = 0;
+        shadowData.I_backs = 0;
+        if (shadowData.L_indices) delete[] shadowData.L_indices;
 
         xWORD3 *frontCapP = NULL;
         if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
-            frontCapP = new xWORD3[elem->facesC];
+            frontCapP = new xWORD3[elem->I_faces];
         xWORD3 *frontDest = frontCapP;
 
-        xEdge  *edgeIter = elem->edgesP;
-        xEdge  *edgeEnd  = edgeIter + elem->edgesC;
+        xEdge  *edgeIter = elem->L_edges;
+        xEdge  *edgeEnd  = edgeIter + elem->I_edges;
 
         if (!infiniteL)
         {
-            xWORD  backFirst = elem->verticesC + edgeIter->vert1;
+            xWORD  backFirst = elem->I_vertices + edgeIter->ID_vert_1;
 
-            if (buffSize < elem->edgesC*sizeof(xWORD4))
+            if (buffSize < elem->I_edges*sizeof(xWORD4))
             {
                 if (buffer) delete[] buffer;
-                buffSize = elem->edgesC*sizeof(xWORD4);
+                buffSize = elem->I_edges*sizeof(xWORD4);
                 buffer = new xBYTE[buffSize];
             }
             xWORD4 *sideQadsP = (xWORD4*)buffer;
@@ -129,146 +129,146 @@ namespace ShadowVolume
 
             if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
                 if (optimizeBackCap)
-                    backCapP = new xWORD3[elem->edgesC];
+                    backCapP = new xWORD3[elem->I_edges];
                 else
-                    backCapP = new xWORD3[elem->facesC];
+                    backCapP = new xWORD3[elem->I_faces];
             xWORD3 *backDest  = backCapP;
 
             for (; edgeIter != edgeEnd; ++edgeIter)
-                if (facingFlag[edgeIter->face1] ^ (edgeIter->face2 != xWORD_MAX && facingFlag[edgeIter->face2]))
+                if (facingFlag[edgeIter->ID_face_1] ^ (edgeIter->ID_face_2 != xWORD_MAX && facingFlag[edgeIter->ID_face_2]))
                 {
-                    if (facingFlag[edgeIter->face1])
+                    if (facingFlag[edgeIter->ID_face_1])
                     {
-                        (*sideDest)[0] = edgeIter->vert2;
-                        (*sideDest)[1] = edgeIter->vert1;
-                        (*sideDest)[2] = elem->verticesC + edgeIter->vert1;
-                        (*sideDest)[3] = elem->verticesC + edgeIter->vert2;
+                        (*sideDest)[0] = edgeIter->ID_vert_2;
+                        (*sideDest)[1] = edgeIter->ID_vert_1;
+                        (*sideDest)[2] = elem->I_vertices + edgeIter->ID_vert_1;
+                        (*sideDest)[3] = elem->I_vertices + edgeIter->ID_vert_2;
                     }
                     else
                     {
-                        (*sideDest)[0] = edgeIter->vert1;
-                        (*sideDest)[1] = edgeIter->vert2;
-                        (*sideDest)[2] = elem->verticesC + edgeIter->vert2;
-                        (*sideDest)[3] = elem->verticesC + edgeIter->vert1;
+                        (*sideDest)[0] = edgeIter->ID_vert_1;
+                        (*sideDest)[1] = edgeIter->ID_vert_2;
+                        (*sideDest)[2] = elem->I_vertices + edgeIter->ID_vert_2;
+                        (*sideDest)[3] = elem->I_vertices + edgeIter->ID_vert_1;
                     }
                     if (optimizeBackCap && shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
                     {
                         (*backDest)[0] = backFirst;
                         (*backDest)[1] = (*sideDest)[3];
                         (*backDest)[2] = (*sideDest)[2];
-                        ++shadowData.backC;
+                        ++shadowData.I_backs;
                         ++backDest;
                     }
                     ++sideDest;
-                    ++shadowData.sideC;
+                    ++shadowData.I_sides;
                 }
 
             if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
             {
-                xFaceList *faceList = elem->faceListP;
-                for (int i=elem->faceListC; i; --i, ++faceList)
+                xFaceList *faceList = elem->L_faceLists;
+                for (int i=elem->I_faceLists; i; --i, ++faceList)
                 {
-                    if (!faceList->materialP || faceList->materialP->transparency == 0.f)
+                    if (!faceList->Material || faceList->Material->transparency == 0.f)
                     {
-                        xWORD3     *face     = elem->facesP + faceList->indexOffset;
-                        const bool *faceFlag = facingFlag + faceList->indexOffset;
-                        for (int j = faceList->indexCount; j; --j, ++face, ++faceFlag)
+                        xWORD3     *face     = elem->L_faces + faceList->I_offset;
+                        const bool *faceFlag = facingFlag + faceList->I_offset;
+                        for (int j = faceList->I_count; j; --j, ++face, ++faceFlag)
                             if (*faceFlag)
                             {
                                 (*frontDest)[0] = (*face)[0];
                                 (*frontDest)[1] = (*face)[1];
                                 (*frontDest)[2] = (*face)[2];
-                                ++shadowData.frontC;
+                                ++shadowData.I_fronts;
                                 ++frontDest;
                             }
                             else
                             if(!optimizeBackCap)
                             {
-                                (*backDest)[0] = elem->verticesC + (*face)[0];
-                                (*backDest)[1] = elem->verticesC + (*face)[1];
-                                (*backDest)[2] = elem->verticesC + (*face)[2];
-                                ++shadowData.backC;
+                                (*backDest)[0] = elem->I_vertices + (*face)[0];
+                                (*backDest)[1] = elem->I_vertices + (*face)[1];
+                                (*backDest)[2] = elem->I_vertices + (*face)[2];
+                                ++shadowData.I_backs;
                                 ++backDest;
                             }
                     }
                 }
-                shadowData.indexSize = 4*shadowData.sideC + 3*shadowData.frontC + 3*shadowData.backC;
-                shadowData.indexP = new xWORD[shadowData.indexSize];
-                memcpy(shadowData.indexP, sideQadsP, shadowData.sideC*sizeof(xWORD4));
-                memcpy(shadowData.indexP + shadowData.sideC*4, frontCapP, shadowData.frontC*sizeof(xWORD3));
+                shadowData.I_indices = 4*shadowData.I_sides + 3*shadowData.I_fronts + 3*shadowData.I_backs;
+                shadowData.L_indices = new xWORD[shadowData.I_indices];
+                memcpy(shadowData.L_indices, sideQadsP, shadowData.I_sides*sizeof(xWORD4));
+                memcpy(shadowData.L_indices + shadowData.I_sides*4, frontCapP, shadowData.I_fronts*sizeof(xWORD3));
                 delete[] frontCapP;
-                memcpy(shadowData.indexP + shadowData.sideC*4 + shadowData.frontC*3,
-                       backCapP, shadowData.backC*sizeof(xWORD3));
+                memcpy(shadowData.L_indices + shadowData.I_sides*4 + shadowData.I_fronts*3,
+                       backCapP, shadowData.I_backs*sizeof(xWORD3));
                 delete[] backCapP;
             }
             else
             {
-                shadowData.indexSize = 4*shadowData.sideC;
-                shadowData.indexP = new xWORD[shadowData.indexSize];
-                memcpy(shadowData.indexP, sideQadsP, shadowData.sideC*sizeof(xWORD4));
+                shadowData.I_indices = 4*shadowData.I_sides;
+                shadowData.L_indices = new xWORD[shadowData.I_indices];
+                memcpy(shadowData.L_indices, sideQadsP, shadowData.I_sides*sizeof(xWORD4));
             }
         }
         else
         {
-            if (buffSize < elem->edgesC*sizeof(xWORD3))
+            if (buffSize < elem->I_edges*sizeof(xWORD3))
             {
                 if (buffer) delete[] buffer;
-                buffSize = elem->edgesC*sizeof(xWORD3);
+                buffSize = elem->I_edges*sizeof(xWORD3);
                 buffer = new xBYTE[buffSize];
             }
             xWORD3 *sideTrisP = (xWORD3*) buffer;
             xWORD3 *sideDest = sideTrisP;
 
             for (; edgeIter != edgeEnd; ++edgeIter)
-                if (facingFlag[edgeIter->face1] ^ (edgeIter->face2 != xWORD_MAX && facingFlag[edgeIter->face2]))
+                if (facingFlag[edgeIter->ID_face_1] ^ (edgeIter->ID_face_2 != xWORD_MAX && facingFlag[edgeIter->ID_face_2]))
                 {
-                    if (facingFlag[edgeIter->face1])
+                    if (facingFlag[edgeIter->ID_face_1])
                     {
-                        (*sideDest)[0] = edgeIter->vert2;
-                        (*sideDest)[1] = edgeIter->vert1;
-                        (*sideDest)[2] = elem->verticesC;
+                        (*sideDest)[0] = edgeIter->ID_vert_2;
+                        (*sideDest)[1] = edgeIter->ID_vert_1;
+                        (*sideDest)[2] = elem->I_vertices;
                     }
                     else
                     {
-                        (*sideDest)[0] = edgeIter->vert1;
-                        (*sideDest)[1] = edgeIter->vert2;
-                        (*sideDest)[2] = elem->verticesC;
+                        (*sideDest)[0] = edgeIter->ID_vert_1;
+                        (*sideDest)[1] = edgeIter->ID_vert_2;
+                        (*sideDest)[2] = elem->I_vertices;
                     }
                     ++sideDest;
-                    ++shadowData.sideC;
+                    ++shadowData.I_sides;
                 }
 
             if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
             {
-                xFaceList *faceList = elem->faceListP;
-                for (int i=elem->faceListC; i; --i, ++faceList)
+                xFaceList *faceList = elem->L_faceLists;
+                for (int i=elem->I_faceLists; i; --i, ++faceList)
                 {
-                    if (!faceList->materialP || faceList->materialP->transparency == 0.f)
+                    if (!faceList->Material || faceList->Material->transparency == 0.f)
                     {
-                        xWORD3     *face     = elem->facesP + faceList->indexOffset;
-                        const bool *faceFlag = facingFlag + faceList->indexOffset;
-                        for (int j = faceList->indexCount; j; --j, ++face, ++faceFlag)
+                        xWORD3     *face     = elem->L_faces + faceList->I_offset;
+                        const bool *faceFlag = facingFlag + faceList->I_offset;
+                        for (int j = faceList->I_count; j; --j, ++face, ++faceFlag)
                             if (*faceFlag)
                             {
                                 (*frontDest)[0] = (*face)[0];
                                 (*frontDest)[1] = (*face)[1];
                                 (*frontDest)[2] = (*face)[2];
-                                ++shadowData.frontC;
+                                ++shadowData.I_fronts;
                                 ++frontDest;
                             }
                     }
                 }
-                shadowData.indexSize = 3*shadowData.sideC + 3*shadowData.frontC;
-                shadowData.indexP = new xWORD[shadowData.indexSize];
-                memcpy(shadowData.indexP, sideTrisP, shadowData.sideC*sizeof(xWORD3));
-                memcpy(shadowData.indexP + shadowData.sideC*3, frontCapP, shadowData.frontC*sizeof(xWORD3));
+                shadowData.I_indices = 3*shadowData.I_sides + 3*shadowData.I_fronts;
+                shadowData.L_indices = new xWORD[shadowData.I_indices];
+                memcpy(shadowData.L_indices, sideTrisP, shadowData.I_sides*sizeof(xWORD3));
+                memcpy(shadowData.L_indices + shadowData.I_sides*3, frontCapP, shadowData.I_fronts*sizeof(xWORD3));
                 delete[] frontCapP;
             }
             else
             {
-                shadowData.indexSize = 3*shadowData.sideC;
-                shadowData.indexP = new xWORD[shadowData.indexSize];
-                memcpy(shadowData.indexP, sideTrisP, shadowData.sideC*sizeof(xWORD3));
+                shadowData.I_indices = 3*shadowData.I_sides;
+                shadowData.L_indices = new xWORD[shadowData.I_indices];
+                memcpy(shadowData.L_indices, sideTrisP, shadowData.I_sides*sizeof(xWORD3));
             }
         }
     }
@@ -280,7 +280,7 @@ namespace ShadowVolume
         int numPlanes = 5;
 
         xMatrix  mtxWorldToObject;
-        mtxWorldToObject = (elem->matrix * location).invert();
+        mtxWorldToObject = (elem->MX_MeshToLocal * location).invert();
 
         // all operations are in object space
         xVector3 vieportCorners[4];

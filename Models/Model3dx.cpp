@@ -24,7 +24,7 @@ bool Model3dx :: Load ( const char *name )
             // save
             char *fname = strdup (name);
             fname[size-1] = 'x';
-            model->fileName = fname;
+            model->FileName = fname;
             model->Save();
         }
     }
@@ -36,16 +36,16 @@ void Model3dx :: Unload( void )
 {
     if (model)
     {
-        if (model->texturesInited)
-            for (xMaterial *mat = model->materialP; mat; mat = mat->nextP)
-                if (mat->texture.name && mat->texture.htex)
+        if (model->FL_textures_loaded)
+            for (xMaterial *mat = model->L_material; mat; mat = mat->Next)
+                if (mat->texture.Name && mat->texture.htex)
                 {
                     HTexture htex;
                     htex.SetHandle(mat->texture.htex);
                     g_TextureMgr.DeleteTexture(htex);
                     mat->texture.htex = 0;
                 }
-        model->texturesInited = false;
+        model->FL_textures_loaded = false;
         delete[] model;
         model = NULL;
     }

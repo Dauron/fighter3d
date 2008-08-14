@@ -14,6 +14,7 @@
 #include "../Math/Figures/xMesh.h"
 
 #include "../Physics/PhysicalFigure.h"
+#include "../Physics/PhysicalWorld.h"
 
 class SceneTest : public Scene, private ISelectionProvider
 {
@@ -53,7 +54,7 @@ class SceneTest : public Scene, private ISelectionProvider
     ::Physics::PhysicalFigure  pf_cube2;
     ::Physics::PhysicalFigure  pf_mesh1;
     ::Physics::PhysicalFigure  pf_mesh2;
-    ::Physics::PhysicalFigure *figures[10][2];
+    ::Physics::PhysicalWorld::ObjectVector figures[10];
 
     xDWORD  selected;
     xDWORD  selectedSub;

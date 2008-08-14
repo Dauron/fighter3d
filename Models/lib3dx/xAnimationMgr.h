@@ -15,16 +15,16 @@ struct xAnimationH : public xAnimation, public HandleDst
 {
     bool ReLoad()
     {
-        assert(name);
-        char *l_name = strdup(name);
+        assert(Name);
+        char *l_name = strdup(Name);
         Unload();
         bool res = Load(l_name);
         delete[] l_name;
         return res;
     }
 
-    void Invalidate()  { boneC = 0; }
-    bool IsValid()     { return boneC; }
+    void Invalidate()  { I_bones = 0; }
+    bool IsValid()     { return I_bones; }
 };
 
 class xAnimationMgr : public Singleton<xAnimationMgr>, public Manager<xAnimationH, HAnimation>
@@ -43,7 +43,7 @@ public:
 
 // Model query.
     const char* GetName( HAnimation hani ) const
-        {  return ( m_HandleMgr.Dereference( hani )->name );  }
+        {  return ( m_HandleMgr.Dereference( hani )->Name );  }
     xAnimation* GetAnimation( HAnimation hani )
         {  return ( m_HandleMgr.Dereference( hani ) );  }
 };

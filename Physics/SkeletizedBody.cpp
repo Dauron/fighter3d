@@ -57,10 +57,10 @@ void GetBoneWeights(const xPoint3  P_face_1[3], const xFace &face_1,
 
     // Get weights of bones
     W_sum = 0.f;
-    xDWORD stride = elem.textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+    xDWORD stride = elem.FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
     for (int ip = 0; ip < 3; ++ip)
     {
-        xVertexSkel *vert = (xVertexSkel*) ( ((xBYTE*)elem.verticesP) + stride * face_1[ip] );
+        xVertexSkel *vert = (xVertexSkel*) ( ((xBYTE*)elem.L_vertices) + stride * face_1[ip] );
         for (int ib=0; ib<4; ++ib)
         {
             int   bi = (int) floor(vert->bone[ib]);
@@ -142,11 +142,11 @@ xVector3 SkeletizedBody :: GetCollisionSpeed( const xVector3 P_face[3], const xV
 
     xFLOAT *W_bone = new xFLOAT[system.I_particles];
     memset(W_bone, 0, system.I_particles * sizeof(xFLOAT));
-    xDWORD stride = elem.textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+    xDWORD stride = elem.FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
 
     for (int pi = 0; pi < 3; ++pi)
     {
-        xVertexSkel *vert = (xVertexSkel*) ( ((xBYTE*)elem.verticesP) + stride * face[pi] );
+        xVertexSkel *vert = (xVertexSkel*) ( ((xBYTE*)elem.L_vertices) + stride * face[pi] );
         for (int b=0; b<4; ++b)
         {
             int   bi = (int) floor(vert->bone[b]);
@@ -177,7 +177,7 @@ struct CollisionPoint {
 
 void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
 {
-    if (model->locked) return;
+    if (model->FL_stationary) return;
 
     model->collisionConstraints.clear();
 
@@ -207,7 +207,7 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
     {
         std::vector<Collisions>::iterator C_iter, C_end;
 
-        xSkeleton &spine   = model->GetModelGr()->spine;
+        xSkeleton &spine   = model->GetModelGr()->Spine;
         xFLOAT   *W_bones  = new xFLOAT[spine.I_bones];
         xVector3 *A_forces = model->verletSystem.A_forces;
         std::vector<std::vector<xVector3>> A_dampings;
@@ -222,10 +222,10 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
         {
             CollisionWithModel model_collision = model->CollidedModels[i];
             RigidObj *model2 = model_collision.model2;
-            xMatrix  &MX_WorldToModel_2 = model2->MX_WorldToModel;
+            xMatrix  &MX_WorldToLocal_2 = model2->MX_WorldToLocal;
 
             xVector3 V_speed_2[4];
-            if (model2->Type != RigidObj::Model_Verlet && !model2->locked)
+            if (model2->Type != RigidObj::Model_Verlet && !model2->FL_stationary)
                 RigidBody::GetParticleSpeeds(V_speed_2, model2->verletSystem.P_current, model2->verletSystem.P_previous, 1.f);
 
             CollisionPoint *A_collisions = new CollisionPoint[spine.I_bones];
@@ -238,29 +238,29 @@ void SkeletizedBody :: CalculateCollisions(SkeletizedObj *model, float T_delta)
                 Collisions &collision = *C_iter;
                 // Force of the resiliance
                 xVector3 A_collision_1 = SkeletizedBody::GetCollisionSpeed(collision.face1v, collision.colPoint,
-                            *collision.elem1, *collision.face1, model->verletSystem);
+                            *collision.elem1, *collision.ID_face_1, model->verletSystem);
                 xVector3 A_collision_2; A_collision_2.zero();
                 // Force of the collision
-                if (!model2->locked)
+                if (!model2->FL_stationary)
                 {
                     if (model2->Type != RigidObj::Model_Verlet)
                     {
-                        xVector3 P_collision_2 = MX_WorldToModel_2.preTransformP(collision.colPoint) - model2->modelInstancePh.center;
+                        xVector3 P_collision_2 = MX_WorldToLocal_2.preTransformP(collision.colPoint) - model2->modelInstancePh.P_center;
                         RigidBody::Contribution W_particle_2 = RigidBody::GetParticleContribution(P_collision_2);
                         A_collision_2  = V_speed_2[0] * W_particle_2.contrib[0] + V_speed_2[1] * W_particle_2.contrib[1] +
                                          V_speed_2[2] * W_particle_2.contrib[2] + V_speed_2[3] * W_particle_2.contrib[3];
-                        A_collision_2 *= model2->mass;
+                        A_collision_2 *= model2->M_mass;
                     }
                     else
                     if (T_step_SqrInv > 0.f)
                         A_collision_2 = SkeletizedBody::GetCollisionSpeed(collision.face2v, collision.colPoint,
-                            *collision.elem2, *collision.face2, model2->verletSystem);
+                            *collision.elem2, *collision.ID_face_2, model2->verletSystem);
                 }
 
                 xVector3 N_collision   = xVector3::CrossProduct( collision.face2v[1] - collision.face2v[0], collision.face2v[2] - collision.face2v[0] ).normalize();
                 xVector4 P_penetration = GetPenetration(collision.face2v, collision.face1v);
                 memset(W_bones, 0, spine.I_bones * sizeof(xFLOAT));
-                GetBoneWeights(collision.face1v, *collision.face1, P_penetration, W_bones, *collision.elem1, spine);
+                GetBoneWeights(collision.face1v, *collision.ID_face_1, P_penetration, W_bones, *collision.elem1, spine);
 
                 for (int ib=0; ib<spine.I_bones; ++ib)
                     if (W_bones[ib])
@@ -420,7 +420,7 @@ void SkeletizedBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
     bool collided = model->CollidedModels.size() > 0;
 
     model->CollidedModels.clear();
-    if (model->locked)
+    if (model->FL_stationary)
     {
         if (model->verletQuaternions)
         {
@@ -437,13 +437,13 @@ void SkeletizedBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
             *FL_lock = false;
     }
 
-    xSkeleton &spine = model->GetModelGr()->spine;
+    xSkeleton &spine = model->GetModelGr()->Spine;
     model->verletSystem.C_constraints = spine.C_constraints;
     model->verletSystem.I_constraints = spine.I_constraints;
     model->verletSystem.C_lengthConst = spine.C_boneLength;
-    model->verletSystem.spine = &spine;
-    model->verletSystem.MX_ModelToWorld   = model->MX_ModelToWorld;
-    model->verletSystem.MX_WorldToModel_T = model->MX_WorldToModel;
+    model->verletSystem.Spine = &spine;
+    model->verletSystem.MX_ModelToWorld = model->MX_LocalToWorld_Get();
+    model->verletSystem.MX_WorldToModel_T = model->MX_WorldToLocal;
     model->verletSystem.MX_WorldToModel_T.transpose();
     model->verletSystem.T_step = T_delta;
 
@@ -491,18 +491,18 @@ void SkeletizedBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
         if (W_max > EPSILON)
         {
             NW_translation.x = NW_translation.y = 0.f;
-            model->MX_ModelToWorld.postTranslateT(NW_translation);
-            xMatrix::Invert(model->MX_ModelToWorld, model->MX_WorldToModel);
+            model->MX_LocalToWorld_Set().postTranslateT(NW_translation);
+            xMatrix::Invert(model->MX_LocalToWorld_Get(), model->MX_WorldToLocal);
         }
     }
     else
     {
         xVector3 NW_translation = model->verletSystem.P_current[0]-model->verletSystem.P_previous[0];
         //if (collided)
-        //    model->MX_ModelToWorld.postTranslateT(NW_translation*max(model->verletWeight, 0.1f));
+        //    model->MX_LocalToWorld_Set().postTranslateT(NW_translation*max(model->verletWeight, 0.1f));
         //else
-            model->MX_ModelToWorld.postTranslateT(NW_translation);
-        xMatrix::Invert(model->MX_ModelToWorld, model->MX_WorldToModel);
+            model->MX_LocalToWorld_Set().postTranslateT(NW_translation);
+        xMatrix::Invert(model->MX_LocalToWorld_Get(), model->MX_LocalToWorld_Set());
     }
     spine.L_bones->QT_rotation.zeroQ();
     model->verletQuaternions[0].zeroQ();

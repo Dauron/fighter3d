@@ -30,17 +30,17 @@
 xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *node, xWORD &currId)
 {
     xElement *elem = new xElement();
-    elem->id = currId;
-    elem->color.r =  elem->color.g = elem->color.b = elem->color.a = 1.0f;
-    elem->nextP = NULL;
-    elem->name = strdup(node->name);
-    elem->verticesP = NULL;
-    elem->kidsP = NULL;
-    elem->kidsC = 0;
+    elem->ID = currId;
+    elem->Color.r =  elem->Color.g = elem->Color.b = elem->Color.a = 1.0f;
+    elem->Next = NULL;
+    elem->Name = strdup(node->name);
+    elem->L_vertices = NULL;
+    elem->L_kids = NULL;
+    elem->I_kids = 0;
 
     memset(&(elem->renderData), 0, sizeof(elem->renderData));
     memset(&(elem->collisionData), 0, sizeof(elem->collisionData));
-    memcpy(elem->matrix.matrix, node->matrix, sizeof(elem->matrix));
+    memcpy(elem->MX_MeshToLocal.matrix, node->matrix, sizeof(elem->MX_MeshToLocal));
 
     int mirrorFaces = 0;
     xMatrix scl;
@@ -57,54 +57,54 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
     }
     xVector4 pivot; pivot.init(-node->data.object.pivot[0], -node->data.object.pivot[1], -node->data.object.pivot[2], 1.f);
     pivot = scl * pivot;
-    elem->matrix.preTranslateT(pivot.vector3);
+    elem->MX_MeshToLocal.preTranslateT(pivot.vector3);
 
-    elem->smoothP = NULL;
-    elem->facesP = NULL;
-    elem->facesC = 0;
-    elem->facesP = NULL;
-    elem->faceListC = 0;
-    elem->faceListP = NULL;
-    elem->edgesP = NULL;
-    elem->verticesC = 0;
-    elem->verticesP = NULL;
-    elem->textured = elem->skeletized = false;
+    elem->L_smooth = NULL;
+    elem->L_faces = NULL;
+    elem->I_faces = 0;
+    elem->L_faces = NULL;
+    elem->I_faceLists = 0;
+    elem->L_faceLists = NULL;
+    elem->L_edges = NULL;
+    elem->I_vertices = 0;
+    elem->L_vertices = NULL;
+    elem->FL_textured = elem->FL_skeletized = false;
 
     if (node->type == LIB3DS_OBJECT_NODE && strcmp(node->name,"$$$DUMMY")!=0)
     {
         Lib3dsMesh *mesh = lib3ds_file_mesh_by_name(model, node->name);
         if (mesh)
         {
-            elem->facesC = mesh->faces;
-            elem->verticesC = mesh->points;
-            elem->skeletized = xmodel->spine.I_bones != 0;
+            elem->I_faces = mesh->faces;
+            elem->I_vertices = mesh->points;
+            elem->FL_skeletized = xmodel->Spine.I_bones != 0;
 
             assert(!mesh->texels || mesh->points == mesh->texels);
 
             size_t stride;
-            elem->textured = mesh->texels;
-            if (elem->textured)
+            elem->FL_textured = mesh->texels;
+            if (elem->FL_textured)
             {
-                elem->verticesTP = new xVertexTex[elem->verticesC];
+                elem->L_verticesT = new xVertexTex[elem->I_vertices];
                 stride = sizeof(xVertexTex);
             }
             else
             {
-                elem->verticesP = new xVertex[elem->verticesC];
+                elem->L_vertices = new xVertex[elem->I_vertices];
                 stride = sizeof(xVertex);
             }
 
-            xVertex     *xvert   = elem->verticesP;
-            xVertexTex  *xvertT  = elem->verticesTP;
-            Lib3dsPoint *kidsP = mesh->pointL;
-            Lib3dsPoint *lastP  = kidsP + mesh->points;
+            xVertex     *xvert   = elem->L_vertices;
+            xVertexTex  *xvertT  = elem->L_verticesT;
+            Lib3dsPoint *L_kids = mesh->pointL;
+            Lib3dsPoint *lastP  = L_kids + mesh->points;
             Lib3dsTexel *firstT = mesh->texelL;
-            for(; kidsP != lastP; ++kidsP)
+            for(; L_kids != lastP; ++L_kids)
             {
-                if (elem->textured) {
-                    xvertT->x = kidsP->pos[0];
-                    xvertT->y = kidsP->pos[1];
-                    xvertT->z = kidsP->pos[2];
+                if (elem->FL_textured) {
+                    xvertT->x = L_kids->pos[0];
+                    xvertT->y = L_kids->pos[1];
+                    xvertT->z = L_kids->pos[2];
                     if (firstT) {
                         xvertT->tx = (*firstT)[0];
                         xvertT->ty = (*firstT)[1];
@@ -114,9 +114,9 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
                 }
                 else
                 {
-                    xvert->x = kidsP->pos[0];
-                    xvert->y = kidsP->pos[1];
-                    xvert->z = kidsP->pos[2];
+                    xvert->x = L_kids->pos[0];
+                    xvert->y = L_kids->pos[1];
+                    xvert->z = L_kids->pos[2];
                     ++xvert;
                 }
             }
@@ -125,25 +125,25 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
             Lib3dsFace *lastF  = firstF + mesh->faces;
             xMaterial  *lastM  = NULL;
             std::vector<std::vector<std::vector<xWORD> > > faces; // material=>smoothing=>faces
-            faces.resize(xmodel->materialC+1);
+            faces.resize(xmodel->I_material+1);
 
             xWORD mid = 0, faceListC = 0;
             for(; firstF != lastF; ++firstF)
             {
                 if (firstF->material[0]) {
-                    if (!lastM || strcmp(firstF->material, lastM->name))
+                    if (!lastM || strcmp(firstF->material, lastM->Name))
                     {
-                        lastM = xmodel->materialP->ByName(firstF->material);
+                        lastM = xmodel->L_material->ByName(firstF->material);
                         bool transparent = lastM->transparency > 0.f;
-                        elem->transparent |= transparent;
-                        elem->opaque      |= !transparent;
+                        elem->FL_transparent |= transparent;
+                        elem->FL_opaque      |= !transparent;
                     }
-                    mid = lastM->id;
+                    mid = lastM->ID;
                 }
                 else
                 {
                     mid = 0;
-                    xmodel->opaque = elem->opaque = true;
+                    xmodel->FL_opaque = elem->FL_opaque = true;
                 }
 
                 xDWORD smooth = firstF->smoothing;
@@ -166,39 +166,39 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
                 faces[mid][smGrp].push_back((xWORD)(smooth >> 16));
             }
 
-            elem->faceListC  = faceListC;
-            elem->faceListP  = new xFaceList[faceListC];
-            xFaceList *faceL = elem->faceListP;
-            elem->facesP     = new xFace[elem->facesC];
-            elem->smoothP    = new xDWORD[elem->facesC];
+            elem->I_faceLists  = faceListC;
+            elem->L_faceLists  = new xFaceList[faceListC];
+            xFaceList *faceL = elem->L_faceLists;
+            elem->L_faces     = new xFace[elem->I_faces];
+            elem->L_smooth    = new xDWORD[elem->I_faces];
 
-            xFace  *faceP   = elem->facesP;
-            xDWORD *smoothP = elem->smoothP;
+            xFace  *faceP   = elem->L_faces;
+            xDWORD *L_smooth = elem->L_smooth;
             xWORD   offset  = 0;
             for (mid=0; mid<faces.size(); ++mid)
                 for (size_t group=0; group<faces[mid].size(); ++group)
                     if (faces[mid][group].size()) {
 
-                        faceL->indexOffset = offset;
-                        faceL->smooth      = group;
-                        faceL->materialId  = mid;
-                        if (xmodel->materialP)
-                            faceL->materialP = xmodel->materialP->ById(mid);
+                        faceL->I_offset    = offset;
+                        faceL->FL_smooth   = group;
+                        faceL->ID_material = mid;
+                        if (xmodel->L_material)
+                            faceL->Material = xmodel->L_material->ById(mid);
                         else
-                            faceL->materialP = NULL;
+                            faceL->Material = NULL;
 
                         std::vector<xWORD>::iterator iter = faces[mid][group].begin();
                         std::vector<xWORD>::iterator end  = faces[mid][group].end();
 
-                        for (; iter != end; ++faceP, ++offset, ++smoothP)
+                        for (; iter != end; ++faceP, ++offset, ++L_smooth)
                         {
                             (*faceP)[0] = *(iter++);
                             (*faceP)[1] = *(iter++);
                             (*faceP)[2] = *(iter++);
-                            *((xWORD*)smoothP+0) = *(iter++);
-                            *((xWORD*)smoothP+1) = *(iter++);
+                            *((xWORD*)L_smooth+0) = *(iter++);
+                            *((xWORD*)L_smooth+1) = *(iter++);
                         }
-                        faceL->indexCount = offset - faceL->indexOffset;
+                        faceL->I_count = offset - faceL->I_offset;
                         ++faceL;
                     }
             elem->FillShadowEdges();
@@ -212,10 +212,10 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
     for (Lib3dsNode *snode = node->childs; snode != NULL; snode = snode->next)
     {
         if (laste)
-            laste = laste->nextP = xImportElementFrom3ds(model,xmodel,snode, ++currId);
+            laste = laste->Next = xImportElementFrom3ds(model,xmodel,snode, ++currId);
         else
-            laste = elem->kidsP = xImportElementFrom3ds(model,xmodel,snode, ++currId);
-        ++(elem->kidsC);
+            laste = elem->L_kids = xImportElementFrom3ds(model,xmodel,snode, ++currId);
+        ++(elem->I_kids);
     }
 
     return elem;
@@ -225,16 +225,15 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
 {
     xModel *xmodel = new xModel();
 
-    xmodel->materialP = 0;
-    xmodel->materialC = 0;
-    xmodel->texturesInited = false;
-    xmodel->transparent = false;
-    xmodel->opaque = false;
-    xmodel->spine.I_bones = 0;
-    xmodel->spine.L_bones = NULL;
-    xmodel->saveCollisionData = true;
-    xmodel->fileName = 0;
-    xmodel->saveCollisionData = true;
+    xmodel->L_material = 0;
+    xmodel->I_material = 0;
+    xmodel->FL_textures_loaded = false;
+    xmodel->FL_transparent = false;
+    xmodel->FL_opaque = false;
+    xmodel->Spine.I_bones = 0;
+    xmodel->Spine.L_bones = NULL;
+    xmodel->FL_save_bvh = true;
+    xmodel->FileName = 0;
 
     xMaterial *lastm = NULL;
     xWORD matId = 0;
@@ -242,16 +241,16 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
     for (Lib3dsMaterial *mat = model->materials; mat != NULL; mat = mat->next)
     {
         if (lastm)
-            lastm = lastm->nextP = new xMaterial();
+            lastm = lastm->Next = new xMaterial();
         else
-            lastm = xmodel->materialP = new xMaterial();
+            lastm = xmodel->L_material = new xMaterial();
 
         memcpy(lastm->ambient.col, mat->ambient, sizeof(Lib3dsRgba));
         memcpy(lastm->diffuse.col, mat->diffuse, sizeof(Lib3dsRgba));
         memcpy(lastm->specular.col, mat->specular, sizeof(Lib3dsRgba));
-        lastm->name = strdup(mat->name);
-        lastm->id = ++matId;
-        lastm->nextP = NULL;
+        lastm->Name = strdup(mat->name);
+        lastm->ID = ++matId;
+        lastm->Next = NULL;
         lastm->shininess_gloss = mat->shininess;
         lastm->shininess_level = mat->shin_strength / 100.f;
         lastm->transparency = mat->transparency;
@@ -261,27 +260,27 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
         lastm->use_wire = mat->use_wire;
         lastm->use_wire_abs = mat->use_wire_abs;
         lastm->wire_size = mat->wire_size;
-        lastm->texture.name = mat->texture1_map.name[0] ? strdup(mat->texture1_map.name) : NULL;
+        lastm->texture.Name = mat->texture1_map.name[0] ? strdup(mat->texture1_map.name) : NULL;
         bool transparent = lastm->transparency > 0.f;
-        xmodel->transparent |= transparent;
-        xmodel->opaque      |= !transparent;
-        ++(xmodel->materialC);
+        xmodel->FL_transparent |= transparent;
+        xmodel->FL_opaque      |= !transparent;
+        ++(xmodel->I_material);
     }
 
-    xmodel->kidsP = NULL;
-    xmodel->kidsC = 0;
+    xmodel->L_kids = NULL;
+    xmodel->I_kids = 0;
 
     xWORD currId = -1;
     xElement *laste = NULL;
     for (Lib3dsNode *node = model->nodes; node != NULL; node = node->next)
     {
         if (laste)
-            laste = laste->nextP  = xImportElementFrom3ds(model,xmodel,node, ++currId);
+            laste = laste->Next  = xImportElementFrom3ds(model,xmodel,node, ++currId);
         else
-            laste = xmodel->kidsP = xImportElementFrom3ds(model,xmodel,node, ++currId);
-        ++(xmodel->kidsC);
+            laste = xmodel->L_kids = xImportElementFrom3ds(model,xmodel,node, ++currId);
+        ++(xmodel->I_kids);
     }
-    xmodel->elementC = xmodel->kidsP->CountAll();
+    xmodel->I_elements = xmodel->L_kids->CountAll();
 
     return xmodel;
 }

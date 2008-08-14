@@ -24,7 +24,7 @@ public:
         return res;
     }
 
-    void Invalidate()  { model->texturesInited = false; }
+    void Invalidate()  { model->FL_textures_loaded = false; }
     bool IsValid()     { return model; }
 };
 

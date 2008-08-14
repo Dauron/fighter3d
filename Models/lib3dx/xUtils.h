@@ -18,8 +18,8 @@ struct xCollisionHierarchyBounds
 
 struct xCollisionHierarchyBoundsRoot : public xCollisionHierarchyBounds
 {
-    xVector4                  * verticesP;
-    xDWORD                      verticesC;
+    xVector4                  * L_vertices;
+    xDWORD                      I_vertices;
 };
 
 void         xModel_SkinElementInstance(const xModel *model, xModelInstance &instance);

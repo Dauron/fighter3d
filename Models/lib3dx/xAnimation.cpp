@@ -7,31 +7,31 @@
 
 void xKeyFrame::LoadFromSkeleton(const xSkeleton &spine)
 {
-    spine.QuatsToArray(boneP);
+    spine.QuatsToArray(QT_bones);
 }
 
 xAnimationInfo xAnimation::GetInfo()
 {
     xAnimationInfo info;
-    info.Duration = 0;
-    info.FrameNo  = 0;
-    info.Progress = progress;
+    info.T_duration = 0;
+    info.I_frameNo  = 0;
+    info.T_progress = T_progress;
 
-    if (!frameP) return info;
+    if (!L_frames) return info;
 
     bool pastCurrent = false;
-    int cnt = this->frameC;
-    for (xKeyFrame *frame = frameP; frame && cnt; frame = frame->next, --cnt)
+    int cnt = this->I_frames;
+    for (xKeyFrame *frame = L_frames; frame && cnt; frame = frame->Next, --cnt)
     {
-        if (frameCurrent == frame)
+        if (CurrentFrame == frame)
             pastCurrent = true;
         if (!pastCurrent) {
-            info.Progress += frame->freeze + frame->duration;
-            ++info.FrameNo;
+            info.T_progress += frame->T_freeze + frame->T_duration;
+            ++info.I_frameNo;
         }
-        info.Duration += frame->freeze + frame->duration;
+        info.T_duration += frame->T_freeze + frame->T_duration;
     }
-    ++info.FrameNo;
+    ++info.I_frameNo;
 
     return info;
 }
@@ -44,72 +44,72 @@ void           xAnimation::SaveToSkeleton(xSkeleton &spine)
 }
 void           xAnimation::UpdatePosition()
 {
-    if (!this->frameCurrent)
+    if (!this->CurrentFrame)
     {
-        this->progress = 0;
+        this->T_progress = 0;
         return;
     }
 
-    if (progress < 0)
+    if (T_progress < 0)
     {
-        this->frameCurrent = this->frameCurrent->prev;
-        while (this->frameCurrent && progress < 0)
+        this->CurrentFrame = this->CurrentFrame->Prev;
+        while (this->CurrentFrame && T_progress < 0)
         {
-            this->progress += this->frameCurrent->freeze + this->frameCurrent->duration;
-            if (progress < 0)
-                this->frameCurrent = this->frameCurrent->prev;
+            this->T_progress += this->CurrentFrame->T_freeze + this->CurrentFrame->T_duration;
+            if (T_progress < 0)
+                this->CurrentFrame = this->CurrentFrame->Prev;
         }
-        if (!this->frameCurrent)
-            this->progress = 0;
+        if (!this->CurrentFrame)
+            this->T_progress = 0;
     }
     else
     {
-        while (this->frameCurrent &&
-               this->progress > this->frameCurrent->freeze + this->frameCurrent->duration)
+        while (this->CurrentFrame &&
+               this->T_progress > this->CurrentFrame->T_freeze + this->CurrentFrame->T_duration)
         {
-            this->progress -= this->frameCurrent->freeze + this->frameCurrent->duration;
-            this->frameCurrent = this->frameCurrent->next;
+            this->T_progress -= this->CurrentFrame->T_freeze + this->CurrentFrame->T_duration;
+            this->CurrentFrame = this->CurrentFrame->Next;
         }
-        if (!this->frameCurrent)
-            this->progress = 0;
+        if (!this->CurrentFrame)
+            this->T_progress = 0;
     }
 }
 
 xQuaternion *     xAnimation::GetTransformations()
 {
-    xQuaternion *bones = new xQuaternion[this->boneC];
+    xQuaternion *bones = new xQuaternion[this->I_bones];
     xQuaternion *pRes = bones;
 
-    if (!this->frameCurrent)
+    if (!this->CurrentFrame)
     {
-        for (int i = this->boneC; i; --i, ++pRes )
+        for (int i = this->I_bones; i; --i, ++pRes )
             pRes->zeroQ();
         return bones;
     }
 
-    xKeyFrame *fCurrent = this->frameCurrent;
-    xQuaternion  *pCurr    = fCurrent->boneP;
+    xKeyFrame *fCurrent = this->CurrentFrame;
+    xQuaternion  *pCurr    = fCurrent->QT_bones;
 
-    xLONG time = this->progress - fCurrent->freeze;
+    xLONG time = this->T_progress - fCurrent->T_freeze;
     if (time <= 0)                         // still freeze
     {
-        for (int i = this->boneC; i; --i, ++pRes, ++pCurr )
+        for (int i = this->I_bones; i; --i, ++pRes, ++pCurr )
             *pRes = *pCurr;
         return bones;
     }
 
-    float complement = time / (float)fCurrent->duration; // get percentage of the frame transition
+    float complement = time / (float)fCurrent->T_duration; // get percentage of the frame transition
     float progress = 1.f - complement;
 
-    if (fCurrent->next)
+    if (fCurrent->Next)
     {
-        xQuaternion *pPCurr = fCurrent->prev ? fCurrent->prev->boneP : pCurr;
-        xQuaternion *pNext = fCurrent->next->boneP;
-        xQuaternion *pNNext = fCurrent->next->next ? fCurrent->next->next->boneP : pNext;
+        xQuaternion *pPCurr = fCurrent->Prev ? fCurrent->Prev->QT_bones : pCurr;
+        xQuaternion *pNext = fCurrent->Next->QT_bones;
+        xQuaternion *pNNext = fCurrent->Next->Next ? fCurrent->Next->Next->QT_bones : pNext;
 
-        for (int i = this->boneC; i; --i, ++pCurr, ++pNext, ++pRes, ++pPCurr, ++pNNext )
+        for (int i = this->I_bones; i; --i, ++pCurr, ++pNext, ++pRes, ++pPCurr, ++pNNext )
         {
-            if (i == this->boneC) // root
+            if (i == this->I_bones) // root
             {
                 *pRes = *pCurr * progress + *pNext * complement;
                 pRes->w = 1.f;
@@ -163,9 +163,9 @@ xQuaternion *     xAnimation::GetTransformations()
     }
     else
     {
-        for (int i = this->boneC; i; --i, ++pCurr, ++pRes )
+        for (int i = this->I_bones; i; --i, ++pCurr, ++pRes )
         {
-            if (i == this->boneC) // root
+            if (i == this->I_bones) // root
             {
                 *pRes = *pCurr * progress;
                 pRes->w = 1.f;
@@ -188,22 +188,22 @@ xQuaternion *     xAnimation::GetTransformations()
     return bones;
 }
 
-xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext, xFLOAT progress, xWORD boneC)
+xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext, xFLOAT progress, xWORD I_bones)
 {
 
-    xQuaternion *bones = new xQuaternion[boneC];
+    xQuaternion *bones = new xQuaternion[I_bones];
     xQuaternion *pRes = bones;
 
     if (!pCurr)
     {
-        for (int i = boneC; i; --i, ++pRes )
+        for (int i = I_bones; i; --i, ++pRes )
             pRes->zeroQ();
         return bones;
     }
 
     if (progress == 0.f)
     {
-        for (int i = boneC; i; --i, ++pRes, ++pCurr )
+        for (int i = I_bones; i; --i, ++pRes, ++pCurr )
             *pRes = *pCurr;
         return bones;
     }
@@ -213,9 +213,9 @@ xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext
 
     if (pNext)
     {
-        for (int i = boneC; i; --i, ++pCurr, ++pNext, ++pRes )
+        for (int i = I_bones; i; --i, ++pCurr, ++pNext, ++pRes )
         {
-            if (i == boneC) // root
+            if (i == I_bones) // root
             {
                 *pRes = *pCurr * progress + *pNext * complement;
                 pRes->w = 1.f;
@@ -262,9 +262,9 @@ xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext
     }
     else
     {
-        for (int i = boneC; i; --i, ++pCurr, ++pRes )
+        for (int i = I_bones; i; --i, ++pCurr, ++pRes )
         {
-            if (i == boneC) // root
+            if (i == I_bones) // root
             {
                 *pRes = *pCurr * progress;
                 pRes->w = 1.f;
@@ -286,28 +286,28 @@ xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext
 
     return bones;
 }
-void           xAnimation::Combine(xQuaternion *pCurr, xQuaternion *pNext, xWORD boneC, xQuaternion *&bones)
+void           xAnimation::Combine(xQuaternion *pCurr, xQuaternion *pNext, xWORD I_bones, xQuaternion *&bones)
 {
-    if (!bones) bones = new xQuaternion[boneC];
+    if (!bones) bones = new xQuaternion[I_bones];
     xQuaternion *pRes = bones;
 
     if (!pCurr)
     {
-        for (int i = boneC; i; --i, ++pRes )
+        for (int i = I_bones; i; --i, ++pRes )
             pRes->zeroQ();
         return;
     }
 
     if (!pNext)
     {
-        for (int i = boneC; i; --i, ++pCurr, ++pRes )
+        for (int i = I_bones; i; --i, ++pCurr, ++pRes )
             *pRes = *pCurr;
         return;
     }
 
-    for (int i = boneC; i; --i, ++pCurr, ++pNext, ++pRes )
+    for (int i = I_bones; i; --i, ++pCurr, ++pNext, ++pRes )
     {
-        if (i == boneC) // root
+        if (i == I_bones) // root
         {
             *pRes = *pCurr + *pNext;
             pRes->w = 1.f;
@@ -317,9 +317,9 @@ void           xAnimation::Combine(xQuaternion *pCurr, xQuaternion *pNext, xWORD
     }
     return;
 }
-void           xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD boneC, xFLOAT progress, xQuaternion *&bones)
+void           xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD I_bones, xFLOAT progress, xQuaternion *&bones)
 {
-    if (!bones) bones = new xQuaternion[boneC];
+    if (!bones) bones = new xQuaternion[I_bones];
     xQuaternion *pRes = bones;
 
     float complement = progress;
@@ -327,21 +327,21 @@ void           xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD
 
     if (!pCurr)
     {
-        for (int i = boneC; i; --i, ++pRes )
+        for (int i = I_bones; i; --i, ++pRes )
             pRes->zeroQ();
         return;
     }
 
     if (!pNext)
     {
-        for (int i = boneC; i; --i, ++pCurr, ++pRes )
+        for (int i = I_bones; i; --i, ++pCurr, ++pRes )
             *pRes = *pCurr * progress;
         return;
     }
 
-    for (int i = boneC; i; --i, ++pCurr, ++pNext, ++pRes )
+    for (int i = I_bones; i; --i, ++pCurr, ++pNext, ++pRes )
     {
-        if (i == boneC) // root
+        if (i == I_bones) // root
         {
             *pRes = *pCurr * progress + *pNext * complement;
             pRes->w = 1.f;
@@ -354,105 +354,105 @@ void           xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD
 xKeyFrame *    xAnimation::InsertKeyFrame()
 {
     xKeyFrame *kfNew = new xKeyFrame();
-    kfNew->duration = 1000;
-    kfNew->freeze   = 0;
+    kfNew->T_duration = 1000;
+    kfNew->T_freeze   = 0;
 
-    if (!frameP)
+    if (!L_frames)
     {
-        frameC = 1;
-        kfNew->next     = NULL;
-        kfNew->prev     = NULL;
-        kfNew->boneP    = new xQuaternion[boneC];
-        for (int i=0; i<boneC; ++i) kfNew->boneP[i].zeroQ();
+        I_frames = 1;
+        kfNew->Next     = NULL;
+        kfNew->Prev     = NULL;
+        kfNew->QT_bones    = new xQuaternion[I_bones];
+        for (int i=0; i<I_bones; ++i) kfNew->QT_bones[i].zeroQ();
 
-        frameCurrent = frameP = kfNew;
-        progress = 0;
+        CurrentFrame = L_frames = kfNew;
+        T_progress = 0;
 
         return kfNew;
     }
 
-    if (!frameCurrent)
+    if (!CurrentFrame)
     {
-        frameCurrent = frameP;
-        progress = 0;
+        CurrentFrame = L_frames;
+        T_progress = 0;
     }
 
-    ++frameC;
+    ++I_frames;
 
-    if (progress == frameCurrent->freeze + frameCurrent->duration)
+    if (T_progress == CurrentFrame->T_freeze + CurrentFrame->T_duration)
     {
-        kfNew->boneP = new xQuaternion[boneC];
-        if (kfNew->next)
-            for (int i=0; i<boneC; ++i) kfNew->boneP[i] = kfNew->next->boneP[i];
+        kfNew->QT_bones = new xQuaternion[I_bones];
+        if (kfNew->Next)
+            for (int i=0; i<I_bones; ++i) kfNew->QT_bones[i] = kfNew->Next->QT_bones[i];
         else
-            for (int i=0; i<boneC; ++i) kfNew->boneP[i].zeroQ();
+            for (int i=0; i<I_bones; ++i) kfNew->QT_bones[i].zeroQ();
 
-        kfNew->next = frameCurrent->next;
-        kfNew->prev = frameCurrent;
-        frameCurrent->next = kfNew;
-        if (kfNew->next) kfNew->next->prev = kfNew;
+        kfNew->Next = CurrentFrame->Next;
+        kfNew->Prev = CurrentFrame;
+        CurrentFrame->Next = kfNew;
+        if (kfNew->Next) kfNew->Next->Prev = kfNew;
     }
-    else if (progress == 0)
+    else if (T_progress == 0)
     {
-        kfNew->boneP = new xQuaternion[boneC];
-        for (int i=0; i<boneC; ++i) kfNew->boneP[i] = frameCurrent->boneP[i];
+        kfNew->QT_bones = new xQuaternion[I_bones];
+        for (int i=0; i<I_bones; ++i) kfNew->QT_bones[i] = CurrentFrame->QT_bones[i];
 
-        kfNew->next = frameCurrent;
-        kfNew->prev = frameCurrent->prev;
-        frameCurrent->prev = kfNew;
-        if (kfNew->prev) kfNew->prev->next = kfNew;
-        if (frameP == frameCurrent) frameP = kfNew;
+        kfNew->Next = CurrentFrame;
+        kfNew->Prev = CurrentFrame->Prev;
+        CurrentFrame->Prev = kfNew;
+        if (kfNew->Prev) kfNew->Prev->Next = kfNew;
+        if (L_frames == CurrentFrame) L_frames = kfNew;
     }
     else
     {
-        kfNew->boneP = GetTransformations();
+        kfNew->QT_bones = GetTransformations();
 
-        if (progress > frameCurrent->freeze)
+        if (T_progress > CurrentFrame->T_freeze)
         {
-            kfNew->duration = frameCurrent->freeze + frameCurrent->duration
-                - progress;
-            kfNew->freeze   = 0;
-            frameCurrent->duration = progress - frameCurrent->freeze;
+            kfNew->T_duration = CurrentFrame->T_freeze + CurrentFrame->T_duration
+                - T_progress;
+            kfNew->T_freeze   = 0;
+            CurrentFrame->T_duration = T_progress - CurrentFrame->T_freeze;
         }
         else
         {
-            kfNew->duration = 1;
-            kfNew->freeze   = frameCurrent->freeze - progress;
-            frameCurrent->duration = 1;
-            frameCurrent->freeze = progress;
+            kfNew->T_duration = 1;
+            kfNew->T_freeze   = CurrentFrame->T_freeze - T_progress;
+            CurrentFrame->T_duration = 1;
+            CurrentFrame->T_freeze = T_progress;
         }
 
-        kfNew->next = frameCurrent->next;
-        kfNew->prev = frameCurrent;
-        frameCurrent->next = kfNew;
-        if (kfNew->next) kfNew->next->prev = kfNew;
+        kfNew->Next = CurrentFrame->Next;
+        kfNew->Prev = CurrentFrame;
+        CurrentFrame->Next = kfNew;
+        if (kfNew->Next) kfNew->Next->Prev = kfNew;
     }
-    frameCurrent = kfNew;
-    progress = 0;
+    CurrentFrame = kfNew;
+    T_progress = 0;
     return kfNew;
 }
 void           xAnimation::DeleteKeyFrame()
 {
-    if (!frameCurrent)
+    if (!CurrentFrame)
         return;
-    if (frameP == frameCurrent)
-        frameP = frameP->next;
-    if (frameCurrent->prev)
+    if (L_frames == CurrentFrame)
+        L_frames = L_frames->Next;
+    if (CurrentFrame->Prev)
     {
-        frameCurrent->prev->next = frameCurrent->next;
-        progress = frameCurrent->prev->duration;
-        frameCurrent->prev->duration = progress + frameCurrent->duration;
+        CurrentFrame->Prev->Next = CurrentFrame->Next;
+        T_progress = CurrentFrame->Prev->T_duration;
+        CurrentFrame->Prev->T_duration = T_progress + CurrentFrame->T_duration;
     }
     else
-        progress = 0;
-    if (frameCurrent->next) frameCurrent->next->prev = frameCurrent->prev;
-    if (frameCurrent->boneP) delete[] frameCurrent->boneP;
+        T_progress = 0;
+    if (CurrentFrame->Next) CurrentFrame->Next->Prev = CurrentFrame->Prev;
+    if (CurrentFrame->QT_bones) delete[] CurrentFrame->QT_bones;
 
-    xKeyFrame *tmp = frameCurrent;
-    frameCurrent = frameCurrent->prev ? frameCurrent->prev : frameP;
+    xKeyFrame *tmp = CurrentFrame;
+    CurrentFrame = CurrentFrame->Prev ? CurrentFrame->Prev : L_frames;
     delete tmp;
 
-    --frameC;
+    --I_frames;
 }
 bool           xAnimation::Save(const char *fileName)
 {
@@ -462,24 +462,24 @@ bool           xAnimation::Save(const char *fileName)
     {
         xAnimationInfo info = GetInfo();
 
-        xBYTE i = (name) ? strlen(name) : 0;
+        xBYTE i = (Name) ? strlen(Name) : 0;
         fwrite(&i, sizeof(xBYTE), 1, file);
-        fwrite(this->name,        sizeof(char), i, file);
-        fwrite(&(this->boneC),    sizeof(this->boneC), 1, file);
-        fwrite(&(this->priority), sizeof(this->priority), 1, file);
-        fwrite(&(this->frameC),   sizeof(this->frameC), 1, file);
-        fwrite(&(info.FrameNo),   sizeof(int), 1, file);
-        fwrite(&(this->progress), sizeof(this->progress), 1, file);
+        fwrite(this->Name,          sizeof(char), i, file);
+        fwrite(&(this->I_bones),    sizeof(this->I_bones), 1, file);
+        fwrite(&(this->I_priority), sizeof(this->I_priority), 1, file);
+        fwrite(&(this->I_frames),   sizeof(this->I_frames), 1, file);
+        fwrite(&(info.I_frameNo),   sizeof(int), 1, file);
+        fwrite(&(this->T_progress), sizeof(this->T_progress), 1, file);
 
-        bool loop = this->frameP && this->frameP->prev;
-        fwrite(&loop,             sizeof(bool), 1, file);
+        bool loop = this->L_frames && this->L_frames->Prev;
+        fwrite(&loop,               sizeof(bool), 1, file);
 
-        int cnt = this->frameC;
-        for (xKeyFrame *frame = frameP; frame && cnt; frame = frame->next, --cnt)
+        int cnt = this->I_frames;
+        for (xKeyFrame *frame = L_frames; frame && cnt; frame = frame->Next, --cnt)
         {
-            fwrite(frame->boneP,       sizeof(xQuaternion), this->boneC, file);
-            fwrite(&(frame->freeze),   sizeof(frame->freeze), 1, file);
-            fwrite(&(frame->duration), sizeof(frame->duration), 1, file);
+            fwrite(frame->QT_bones,      sizeof(xQuaternion), this->I_bones, file);
+            fwrite(&(frame->T_freeze),   sizeof(frame->T_freeze), 1, file);
+            fwrite(&(frame->T_duration), sizeof(frame->T_duration), 1, file);
         }
 
         fclose(file);
@@ -497,44 +497,44 @@ bool           xAnimation::Load(const char *fileName)
         xBYTE i;
         fread(&i, sizeof(xBYTE), 1, file);
         if (i) {
-            this->name = new char[i];
-            fread(this->name,        sizeof(char), i, file);
-            delete[] this->name;
+            this->Name = new char[i];
+            fread(this->Name,        sizeof(char), i, file);
+            delete[] this->Name;
         }
-        this->name = strdup(fileName); // overwrite name with path
+        this->Name = strdup(fileName); // overwrite name with path
 
-        fread(&(this->boneC),    sizeof(this->boneC), 1, file);
-        fread(&(this->priority), sizeof(this->priority), 1, file);
-        fread(&(this->frameC),   sizeof(this->frameC), 1, file);
+        fread(&(this->I_bones),    sizeof(this->I_bones), 1, file);
+        fread(&(this->I_priority), sizeof(this->I_priority), 1, file);
+        fread(&(this->I_frames),   sizeof(this->I_frames), 1, file);
         int frameNo;
-        fread(&frameNo,          sizeof(int), 1, file);
-        fread(&(this->progress), sizeof(this->progress), 1, file);
+        fread(&frameNo,            sizeof(int), 1, file);
+        fread(&(this->T_progress), sizeof(this->T_progress), 1, file);
 
         bool loop;
-        fread(&loop,             sizeof(bool), 1, file);
+        fread(&loop,               sizeof(bool), 1, file);
 
         xKeyFrame *frame = NULL, *prevFrame = NULL;
-        for (int i=0; i<this->frameC; ++i)
+        for (int i=0; i<this->I_frames; ++i)
         {
             frame = new xKeyFrame();
-            if (i == 0) this->frameP = frame;
-            frame->boneP = new xQuaternion[this->boneC];
-            fread(frame->boneP, sizeof(xQuaternion), this->boneC, file);
-            fread(&(frame->freeze),   sizeof(frame->freeze), 1, file);
-            fread(&(frame->duration), sizeof(frame->duration), 1, file);
-            if (i == frameNo-1) this->frameCurrent = frame;
-            if (prevFrame) prevFrame->next = frame;
-            frame->prev = prevFrame;
+            if (i == 0) this->L_frames = frame;
+            frame->QT_bones = new xQuaternion[this->I_bones];
+            fread(frame->QT_bones, sizeof(xQuaternion), this->I_bones, file);
+            fread(&(frame->T_freeze),   sizeof(frame->T_freeze), 1, file);
+            fread(&(frame->T_duration), sizeof(frame->T_duration), 1, file);
+            if (i == frameNo-1) this->CurrentFrame = frame;
+            if (prevFrame) prevFrame->Next = frame;
+            frame->Prev = prevFrame;
             prevFrame = frame;
         }
         if (frame)
             if (loop)
             {
-                frame->next = this->frameP;
-                this->frameP->prev = frame->next;
+                frame->Next = this->L_frames;
+                this->L_frames->Prev = frame->Next;
             }
             else
-                frame->next = NULL;
+                frame->Next = NULL;
 
         fclose(file);
         return true;

@@ -645,14 +645,6 @@
 			Name="World"
 			>
 			<File
-				RelativePath="..\World\BaseObj.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\World\BaseObj.h"
-				>
-			</File>
-			<File
 				RelativePath="..\World\RigidObj.cpp"
 				>
 			</File>
@@ -676,18 +668,6 @@
 				RelativePath="..\World\World.h"
 				>
 			</File>
-			<Filter
-				Name="BuiltIn"
-				>
-				<File
-					RelativePath="..\World\BuiltIn\Crate.h"
-					>
-				</File>
-				<File
-					RelativePath="..\World\BuiltIn\Text3d.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Data"
@@ -890,6 +870,10 @@
 			</File>
 			<File
 				RelativePath="..\Physics\IPhysicalBody.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Physics\PhysicalBody.cpp"
 				>
 			</File>
 			<File

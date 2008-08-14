@@ -129,13 +129,13 @@ bool SceneSkeleton::Update(float deltaTime)
     if (EditMode == emEditAnimation && State.PlayAnimation)
     {
         if (im.GetInputState(IC_BE_Modifier))
-            Animation.Instance->progress += (xWORD)(deltaTime*100);
+            Animation.Instance->T_progress += (xWORD)(deltaTime*100);
         else
-            Animation.Instance->progress += (xWORD)(deltaTime*1000);
+            Animation.Instance->T_progress += (xWORD)(deltaTime*1000);
         Animation.Instance->UpdatePosition();
-        if (! Animation.Instance->frameCurrent)
-            Animation.Instance->frameCurrent = Animation.Instance->frameP;
-        Animation.Instance->SaveToSkeleton(Model.GetModelGr()->spine);
+        if (! Animation.Instance->CurrentFrame)
+            Animation.Instance->CurrentFrame = Animation.Instance->L_frames;
+        Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
         Model.CalculateSkeleton();
     }
 
@@ -144,39 +144,39 @@ bool SceneSkeleton::Update(float deltaTime)
         if (im.GetInputState(IC_BE_Modifier))
         {
             bool update = false;
-            if (! Animation.Instance->frameCurrent)
-                Animation.Instance->frameCurrent = Animation.Instance->frameP;
+            if (! Animation.Instance->CurrentFrame)
+                Animation.Instance->CurrentFrame = Animation.Instance->L_frames;
             if (im.GetInputState(IC_MoveLeft))
-            { Animation.Instance->progress -= 1; update = true; }
+            { Animation.Instance->T_progress -= 1; update = true; }
             if (im.GetInputState(IC_MoveRight))
-            { Animation.Instance->progress += 1; update = true; }
+            { Animation.Instance->T_progress += 1; update = true; }
             if (im.GetInputStateAndClear(IC_MoveUp))
             {
-                if (Animation.Instance->frameCurrent->next)
+                if (Animation.Instance->CurrentFrame->Next)
                 {
-                    Animation.Instance->frameCurrent = Animation.Instance->frameCurrent->next;
-                    Animation.Instance->progress = 0;
+                    Animation.Instance->CurrentFrame = Animation.Instance->CurrentFrame->Next;
+                    Animation.Instance->T_progress = 0;
                 }
                 else
-                    Animation.Instance->progress = Animation.Instance->frameCurrent->freeze + Animation.Instance->frameCurrent->duration;
+                    Animation.Instance->T_progress = Animation.Instance->CurrentFrame->T_freeze + Animation.Instance->CurrentFrame->T_duration;
                 update = true;
             }
             if (im.GetInputStateAndClear(IC_MoveDown))
             {
-                if (Animation.Instance->progress)
-                    Animation.Instance->progress = 0;
+                if (Animation.Instance->T_progress)
+                    Animation.Instance->T_progress = 0;
                 else
-                if (Animation.Instance->frameCurrent->prev)
-                    Animation.Instance->frameCurrent = Animation.Instance->frameCurrent->prev;
+                if (Animation.Instance->CurrentFrame->Prev)
+                    Animation.Instance->CurrentFrame = Animation.Instance->CurrentFrame->Prev;
                 update = true;
             }
 
             if (update)
             {
                 Animation.Instance->UpdatePosition();
-                if (! Animation.Instance->frameCurrent)
-                    Animation.Instance->frameCurrent = Animation.Instance->frameP;
-                Animation.Instance->SaveToSkeleton(Model.GetModelGr()->spine);
+                if (! Animation.Instance->CurrentFrame)
+                    Animation.Instance->CurrentFrame = Animation.Instance->L_frames;
+                Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
                 Model.CalculateSkeleton();
                 return true;
             }
@@ -204,12 +204,12 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         if (button.Action == IC_BE_ModeSkeletize) {
             EditMode = emCreateBone;
             UpdateButton(Buttons[emCreateBone][0]);
-            Selection.Bone = Model.GetModelGr()->spine.L_bones;
-            Model.GetModelGr()->spine.ResetQ();
+            Selection.Bone = Model.GetModelGr()->Spine.L_bones;
+            Model.GetModelGr()->Spine.ResetQ();
             Model.CalculateSkeleton();
         }
         else // must be skeletized to perform skinning
-        if (button.Action == IC_BE_ModeSkin && Model.GetModelGr()->spine.L_bones)
+        if (button.Action == IC_BE_ModeSkin && Model.GetModelGr()->Spine.L_bones)
             EditMode = emSelectElement;
         else
         if (button.Action == IC_BE_ModeAnimate)
@@ -239,7 +239,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             xBYTE boneId = Selection.Bone->ID;
             Selection.Bone = NULL;
             Model.GetModelGr()->BoneDelete(boneId);
-            if (Model.GetModelPh()->spine.L_bones != Model.GetModelGr()->spine.L_bones)
+            if (Model.GetModelPh()->Spine.L_bones != Model.GetModelGr()->Spine.L_bones)
                 Model.GetModelPh()->BoneDelete(boneId);
             Model.VerticesChanged(true);
         }
@@ -266,8 +266,8 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         if (button.Action == IC_BE_Create)
         {
             Animation.Instance  = new xAnimation();
-            Animation.Instance->Reset(Model.GetModelGr()->spine.I_bones);
-            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->spine);
+            Animation.Instance->Reset(Model.GetModelGr()->Spine.I_bones);
+            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
             Buttons[emEditAnimation][5].Down = false;
             EditMode = emEditAnimation;
@@ -297,46 +297,46 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             EditMode = emAnimateBones;
             Buttons[emAnimateBones][3].Down = !(State.HideBonesOnAnim = false);
             UpdateButton(Buttons[emAnimateBones][0]);
-            Animation.Instance->progress = 0;
-            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->spine);
+            Animation.Instance->T_progress = 0;
+            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
         }
         if (button.Action == IC_BE_Move)
         {
-            Animation.Instance->progress = 0;
-            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->spine);
+            Animation.Instance->T_progress = 0;
+            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
             EditMode = emFrameParams;
             g_InputMgr.Buffer.clear();
             InputState.String.clear();
             Animation.KeyFrame.step = 1;
-            Animation.KeyFrame.freeze   = Animation.Instance->frameCurrent->freeze;
-            Animation.KeyFrame.duration = Animation.Instance->frameCurrent->duration;
+            Animation.KeyFrame.freeze   = Animation.Instance->CurrentFrame->T_freeze;
+            Animation.KeyFrame.duration = Animation.Instance->CurrentFrame->T_duration;
         }
         if (button.Action == IC_BE_Delete)
         {
             Animation.Instance->DeleteKeyFrame();
-            if (! Animation.Instance->frameC)
+            if (! Animation.Instance->I_frames)
                 Animation.Instance->InsertKeyFrame();
-            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->spine);
+            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
         }
         else
         if (button.Action == IC_BE_Loop)
         {
             Buttons[emEditAnimation][5].Down = !Buttons[emEditAnimation][5].Down;
-            if (Animation.Instance->frameP->prev)
+            if (Animation.Instance->L_frames->Prev)
             {
-                Animation.Instance->frameP->prev->next = NULL;
-                Animation.Instance->frameP->prev = NULL;
+                Animation.Instance->L_frames->Prev->Next = NULL;
+                Animation.Instance->L_frames->Prev = NULL;
             }
             else
             {
-                xKeyFrame *frameP = Animation.Instance->frameP;
-                while (frameP->next)
-                    frameP = frameP->next;
-                Animation.Instance->frameP->prev = frameP;
-                frameP->next = Animation.Instance->frameP;
+                xKeyFrame *frameP = Animation.Instance->L_frames;
+                while (frameP->Next)
+                    frameP = frameP->Next;
+                Animation.Instance->L_frames->Prev = frameP;
+                frameP->Next = Animation.Instance->L_frames;
             }
         }
         else
@@ -362,13 +362,13 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         else
         if (button.Action == IC_BE_Save)
         {
-            Animation.Instance->frameCurrent->LoadFromSkeleton(Model.GetModelGr()->spine);
+            Animation.Instance->CurrentFrame->LoadFromSkeleton(Model.GetModelGr()->Spine);
             EditMode = emEditAnimation;
         }
         else
         if (button.Action == IC_Reject)
         {
-            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->spine);
+            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
             EditMode = emEditAnimation;
         }
@@ -433,10 +433,10 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             filePath += AnimationName;
             Animation.Instance = new xAnimation();
             Animation.Instance->Load(filePath.c_str());
-            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->spine);
+            Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
             EditMode = emEditAnimation;
-            Buttons[emEditAnimation][5].Down = Animation.Instance->frameP && Animation.Instance->frameP->prev;
+            Buttons[emEditAnimation][5].Down = Animation.Instance->L_frames && Animation.Instance->L_frames->Prev;
         }
         if (button.Action == IC_Reject)
         {
@@ -506,17 +506,17 @@ void SceneSkeleton::MouseLUp(int X, int Y)
                 ? Selection.Bone->P_end : xVector3::Create(0.0f, 0.0f, 0.0f);
             hitPos = Get3dPos(X, Y, hitPos);
 
-            if (!Model.GetModelGr()->spine.I_bones)                 // if no spine
+            if (!Model.GetModelGr()->Spine.I_bones)                 // if no spine
             {
                 Model.GetModelGr()->SkeletonAdd();                  //   add skeleton to model
                 Model.GetModelPh()->SkeletonAdd();                  //   add skeleton to model
-                Selection.Bone = Model.GetModelGr()->spine.L_bones; //   select root
+                Selection.Bone = Model.GetModelGr()->Spine.L_bones; //   select root
                 Selection.Bone->P_end = hitPos;                     //   set root position
             }
             else
             {
-                if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->spine.L_bones;
-                Selection.Bone = Model.GetModelGr()->spine.BoneAdd(Selection.Bone->ID, hitPos); // add bone to skeleton
+                if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->Spine.L_bones;
+                Selection.Bone = Model.GetModelGr()->Spine.BoneAdd(Selection.Bone->ID, hitPos); // add bone to skeleton
                 Model.CopySpineToPhysical();
             }
             Model.CalculateSkeleton();
@@ -530,7 +530,7 @@ void SceneSkeleton::MouseLUp(int X, int Y)
                 if (sel->size())
                 {
                     int selectedConstr = sel->back();
-                    xSkeleton &spine = Model.GetModelGr()->spine;
+                    xSkeleton &spine = Model.GetModelGr()->Spine;
                     if (spine.I_constraints == 1)
                     {
                         spine.I_constraints = 0;
@@ -557,14 +557,14 @@ void SceneSkeleton::MouseLUp(int X, int Y)
         if (State.CurrentAction != IC_BE_Move) // select bone
         {
             Selection.Bone = SelectBone(X,Y);
-            if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->spine.L_bones;
+            if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->Spine.L_bones;
         }
     }
     else
     if (EditMode == emCreateConstraint_Node)
     {
         xBone *bone = SelectBone(X,Y);
-        xBone *root = Model.GetModelGr()->spine.L_bones;
+        xBone *root = Model.GetModelGr()->Spine.L_bones;
         if (!bone) bone = root;
 
         if (Constraint.type == IC_BE_CreateConstrAng)
@@ -601,7 +601,7 @@ void SceneSkeleton::MouseLUp(int X, int Y)
         }
         else if (Constraint.boneB != xBYTE_MAX)
         {
-            xBone *bone1 = Model.GetModelGr()->spine.L_bones + Constraint.boneA;
+            xBone *bone1 = Model.GetModelGr()->Spine.L_bones + Constraint.boneA;
             Constraint.S_length = bone1->S_length;
             EditMode = emCreateConstraint_Params;
             InputState.String.clear();
@@ -614,9 +614,9 @@ void SceneSkeleton::MouseLUp(int X, int Y)
         Selection.ElementId = (int) SelectElement(X,Y);
         if (Selection.ElementId != xWORD_MAX) { // MAXUINT
             if (State.DisplayPhysical)
-                Selection.Element = Model.GetModelPh()->kidsP->ById(Selection.ElementId);
+                Selection.Element = Model.GetModelPh()->L_kids->ById(Selection.ElementId);
             else
-                Selection.Element = Model.GetModelGr()->kidsP->ById(Selection.ElementId);
+                Selection.Element = Model.GetModelGr()->L_kids->ById(Selection.ElementId);
             EditMode = emSelectVertex;
             Selection.Vertices.clear();
         }
@@ -655,7 +655,7 @@ void SceneSkeleton::MouseLUp(int X, int Y)
     if (EditMode == emSelectBone) // select bone and switch to the Input Weight Mode
     {
         Selection.Bone = SelectBone(X,Y);
-        if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->spine.L_bones;
+        if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->Spine.L_bones;
 
         EditMode = emInputWght;
         g_InputMgr.Buffer.clear();
@@ -665,7 +665,7 @@ void SceneSkeleton::MouseLUp(int X, int Y)
     if (EditMode == emAnimateBones && State.CurrentAction != IC_BE_Move) // select bone
     {
         Selection.Bone = SelectBone(X,Y);
-        if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->spine.L_bones;
+        if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->Spine.L_bones;
         UpdateButton(Buttons[emAnimateBones][1]); // switch to move mode
     }
     else
@@ -702,7 +702,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
         Selection.Bone->P_end = Get3dPos(X, Y, Selection.Bone->P_end);
         Selection.Bone->S_lengthSqr = (Selection.Bone->P_end-Selection.Bone->P_begin).lengthSqr();
         Selection.Bone->S_length    = sqrt(Selection.Bone->S_lengthSqr);
-        xSkeleton &spine = Model.GetModelGr()->spine;
+        xSkeleton &spine = Model.GetModelGr()->Spine;
         xBYTE *join  = Selection.Bone->ID_kids;
         for (xBYTE i = Selection.Bone->I_kids; i; --i, ++join)
         {
@@ -722,7 +722,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
         // if there were vertices inside the selection box
         if (sel) {
             std::vector<xDWORD>::iterator iter = sel->begin();
-            while (iter != sel->end() && *iter >= Selection.Element->verticesC)
+            while (iter != sel->end() && *iter >= Selection.Element->I_vertices)
                 ++iter;
             HoveredVert = (iter != sel->end()) ? *iter : (xDWORD)-1;
             delete sel;
@@ -733,7 +733,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
     else
     if (EditMode == emAnimateBones && InputState.MouseLIsDown && State.CurrentAction == IC_BE_Move)
     {
-        xSkeleton &spine = Model.GetModelGr()->spine;
+        xSkeleton &spine = Model.GetModelGr()->Spine;
         if (Selection.Bone && Selection.Bone != spine.L_bones) // anim-rotate bone (matrix)
         {
             bool useVerlet = false;
@@ -741,7 +741,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
             {
                 Selection.Bone->QT_rotation = Animation.PreviousQuaternion;
                 Model.CalculateSkeleton();
-                xMatrix  MX_bone  = Model.modelInstanceGr.bonesM[Selection.Bone->ID]; // get current bone matrix
+                xMatrix  MX_bone  = Model.modelInstanceGr.MX_bones[Selection.Bone->ID]; // get current bone matrix
                 xVector3 P_begin  = MX_bone.postTransformP(Selection.Bone->P_begin);  // get parent skeletized position
                 xVector3 P_end    = MX_bone.postTransformP(Selection.Bone->P_end);    // get ending skeletized position
                 xVector3 P_root   = CastPoint(P_begin, P_end);                        // get root on the current ending plane
@@ -767,7 +767,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
                 vSystem.C_lengthConst = spine.C_boneLength;
                 vSystem.I_constraints = spine.I_constraints;
                 vSystem.C_constraints = spine.C_constraints;
-                vSystem.spine = &spine;
+                vSystem.Spine = &spine;
                 vEngine.Init(&vSystem);
                 vEngine.I_passes = 10;
 
@@ -775,8 +775,8 @@ void SceneSkeleton::MouseMove(int X, int Y)
                 xVector3    *P_cur   = vSystem.P_current, *P_old = vSystem.P_previous;
                 xQuaternion *QT_skew = vSystem.QT_boneSkew;
                 xFLOAT      *M_iter  = vSystem.M_weight_Inv;
-                xMatrix     *MX_bone = Model.modelInstanceGr.bonesM;
-                xQuaternion *QT_bone = Model.modelInstanceGr.bonesQ;
+                xMatrix     *MX_bone = Model.modelInstanceGr.MX_bones;
+                xQuaternion *QT_bone = Model.modelInstanceGr.QT_bones;
                 for (int i = spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++MX_bone, QT_bone+=2, ++M_iter)
                 {
                     *P_cur  = *P_old = MX_bone->postTransformP(bone->P_end);
@@ -883,21 +883,21 @@ void SceneSkeleton::GetConstraintParams()
             }
 
             VConstraintAngular *res = new VConstraintAngular();
-            xBone *bone = Model.GetModelGr()->spine.L_bones + Constraint.boneA;
+            xBone *bone = Model.GetModelGr()->Spine.L_bones + Constraint.boneA;
             xBone *root;
             if (bone->ID_parent != 0)
             {
-                root = Model.GetModelGr()->spine.L_bones + bone->ID_parent;
+                root = Model.GetModelGr()->Spine.L_bones + bone->ID_parent;
                 res->particleRootB = root->ID_parent;
                 res->particleRootE = root->ID;
             }
             else
             {
-                root = Model.GetModelGr()->spine.L_bones;
+                root = Model.GetModelGr()->Spine.L_bones;
                 if (bone->ID == root->ID_kids[0])
-                    root = Model.GetModelGr()->spine.L_bones + root->ID_kids[1];
+                    root = Model.GetModelGr()->Spine.L_bones + root->ID_kids[1];
                 else
-                    root = Model.GetModelGr()->spine.L_bones + root->ID_kids[0];
+                    root = Model.GetModelGr()->Spine.L_bones + root->ID_kids[0];
                 res->particleRootB = root->ID;
                 res->particleRootE = 0;
             }
@@ -915,7 +915,7 @@ void SceneSkeleton::GetConstraintParams()
                 len = Constraint.S_length;
         if (Constraint.type == IC_BE_CreateConstrWeight)
         {
-            xBone *bone = Model.GetModelGr()->spine.L_bones + Constraint.boneA;
+            xBone *bone = Model.GetModelGr()->Spine.L_bones + Constraint.boneA;
             bone->M_weight = len;
             EditMode = emCreateBone;
             return;
@@ -953,7 +953,7 @@ void SceneSkeleton::GetConstraintParams()
 
         EditMode = emCreateBone;
 
-        xSkeleton &spine = Model.GetModelGr()->spine;
+        xSkeleton &spine = Model.GetModelGr()->Spine;
         if (!spine.I_constraints)
         {
             spine.I_constraints = 1;
@@ -1002,11 +1002,11 @@ void SceneSkeleton::GetBoneIdAndWeight()
             if (sum >= 100) {
                 EditMode = emSelectVertex;
 
-                xDWORD stride = Selection.Element->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+                xDWORD stride = Selection.Element->FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
                 for (int dataSrc = 0; dataSrc < 2; ++dataSrc)
                 {
-                    xBYTE *verts = (xBYTE *) (dataSrc ? Selection.Element->verticesP : Selection.Element->renderData.verticesP);
-                    xDWORD count = dataSrc ? Selection.Element->verticesC : Selection.Element->renderData.verticesC;
+                    xBYTE *verts = (xBYTE *) (dataSrc ? Selection.Element->L_vertices : Selection.Element->renderData.L_vertices);
+                    xDWORD count = dataSrc ? Selection.Element->I_vertices : Selection.Element->renderData.I_vertices;
                     std::vector<xDWORD>::iterator iter = Selection.Vertices.begin();
                     for (; iter != Selection.Vertices.end(); ++iter)
                     {
@@ -1040,8 +1040,8 @@ void SceneSkeleton::GetFrameParams()
         ++Animation.KeyFrame.step;
         if (Animation.KeyFrame.step > 2)
         {
-            Animation.Instance->frameCurrent->freeze   = Animation.KeyFrame.freeze;
-            Animation.Instance->frameCurrent->duration = Animation.KeyFrame.duration;
+            Animation.Instance->CurrentFrame->T_freeze   = Animation.KeyFrame.freeze;
+            Animation.Instance->CurrentFrame->T_duration = Animation.KeyFrame.duration;
             EditMode = emEditAnimation;
         }
         InputState.String.clear();

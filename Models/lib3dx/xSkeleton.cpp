@@ -211,13 +211,13 @@ void xSkeleton :: Save( FILE *file ) const
 void   _xBoneCalculateMatrices(const xBone *L_bones, xBYTE ID_bone, xModelInstance &instance)
 {
     const xBone &bone        = L_bones[ID_bone];
-    xMatrix     &MX_bone     = instance.bonesM[ID_bone];
-    bool        &FL_modified = instance.bonesMod[ID_bone];
+    xMatrix     &MX_bone     = instance.MX_bones[ID_bone];
+    bool        &FL_modified = instance.FL_modified[ID_bone];
 
     xMatrix MX_new;
     if (bone.ID)
     {
-        xMatrix &MX_parent = instance.bonesM[bone.ID_parent];
+        xMatrix &MX_parent = instance.MX_bones[bone.ID_parent];
         MX_new = MX_parent * xMatrixFromQuaternion(bone.QT_rotation).preTranslate(bone.P_begin).postTranslate(-bone.P_begin);
     }
     else
@@ -231,22 +231,22 @@ void   _xBoneCalculateMatrices(const xBone *L_bones, xBYTE ID_bone, xModelInstan
 }
 void    xBoneCalculateMatrices(const xSkeleton &spine, xModelInstance *instance)
 {
-    instance->bonesC = spine.I_bones;
+    instance->I_bones = spine.I_bones;
     if (!spine.I_bones)
     {
-        if (instance->bonesM)   { delete[] instance->bonesM;   instance->bonesM = NULL; }
-        if (instance->bonesMod) { delete[] instance->bonesMod; instance->bonesMod = NULL; }
+        if (instance->MX_bones)    { delete[] instance->MX_bones;    instance->MX_bones = NULL; }
+        if (instance->FL_modified) { delete[] instance->FL_modified; instance->FL_modified = NULL; }
         return;
     }
-    if (!instance->bonesM)   instance->bonesM   = new xMatrix[spine.I_bones];
-    if (!instance->bonesMod) instance->bonesMod = new bool[spine.I_bones];
+    if (!instance->MX_bones)    instance->MX_bones    = new xMatrix[spine.I_bones];
+    if (!instance->FL_modified) instance->FL_modified = new bool[spine.I_bones];
     _xBoneCalculateMatrices(spine.L_bones, 0, *instance);
 }
 
 void   _xBoneCalculateQuats(const xBone *L_bones, xBYTE ID_bone, xModelInstance &instance)
 {
     const xBone &bone    = L_bones[ID_bone];
-    xQuaternion *QT_bone = instance.bonesQ + ID_bone*2;
+    xQuaternion *QT_bone = instance.QT_bones + ID_bone*2;
     QT_bone[0] = bone.QT_rotation;
     if (bone.ID)
         QT_bone[1].init(bone.P_begin, bone.ID_parent);
@@ -259,13 +259,13 @@ void   _xBoneCalculateQuats(const xBone *L_bones, xBYTE ID_bone, xModelInstance 
 }
 void    xBoneCalculateQuats(const xSkeleton &spine, xModelInstance *instance)
 {
-    instance->bonesC = spine.I_bones;
+    instance->I_bones = spine.I_bones;
     if (!spine.I_bones)
     {
-        if (instance->bonesQ)   { delete[] instance->bonesQ;   instance->bonesQ = NULL; }
+        if (instance->QT_bones) { delete[] instance->QT_bones;   instance->QT_bones = NULL; }
         return;
     }
-    if (!instance->bonesQ) instance->bonesQ = new xQuaternion[spine.I_bones*2];
+    if (!instance->QT_bones) instance->QT_bones = new xQuaternion[spine.I_bones*2];
     _xBoneCalculateQuats(spine.L_bones, 0, *instance);
 }
 

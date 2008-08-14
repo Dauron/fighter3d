@@ -26,12 +26,12 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
 
     xQuaternion QT_parent, QT_current;
     // OPTIMIZE: calc only needed quats
-    system->spine->CalcQuats(system->P_current, system->QT_boneSkew,
+    system->Spine->CalcQuats(system->P_current, system->QT_boneSkew,
                              0, system->MX_WorldToModel_T, xVector3::Create(0.f,0.f,0.f));
-    xBoneCalculateQuatForVerlet(*system->spine, particle, QT_parent, QT_current);
+    xBoneCalculateQuatForVerlet(*system->Spine, particle, QT_parent, QT_current);
     QT_current = xQuaternion::product(QT_parent, QT_current);
 
-    xBone   &bone    = system->spine->L_bones[particle];
+    xBone   &bone    = system->Spine->L_bones[particle];
     xVector3 N_up    = system->MX_ModelToWorld.preTransformV(xQuaternion::rotate(QT_parent, bone.P_end-bone.P_begin)).normalize();
     xVector3 N_front = system->MX_ModelToWorld.preTransformV(xQuaternion::rotate(QT_current, bone.getFront()));
 

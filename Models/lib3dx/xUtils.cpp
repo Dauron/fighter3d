@@ -3,23 +3,23 @@
 void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, const bool *boneMods,
                                    xElementInstance &instance)
 {
-    xWORD     count  = instance.verticesC = elem->verticesC;
-    xBYTE    *srcV   = (xBYTE *) elem->verticesP;
-    xVector3 *srcN   = elem->renderData.normalP;
-    xDWORD stride = elem->skeletized
-        ? (elem->textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
-        : (elem->textured ? sizeof(xVertexTex)     : sizeof(xVertex));
+    xWORD     count  = instance.I_vertices = elem->I_vertices;
+    xBYTE    *srcV   = (xBYTE *) elem->L_vertices;
+    xVector3 *srcN   = elem->renderData.L_normals;
+    xDWORD stride = elem->FL_skeletized
+        ? (elem->FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
+        : (elem->FL_textured ? sizeof(xVertexTex)     : sizeof(xVertex));
 
-    if (elem->skeletized)
+    if (elem->FL_skeletized)
     {
-        bool old_refill = instance.verticesP;
+        bool old_refill = instance.L_vertices;
         if (!old_refill)
         {
-            instance.verticesP = new xVector4[count];
-            instance.normalsP  = new xVector3[count];
+            instance.L_vertices = new xVector4[count];
+            instance.L_normals  = new xVector3[count];
         }
-        xVector4 *itrV = instance.verticesP;
-        xVector3 *itrN = instance.normalsP;
+        xVector4 *itrV = instance.L_vertices;
+        xVector3 *itrN = instance.L_normals;
         for (int i = count; i > 0; --i, ++itrV, ++itrN, srcV += stride, ++srcN)
         {
             xVertexSkel *vert = (xVertexSkel *)srcV;
@@ -57,14 +57,14 @@ void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, c
     }
     else
     {
-        if (!instance.verticesP)
+        if (!instance.L_vertices)
         {
-            instance.verticesP = new xVector4[count];
-            instance.normalsP  = NULL;
-            xVector4 *itrV = instance.verticesP;
+            instance.L_vertices = new xVector4[count];
+            instance.L_normals  = NULL;
+            xVector4 *itrV = instance.L_vertices;
             for (int i = count; i > 0; --i, ++itrV, srcV += stride)
                 itrV->init(*(xVector3 *)srcV, 1.f);
-            //memcpy(dst.normalsP, elem->renderData.normalP, sizeof(xVector3)*count);
+            //memcpy(dst.L_normals, elem->renderData.L_normals, sizeof(xVector3)*count);
         }
     }
 }
@@ -72,15 +72,15 @@ void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, c
 void _xModel_SkinElementInstance(const xElement *elem, xElementInstance *instanceP,
                                  const xMatrix *bones, const bool *boneMods)
 {
-    for (xElement *celem = elem->kidsP; celem; celem = celem->nextP)
+    for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
         _xModel_SkinElementInstance(celem, instanceP, bones, boneMods);
 
-    _xElement_SkinElementInstance(elem, bones, boneMods, instanceP[elem->id]);
+    _xElement_SkinElementInstance(elem, bones, boneMods, instanceP[elem->ID]);
 }
 void xModel_SkinElementInstance(const xModel *model, xModelInstance &instance)
 {
-    for (xElement *celem = model->kidsP; celem; celem = celem->nextP)
-        _xModel_SkinElementInstance(celem, instance.elementInstanceP, instance.bonesM, instance.bonesMod);
+    for (xElement *celem = model->L_kids; celem; celem = celem->Next)
+        _xModel_SkinElementInstance(celem, instance.L_elements, instance.MX_bones, instance.FL_modified);
 }
 
 xBoxA    _xBoundingBox(const xVector4 *vertexP, xWORD vertexC)
@@ -115,7 +115,7 @@ xBoxA    _xBoundingBox(const xVector4 *vertexP, xWORD vertexC)
 
 void     _xElementInstance_GetBounds(xElementInstance &instance)
 {
-    if (!instance.verticesC)
+    if (!instance.I_vertices)
     {
         instance.bbBox.P_min.zero();
         instance.bbBox.P_max.zero();
@@ -124,12 +124,12 @@ void     _xElementInstance_GetBounds(xElementInstance &instance)
         return;
     }
 
-    instance.bbBox    = _xBoundingBox(instance.verticesP, instance.verticesC);
+    instance.bbBox    = _xBoundingBox(instance.L_vertices, instance.I_vertices);
     instance.bsCenter = (instance.bbBox.P_min + instance.bbBox.P_max) * 0.5f;
 
-    xVector4 *iter = instance.verticesP;
+    xVector4 *iter = instance.L_vertices;
     xFLOAT r = 0.f;
-    for (xWORD i = instance.verticesC; i; --i, ++iter)
+    for (xWORD i = instance.I_vertices; i; --i, ++iter)
         r = max (r, (iter->vector3 - instance.bsCenter).lengthSqr());
     instance.bsRadius = sqrtf(r);
 }
@@ -139,12 +139,12 @@ xVector3 xModel_GetBounds(xModelInstance &instance)
     xVector3 res; res.zero();
     xDWORD   vcnt = 0;
 
-    xElementInstance *iter = instance.elementInstanceP;
-    for (xBYTE i = instance.elementInstanceC; i; --i, ++iter)
+    xElementInstance *iter = instance.L_elements;
+    for (xBYTE i = instance.I_elements; i; --i, ++iter)
     {
         _xElementInstance_GetBounds(*iter);
-        vcnt += iter->verticesC;
-        res  += iter->bsCenter*iter->verticesC;
+        vcnt += iter->I_vertices;
+        res  += iter->bsCenter*iter->I_vertices;
     }
 
     if (vcnt) res /= (float)vcnt;
@@ -156,11 +156,11 @@ xVector3 xModel_GetBounds(xModelInstance &instance)
 
 void xElement_FreeCollisionHierarchyBounds(xCollisionData *pcData, xCollisionHierarchyBounds *hierarchyBP)
 {
-    if (pcData->kidsP && hierarchyBP)
+    if (pcData->L_kids && hierarchyBP)
     {
-        xCollisionHierarchy       *hierarchy  = pcData->kidsP;
+        xCollisionHierarchy       *hierarchy  = pcData->L_kids;
         xCollisionHierarchyBounds *hierarchyB = hierarchyBP;
-        for (int i=pcData->kidsC; i; --i, ++hierarchy, ++hierarchyB)
+        for (int i=pcData->I_kids; i; --i, ++hierarchy, ++hierarchyB)
             xElement_FreeCollisionHierarchyBounds(hierarchy, hierarchyB->kids);
         delete[] hierarchyBP;
     }
@@ -173,22 +173,22 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
     res.P_max.x = -1000000000.f; res.P_max.y = -1000000000.f; res.P_max.z = -1000000000.f;
     res.P_min.x =  1000000000.f; res.P_min.y =  1000000000.f; res.P_min.z =  1000000000.f;
 
-    if (pcData->kidsP)
+    if (pcData->L_kids)
     {
         bool init = !pBound->kids;
         if (init)
-            pBound->kids = new xCollisionHierarchyBounds[pcData->kidsC];
+            pBound->kids = new xCollisionHierarchyBounds[pcData->I_kids];
 
         xCollisionHierarchyBounds *bound     = pBound->kids;
-        xCollisionHierarchy       *hierarchy = pcData->kidsP;
+        xCollisionHierarchy       *hierarchy = pcData->L_kids;
 
-        for (int i=pcData->kidsC; i; --i, ++bound, ++hierarchy)
+        for (int i=pcData->I_kids; i; --i, ++bound, ++hierarchy)
         {
             if (init)
                 bound->kids = NULL;
             bound->sorted = false;
 
-            if (hierarchy->kidsC)
+            if (hierarchy->I_kids)
               {
                 xElement_CalcCollisionHierarchyBox(vertices, hierarchy, bound);
                 if (bound->bounding.P_min.x < res.P_min.x) res.P_min.x = bound->bounding.P_min.x;
@@ -199,10 +199,10 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                 if (bound->bounding.P_max.z > res.P_max.z) res.P_max.z = bound->bounding.P_max.z;
             }
             else
-            if (hierarchy->verticesP)
+            if (hierarchy->L_vertices)
             {
-                xWORD * iterV  = hierarchy->verticesP;
-                xWORD   vCount = hierarchy->verticesC;
+                xWORD * iterV  = hierarchy->L_vertices;
+                xWORD   vCount = hierarchy->I_vertices;
 
                 xBoxA tmp;
 #ifndef WIN32
@@ -339,15 +339,15 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
                 if (tmp.P_max.z > res.P_max.z) res.P_max.z = tmp.P_max.z;
             }
             else
-            if (hierarchy->facesP)
+            if (hierarchy->L_faces)
             {
                 xBoxA tmp;
                 tmp.P_max.x = -1000000000.f; tmp.P_max.y = -1000000000.f; tmp.P_max.z = -1000000000.f;
                 tmp.P_min.x =  1000000000.f; tmp.P_min.y =  1000000000.f; tmp.P_min.z =  1000000000.f;
 
-                xFace ** iterF = hierarchy->facesP;
+                xFace ** iterF = hierarchy->L_faces;
                 xBoxA    iterB;
-                for (int j=hierarchy->facesC; j; --j, ++iterF)
+                for (int j=hierarchy->I_faces; j; --j, ++iterF)
                 {
                     const xVector4 *v1 = vertices + (**iterF)[0];
                     const xVector4 *v2 = vertices + (**iterF)[1];

@@ -46,12 +46,12 @@ void RenderShadowVolumeZPass(xShadowData &shadowData, bool infiniteL)
     {
         glNewList(shadowData.gpuShadowPointers.listIDPass = glGenLists(1), GL_COMPILE);
         {
-            glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
+            glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.L_vertices);
             // Extruded quads
             if (!infiniteL)
-                glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, shadowData.indexP);
+                glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, shadowData.L_indices);
             else
-                glDrawElements ( GL_TRIANGLES, 3*shadowData.sideC, GL_UNSIGNED_SHORT, shadowData.indexP);
+                glDrawElements ( GL_TRIANGLES, 3*shadowData.I_sides, GL_UNSIGNED_SHORT, shadowData.L_indices);
         }
         glEndList();
     }
@@ -100,16 +100,16 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
         {
             glNewList(shadowData.gpuShadowPointers.listIDFail = glGenLists(1), GL_COMPILE);
             {
-                glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
+                glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.L_vertices);
                 if (infiniteL)// Extruded tris & Front cap
-                    glDrawElements ( GL_TRIANGLES, 3*(shadowData.sideC+shadowData.frontC), GL_UNSIGNED_SHORT, shadowData.indexP);
+                    glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_sides+shadowData.I_fronts), GL_UNSIGNED_SHORT, shadowData.L_indices);
                 else
                 {
                     // Extruded quads
-                    glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, shadowData.indexP);
+                    glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, shadowData.L_indices);
                     // Front & Back cap
-                    glDrawElements ( GL_TRIANGLES, 3*(shadowData.frontC+shadowData.backC), GL_UNSIGNED_SHORT,
-                        shadowData.indexP + 4*shadowData.sideC);
+                    glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_fronts+shadowData.I_backs), GL_UNSIGNED_SHORT,
+                        shadowData.L_indices + 4*shadowData.I_sides);
                 }
             }
             glEndList();
@@ -121,13 +121,13 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
         {
             glNewList(shadowData.gpuShadowPointers.listIDFailF = glGenLists(1), GL_COMPILE);
             {
-                glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
+                glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.L_vertices);
                 if (infiniteL)
-                    glDrawElements ( GL_TRIANGLES, 3*shadowData.frontC, GL_UNSIGNED_SHORT,
-                        shadowData.indexP + 3*shadowData.sideC);
+                    glDrawElements ( GL_TRIANGLES, 3*shadowData.I_fronts, GL_UNSIGNED_SHORT,
+                        shadowData.L_indices + 3*shadowData.I_sides);
                 else
-                    glDrawElements ( GL_TRIANGLES, 3*shadowData.frontC, GL_UNSIGNED_SHORT,
-                        shadowData.indexP + 4*shadowData.sideC);
+                    glDrawElements ( GL_TRIANGLES, 3*shadowData.I_fronts, GL_UNSIGNED_SHORT,
+                        shadowData.L_indices + 4*shadowData.I_sides);
             }
             glEndList();
         }
@@ -135,11 +135,11 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
         {
             glNewList(shadowData.gpuShadowPointers.listIDFailS = glGenLists(1), GL_COMPILE);
             {
-                glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
+                glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.L_vertices);
                 if (infiniteL)
-                    glDrawElements ( GL_TRIANGLES, 3*shadowData.sideC, GL_UNSIGNED_SHORT, shadowData.indexP);
+                    glDrawElements ( GL_TRIANGLES, 3*shadowData.I_sides, GL_UNSIGNED_SHORT, shadowData.L_indices);
                 else
-                    glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, shadowData.indexP);
+                    glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, shadowData.L_indices);
             }
             glEndList();
         }
@@ -147,13 +147,13 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
         {
             glNewList(shadowData.gpuShadowPointers.listIDFailB = glGenLists(1), GL_COMPILE);
             {
-                glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.verticesP);
+                glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), shadowData.L_vertices);
                 if (infiniteL)
-                    glDrawElements ( GL_TRIANGLES, 3*shadowData.backC, GL_UNSIGNED_SHORT,
-                        shadowData.indexP + 3*shadowData.sideC + 3*shadowData.frontC);
+                    glDrawElements ( GL_TRIANGLES, 3*shadowData.I_backs, GL_UNSIGNED_SHORT,
+                        shadowData.L_indices + 3*shadowData.I_sides + 3*shadowData.I_fronts);
                 else
-                    glDrawElements ( GL_TRIANGLES, 3*shadowData.backC, GL_UNSIGNED_SHORT,
-                        shadowData.indexP + 4*shadowData.sideC + 3*shadowData.frontC);
+                    glDrawElements ( GL_TRIANGLES, 3*shadowData.I_backs, GL_UNSIGNED_SHORT,
+                        shadowData.L_indices + 4*shadowData.I_sides + 3*shadowData.I_fronts);
             }
             glEndList();
         }
@@ -265,33 +265,33 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
 
 void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLight &light, xFieldOfView &FOV)
 {
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+    for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowVolumeElem(selem, modelInstance, light, FOV);
 
-    if (!elem->renderData.verticesC) return;
-    if (!elem->edgesC) return;
+    if (!elem->renderData.I_vertices) return;
+    if (!elem->I_edges) return;
 
-    xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
-    xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
-    xMatrix  mtxWorldToObject = (elem->matrix * modelInstance.location).invert();
+    xElementInstance &instance = modelInstance.L_elements[elem->ID];
+    xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
+    xMatrix  mtxWorldToObject = (elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).invert();
     if (!light.elementReceivesLight(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius)) return;
 
-    bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.location, FOV, light);
+    bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.MX_LocalToWorld, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;
     xVector3 lightPos = (infiniteL)
         ? mtxWorldToObject.preTransformV(light.position)
         : mtxWorldToObject.preTransformP(light.position);
 
     xShadowData &shadowData = instance.GetShadowData(light, zPass ? xShadowData::ZPASS_ONLY : xShadowData::ZFAIL_PASS);
-    if (!shadowData.indexP)
+    if (!shadowData.L_indices)
     {
         bool *facingFlag = NULL;
         bool  useBackCapOptimization
             = (lightPos - instance.bsCenter).lengthSqr() > instance.bsRadius*instance.bsRadius;
 
-        if (!shadowData.verticesP)
-            shadowData.verticesP = (infiniteL) ? new xVector4[instance.verticesC + 1] : new xVector4[instance.verticesC << 1];
-        memcpy (shadowData.verticesP, instance.verticesP, instance.verticesC*sizeof(xVector4));
+        if (!shadowData.L_vertices)
+            shadowData.L_vertices = (infiniteL) ? new xVector4[instance.I_vertices + 1] : new xVector4[instance.I_vertices << 1];
+        memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xVector4));
         ShadowVolume::ExtrudePoints(elem, infiniteL, lightPos, shadowData);
         ShadowVolume::GetBackFaces (elem, instance, infiniteL, shadowData, facingFlag);
         ShadowVolume::GetSilhouette(elem, infiniteL, useBackCapOptimization, facingFlag, shadowData);
@@ -325,7 +325,7 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
     }
 
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.x0);
+    glMultMatrixf(&elem->MX_MeshToLocal.x0);
 
     bool modelInFrustum, extrusionInFrustum, backCapInFrustum;
     CheckShadowVolumeInFrustum(mtxTrasformation, mtxWorldToObject,
@@ -370,9 +370,9 @@ void RenderShadowVolumeZPassVBO(xShadowData &shadowData, bool infiniteL)
 
         // Extruded quads
         if (!infiniteL)
-            glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
         else
-            glDrawElements ( GL_TRIANGLES, 3*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_TRIANGLES, 3*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
     }
     else
     {
@@ -385,9 +385,9 @@ void RenderShadowVolumeZPassVBO(xShadowData &shadowData, bool infiniteL)
 
         // Extruded quads
         if (!infiniteL)
-            glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
         else
-            glDrawElements ( GL_TRIANGLES, 3*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_TRIANGLES, 3*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
 
         glCullFace(GL_BACK);
         if (GLExtensions::Exists_EXT_StencilWrap)
@@ -398,9 +398,9 @@ void RenderShadowVolumeZPassVBO(xShadowData &shadowData, bool infiniteL)
 
         // Extruded quads
         if (!infiniteL)
-            glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
         else
-            glDrawElements ( GL_TRIANGLES, 3*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_TRIANGLES, 3*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
     }
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
@@ -430,33 +430,33 @@ void RenderShadowVolumeZFailVBO(xShadowData &shadowData, bool infiniteL)
         if (!infiniteL)
         {
             // Extruded quads
-            glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
             // Front cap
-            glDrawElements ( GL_TRIANGLES, 3*shadowData.frontC, GL_UNSIGNED_SHORT,
-                (GLvoid*)(4*shadowData.sideC*sizeof(xWORD)));
+            glDrawElements ( GL_TRIANGLES, 3*shadowData.I_fronts, GL_UNSIGNED_SHORT,
+                (GLvoid*)(4*shadowData.I_sides*sizeof(xWORD)));
             // Back cap
-            glDrawElements ( GL_TRIANGLES, 3*shadowData.backC, GL_UNSIGNED_SHORT,
-                (GLvoid*)((4*shadowData.sideC + 3*shadowData.frontC)*sizeof(xWORD)));
+            glDrawElements ( GL_TRIANGLES, 3*shadowData.I_backs, GL_UNSIGNED_SHORT,
+                (GLvoid*)((4*shadowData.I_sides + 3*shadowData.I_fronts)*sizeof(xWORD)));
         }
         else
         {
             // Extruded tris
-            glDrawElements ( GL_TRIANGLES, 3*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_TRIANGLES, 3*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
             // Front cap
-            glDrawElements ( GL_TRIANGLES, 3*shadowData.frontC, GL_UNSIGNED_SHORT,
-                (GLvoid*)(3*shadowData.sideC*sizeof(xWORD)));
+            glDrawElements ( GL_TRIANGLES, 3*shadowData.I_fronts, GL_UNSIGNED_SHORT,
+                (GLvoid*)(3*shadowData.I_sides*sizeof(xWORD)));
         }
 */
         if (!infiniteL)
         {
             // Extruded quads
-            glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
             // Front & Back cap
-            glDrawElements ( GL_TRIANGLES, 3*(shadowData.frontC+shadowData.backC), GL_UNSIGNED_SHORT,
-                (GLvoid*)(4*shadowData.sideC*sizeof(xWORD)));
+            glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_fronts+shadowData.I_backs), GL_UNSIGNED_SHORT,
+                (GLvoid*)(4*shadowData.I_sides*sizeof(xWORD)));
         }
         else// Extruded tris & Front cap
-            glDrawElements ( GL_TRIANGLES, 3*(shadowData.sideC+shadowData.frontC), GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_sides+shadowData.I_fronts), GL_UNSIGNED_SHORT, 0);
     }
     else
     {
@@ -470,13 +470,13 @@ void RenderShadowVolumeZFailVBO(xShadowData &shadowData, bool infiniteL)
         if (!infiniteL)
         {
             // Extruded quads
-            glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
             // Front & Back cap
-            glDrawElements ( GL_TRIANGLES, 3*(shadowData.frontC+shadowData.backC), GL_UNSIGNED_SHORT,
-                (GLvoid*)(4*shadowData.sideC*sizeof(xWORD)));
+            glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_fronts+shadowData.I_backs), GL_UNSIGNED_SHORT,
+                (GLvoid*)(4*shadowData.I_sides*sizeof(xWORD)));
         }
         else// Extruded tris & Front cap
-            glDrawElements ( GL_TRIANGLES, 3*(shadowData.sideC+shadowData.frontC), GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_sides+shadowData.I_fronts), GL_UNSIGNED_SHORT, 0);
 
         glCullFace(GL_FRONT);
         if (GLExtensions::Exists_EXT_StencilWrap)
@@ -488,13 +488,13 @@ void RenderShadowVolumeZFailVBO(xShadowData &shadowData, bool infiniteL)
         if (!infiniteL)
         {
             // Extruded quads
-            glDrawElements ( GL_QUADS, 4*shadowData.sideC, GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_QUADS, 4*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
             // Front & Back cap
-            glDrawElements ( GL_TRIANGLES, 3*(shadowData.frontC+shadowData.backC), GL_UNSIGNED_SHORT,
-                (GLvoid*)(4*shadowData.sideC*sizeof(xWORD)));
+            glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_fronts+shadowData.I_backs), GL_UNSIGNED_SHORT,
+                (GLvoid*)(4*shadowData.I_sides*sizeof(xWORD)));
         }
         else// Extruded tris & Front cap
-            glDrawElements ( GL_TRIANGLES, 3*(shadowData.sideC+shadowData.frontC), GL_UNSIGNED_SHORT, 0);
+            glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_sides+shadowData.I_fronts), GL_UNSIGNED_SHORT, 0);
     }
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
@@ -503,24 +503,24 @@ void RenderShadowVolumeZFailVBO(xShadowData &shadowData, bool infiniteL)
 
 void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, xLight &light, xFieldOfView &FOV)
 {
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+    for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowVolumeElemVBO(selem, modelInstance, light, FOV);
 
-    if (!elem->renderData.verticesC) return;
-    if (!elem->edgesC) return;
+    if (!elem->renderData.I_vertices) return;
+    if (!elem->I_edges) return;
 
-    xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
+    xElementInstance &instance = modelInstance.L_elements[elem->ID];
 
-    if (!light.elementReceivesLight((elem->matrix * modelInstance.location).preTransformP(instance.bsCenter), instance.bsRadius)) return;
+    if (!light.elementReceivesLight((elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).preTransformP(instance.bsCenter), instance.bsRadius)) return;
 
-    bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.location, FOV, light);
+    bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.MX_LocalToWorld, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;
 
     bool changed = false;
     xShadowData &shadowData = instance.GetShadowData(light, zPass ? xShadowData::ZPASS_ONLY : xShadowData::ZFAIL_PASS);
-    if (!shadowData.indexP)
+    if (!shadowData.L_indices)
     {
-        xMatrix  mtxWorldToObject = (elem->matrix * modelInstance.location).invert();
+        xMatrix  mtxWorldToObject = (elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).invert();
         xVector3 lightPos;
         if (infiniteL)
             lightPos = mtxWorldToObject.preTransformV(light.position);
@@ -531,9 +531,9 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
         bool  useBackCapOptimization
             = (lightPos - instance.bsCenter).lengthSqr() > instance.bsRadius*instance.bsRadius;
 
-        if (!shadowData.verticesP)
-            shadowData.verticesP = new xVector4[(infiniteL) ? instance.verticesC + 1 : instance.verticesC << 1];
-        memcpy (shadowData.verticesP, instance.verticesP, instance.verticesC*sizeof(xVector4));
+        if (!shadowData.L_vertices)
+            shadowData.L_vertices = new xVector4[(infiniteL) ? instance.I_vertices + 1 : instance.I_vertices << 1];
+        memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xVector4));
         ShadowVolume::ExtrudePoints(elem, infiniteL, lightPos, shadowData);
         ShadowVolume::GetBackFaces (elem, instance, infiniteL, shadowData, facingFlag);
         ShadowVolume::GetSilhouette(elem, infiniteL, useBackCapOptimization, facingFlag, shadowData);
@@ -547,31 +547,31 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
         glGenBuffersARB(1, &p); shadowData.gpuShadowPointers.vertexB = p;
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, shadowData.gpuShadowPointers.vertexB );
         glBufferDataARB( GL_ARRAY_BUFFER_ARB,
-            sizeof(xVector4)*((infiniteL) ? instance.verticesC + 1 : instance.verticesC << 1),
-            shadowData.verticesP, GL_DYNAMIC_DRAW_ARB);
+            sizeof(xVector4)*((infiniteL) ? instance.I_vertices + 1 : instance.I_vertices << 1),
+            shadowData.L_vertices, GL_DYNAMIC_DRAW_ARB);
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
 
         glGenBuffersARB(1, &p); shadowData.gpuShadowPointers.indexB = p;
         glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, shadowData.gpuShadowPointers.indexB );
-        glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(xWORD)*shadowData.indexSize, shadowData.indexP, GL_DYNAMIC_DRAW_ARB);
+        glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(xWORD)*shadowData.I_indices, shadowData.L_indices, GL_DYNAMIC_DRAW_ARB);
         glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     }
     else
     if (changed)
     {
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, shadowData.gpuShadowPointers.vertexB );
-        glBufferSubDataARB( GL_ARRAY_BUFFER_ARB, sizeof(xVector4)*instance.verticesC,
-            sizeof(xVector4)*((infiniteL) ? 1 : instance.verticesC),
-            shadowData.verticesP+instance.verticesC);
+        glBufferSubDataARB( GL_ARRAY_BUFFER_ARB, sizeof(xVector4)*instance.I_vertices,
+            sizeof(xVector4)*((infiniteL) ? 1 : instance.I_vertices),
+            shadowData.L_vertices+instance.I_vertices);
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
 
         glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, shadowData.gpuShadowPointers.indexB );
-        glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(xWORD)*shadowData.indexSize, shadowData.indexP, GL_DYNAMIC_DRAW_ARB);
+        glBufferDataARB( GL_ELEMENT_ARRAY_BUFFER_ARB, sizeof(xWORD)*shadowData.I_indices, shadowData.L_indices, GL_DYNAMIC_DRAW_ARB);
         glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     }
 
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.x0);
+    glMultMatrixf(&elem->MX_MeshToLocal.x0);
 
     if (zPass)
         RenderShadowVolumeZPassVBO(shadowData, infiniteL);
@@ -584,11 +584,11 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
 void RendererGL :: RenderShadowVolume(xModel &model, xModelInstance &instance, xLight &light, xFieldOfView &FOV)
 {
     glPushMatrix();
-    glMultMatrixf(&instance.location.x0);
+    glMultMatrixf(&instance.MX_LocalToWorld.x0);
 
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    for (xElement *elem = model.kidsP; elem; elem = elem->nextP)
+    for (xElement *elem = model.L_kids; elem; elem = elem->Next)
         //if (UseVBO)
         //    RenderShadowVolumeElemVBO(elem, instance, light, FOV);
         //else

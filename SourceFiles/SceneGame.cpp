@@ -209,7 +209,7 @@ bool SceneGame::Update(float deltaTime)
         RigidObj *obj = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
             g_Application.SetCurrentScene(new SceneSkeleton(/*this*/ &g_Application.CurrentScene(),
-                obj->GetModelGr()->fileName, obj->GetModelPh()->fileName), false);
+                obj->GetModelGr()->FileName, obj->GetModelPh()->FileName), false);
 /*
         float near_height = 0.1f * tan(45.0f * PI / 360.0f);
         float norm_x = 1.0f - (float)g_InputMgr.mouseX/(Width/2.0f);
@@ -307,7 +307,7 @@ bool SceneGame::Render()
     glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
 
     // Render the contents of the world
-    World::xObjectVector::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
+    World::ObjectVector::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
     xLightVector::iterator light, beginL = world.lights.begin(), endL = world.lights.end();
 
     //////////////////// WORLD - BEGIN
@@ -360,7 +360,7 @@ bool SceneGame::Render()
             GLShader::SetLightType(xLight_NONE);
             GLShader::EnableTexturing(xState_Off);
             for ( i = begin ; i != end ; ++i )
-                (*i)->RenderDepth(FOV, false);
+                ((RigidObj*)*i)->RenderDepth(FOV, false);
 
             ////// RENDER GLOBAL AMBIENT PASS
             for (light=beginL; light!=endL; ++light)
@@ -373,7 +373,7 @@ bool SceneGame::Render()
             glColorMask(1,1,1,1);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false);
             glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
+            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, FOV, false);
 
             ////// RENDER SHADOWS AND LIGHTS
             for (light=beginL; light!=endL; ++light)
@@ -419,8 +419,8 @@ bool SceneGame::Render()
                         GLShader::SetLightType(xLight_NONE);
                         GLShader::Suspend();
                         for ( i = begin ; i != end ; ++i )
-                            if ((*i)->castsShadows)
-                                (*i)->RenderShadowVolume(*light, FOV);
+                            if (((RigidObj*)*i)->FL_shadowcaster)
+                                ((RigidObj*)*i)->RenderShadowVolume(*light, FOV);
                     }
 
                     ////// ILLUMINATION PASS
@@ -439,7 +439,7 @@ bool SceneGame::Render()
                     GLShader::EnableTexturing(xState_Enable);
                     SetLight(*light, false, true, true);
                     glEnable(GL_LIGHT0);
-                    for ( i = begin ; i != end ; ++i ) (*i)->RenderDiffuse(*light, FOV, false);
+                    for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderDiffuse(*light, FOV, false);
 
                     ////// DISPLAY SHADOW VOLUMES PASS
                     if (Config::DisplayShadowVolumes)
@@ -455,8 +455,8 @@ bool SceneGame::Render()
                         GLShader::Suspend();
                         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
                         for ( i = begin ; i != end ; ++i )
-                            if ((*i)->castsShadows)
-                                (*i)->RenderShadowVolume(*light, FOV);
+                            if (((RigidObj*)*i)->FL_shadowcaster)
+                                ((RigidObj*)*i)->RenderShadowVolume(*light, FOV);
                         glPopAttrib();
                     }
                 }
@@ -473,7 +473,7 @@ bool SceneGame::Render()
             GLShader::EnableTexturing(xState_Enable);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
             glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
+            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, FOV, true);
             GLShader::Suspend();
 /*
             GLShader::EnableTexturing(xState_Disable);
@@ -502,7 +502,7 @@ bool SceneGame::Render()
             GLShader::SetLightType(xLight_GLOBAL, true, false, false);
             glDisable(GL_BLEND);
             glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(dayLightVec, FOV, false);
+            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(dayLightVec, FOV, false);
 
             ////// RENDER SHADOWS AND LIGHTS
             glDepthMask(0);
@@ -533,8 +533,8 @@ bool SceneGame::Render()
                 GLShader::SetLightType(xLight_NONE);
                 GLShader::Suspend();
                 for ( i = begin ; i != end ; ++i )
-                    if ((*i)->castsShadows)
-                        (*i)->RenderShadowVolume(*dayLightVec.begin(), FOV);
+                    if (((RigidObj*)*i)->FL_shadowcaster)
+                        ((RigidObj*)*i)->RenderShadowVolume(*dayLightVec.begin(), FOV);
             }
 
             ////// ILLUMINATION PASS
@@ -553,7 +553,7 @@ bool SceneGame::Render()
             GLShader::EnableTexturing(xState_Enable);
             SetLight(dayLight, false, true, true);
             glEnable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) (*i)->RenderDiffuse(*dayLightVec.begin(), FOV, false);
+            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderDiffuse(*dayLightVec.begin(), FOV, false);
 
             dayLight.modified = false;
 
@@ -567,7 +567,7 @@ bool SceneGame::Render()
             GLShader::EnableTexturing(xState_Enable);
             GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
             glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(dayLightVec, FOV, true);
+            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(dayLightVec, FOV, true);
             GLShader::Suspend();
         }
     else
@@ -581,12 +581,12 @@ bool SceneGame::Render()
         glColorMask(1, 1, 1, 1);
         GLShader::EnableTexturing(xState_Enable);
         GLShader::SetLightType(xLight_NONE);
-        for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, false);
+        for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, FOV, false);
 
         ////// RENDER TRANSPARENT PASS
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        for ( i = begin ; i != end ; ++i ) (*i)->RenderAmbient(world.lights, FOV, true);
+        for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, FOV, true);
     }
 
     glPopAttrib();
@@ -604,10 +604,10 @@ bool SceneGame::Render()
 void SceneGame :: RenderSelect(const xFieldOfView *FOV)
 {
     int objectID = -1;
-    World::xObjectVector::iterator iter = world.objects.begin(), end = world.objects.end();
+    World::ObjectVector::iterator iter = world.objects.begin(), end = world.objects.end();
     for ( ; iter != end ; ++iter ) {
         glLoadName(++objectID);
-        RigidObj &mdl = **iter;
+        RigidObj &mdl = *(RigidObj*)*iter;
         mdl.renderer.RenderVertices(*mdl.GetModelGr(), mdl.modelInstanceGr, Renderer::smModel);
     }
 }

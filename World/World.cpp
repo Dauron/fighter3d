@@ -1,7 +1,7 @@
 #include <fstream>
 #include "World.h"
 #include "../Utils/Filesystem.h"
-
+/*
 RigidObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 {
     xVector3 rayEnd = rayPos + rayDir.normalize() * 1000.0f;
@@ -24,26 +24,29 @@ RigidObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 
     return res;
 }
-
+*/
 const xFLOAT TIME_STEP = 0.02f;
 
-void World:: Update(float deltaTime)
+void World:: Update(float T_delta)
 {
-    if (deltaTime > 0.05f) deltaTime = 0.05f;
-    deltaTime *= Config::Speed;
+    if (T_delta > 0.05f) T_delta = 0.05f;
+    T_delta *= Config::Speed;
 
-    float delta = TIME_STEP;
-    while (deltaTime > EPSILON)
+    float T_step = TIME_STEP;
+    while (T_delta > EPSILON)
     {
-        deltaTime -= delta;
-        if (deltaTime < 0.f) { delta += deltaTime; }
+        T_delta -= T_step;
+        if (T_delta < 0.f) { T_step += T_delta; }
 
+        Interact(T_step, objects);
+
+/*
         xObjectVector::iterator i, j, begin = objects.begin(), end = objects.end();
         for ( i = begin ; i != end ; ++i )
-            if (! (*i)->phantom)
+            if (! (*i)->FL_phantom)
                 for ( j = i + 1; j != end; ++j )
-                    if (!(*i)->locked || !(*j)->locked)
-                        if (!(*j)->phantom && cd_MeshToMesh.Collide(*i, *j))
+                    if (!(*i)->FL_stationary || !(*j)->FL_stationary)
+                        if (!(*j)->FL_phantom && cd_MeshToMesh.Collide(*i, *j))
                         {
                             // process collision
                         }
@@ -53,6 +56,7 @@ void World:: Update(float deltaTime)
 
         for ( i = begin ; i != end ; ++i )
             (*i)->Update(delta);
+*/
     }
 }
 
@@ -73,7 +77,7 @@ void World:: Finalize()
         skyBox = NULL;
     }
 
-    xObjectVector::iterator i, begin = objects.begin(), end = objects.end();
+    ObjectVector::iterator i, begin = objects.begin(), end = objects.end();
     for ( i = begin ; i != end ; ++i )
     {
         (*i)->Finalize();
@@ -144,6 +148,7 @@ void World:: Load(const char *mapFileName)
                     if (model != NULL)
                         objects.push_back(model);
                     model = new RigidObj();
+                    model->ApplyDefaults();
                     fastModelFile.clear();
                     continue;
                 }
@@ -153,6 +158,7 @@ void World:: Load(const char *mapFileName)
                     if (model != NULL)
                         objects.push_back(model);
                     model = new SkeletizedObj();
+                    model->ApplyDefaults();
                     fastModelFile.clear();
                     continue;
                 }
@@ -226,42 +232,42 @@ void World:: Load(const char *mapFileName)
                 {
                     int b;
                     sscanf(buffer, "physical\t%d", &b);
-                    model->physical = b;
+                    model->FL_physical = b;
                     continue;
                 }
                 if (StartsWith(buffer, "locked"))
                 {
                     int b;
                     sscanf(buffer, "locked\t%d", &b);
-                    model->locked = b;
+                    model->FL_stationary = b;
                     continue;
                 }
                 if (StartsWith(buffer, "phantom"))
                 {
                     int b;
                     sscanf(buffer, "phantom\t%d", &b);
-                    model->phantom = b;
+                    model->FL_phantom = b;
                     continue;
                 }
                 if (StartsWith(buffer, "mass"))
                 {
                     float mass;
                     sscanf(buffer, "mass\t%f", &mass);
-                    model->mass = mass;
+                    model->M_mass = mass;
                     continue;
                 }
                 if (StartsWith(buffer, "resilience"))
                 {
                     float resilience;
                     sscanf(buffer, "resilience\t%f", &resilience);
-                    model->resilience = resilience;
+                    model->W_resilience = resilience;
                     continue;
                 }
                 if (StartsWith(buffer, "shadows"))
                 {
                     int b;
                     sscanf(buffer, "shadows\t%d", &b);
-                    model->castsShadows = b;
+                    model->FL_shadowcaster = b;
                     continue;
                 }
 
@@ -281,7 +287,7 @@ void World:: Load(const char *mapFileName)
                 if (StartsWith(buffer, "camera_controled"))
                 {
                     g_CaptureInput.Finalize();
-                    bool captureOK = g_CaptureInput.Initialize(model->GetModelGr()->spine);
+                    bool captureOK = g_CaptureInput.Initialize(model->GetModelGr()->Spine);
                     ((SkeletizedObj*)model)->ControlType = (captureOK)
                         ? SkeletizedObj::Control_CaptureInput
                         : SkeletizedObj::Control_AI;

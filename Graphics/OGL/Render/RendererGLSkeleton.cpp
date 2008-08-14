@@ -287,25 +287,25 @@ void RendererGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWO
         glEnable(GL_COLOR_MATERIAL);
 
         glPushMatrix();
-        glMultMatrixf(&instance.location.x0);
+        glMultMatrixf(&instance.MX_LocalToWorld.x0);
 
-        if (model.spine.I_bones)
+        if (model.Spine.I_bones)
         {
             g_AnimSkeletal.BeginAnimation();
-            g_AnimSkeletal.SetBones(instance.bonesC, instance.bonesM, instance.bonesQ, NULL, false);
+            g_AnimSkeletal.SetBones(instance.I_bones, instance.MX_bones, instance.QT_bones, NULL, false);
 
             glColor4f(1.0f,1.0f,0.0f,1.0f);
             glBegin(GL_TRIANGLES);
-            RenderBone(model.spine.L_bones, 0, ID_selBone);
+            RenderBone(model.Spine.L_bones, 0, ID_selBone);
             glEnd();
 
             g_AnimSkeletal.EndAnimation();
 
-            RenderConstraint(model.spine, instance.bonesM, instance.bonesQ);
+            RenderConstraint(model.Spine, instance.MX_bones, instance.QT_bones);
         }
         else
         {
-            glTranslatef(instance.center.x,instance.center.y,instance.center.z);
+            glTranslatef(instance.P_center.x,instance.P_center.y,instance.P_center.z);
             glBegin(GL_LINES);
                 glColor4f(1.f,0.f,0.f,1.f);
                 glVertex3f(0,0,0);
@@ -403,25 +403,25 @@ void RenderConstraintSelection ( const xSkeleton &spine, const xMatrix *MX_bones
 
 void RendererGL :: RenderSkeletonSelection ( xModel &model, xModelInstance &instance, bool selectConstraint )
 {
-    if (model.spine.I_bones)
+    if (model.Spine.I_bones)
     {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
 
         glPushMatrix();
-        glMultMatrixf(&instance.location.x0);
+        glMultMatrixf(&instance.MX_LocalToWorld.x0);
 
         if (!selectConstraint)
         {
             g_AnimSkeletal.ForceSoftware(true);
             g_AnimSkeletal.BeginAnimation();
-            g_AnimSkeletal.SetBones(instance.bonesC, instance.bonesM, instance.bonesQ, NULL, false);
-            RenderBoneSelection(model.spine.L_bones, 0);
+            g_AnimSkeletal.SetBones(instance.I_bones, instance.MX_bones, instance.QT_bones, NULL, false);
+            RenderBoneSelection(model.Spine.L_bones, 0);
             g_AnimSkeletal.EndAnimation();
             g_AnimSkeletal.ForceSoftware(false);
         }
         else
-            RenderConstraintSelection(model.spine, instance.bonesM, instance.bonesQ);
+            RenderConstraintSelection(model.Spine, instance.MX_bones, instance.QT_bones);
 
         glPopMatrix();
 

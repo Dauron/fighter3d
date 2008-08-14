@@ -22,15 +22,13 @@ namespace Physics {
             PhysicalBody::FrameUpdate(T_time);
 
             if (IsModified())
-            {
-                BVHierarchy.invalidateTransformation();
                 BVHierarchy.GetTransformed(MX_LocalToWorld_Get());
-            }
         }
 
-        virtual void Initialize()
+        virtual void ApplyDefaults()
         {
-            PhysicalBody::Initialize();
+            PhysicalBody::ApplyDefaults();
+
             M_mass = BVHierarchy.Figure->W_Volume_Get();
             if (BVHierarchy.Figure->Type != xIFigure3d::Capsule)
                 S_radius = 2.f * sqrt(BVHierarchy.Figure->S_Radius_Sqr_Get());

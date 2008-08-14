@@ -11,17 +11,14 @@ class SkeletizedObj : public RigidObj
 public:
 
     SkeletizedObj () : RigidObj(), verletQuaternions(NULL), ControlType(Control_AI) {}
-    SkeletizedObj (GLfloat x, GLfloat y, GLfloat z)
-      : RigidObj(x,y,z), verletQuaternions(NULL), ControlType(Control_AI) {}
-    SkeletizedObj (GLfloat x, GLfloat y, GLfloat z,
-        GLfloat rotX, GLfloat rotY, GLfloat rotZ)
-      : RigidObj(x,y,z, rotX,rotY,rotZ), verletQuaternions(NULL), ControlType(Control_AI) {}
+
+    virtual void ApplyDefaults();
+    virtual void Initialize ();
+    virtual void Finalize ();
 
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL,
                              bool physicalNotLocked = false, bool phantom = true);
-    virtual void Finalize ();
-
-    void AddAnimation(const char *fileName, xDWORD startTime = 0, xDWORD endTime = 0);
+    void AddAnimation(const char *fileName, xDWORD T_start = 0, xDWORD T_end = 0);
 
     virtual void PreUpdate(float deltaTime);
     virtual void Update(float deltaTime);

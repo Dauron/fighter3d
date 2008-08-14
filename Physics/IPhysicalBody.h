@@ -10,16 +10,17 @@ namespace Physics {
     class IPhysicalBody
     {
     private:
+        bool         FL_defaults_applied;
         bool         FL_initialized;
-        bool         FL_stationary;
 
     protected:
-        bool         IsInitialized() { return FL_initialized; }
+        bool         IsDefaultsApplied() { return FL_defaults_applied; }
+        bool         IsInitialized()     { return FL_initialized; }
 
     public:
-        xBVHierarchy BVHierarchy;
+        bool         FL_stationary;
 
-        bool         IsStationary() { return FL_stationary; }
+        xBVHierarchy BVHierarchy;
 
     public:
         virtual void     Stop() = 0;
@@ -40,7 +41,15 @@ namespace Physics {
         virtual void     ApplyForce(xVector3 NW_force, xFLOAT T_time) = 0;
         virtual void     ApplyForce(xVector3 NW_force, xFLOAT T_time, xPoint3 P_point) = 0;
 
-        virtual void     Initialize()               { FL_initialized = true; FL_stationary = false; }
+        IPhysicalBody() : FL_initialized(false), FL_defaults_applied(false) {}
+
+        virtual void     ApplyDefaults()            { FL_defaults_applied = true; FL_stationary = false; }
+        virtual void     Initialize()
+        {
+            if (!IsDefaultsApplied()) ApplyDefaults();
+            FL_initialized = true;
+        }
+        virtual void     Invalidate()               {}
         virtual void     FrameStart()               {}
         virtual void     FrameUpdate(xFLOAT T_time) {}
         virtual void     FrameRender()              {}

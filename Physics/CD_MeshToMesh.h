@@ -1,6 +1,7 @@
 #ifndef __incl_Physics_CD_MeshToMesh_h
 #define __incl_Physics_CD_MeshToMesh_h
 
+#include "../AppFramework/System.h"
 #include "../World/RigidObj.h"
 
 class CD_MeshToMesh
@@ -47,8 +48,8 @@ public:
         collidedModel1 = collidedModel2 = NULL;
 
         bool res = false;
-        for (xElement *elem1 = model1->GetModelPh()->kidsP; elem1; elem1 = elem1->nextP)
-            res |= Collide1(++ci1, ci2, elem1, model2->GetModelPh()->kidsP);
+        for (xElement *elem1 = model1->GetModelPh()->L_kids; elem1; elem1 = elem1->Next)
+            res |= Collide1(++ci1, ci2, elem1, model2->GetModelPh()->L_kids);
 
         Performance.CollisionDeterminationMS += GetTick() - delta;
         return res;

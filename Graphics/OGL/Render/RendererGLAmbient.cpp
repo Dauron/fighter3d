@@ -5,15 +5,15 @@
 void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xLightVector &lights,
                     xElement *elem, xModelInstance &modelInstance)
 {
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+    for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderElementAmbientLST(transparent, FOV, lights, selem, modelInstance);
 
-    if (!elem->renderData.verticesC
-        || (transparent && !elem->transparent)
-        || (!transparent && !elem->opaque)) return;
+    if (!elem->renderData.I_vertices
+        || (transparent && !elem->FL_transparent)
+        || (!transparent && !elem->FL_opaque)) return;
 
-    xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
-    xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
+    xElementInstance &instance = modelInstance.L_elements[elem->ID];
+    xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
     xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
     if (!FOV.CheckSphere(center, instance.bsRadius) ||
         !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
@@ -35,16 +35,16 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambient.xyzw);
 
     /************************** PREPARE LST  ****************************/
-    xDWORD &listID    = elem->skeletized
+    xDWORD &listID    = elem->FL_skeletized
         ? transparent ? instance.gpuMain.listIDTransp : instance.gpuMain.listID
         : transparent ? elem->renderData.gpuMain.listIDTransp : elem->renderData.gpuMain.listID;
-    xDWORD &listIDTex = elem->skeletized
+    xDWORD &listIDTex = elem->FL_skeletized
         ? transparent ? instance.gpuMain.listIDTexTransp : instance.gpuMain.listIDTex
         : transparent ? elem->renderData.gpuMain.listIDTexTransp : elem->renderData.gpuMain.listIDTex;
-    xGPURender::Mode &mode = elem->skeletized ? instance.mode : elem->renderData.mode;
+    xGPURender::Mode &mode = elem->FL_skeletized ? instance.mode : elem->renderData.mode;
     bool textured = false;
 
-    if (elem->skeletized)
+    if (elem->FL_skeletized)
         GLShader::EnableSkeleton(xState_On);
 
     if (!listID)
@@ -52,78 +52,78 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
         mode = xGPURender::LIST;
         glNewList(listID = glGenLists(1), GL_COMPILE);
 
-        if (elem->skeletized) {
+        if (elem->FL_skeletized) {
             g_AnimSkeletal.BeginAnimation();
-            g_AnimSkeletal.SetBones (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, false);
+            g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
             g_AnimSkeletal.SetElement(elem, &instance);
         }
         else
         {
-            if (elem->textured)
-                glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), elem->renderData.verticesTP);
+            if (elem->FL_textured)
+                glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), elem->renderData.L_verticesT);
             else
-                glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), elem->renderData.verticesP);
+                glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), elem->renderData.L_vertices);
             /////////////////////////// LOAD NORMALS ///////////////////////////
-            if (elem->renderData.normalP)
+            if (elem->renderData.L_normals)
             {
-                glNormalPointer (GL_FLOAT, sizeof(xVector3), elem->renderData.normalP);
+                glNormalPointer (GL_FLOAT, sizeof(xVector3), elem->renderData.L_normals);
                 glEnableClientState(GL_NORMAL_ARRAY);
             }
         }
 
-        xFaceList *faceL = elem->faceListP;
+        xFaceList *faceL = elem->L_faceLists;
         xMaterial *m_currentMaterial = (xMaterial*)1;
-        for(int i=elem->faceListC; i; --i, ++faceL)
+        for(int i=elem->I_faceLists; i; --i, ++faceL)
         {
-            if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
-                (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
+            if ((transparent && (!faceL->Material || faceL->Material->transparency == 0.f)) ||
+                (!transparent && faceL->Material && faceL->Material->transparency > 0.f) )
                 continue;
-            if (elem->textured && faceL->materialP && faceL->materialP->texture.htex)
+            if (elem->FL_textured && faceL->Material && faceL->Material->texture.htex)
             {
                 textured = true;
                 continue;
             }
-            if (faceL->materialP != m_currentMaterial)
-                RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
-            glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
+            if (faceL->Material != m_currentMaterial)
+                RendererGL::SetMaterial(elem->Color, m_currentMaterial = faceL->Material, false);
+            glDrawElements(GL_TRIANGLES, 3*faceL->I_count, GL_UNSIGNED_SHORT, elem->renderData.L_faces+faceL->I_offset);
         }
-        if (!textured && elem->renderData.normalP) glDisableClientState(GL_NORMAL_ARRAY);
-        if (!textured && elem->skeletized)
+        if (!textured && elem->renderData.L_normals) glDisableClientState(GL_NORMAL_ARRAY);
+        if (!textured && elem->FL_skeletized)
             g_AnimSkeletal.EndAnimation();
 
         glEndList();
     }
 
-    if (textured && elem->textured && !listIDTex)
+    if (textured && elem->FL_textured && !listIDTex)
     {
         glNewList(listIDTex = glGenLists(1), GL_COMPILE);
 
-        if (elem->skeletized) {
+        if (elem->FL_skeletized) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.verticesTSP->tx));
-            g_AnimSkeletal.SetBones (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, false);
+            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.L_verticesTS->tx));
+            g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
         }
         else {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), &(elem->renderData.verticesTP->tx));
+            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), &(elem->renderData.L_verticesT->tx));
         }
 
-        xFaceList *faceL = elem->faceListP;
+        xFaceList *faceL = elem->L_faceLists;
         xMaterial *m_currentMaterial = (xMaterial*)1;
-        for(int i=elem->faceListC; i; --i, ++faceL)
+        for(int i=elem->I_faceLists; i; --i, ++faceL)
         {
-            if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
-                (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
+            if ((transparent && (!faceL->Material || faceL->Material->transparency == 0.f)) ||
+                (!transparent && faceL->Material && faceL->Material->transparency > 0.f) )
                 continue;
-            if (!faceL->materialP || !faceL->materialP->texture.htex)
+            if (!faceL->Material || !faceL->Material->texture.htex)
                 continue;
-            if (faceL->materialP != m_currentMaterial)
-                RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP, false);
-            glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, elem->renderData.facesP+faceL->indexOffset);
+            if (faceL->Material != m_currentMaterial)
+                RendererGL::SetMaterial(elem->Color, m_currentMaterial = faceL->Material, false);
+            glDrawElements(GL_TRIANGLES, 3*faceL->I_count, GL_UNSIGNED_SHORT, elem->renderData.L_faces+faceL->I_offset);
         }
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        if (elem->renderData.normalP) glDisableClientState(GL_NORMAL_ARRAY);
-        if (elem->skeletized)
+        if (elem->renderData.L_normals) glDisableClientState(GL_NORMAL_ARRAY);
+        if (elem->FL_skeletized)
             g_AnimSkeletal.EndAnimation();
 
         glEndList();
@@ -134,7 +134,7 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
     {
         glPushMatrix();
         {
-            glMultMatrixf(&elem->matrix.x0);
+            glMultMatrixf(&elem->MX_MeshToLocal.x0);
             GLShader::EnableTexturing(xState_Off);
             GLShader::Start();
             glCallList(listID);
@@ -152,15 +152,15 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
 void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xLightVector &lights,
                     xElement *elem, xModelInstance &modelInstance)
 {
-    for (xElement *selem = elem->kidsP; selem; selem = selem->nextP)
+    for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderElementAmbientVBO(transparent, FOV, lights, selem, modelInstance);
 
-    if (!elem->renderData.verticesC
-        || (transparent && !elem->transparent)
-        || (!transparent && !elem->opaque)) return;
+    if (!elem->renderData.I_vertices
+        || (transparent && !elem->FL_transparent)
+        || (!transparent && !elem->FL_opaque)) return;
 
-    xElementInstance &instance = modelInstance.elementInstanceP[elem->id];
-    xMatrix mtxTrasformation = elem->matrix * modelInstance.location;
+    xElementInstance &instance = modelInstance.L_elements[elem->ID];
+    xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
     xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
     if (!FOV.CheckSphere(center, instance.bsRadius) ||
         !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
@@ -189,23 +189,23 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
 
     /************************* LOAD VERTICES ****************************/
     glPushMatrix();
-    glMultMatrixf(&elem->matrix.matrix[0][0]);
+    glMultMatrixf(&elem->MX_MeshToLocal.matrix[0][0]);
 
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.vertexB );
-    if (elem->skeletized) {
-        if (elem->textured) {
+    if (elem->FL_skeletized) {
+        if (elem->FL_textured) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), (void *)(7*sizeof(xFLOAT)));
         }
         GLShader::EnableSkeleton(xState_On);
         GLShader::Start();
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, true);
+        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
         g_AnimSkeletal.SetElement(elem, &instance, true);
     }
     else
     {
-        if (elem->textured) {
+        if (elem->FL_textured) {
             glVertexPointer   (3, GL_FLOAT, sizeof(xVertexTex), 0);
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), (void *)(3*sizeof(xFLOAT)));
@@ -217,25 +217,25 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
     /************************* RENDER FACES ****************************/
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.indexB );
     xMaterial *m_currentMaterial = (xMaterial*)1;
-    xFaceList *faceL = elem->faceListP;
-    for(int i=elem->faceListC; i; --i, ++faceL)
+    xFaceList *faceL = elem->L_faceLists;
+    for(int i=elem->I_faceLists; i; --i, ++faceL)
     {
-        if ((transparent && (!faceL->materialP || faceL->materialP->transparency == 0.f)) ||
-            (!transparent && faceL->materialP && faceL->materialP->transparency > 0.f) )
+        if ((transparent && (!faceL->Material || faceL->Material->transparency == 0.f)) ||
+            (!transparent && faceL->Material && faceL->Material->transparency > 0.f) )
             continue;
-        if (faceL->materialP != m_currentMaterial)
+        if (faceL->Material != m_currentMaterial)
         {
-            RendererGL::SetMaterial(elem->color, m_currentMaterial = faceL->materialP);
-            if (elem->skeletized) g_AnimSkeletal.SetBones  (modelInstance.bonesC, modelInstance.bonesM, modelInstance.bonesQ, elem, true);
+            RendererGL::SetMaterial(elem->Color, m_currentMaterial = faceL->Material);
+            if (elem->FL_skeletized) g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
         }
-        glDrawElements(GL_TRIANGLES, 3*faceL->indexCount, GL_UNSIGNED_SHORT, (void*)(faceL->indexOffset*3*sizeof(xWORD)));
+        glDrawElements(GL_TRIANGLES, 3*faceL->I_count, GL_UNSIGNED_SHORT, (void*)(faceL->I_offset*3*sizeof(xWORD)));
     }
     glBindBufferARB ( GL_ELEMENT_ARRAY_BUFFER_ARB, 0 );
     glBindBufferARB ( GL_ARRAY_BUFFER_ARB, 0 );
 
-    if (elem->textured)
+    if (elem->FL_textured)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    if (elem->skeletized)
+    if (elem->FL_skeletized)
         g_AnimSkeletal.EndAnimation();
     GLShader::EnableSkeleton(xState_Off);
 
@@ -245,16 +245,16 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
 void RendererGL :: RenderAmbient(xModel &model, xModelInstance &instance, const xLightVector &lights,
                               bool transparent, const xFieldOfView &FOV)
 {
-    if ((transparent  && !model.transparent) ||
-        (!transparent && !model.opaque)) return;
+    if ((transparent  && !model.FL_transparent) ||
+        (!transparent && !model.FL_opaque)) return;
 
     InitTextures(model);
     glEnableClientState(GL_VERTEX_ARRAY);
 
     glPushMatrix();
-    glMultMatrixf(&instance.location.x0);
+    glMultMatrixf(&instance.MX_LocalToWorld.x0);
 
-    for (xElement *elem = model.kidsP; elem; elem = elem->nextP)
+    for (xElement *elem = model.L_kids; elem; elem = elem->Next)
         if (UseVBO)
             RenderElementAmbientVBO(transparent, FOV, lights, elem, instance);
         else

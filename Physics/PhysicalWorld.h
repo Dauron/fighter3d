@@ -10,25 +10,27 @@ namespace Physics {
     class PhysicalWorld
     {
     public:
-        void Interact(xFLOAT T_time, IPhysicalBody **L_object, xWORD I_object)
-        {
-            if (!I_object) return;
+        typedef std::vector<IPhysicalBody*> ObjectVector;
 
-            IPhysicalBody **Object_1,
-                          **Object_2,
-                          **Object_2_Last = L_object + I_object,
-                          **Object_1_Last = Object_2_Last - 1;
+        void Interact(xFLOAT T_time, ObjectVector &L_objects)
+        {
+            if (!L_objects.size()) return;
+
+            ObjectVector::iterator Object_1,
+                                   Object_2,
+                                   Object_2_Last = L_objects.end(),
+                                   Object_1_Last = Object_2_Last - 1;
 
             BVHCollider  Collider;
             CollisionSet cset;
 
-            for (Object_1 = L_object; Object_1 != Object_1_Last; ++Object_1)
+            for (Object_1 = L_objects.begin(); Object_1 != Object_1_Last; ++Object_1)
                 for (Object_2 = Object_1 + 1; Object_2 != Object_2_Last; ++Object_2)
                 {
                     IPhysicalBody &pBody1 = **Object_1,
                                   &pBody2 = **Object_2;
 
-                    if (! (pBody1.IsStationary() && pBody2.IsStationary() ) &&
+                    if (! (pBody1.FL_stationary && pBody2.FL_stationary ) &&
                         Collider.Collide(pBody1.BVHierarchy, pBody2.BVHierarchy,
                                          pBody1.MX_LocalToWorld_Get(),
                                          pBody2.MX_LocalToWorld_Get(),
@@ -37,7 +39,7 @@ namespace Physics {
                         CollisionSet::CollisionVec::iterator collision, ci_end = cset.collisions.end();
 
                         xFLOAT W_hits_Inv = 1.f / cset.Count();
-                        if (!(pBody1.IsStationary() || pBody2.IsStationary()))
+                        if (!(pBody1.FL_stationary || pBody2.FL_stationary))
                         {
                             xFLOAT M_mass_1 = pBody1.GetMass();
                             xFLOAT M_mass_2 = pBody2.GetMass();
@@ -66,7 +68,7 @@ namespace Physics {
                             }
                         }
                         else
-                        if (pBody2.IsStationary())
+                        if (pBody2.FL_stationary)
                         {
                             xFLOAT W_V1_1 = -2.f * W_hits_Inv;
                             for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
@@ -77,7 +79,7 @@ namespace Physics {
                             }
                         }
                         else
-                        if (pBody1.IsStationary())
+                        if (pBody1.FL_stationary)
                         {
                             xFLOAT W_V2_2 = -2.f * W_hits_Inv;
                             for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
@@ -92,7 +94,7 @@ namespace Physics {
                     }
                 }
 
-            for (Object_1 = L_object; Object_1 != Object_2_Last; ++Object_1)
+            for (Object_1 = L_objects.begin(); Object_1 != Object_2_Last; ++Object_1)
                 (**Object_1).FrameUpdate(T_time);
         }
     };

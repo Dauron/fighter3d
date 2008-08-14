@@ -7,8 +7,8 @@
 
 struct xIKNode
 {
-    xBYTE     id;
-    char     *name;
+    xBYTE     ID;
+    char     *Name;
     xFLOAT    weight;
 
     xVector3  pointB;
@@ -40,8 +40,8 @@ struct xIKNode
 
     void Zero()
     {
-        id     = 0;
-        name   = 0;
+        ID     = 0;
+        Name   = 0;
         weight = 1.f;
         pointB.zero();
         joinsBP = NULL;
@@ -58,7 +58,7 @@ struct xIKNode
 
     void Clear()
     {
-        if (name)    delete[] name;
+        if (Name)    delete[] Name;
         if (joinsBP) delete[] joinsBP;
         if (joinsEP) delete[] joinsEP;
     }

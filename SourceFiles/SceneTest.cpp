@@ -6,7 +6,6 @@
 #include "SceneConsole.h"
 #include "../Graphics/OGL/Extensions/GLExtensions.h"
 #include "../Physics/Colliders/FigureCollider.h"
-#include "../Physics/PhysicalWorld.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
@@ -22,35 +21,45 @@ bool SceneTest::Initialize(int left, int top, unsigned int width, unsigned int h
 
     if (DefaultCamera != &fCamera)
     {
-        figures[0][0] = &pf_sphere1;
-        figures[0][1] = &pf_sphere2;
+        figures[0].clear();
+        figures[0].push_back(&pf_sphere1);
+        figures[0].push_back(&pf_sphere2);
 
-        figures[1][0] = &pf_sphere1;
-        figures[1][1] = &pf_capsule1;
+        figures[1].clear();
+        figures[1].push_back(&pf_sphere1);
+        figures[1].push_back(&pf_capsule1);
 
-        figures[2][0] = &pf_capsule1;
-        figures[2][1] = &pf_capsule2;
+        figures[2].clear();
+        figures[2].push_back(&pf_capsule1);
+        figures[2].push_back(&pf_capsule2);
 
-        figures[3][0] = &pf_cube1;
-        figures[3][1] = &pf_cube2;
+        figures[3].clear();
+        figures[3].push_back(&pf_cube1);
+        figures[3].push_back(&pf_cube2);
 
-        figures[4][0] = &pf_cube1;
-        figures[4][1] = &pf_sphere2;
+        figures[4].clear();
+        figures[4].push_back(&pf_cube1);
+        figures[4].push_back(&pf_sphere2);
 
-        figures[5][0] = &pf_cube1;
-        figures[5][1] = &pf_capsule1;
+        figures[5].clear();
+        figures[5].push_back(&pf_cube1);
+        figures[5].push_back(&pf_capsule1);
 
-        figures[6][0] = &pf_mesh1;
-        figures[6][1] = &pf_sphere2;
+        figures[6].clear();
+        figures[6].push_back(&pf_mesh1);
+        figures[6].push_back(&pf_sphere2);
 
-        figures[7][0] = &pf_mesh1;
-        figures[7][1] = &pf_cube2;
+        figures[7].clear();
+        figures[7].push_back(&pf_mesh1);
+        figures[7].push_back(&pf_cube2);
 
-        figures[8][0] = &pf_mesh1;
-        figures[8][1] = &pf_capsule1;
+        figures[8].clear();
+        figures[8].push_back(&pf_mesh1);
+        figures[8].push_back(&pf_capsule1);
 
-        figures[9][0] = &pf_mesh1;
-        figures[9][1] = &pf_mesh2;
+        figures[9].clear();
+        figures[9].push_back(&pf_mesh1);
+        figures[9].push_back(&pf_mesh2);
 
         fCamera.SetCamera(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
         DefaultCamera = &fCamera;
@@ -70,21 +79,25 @@ bool SceneTest::Initialize(int left, int top, unsigned int width, unsigned int h
 void SceneTest::InitObjects()
 {
     xSphere &sphere1 = *(xSphere*) pf_sphere1.BVHierarchy.Figure;
+    pf_sphere1.ApplyDefaults();
     sphere1.P_center.init(-3,-5,2);
     sphere1.S_radius = 1.f;
     pf_sphere1.Initialize();
     xSphere &sphere2 = *(xSphere*) pf_sphere2.BVHierarchy.Figure;
+    pf_sphere2.ApplyDefaults();
     sphere2.P_center.init(3,-5,0);
     sphere2.S_radius = 2.f;
     pf_sphere2.Initialize();
 
     xCapsule &capsule1 = *(xCapsule*) pf_capsule1.BVHierarchy.Figure;
+    pf_capsule1.ApplyDefaults();
     capsule1.P_center.init(3, -5, 0);
     capsule1.N_top.init(1,0,0);
     capsule1.S_radius = 0.5f;
     capsule1.S_top    = 2.f;
     pf_capsule1.Initialize();
     xCapsule &capsule2 = *(xCapsule*) pf_capsule2.BVHierarchy.Figure;
+    pf_capsule2.ApplyDefaults();
     capsule2.P_center.init(-3, -5, 0);
     capsule2.N_top.init(0,0,1);
     capsule2.S_radius = 1.5f;
@@ -92,6 +105,7 @@ void SceneTest::InitObjects()
     pf_capsule2.Initialize();
 
     xBoxO &cube1 = *(xBoxO*) pf_cube1.BVHierarchy.Figure;
+    pf_cube1.ApplyDefaults();
     cube1.P_center.init(-3,-5,-2);
     cube1.S_top   = 1.f;
     cube1.S_front = 2.f;
@@ -101,6 +115,7 @@ void SceneTest::InitObjects()
     cube1.N_front = xVector3::CrossProduct(cube1.N_top, cube1.N_side);
     pf_cube1.Initialize();
     xBoxO &cube2 = *(xBoxO*) pf_cube2.BVHierarchy.Figure;
+    pf_cube2.ApplyDefaults();
     cube2.P_center.init(3,-5,0);
     cube2.S_top   = 1.2f;
     cube2.S_front = 1.7f;
@@ -151,11 +166,11 @@ void SceneTest::InitObjects()
         mesh1.MeshData->L_FaceData   = (xBYTE*) ID_face;
         mesh1.MeshData->I_FaceCount  = 3;
         mesh1.MeshData->I_FaceStride = sizeof(xWORD3);
-
-        mesh1.Transform(xMatrix::Identity());
-        mesh1.MeshData->CalculateProperties();
-        mesh1.P_center = mesh1.MeshData->P_center;
     }
+    mesh1.Transform(xMatrix::Identity());
+    mesh1.MeshData->CalculateProperties();
+    pf_mesh1.ApplyDefaults();
+    mesh1.P_center = mesh1.MeshData->P_center;
     pf_mesh1.Initialize();
 
     xMesh &mesh2 = *(xMesh*) pf_mesh2.BVHierarchy.Figure;
@@ -199,11 +214,11 @@ void SceneTest::InitObjects()
         mesh2.MeshData->L_FaceData   = (xBYTE*) ID_face;
         mesh2.MeshData->I_FaceCount  = 3;
         mesh2.MeshData->I_FaceStride = sizeof(xWORD3);
-
-        mesh2.Transform(xMatrix::Identity());
-        mesh2.MeshData->CalculateProperties();
-        mesh2.P_center = mesh2.MeshData->P_center;
     }
+    mesh2.Transform(xMatrix::Identity());
+    mesh2.MeshData->CalculateProperties();
+    pf_mesh2.ApplyDefaults();
+    mesh2.P_center = mesh2.MeshData->P_center;
     pf_mesh2.Initialize();
 
     if (Config::TestCase < 0) Config::TestCase = 0;
@@ -399,7 +414,7 @@ bool SceneTest::Update(float deltaTime)
     {
         if (FL_mouse_down)
         {
-            Physics::PhysicalFigure &p_figure = *figures[Config::TestCase][selected];
+            Physics::PhysicalFigure &p_figure = *(Physics::PhysicalFigure*)figures[Config::TestCase][selected];
             if (selectedSub == 0)
             {
                 xVector3 P_currMouse = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, p_figure.P_center_Trfm);
@@ -484,7 +499,7 @@ bool SceneTest::Update(float deltaTime)
             if (selected != -1)
             {
                 FL_mouse_down = true;
-                Physics::PhysicalFigure &p_figure = *figures[Config::TestCase][selected];
+                Physics::PhysicalFigure &p_figure = *(Physics::PhysicalFigure*)figures[Config::TestCase][selected];
                 p_figure.Stop();
 
                 selectedSub = 0;
@@ -563,7 +578,7 @@ bool SceneTest::Update(float deltaTime)
 
     T_total += deltaTime;
     if (!FL_mouse_down && !FL_pause)
-        Physics::PhysicalWorld().Interact(deltaTime, (Physics::IPhysicalBody**) figures[Config::TestCase], 2);
+        Physics::PhysicalWorld().Interact(deltaTime, figures[Config::TestCase]);
 
     if (!im.GetInputState(IC_LClick) && FL_mouse_down)
     {

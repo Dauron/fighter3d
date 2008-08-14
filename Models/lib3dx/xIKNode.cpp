@@ -77,7 +77,7 @@ void xIKNode :: CloneTo(xIKNode &dst) const
 {
     dst = *this;
 
-    if (name) dst.name = strdup(name);
+    if (Name) dst.Name = strdup(Name);
 
     if (joinsBC)
     {
@@ -98,13 +98,13 @@ void xIKNode :: Load( FILE *file )
     fread(&nameLen, sizeof(xBYTE), 1, file);
     if (nameLen)
     {
-        this->name = new char[nameLen];
-        fread(this->name, 1, nameLen, file);
+        this->Name = new char[nameLen];
+        fread(this->Name, 1, nameLen, file);
     }
     else
-        this->name = NULL;
+        this->Name = NULL;
 
-    fread(&this->id,      sizeof(xBYTE), 1, file);
+    fread(&this->ID,      sizeof(xBYTE), 1, file);
     fread(&this->weight,  sizeof(xFLOAT), 1, file);
     //weight = 1.f;
 
@@ -138,13 +138,13 @@ void xIKNode :: Load( FILE *file )
 void xIKNode :: Save( FILE *file ) const
 {
     xBYTE nameLen = 0;
-    if (this->name)
-        nameLen = strlen(this->name)+1;
+    if (this->Name)
+        nameLen = strlen(this->Name)+1;
     fwrite(&nameLen,      sizeof(xBYTE), 1, file);
     if (nameLen)
-        fwrite(this->name, 1, nameLen, file);
+        fwrite(this->Name, 1, nameLen, file);
 
-    fwrite(&this->id,      sizeof(xBYTE), 1, file);
+    fwrite(&this->ID,      sizeof(xBYTE), 1, file);
     fwrite(&this->weight,  sizeof(xFLOAT), 1, file);
 
     fwrite(&this->pointB,  sizeof(xVector3), 1, file);

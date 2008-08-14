@@ -50,7 +50,7 @@ class SceneGame : public Scene, private ISelectionProvider
     RigidObj *Select(int X, int Y)
     {
         std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(&FOV, X, Y);
-        return objectIDs == NULL ? NULL : world.objects[objectIDs->back()];
+        return objectIDs == NULL ? NULL : (RigidObj*) world.objects[objectIDs->back()];
     }
 
 

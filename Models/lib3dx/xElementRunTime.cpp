@@ -4,7 +4,7 @@ xShadowData & xElementInstance :: GetShadowData(xLight &light, xShadowData::xSha
 {
     xShadowDataVector::iterator iter = gpuShadows.begin(), iterE = gpuShadows.end();
     for (; iter != iterE; ++iter)
-        if (iter->lightId == light.id)
+        if (iter->ID_light == light.id)
         {
             if (light.modified || iter->zDataLevel < zLevel)
                 iter->FreeData();
@@ -14,7 +14,7 @@ xShadowData & xElementInstance :: GetShadowData(xLight &light, xShadowData::xSha
 
     xShadowData newData;
     memset(&newData, 0, sizeof(xShadowData));
-    newData.lightId = light.id;
+    newData.ID_light = light.id;
     newData.zDataLevel = zLevel;
     gpuShadows.push_back(newData);
     return *gpuShadows.rbegin();
@@ -31,9 +31,9 @@ void xElementInstance :: Zero()
     bsCenter.zero();
     bsRadius = 0;
 
-    verticesC = 0;
-    verticesP = NULL;
-    normalsP  = NULL;
+    I_vertices = 0;
+    L_vertices = NULL;
+    L_normals  = NULL;
 }
 
 void xElementInstance :: Clear()
@@ -43,8 +43,8 @@ void xElementInstance :: Clear()
         iter->FreeData();
     gpuShadows.clear();
 
-    if (verticesP) { delete[] verticesP; verticesP = NULL; }
-    if (normalsP)  { delete[] normalsP;  normalsP  = NULL; }
+    if (L_vertices) { delete[] L_vertices; L_vertices = NULL; }
+    if (L_normals)  { delete[] L_normals;  L_normals  = NULL; }
 }
 
 void xElementInstance :: InvalidateVertexData()
@@ -53,6 +53,6 @@ void xElementInstance :: InvalidateVertexData()
     for (; iter != iterE; ++iter)
         iter->InvalidateData();
 
-    //if (verticesP) { delete[] verticesP; verticesP = NULL; }
-    //if (normalsP)  { delete[] normalsP;  normalsP  = NULL; }
+    //if (L_vertices) { delete[] L_vertices; L_vertices = NULL; }
+    //if (L_normals)  { delete[] L_normals;  L_normals  = NULL; }
 }
