@@ -3,9 +3,19 @@
 
 #include "../Math/xMath.h"
 #include "../Math/Figures/xBVHierarchy.h"
+#include <vector>
 
 namespace Physics {
     using namespace Math::Figures;
+
+    struct HitInfo
+    {
+        xPoint3  P_collision;
+        xVector3 NW_collision;
+
+        HitInfo( const xPoint3  &p_collision, const xVector3 &nw_collision )
+            : P_collision(p_collision), NW_collision(nw_collision) {}
+    };
 
     class IPhysicalBody
     {
@@ -18,7 +28,12 @@ namespace Physics {
         bool         IsInitialized()     { return FL_initialized; }
 
     public:
-        bool         FL_stationary;
+        bool         FL_stationary; // no movement
+        bool         FL_phantom;    // no collisions
+        bool         FL_physical;   // affected by gravity?
+        float        W_resilience;  // how much energy will the object retain during collisions
+
+        std::vector<HitInfo> Collisions;
 
         xBVHierarchy BVHierarchy;
 
@@ -30,20 +45,26 @@ namespace Physics {
         virtual       xMatrix &MX_LocalToWorld_Set() = 0;
 
         virtual xVector3 GetVelocity() = 0;
-        virtual xVector3 GetVelocity(xPoint3 P_point) = 0;
+        virtual xVector3 GetVelocity(const xPoint3 &P_point) = 0;
 
         virtual xVector3 GetForce(xFLOAT T_time_inv) = 0;
-        virtual xVector3 GetForce(xFLOAT T_time_inv, xPoint3 P_point) = 0;
+        virtual xVector3 GetForce(xFLOAT T_time_inv, const xPoint3 &P_point) = 0;
 
-        virtual void     ApplyAcceleration(xVector3 NW_accel, xFLOAT T_time) = 0;
-        virtual void     ApplyAcceleration(xVector3 NW_accel, xFLOAT T_time, xPoint3 P_point) = 0;
+        virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time) = 0;
+        virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time, const xPoint3 &P_point) = 0;
 
-        virtual void     ApplyForce(xVector3 NW_force, xFLOAT T_time) = 0;
-        virtual void     ApplyForce(xVector3 NW_force, xFLOAT T_time, xPoint3 P_point) = 0;
+        virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time) = 0;
+        virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time, const xPoint3 &P_point) = 0;
 
         IPhysicalBody() : FL_initialized(false), FL_defaults_applied(false) {}
 
-        virtual void     ApplyDefaults()            { FL_defaults_applied = true; FL_stationary = false; }
+        virtual void     ApplyDefaults()            {
+            FL_defaults_applied = true;
+            FL_stationary       = false;
+            FL_phantom          = false;
+            FL_physical         = true;
+            W_resilience        = 0.2f;
+        }
         virtual void     Initialize()
         {
             if (!IsDefaultsApplied()) ApplyDefaults();

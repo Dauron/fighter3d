@@ -20,9 +20,6 @@ public:
     } Type;
 
     bool           FL_shadowcaster;
-    bool           FL_phantom;   // no collisions
-    bool           FL_physical;  // affected by gravity?
-    float          W_resilience; // how much energy will the object retain during collisions
 
     VConstraintCollisionVector collisionConstraints;
     VerletSystem               verletSystem;

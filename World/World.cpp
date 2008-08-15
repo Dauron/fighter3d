@@ -226,6 +226,7 @@ void World:: Load(const char *mapFileName)
                     xVector3 speed; speed.init(x*TIME_STEP_INV, y*TIME_STEP_INV, z*TIME_STEP_INV);
                     for (xWORD i = model->verletSystem.I_particles; i; --i, ++A_iter)
                         *A_iter = speed;
+                    model->ApplyAcceleration(xVector3::Create(x,y,z), 1.f);
                     continue;
                 }
                 if (StartsWith(buffer, "physical"))

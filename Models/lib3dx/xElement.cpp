@@ -69,7 +69,7 @@ void      xElement :: Free()
 
 #include "xModel.h"
 
-xElement *xElement :: Load (FILE *file, xModel *xmodel, bool createCollisionInfo)
+xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_CollisionInfo)
 {
     xElement *elem = new xElement();
     if (!elem) return NULL;
@@ -185,9 +185,9 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool createCollisionInfo
         for (int i=0; i < elem->I_kids; ++i)
         {
             if (last)
-                last = last->Next = xElement::Load(file, xmodel, createCollisionInfo);
+                last = last->Next = xElement::Load(file, xmodel, FL_create_CollisionInfo);
             else
-                last = elem->L_kids = xElement::Load(file, xmodel, createCollisionInfo);
+                last = elem->L_kids = xElement::Load(file, xmodel, FL_create_CollisionInfo);
             if (!last)
             {
                 elem->Free();
@@ -198,8 +198,8 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool createCollisionInfo
 
     if (xmodel->FL_save_bvh)
         elem->collisionData.Load(file, elem);
-    else
-    if (createCollisionInfo)
+    //else
+    if (FL_create_CollisionInfo)
         elem->collisionData.Fill(xmodel, elem);
 
     return elem;

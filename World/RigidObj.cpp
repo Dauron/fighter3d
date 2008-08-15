@@ -9,7 +9,6 @@ void RigidObj :: ApplyDefaults()
 
     M_mass       = 0.f;
     S_radius     = 0.f;
-    W_resilience = 0.2f;
 }
 
 void RigidObj :: Initialize ()
@@ -26,6 +25,7 @@ void RigidObj :: Initialize ()
             S_radius = 0.75 * ((Math::Figures::xCapsule*) BVHierarchy.Figure)->S_radius
                      + 0.25 * ((Math::Figures::xCapsule*) BVHierarchy.Figure)->S_top;
     }
+    P_center = BVHierarchy.Figure->P_center;
 
     Type = Model_Rigid;
     UpdateMatrices();

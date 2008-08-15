@@ -47,7 +47,7 @@ struct xElement {
     xElement  *ById     ( xBYTE eid );
     xBYTE      CountAll ();
 
-    size_t     GetVertexStride() {
+    size_t     GetVertexStride() const {
         return FL_skeletized
             ? (FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
             : (FL_textured ? sizeof(xVertexTex)     : sizeof(xVertex));
@@ -55,7 +55,7 @@ struct xElement {
 
            void      Free();
            void      Save( FILE *file, const xModel *xmodel );
-    static xElement *Load( FILE *file, xModel *xmodel, bool createCollisionInfo );
+    static xElement *Load( FILE *file, xModel *xmodel, bool FL_create_CollisionInfo );
 
     void         FillShadowEdges();
     void         CalculateSmoothVertices();

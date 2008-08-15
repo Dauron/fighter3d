@@ -25,10 +25,10 @@ int main( int argc, char **argv )
     game.OnApplicationInvalidate = OnApplicationInvalidate;
     game.OnApplicationTerminate  = OnApplicationTerminate;
 #ifndef NDEBUG
-    if (!game.Initialize("Camera Fighter - Debug", 800, 600, false, new SceneTest()))
+    if (!game.Initialize("Camera Fighter - Debug", 800, 600, false, new SceneGame()))
         return 1;
 #else
-    if (!game.Initialize("Camera Fighter", 800, 600, false, new SceneTest()))
+    if (!game.Initialize("Camera Fighter", 800, 600, false, new SceneGame()))
         return 1;
 #endif
     int res = game.Run();

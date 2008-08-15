@@ -83,7 +83,7 @@ void xCollisionData :: FreeKids()
     if (this->L_kids)
     {
         xCollisionHierarchy *ch = this->L_kids;
-        for (int i = this->I_kids; i; --i)
+        for (int i = this->I_kids; i; --i, ++ch)
         {
             if (ch->L_faces)    delete[] ch->L_faces;
             if (ch->L_vertices) delete[] ch->L_vertices;
@@ -103,10 +103,28 @@ void CreateHierarchyFromVertices(const xElement                   *elem,
                                  std::vector<xBoxA>               &cBoundings,
                                  std::vector<xCollisionHierarchy> &cHierarchy);
 
+inline void GetMinMax3(xFLOAT v1, xFLOAT v2, xFLOAT v3, xFLOAT &minV, xFLOAT &maxV)
+{
+    if (v1 >= v2)
+    {
+        if (v1 >= v3)
+        { maxV = v1; minV = min(v2, v3); }
+        else
+        { maxV = v3; minV = v2; }
+    }
+    else
+    {
+        if (v2 >= v3)
+        { maxV = v2; minV = min(v1, v3); }
+        else
+        { maxV = v3; minV = v1; }
+    }
+}
+
 void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
 {
-    //if (this->L_kids) // force Octree recalculation
-    //    this->FreeKids();
+    if (this->L_kids) // force Octree recalculation
+        this->FreeKids();
     if (this->L_kids == NULL)
     {
         if (!elem->I_vertices)
@@ -138,9 +156,7 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
         }
 
         xBYTE *src    = (xBYTE *) elem->L_vertices;
-        xDWORD stride = elem->FL_skeletized
-            ? (elem->FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
-            : (elem->FL_textured ? sizeof(xVertexTex)     : sizeof(xVertex));
+        xDWORD stride = elem->GetVertexStride();
         std::vector<xCollisionHierarchy> cHierarchy;
 
         if (!elem->FL_skeletized || !xmodel->Spine.I_bones)
@@ -151,13 +167,14 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
             hierarchy.I_faces    = elem->I_faces;
             hierarchy.I_vertices = elem->I_vertices;
             xFace **iterHF = hierarchy.L_faces    = new xFace*[elem->I_faces];
-            xWORD   *iterHV = hierarchy.L_vertices = new xWORD[elem->I_vertices];
+            xWORD  *iterHV = hierarchy.L_vertices = new xWORD[elem->I_vertices];
             xFace  *iterF  = elem->L_faces;
 
+            // copy all faces, and calculate maximal bounding box
+            xFLOAT minV, maxV;
             xBoxA bounding;
-            bounding.P_max.x = -1000000000.f; bounding.P_max.y = -1000000000.f; bounding.P_max.z = -1000000000.f;
-            bounding.P_min.x =  1000000000.f; bounding.P_min.y =  1000000000.f; bounding.P_min.z =  1000000000.f;
-
+            bounding.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
+            bounding.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
             for (int i = elem->I_faces; i; --i, ++iterHF, ++iterF)
             {
                 *iterHF = iterF;
@@ -166,24 +183,20 @@ void xCollisionData :: Fill (xModel *xmodel, xElement *elem)
                 const xVector3 *v2 = (xVector3*) &((xVertex*) (src + stride*(*iterF)[1]))->pos;
                 const xVector3 *v3 = (xVector3*) &((xVertex*) (src + stride*(*iterF)[2]))->pos;
 
-                float minx = min(v1->x, min(v2->x, v3->x));
-                float miny = min(v1->y, min(v2->y, v3->y));
-                float minz = min(v1->z, min(v2->z, v3->z));
-                float maxx = max(v1->x, max(v2->x, v3->x));
-                float maxy = max(v1->y, max(v2->y, v3->y));
-                float maxz = max(v1->z, max(v2->z, v3->z));
-
-                if (minx < bounding.P_min.x) bounding.P_min.x = minx;
-                if (miny < bounding.P_min.y) bounding.P_min.y = miny;
-                if (minz < bounding.P_min.z) bounding.P_min.z = minz;
-                if (maxx > bounding.P_max.x) bounding.P_max.x = maxx;
-                if (maxy > bounding.P_max.y) bounding.P_max.y = maxy;
-                if (maxz > bounding.P_max.z) bounding.P_max.z = maxz;
+                GetMinMax3(v1->x, v2->x, v3->x, minV, maxV);
+                if (minV < bounding.P_min.x) bounding.P_min.x = minV;
+                if (maxV > bounding.P_max.x) bounding.P_max.x = maxV;
+                GetMinMax3(v1->y, v2->y, v3->y, minV, maxV);
+                if (minV < bounding.P_min.y) bounding.P_min.y = minV;
+                if (maxV > bounding.P_max.y) bounding.P_max.y = maxV;
+                GetMinMax3(v1->z, v2->z, v3->z, minV, maxV);
+                if (minV < bounding.P_min.z) bounding.P_min.z = minV;
+                if (maxV > bounding.P_max.z) bounding.P_max.z = maxV;
             }
-
+            // copy all vertices
             for (xDWORD i = 0; i < elem->I_vertices; ++i, ++iterHV)
                 *iterHV = i;
-
+            // subdivide the bouding box
             hierarchy.Subdivide(elem, 5.f, 1, bounding);
             cHierarchy.push_back(hierarchy);
         }
@@ -262,9 +275,9 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
     int   cy = (int)ceil(dy / wy);
     int   cz = (int)ceil(dz / wz);
 
+    // create bounding box grid
     std::vector<xBoxA> cBoundings;
     cBoundings.resize(cx*cy*cz);
-
     for (int ix = 0; ix < cx; ++ix)
         for (int iy = 0; iy < cy; ++iy)
             for (int iz = 0; iz < cz; ++iz)
@@ -279,9 +292,11 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
                 cBounding.P_max.z = (iz+1 != cz) ? (iz+1) * wz + bounding.P_min.z : bounding.P_max.z;
             }
 
+    // create subhierarchies for given grid
     std::vector<xCollisionHierarchy> cHierarchy;
     CreateHierarchyFromVertices(elem, this, cBoundings, cHierarchy);
 
+    // subdivide subhierarchies
     if (depth < MAX_HIERARCHY_DEPTH)
         for (size_t i = 0; i<cHierarchy.size(); ++i)
             if (cHierarchy[i].I_faces > 20)
@@ -292,6 +307,7 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
                 cHierarchy[i].Subdivide(elem, scale, depth+1, cBoundings[i]);
             }
 
+    // remove empty subitems
     for (size_t i = 0; i<cHierarchy.size(); ++i)
         if (cHierarchy[i].I_faces == 0)
         {
@@ -299,6 +315,7 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
             cHierarchy.resize(cHierarchy.size()-1);
         }
 
+    // return if no children
     if (cHierarchy.empty())
         return;
 
@@ -306,6 +323,7 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
     this->L_faces = NULL;
     delete[] this->L_vertices;
     this->L_vertices = NULL;
+    // if only one child, merge it with its parent
     if (cHierarchy.size() == 1)
     {
         this->L_vertices = cHierarchy[0].L_vertices;
@@ -313,6 +331,7 @@ void xCollisionHierarchy :: Subdivide(const xElement *elem, float scale, int dep
         this->I_kids  = cHierarchy[0].I_kids;
         this->L_kids  = cHierarchy[0].L_kids;
     }
+    // otherwise save all children
     else
     {
         this->I_kids = cHierarchy.size();
@@ -328,15 +347,13 @@ void CreateHierarchyFromVertices(const xElement                   *elem,
                                  std::vector<xCollisionHierarchy> &cHierarchy)
 {
     std::vector<std::vector<xFace*> > cFaces;
-    std::vector<std::vector<xWORD> >   cVerts;
-    std::vector<xWORD>::iterator       found;
+    std::vector<std::vector<xWORD> >  cVerts;
+    std::vector<xWORD>::iterator      found;
     cFaces.resize(cBoundings.size());
     cVerts.resize(cBoundings.size());
 
     xBYTE *src    = (xBYTE *) elem->L_vertices;
-    xDWORD stride = elem->FL_skeletized
-        ? (elem->FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
-        : (elem->FL_textured ? sizeof(xVertexTex)     : sizeof(xVertex));
+    xDWORD stride = elem->GetVertexStride();
 
     if (baseHierarchy)
     {
@@ -359,11 +376,11 @@ void CreateHierarchyFromVertices(const xElement                   *elem,
                                         (cVerts[j].begin(), cVerts[j].end(), (**iterF)[0]);
                     if (found == cVerts[j].end()) cVerts[j].push_back((**iterF)[0]);
                     found = std::find<std::vector<xWORD>::iterator, xWORD>
-                                        (cVerts[j].begin(), cVerts[j].end(), (**iterF)[0]);
-                    if (found == cVerts[j].end()) cVerts[j].push_back((**iterF)[0]);
+                                        (cVerts[j].begin(), cVerts[j].end(), (**iterF)[1]);
+                    if (found == cVerts[j].end()) cVerts[j].push_back((**iterF)[1]);
                     found = std::find<std::vector<xWORD>::iterator, xWORD>
-                                        (cVerts[j].begin(), cVerts[j].end(), (**iterF)[0]);
-                    if (found == cVerts[j].end()) cVerts[j].push_back((**iterF)[0]);
+                                        (cVerts[j].begin(), cVerts[j].end(), (**iterF)[2]);
+                    if (found == cVerts[j].end()) cVerts[j].push_back((**iterF)[2]);
                     break;
                 }
             }
@@ -389,11 +406,11 @@ void CreateHierarchyFromVertices(const xElement                   *elem,
                                         (cVerts[j].begin(), cVerts[j].end(), (*iterF)[0]);
                     if (found == cVerts[j].end()) cVerts[j].push_back((*iterF)[0]);
                     found = std::find<std::vector<xWORD>::iterator, xWORD>
-                                        (cVerts[j].begin(), cVerts[j].end(), (*iterF)[0]);
-                    if (found == cVerts[j].end()) cVerts[j].push_back((*iterF)[0]);
+                                        (cVerts[j].begin(), cVerts[j].end(), (*iterF)[1]);
+                    if (found == cVerts[j].end()) cVerts[j].push_back((*iterF)[1]);
                     found = std::find<std::vector<xWORD>::iterator, xWORD>
-                                        (cVerts[j].begin(), cVerts[j].end(), (*iterF)[0]);
-                    if (found == cVerts[j].end()) cVerts[j].push_back((*iterF)[0]);
+                                        (cVerts[j].begin(), cVerts[j].end(), (*iterF)[2]);
+                    if (found == cVerts[j].end()) cVerts[j].push_back((*iterF)[2]);
                     break;
                 }
             }

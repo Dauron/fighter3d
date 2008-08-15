@@ -237,8 +237,8 @@ inline bool SegmentSegmentFixDistance(const xVector3 &N_fix, const xPoint3 &P_fi
                                       xFLOAT &S_minmax, xVector3 &N_fix_min)
 {
     xPlane PN_fix; PN_fix.init(N_fix, P_fix);
-    xFLOAT S_a = PN_fix.distanceToPoint(P_a);
-    xFLOAT S_b = PN_fix.distanceToPoint(P_b);
+    xFLOAT S_a = -PN_fix.distanceToPoint(P_a);
+    xFLOAT S_b = -PN_fix.distanceToPoint(P_b);
     xFLOAT S_max = max(S_a,S_b);
 
     if (S_max < S_minmax)
@@ -526,52 +526,149 @@ xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const x
     xVector3 N_fix_min;
     xFLOAT   S_minmax = xFLOAT_HUGE_POSITIVE;
     xFLOAT   S_a_min, S_b_min;
+    const xPoint3 *P_fix_min_a, *P_fix_min_b;
 
     xVector3 NW_12   = P_a2 - P_a1;
     xVector3 NW_23   = P_a3 - P_a2;
     xVector3 NW_31   = P_a1 - P_a3;
-    xVector3 NW_tri = xVector3::CrossProduct(NW_12, NW_23);
+    xVector3 N_tri = xVector3::CrossProduct(NW_12, NW_23).normalize();
 
-    if (SegmentSegmentFixDistance(xVector3::CrossProduct(NW_tri, NW_12).normalize(), P_a1,
+    xPlane PN_tri; PN_tri.init(N_tri, P_a1);
+    xFLOAT S_1 = PN_tri.distanceToPoint(*b1);
+    xFLOAT S_1a = fabs(S_1);
+    xFLOAT S_2 = PN_tri.distanceToPoint(*b2);
+    xFLOAT S_2a = fabs(S_2);
+    xFLOAT S_3 = PN_tri.distanceToPoint(*b3);
+    xFLOAT S_3a = fabs(S_3);
+
+    if (S_1 < 0)//(S_1a < S_2a || S_1a < S_3a)
+    {
+        N_fix_min = S_1 > 0 ? N_tri : -N_tri;
+        P_fix_min_a = b1;
+        S_a_min = S_1a;
+        S_b_min = -1.f;
+        S_minmax = S_1a;
+    }
+    else
+    {
+        N_fix_min = S_2 > 0 ? N_tri : -N_tri;
+        P_fix_min_a = b2;
+        P_fix_min_b = b3;
+        S_a_min = S_2a;
+        S_b_min = S_3a;
+        S_minmax = max(S_2a, S_3a);
+    }
+
+    NW_12 = P_b2 - P_b1;
+    NW_23 = P_b3 - P_b2;
+    NW_31 = P_b1 - P_b3;
+    N_tri = xVector3::CrossProduct(NW_12, NW_23).normalize();
+
+    PN_tri; PN_tri.init(N_tri, P_b1);
+    S_1 = PN_tri.distanceToPoint(*a1);
+    S_1a = fabs(S_1);
+    S_2 = PN_tri.distanceToPoint(*a2);
+    S_2a = fabs(S_2);
+    S_3 = PN_tri.distanceToPoint(*a3);
+    S_3a = fabs(S_3);
+
+    if (S_1 < 0)//(S_1a < S_2a || S_1a < S_3a)
+    {
+        if (S_1a < S_minmax)
+        {
+            N_fix_min = S_1 > 0 ? N_tri : -N_tri;
+            P_fix_min_a = a1;
+            S_a_min = S_1a;
+            S_b_min = -1.f;
+            S_minmax = S_1a;
+        }
+    }
+    else
+    {
+        if (S_2a < S_minmax && S_3a < S_minmax)
+        {
+            N_fix_min = S_2 > 0 ? N_tri : -N_tri;
+            P_fix_min_a = a2;
+            P_fix_min_b = a3;
+            S_a_min = S_2a;
+            S_b_min = S_3a;
+            S_minmax = max(S_2a, S_3a);
+        }
+    }
+/*
+    if (SegmentSegmentFixDistance(xVector3::CrossProduct(NW_12, NW_tri).normalize(), P_a1,
                               p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min))
         N_fix_min.invert();
-    if (SegmentSegmentFixDistance(xVector3::CrossProduct(NW_tri, NW_23).normalize(), P_a2,
+    if (SegmentSegmentFixDistance(xVector3::CrossProduct(NW_23, NW_tri).normalize(), P_a2,
                               p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min))
         N_fix_min.invert();
-    if (SegmentSegmentFixDistance(xVector3::CrossProduct(NW_tri, NW_31).normalize(), P_a3,
+    if (SegmentSegmentFixDistance(xVector3::CrossProduct(NW_31, NW_tri).normalize(), P_a3,
                               p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min))
         N_fix_min.invert();
-    SegmentSegmentFixDistanceAbs(NW_tri.normalize(), P_b1,
-                                 p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min);
+    if (SegmentSegmentFixDistanceAbs(NW_tri.normalize(), *b1,
+                                 p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min) &&
+        xVector3::DotProduct(NW_tri, *b1-*b2) < 0)
+        N_fix_min.invert();
+
+    xPlane PN_fix; PN_fix.init(NW_tri, *b1);
+    xFLOAT S_2 = fabs ( PN_fix.distanceToPoint(*b2) );
+    xFLOAT S_3 = fabs ( PN_fix.distanceToPoint(*b3) );
+    if (S_2 >= S_3)
+        if (SegmentSegmentFixDistanceAbs(-NW_tri, *b2,
+                                 p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min)  &&
+            xVector3::DotProduct(NW_tri, *b1-*b2) < 0)
+            N_fix_min.invert();
+    else
+        if (SegmentSegmentFixDistanceAbs(-NW_tri, *b3,
+                                 p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min)  &&
+            xVector3::DotProduct(NW_tri, *b1-*b2) < 0)
+            N_fix_min.invert();
 
     NW_12   = P_b2 - P_b1;
     NW_23   = P_b3 - P_b2;
     NW_31   = P_b1 - P_b3;
     NW_tri = xVector3::CrossProduct(NW_12, NW_23);
 
-    SegmentSegmentFixDistance(xVector3::CrossProduct(NW_tri, NW_12).normalize(), P_b1,
+    SegmentSegmentFixDistance(xVector3::CrossProduct(NW_12, NW_tri).normalize(), P_b1,
                               p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min);
-    SegmentSegmentFixDistance(xVector3::CrossProduct(NW_tri, NW_23).normalize(), P_b2,
+    SegmentSegmentFixDistance(xVector3::CrossProduct(NW_23, NW_tri).normalize(), P_b2,
                               p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min);
-    SegmentSegmentFixDistance(xVector3::CrossProduct(NW_tri, NW_31).normalize(), P_b3,
+    SegmentSegmentFixDistance(xVector3::CrossProduct(NW_31, NW_tri).normalize(), P_b3,
                               p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min);
     if (SegmentSegmentFixDistanceAbs(NW_tri.normalize(), P_a1,
-                                 p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min))
+                                 p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min) &&
+        xVector3::DotProduct(NW_tri, *a1-*a2) > 0)
         N_fix_min.invert();
 
+    PN_fix.init(NW_tri, *a1);
+    S_2 = fabs ( PN_fix.distanceToPoint(*a2) );
+    S_3 = fabs ( PN_fix.distanceToPoint(*a3) );
+    if (S_2 >= S_3)
+    {
+        if (SegmentSegmentFixDistanceAbs(-NW_tri, *a2,
+                                 p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min) &&
+            xVector3::DotProduct(NW_tri, *a1-*a2) > 0)
+            N_fix_min.invert();
+    }
+    else
+        if (SegmentSegmentFixDistanceAbs(-NW_tri, *a3,
+                                 p1, p2, S_a_min, S_b_min, S_minmax, N_fix_min) &&
+            xVector3::DotProduct(NW_tri, *a1-*a2) > 0)
+            N_fix_min.invert();
+*/
     N_fix_min *= S_minmax;
 
     if (S_a_min > S_b_min)
         return cset.Add(CollisionInfo(figure1, figure2, ID_tri_1, ID_tri_2,
-                                      N_fix_min, p1, p1 + N_fix_min)), 1;
-    if (S_a_min < S_b_min || p1 == p2)
+                                      N_fix_min, *P_fix_min_a, *P_fix_min_a + N_fix_min)), 1;
+    if (S_a_min < S_b_min)
         return cset.Add(CollisionInfo(figure1, figure2, ID_tri_1, ID_tri_2,
-                                      N_fix_min, p2, p2 + N_fix_min)), 1;
+                                      N_fix_min, *P_fix_min_b, *P_fix_min_b + N_fix_min)), 1;
 
     cset.Add(CollisionInfo(figure1, figure2, ID_tri_1, ID_tri_2,
-                                      N_fix_min, p1, p1 + N_fix_min));
+                                      N_fix_min, *P_fix_min_a, *P_fix_min_a + N_fix_min));
     cset.Add(CollisionInfo(figure1, figure2, ID_tri_1, ID_tri_2,
-                                      N_fix_min, p2, p2 + N_fix_min));
+                                      N_fix_min, *P_fix_min_b, *P_fix_min_b + N_fix_min));
     return 2;
 }
 

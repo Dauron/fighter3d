@@ -100,7 +100,8 @@ namespace Physics { namespace Colliders {
             xDWORD   I_MinX = 0;
             xDWORD   I_MinY = 0;
             xDWORD   I_MinZ = 0;
-            xDWORD   I_cols = 0;
+            xFLOAT   S_minLen = xFLOAT_HUGE_POSITIVE;
+            NW_fix_1.zero();
 
             P_collision_1.zero();
             P_collision_2.zero();
@@ -110,6 +111,8 @@ namespace Physics { namespace Colliders {
             {
                 P_collision_1 += iter->P_collision_1;
                 P_collision_2 += iter->P_collision_2;
+                NW_fix_1 += iter->NW_fix_1;
+                S_minLen = min (S_minLen, iter->NW_fix_1.lengthSqr());
 
                 if (iter->NW_fix_1.x > EPSILON)
                 {
@@ -143,6 +146,13 @@ namespace Physics { namespace Colliders {
                 }
             }
 
+            xFLOAT I_count_Inv = 1.f / (xFLOAT)collisions.size();
+            P_collision_1 *= I_count_Inv;
+            P_collision_2 *= I_count_Inv;
+            NW_fix_1      *= I_count_Inv;
+            if (NW_fix_1.lengthSqr() >= S_minLen)
+                return;
+
             if (I_MaxX > 0 || I_MinX > 0)
             {
                 xFLOAT W_max = I_MaxX / ((xFLOAT) I_MaxX + I_MinX);
@@ -166,8 +176,6 @@ namespace Physics { namespace Colliders {
                 NW_fix_1.z = 0.f;
 
             if (NW_fix_1.lengthSqr() < EPSILON) NW_fix_1.init(0.f, 0.f, 0.1f); // add random fix if locked
-            P_collision_1 /= (xFLOAT)collisions.size();
-            P_collision_2 /= (xFLOAT)collisions.size();
         }
     };
 

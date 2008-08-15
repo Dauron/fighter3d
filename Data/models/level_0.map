@@ -24,8 +24,8 @@ phantom     0
 [model]
 fastm	crate_fst.3dx
 model	crate.3dx
-skip rotation    0 45 0
-position    -0.5 -2 -0.2
+rotation    0 10 0
+position    -0.5 -2 1.2
 physical    1
 locked      0
 phantom     0

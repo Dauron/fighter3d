@@ -222,7 +222,7 @@ void   xModel :: Free()
     delete this;
 }
 
-xModel *xModel :: Load(const char *fileName, bool createCollisionInfo)
+xModel *xModel :: Load(const char *fileName, bool FL_create_CollisionInfo)
 {
     FILE *file;
     file = fopen(fileName, "rb");
@@ -274,9 +274,9 @@ xModel *xModel :: Load(const char *fileName, bool createCollisionInfo)
                 for (int i=0; i < xmodel->I_kids; ++i)
                 {
                     if (last)
-                        last = last->Next   = xElement::Load(file, xmodel, createCollisionInfo);
+                        last = last->Next   = xElement::Load(file, xmodel, FL_create_CollisionInfo);
                     else
-                        last = xmodel->L_kids = xElement::Load(file, xmodel, createCollisionInfo);
+                        last = xmodel->L_kids = xElement::Load(file, xmodel, FL_create_CollisionInfo);
                     if (!last)
                     {
                         xmodel->Free();

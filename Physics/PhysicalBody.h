@@ -48,21 +48,21 @@ namespace Physics {
 
         virtual xVector3 GetVelocity()
         { return NW_velocity; }
-        virtual xVector3 GetVelocity(xPoint3 P_point)
+        virtual xVector3 GetVelocity(const xPoint3 &P_point)
         { return NW_velocity + xVector3::CrossProduct(QT_velocity.angularVelocity(), P_point - P_center_Trfm); }
 
         virtual xVector3 GetForce(xFLOAT T_time_inv)
         { return GetVelocity() * GetMass() * T_time_inv; }
-        virtual xVector3 GetForce(xFLOAT T_time_inv, xPoint3 P_point)
+        virtual xVector3 GetForce(xFLOAT T_time_inv, const xPoint3 &P_point)
         { return GetVelocity(P_point) * GetMass() * T_time_inv; }
 
-        virtual void     ApplyAcceleration(xVector3 NW_accel, xFLOAT T_time)
+        virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time)
         { NW_velocity_new += NW_accel * T_time; }
-        virtual void     ApplyAcceleration(xVector3 NW_accel, xFLOAT T_time, xPoint3 P_point);
+        virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time, const xPoint3 &P_point);
 
-        virtual void     ApplyForce(xVector3 NW_force, xFLOAT T_time)
+        virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time)
         { ApplyAcceleration(NW_force / GetMass(), T_time); }
-        virtual void     ApplyForce(xVector3 NW_force, xFLOAT T_time, xPoint3 P_point)
+        virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time, const xPoint3 &P_point)
         { ApplyAcceleration(NW_force / GetMass(), T_time, P_point); }
 
     public:

@@ -29,7 +29,7 @@ struct xModel {
 
     void CreateBVH(Math::Figures::xBVHierarchy &BVH_node);
 
-    static xModel *Load( const char *fileName, bool createCollisionInfo = true );
+    static xModel *Load( const char *fileName, bool FL_create_CollisionInfo = true );
            void    Save();
 };
 
