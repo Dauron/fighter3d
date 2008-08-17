@@ -39,6 +39,8 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     xVector3 P_curr_Local   = MX_WorldToBone.preTransformP( P_curr );
     xVector3 N_curr_Local   = xVector3::Normalize( P_curr_Local );
 
+    if (N_curr_Local.z > 0.99f) return false;
+
     xFLOAT r_Inv = 1.f / sqrt(N_curr_Local.x*N_curr_Local.x+N_curr_Local.y*N_curr_Local.y);
     xFLOAT cosAlpha = fabs(N_curr_Local.x)*r_Inv,
            sinAlpha = fabs(N_curr_Local.y)*r_Inv,

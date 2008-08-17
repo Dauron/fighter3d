@@ -53,7 +53,14 @@ void xSkeleton :: CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_bone
     if (ID_bone)
     {
         xVector3    NW_up = bone.P_end-bone.P_begin;
-        xQuaternion quat  = xQuaternion::getRotation(NW_up, P_endN-P_end_parent);
+        xQuaternion quat;
+
+        if (QT_boneSkew)
+        {
+            quat.init(-QT_boneSkew[ID_bone].vector3, QT_boneSkew[ID_bone].w);
+            P_endN = xQuaternion::rotate(quat, P_endN, P_end_parent);
+        }
+        quat = xQuaternion::getRotation(NW_up, P_endN-P_end_parent);
 
         if (QT_boneSkew)
             bone.QT_rotation = xQuaternion::product(QT_boneSkew[ID_bone], quat);

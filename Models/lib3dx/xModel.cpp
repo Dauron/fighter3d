@@ -291,6 +291,9 @@ xModel *xModel :: Load(const char *fileName, bool FL_create_CollisionInfo)
             fread(&skeletized, sizeof(bool), 1, file);
             if (skeletized)
                 xmodel->Spine.Load(file);
+
+            if (xmodel->I_kids && FL_create_CollisionInfo && !xmodel->FL_save_bvh)
+                xmodel->L_kids->FillCollisionInfo(*xmodel);
         }
         fclose(file);
         return xmodel;
@@ -337,7 +340,35 @@ void   xModel :: Save()
 #include "../../Math/Figures/xSphere.h"
 using namespace Math::Figures;
 
-void xModel::CreateBVH(xBVHierarchy &BVH_node)
+void xModel::ReFillBVH(xBVHierarchy &BVH_node, xMeshData *&MeshData)
+{
+    xSphere &sphere = *(xSphere*) BVH_node.Figure;
+
+    if (!this->I_kids)
+        return;
+
+    xBoxA boxA, boxAc;
+    boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
+    boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
+
+    xElement *elem = L_kids;
+    for (; elem; elem = elem->Next)
+    {
+        boxAc = elem->ReFillBVH( BVH_node.L_items, MeshData );
+        if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
+        if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
+        if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
+        if (boxAc.P_max.x > boxA.P_max.x) boxA.P_max.x = boxAc.P_max.x;
+        if (boxAc.P_max.y > boxA.P_max.y) boxA.P_max.y = boxAc.P_max.y;
+        if (boxAc.P_max.z > boxA.P_max.z) boxA.P_max.z = boxAc.P_max.z;
+    }
+
+    xVector3 NW_extends = (boxA.P_max - boxA.P_min) * 0.5f;
+    sphere.P_center = boxA.P_min + NW_extends;
+    sphere.S_radius = NW_extends.length();
+}
+
+void xModel::CreateBVH(xBVHierarchy &BVH_node, xMeshData *&MeshData)
 {
     BVH_node.init(*new xSphere());
     xSphere &sphere = *(xSphere*) BVH_node.Figure;
@@ -349,6 +380,7 @@ void xModel::CreateBVH(xBVHierarchy &BVH_node)
         return;
     }
 
+    MeshData         = new xMeshData[I_elements];
     BVH_node.L_items = new xBVHierarchy[I_elements];
     BVH_node.I_items = I_elements;
 
@@ -359,7 +391,7 @@ void xModel::CreateBVH(xBVHierarchy &BVH_node)
     xElement *elem = L_kids;
     for (; elem; elem = elem->Next)
     {
-        boxAc = elem->FillBVH( BVH_node.L_items );
+        boxAc = elem->FillBVH( BVH_node.L_items, MeshData );
         if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
         if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
         if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;

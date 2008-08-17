@@ -577,6 +577,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\App Framework\Scene.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\App Framework\Scene.h"
 				>
 			</File>
@@ -885,6 +889,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Physics\PhysicalWorld.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\Physics\PhysicalWorld.h"
 				>
 			</File>
@@ -1005,6 +1013,10 @@
 				</File>
 				<File
 					RelativePath="..\Physics\Colliders\CapsuleTriangle.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Physics\Colliders\CollisionInfo.cpp"
 					>
 				</File>
 				<File
@@ -1219,6 +1231,10 @@
 				</File>
 				<File
 					RelativePath="..\Math\Figures\xIFigure3d.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Figures\xMesh.cpp"
 					>
 				</File>
 				<File
@@ -1456,6 +1472,10 @@
 					</File>
 					<File
 						RelativePath="..\Graphics\OGL\Render\RendererGLAmbient.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\Graphics\OGL\Render\RendererGLBVH.cpp"
 						>
 					</File>
 					<File

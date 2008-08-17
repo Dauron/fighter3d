@@ -37,7 +37,7 @@ struct xCollisionData
     void Save( FILE *file, xElement *elem );
 
     void FreeKids();
-    void Fill ( xModel *xmodel, xElement *elem );
+    void Fill ( xModel &xmodel, xElement &elem );
 
     static const xBYTE MAX_HIERARCHY_DEPTH = 10;
 };
@@ -52,7 +52,7 @@ struct xCollisionHierarchy : xCollisionData
     void Load( FILE *file, xElement *elem );
     void Save( FILE *file, xElement *elem );
 
-    void Subdivide(const xElement *elem, float scale, int depth, const xBoxA &bounding);
+    void Subdivide(const xElement &elem, float scale, int depth, const xBoxA &bounding);
 };
 
 #endif

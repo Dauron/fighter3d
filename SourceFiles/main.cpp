@@ -3,6 +3,7 @@
 #include "../Utils/Filesystem.h"
 #include "../Graphics/OGL/GLShader.h"
 
+#include "SceneConsole.h"
 #include "SceneGame.h"
 #include "SceneTest.h"
 
@@ -25,10 +26,10 @@ int main( int argc, char **argv )
     game.OnApplicationInvalidate = OnApplicationInvalidate;
     game.OnApplicationTerminate  = OnApplicationTerminate;
 #ifndef NDEBUG
-    if (!game.Initialize("Camera Fighter - Debug", 800, 600, false, new SceneGame()))
+    if (!game.Initialize("Camera Fighter - Debug", 800, 600, false, new SceneConsole(new SceneGame())))
         return 1;
 #else
-    if (!game.Initialize("Camera Fighter", 800, 600, false, new SceneGame()))
+    if (!game.Initialize("Camera Fighter", 800, 600, false, new SceneConsole(new SceneGame())))
         return 1;
 #endif
     int res = game.Run();

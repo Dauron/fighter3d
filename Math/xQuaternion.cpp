@@ -52,14 +52,15 @@ xPoint3 xQuaternion::rotate(const xQuaternion &q, const xPoint3 &p, const xPoint
     return ret + center;
 }
 
-xVector3 xQuaternion::angularVelocity()
+xVector3 xQuaternion::angularVelocity() const
 {
     xVector3 res = vector3;
-    if (w > 1.f)  w = 1.f;
+    xFLOAT rw = w;
+    if (rw > 1.f)  rw = 1.f;
     else
-    if (w < -1.f) w = -1.f;
+    if (rw < -1.f) rw = -1.f;
     res.normalize();
-    res *= 2.f * acos(w);
+    res *= 2.f * acos(rw);
     return res;
 }
 

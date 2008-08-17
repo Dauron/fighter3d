@@ -21,7 +21,6 @@ public:
     //RigidObj *CollideWithRay(xVector3 rayPos, xVector3 rayDir);
 
     void Initialize ();
-    void Update     (float T_delta);
     void Finalize   ();
 
     void Invalidate()
@@ -33,6 +32,33 @@ public:
         ObjectVector::iterator model, beginM = objects.begin(), endM = objects.end();
         for (model=beginM; model!=endM; ++model)
             (*model)->Invalidate();
+    }
+
+    void InitialUpdate()
+    {
+        ObjectVector::iterator model, beginM = objects.begin(), endM = objects.end();
+        for (model=beginM; model!=endM; ++model)
+            (*model)->FrameUpdate(0.f);
+    }
+
+    void FrameStart()
+    {
+        ObjectVector::iterator model, beginM = objects.begin(), endM = objects.end();
+        for (model=beginM; model!=endM; ++model)
+            (*model)->FrameStart();
+    }
+    void FrameUpdate (float T_delta);
+    void FrameRender()
+    {
+        ObjectVector::iterator model, beginM = objects.begin(), endM = objects.end();
+        for (model=beginM; model!=endM; ++model)
+            (*model)->FrameRender();
+    }
+    void FrameEnd()
+    {
+        ObjectVector::iterator model, beginM = objects.begin(), endM = objects.end();
+        for (model=beginM; model!=endM; ++model)
+            (*model)->FrameEnd();
     }
 
     void Load       (const char *mapFileName);

@@ -151,7 +151,7 @@ void RigidBody :: CalculateCollisions(RigidObj *model, float T_delta)
                                      (V_speed_1[2]-V_speed_1[0]) * W_particle_1.contrib[2] +
                                      (V_speed_1[3]-V_speed_1[0]) * W_particle_1.contrib[3];
             xVector3 A_collision = A_collision_1;
-            xVector3 A_total = -model->W_resilience * A_collision_1;
+            xVector3 A_total = -model->W_restitution * A_collision_1;
             // Force of the collision
             if (!model2->FL_stationary)
             {
@@ -227,7 +227,7 @@ void RigidBody :: CalculateMovement(RigidObj *model, float T_delta)
 
     model->verletSystem.T_step = T_delta;
     VerletSolver engine;
-    engine.Init(& model->verletSystem);
+    engine.Init(model->verletSystem);
     engine.I_passes = 1;
     engine.VerletFull();
     engine.SatisfyConstraints();

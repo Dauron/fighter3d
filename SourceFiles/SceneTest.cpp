@@ -5,6 +5,7 @@
 #include "../Graphics/OGL/Utils.h"
 #include "SceneConsole.h"
 #include "../Graphics/OGL/Extensions/GLExtensions.h"
+#include "../Graphics/OGL/Render/RendererGL.h"
 #include "../Physics/Colliders/FigureCollider.h"
 
 #define MULT_MOVE   5.0f
@@ -80,17 +81,20 @@ void SceneTest::InitObjects()
 {
     xSphere &sphere1 = *(xSphere*) pf_sphere1.BVHierarchy.Figure;
     pf_sphere1.ApplyDefaults();
+    pf_sphere1.FL_physical = false;
     sphere1.P_center.init(-3,-5,2);
     sphere1.S_radius = 1.f;
     pf_sphere1.Initialize();
     xSphere &sphere2 = *(xSphere*) pf_sphere2.BVHierarchy.Figure;
     pf_sphere2.ApplyDefaults();
+    pf_sphere2.FL_physical = false;
     sphere2.P_center.init(3,-5,0);
     sphere2.S_radius = 2.f;
     pf_sphere2.Initialize();
 
     xCapsule &capsule1 = *(xCapsule*) pf_capsule1.BVHierarchy.Figure;
     pf_capsule1.ApplyDefaults();
+    pf_capsule1.FL_physical = false;
     capsule1.P_center.init(3, -5, 0);
     capsule1.N_top.init(1,0,0);
     capsule1.S_radius = 0.5f;
@@ -98,6 +102,7 @@ void SceneTest::InitObjects()
     pf_capsule1.Initialize();
     xCapsule &capsule2 = *(xCapsule*) pf_capsule2.BVHierarchy.Figure;
     pf_capsule2.ApplyDefaults();
+    pf_capsule2.FL_physical = false;
     capsule2.P_center.init(-3, -5, 0);
     capsule2.N_top.init(0,0,1);
     capsule2.S_radius = 1.5f;
@@ -106,6 +111,7 @@ void SceneTest::InitObjects()
 
     xBoxO &cube1 = *(xBoxO*) pf_cube1.BVHierarchy.Figure;
     pf_cube1.ApplyDefaults();
+    pf_cube1.FL_physical = false;
     cube1.P_center.init(-3,-5,-2);
     cube1.S_top   = 1.f;
     cube1.S_front = 2.f;
@@ -116,6 +122,7 @@ void SceneTest::InitObjects()
     pf_cube1.Initialize();
     xBoxO &cube2 = *(xBoxO*) pf_cube2.BVHierarchy.Figure;
     pf_cube2.ApplyDefaults();
+    pf_cube2.FL_physical = false;
     cube2.P_center.init(3,-5,0);
     cube2.S_top   = 1.2f;
     cube2.S_front = 1.7f;
@@ -170,6 +177,7 @@ void SceneTest::InitObjects()
     mesh1.Transform(xMatrix::Identity());
     mesh1.MeshData->CalculateProperties();
     pf_mesh1.ApplyDefaults();
+    pf_mesh1.FL_physical = false;
     mesh1.P_center = mesh1.MeshData->P_center;
     pf_mesh1.Initialize();
 
@@ -218,6 +226,7 @@ void SceneTest::InitObjects()
     mesh2.Transform(xMatrix::Identity());
     mesh2.MeshData->CalculateProperties();
     pf_mesh2.ApplyDefaults();
+    pf_mesh2.FL_physical = false;
     mesh2.P_center = mesh2.MeshData->P_center;
     pf_mesh2.Initialize();
 
@@ -338,7 +347,42 @@ xVector3 SceneTest::Get3dPos(int X, int Y, xVector3 P_onPlane)
     return PN_plane.intersectRay(P_ray, N_ray);
 }
 
-bool SceneTest::Update(float deltaTime)
+bool SceneTest :: ShellCommand (std::string &cmd, std::string &output)
+{
+    if (cmd == "?" || cmd == "help")
+    {
+        output.append("\n\
+  Available shell comands for [test]:\n\
+    Full command        | Short command | Description\n\
+    ------------------------------------------------------------------------\n\
+    help                | ?             | print this help screen\n\
+    ------------------------------------------------------------------------\n\
+    reinitialize        | init          | reinitialize objects, etc.\n\
+    ------------------------------------------------------------------------\n\
+    test {int}          | test {int}    | show test case {int}\n\
+    speed {float}       | speed {float} | enter clock speed multiplier\n");
+        return true;
+    }
+    if (cmd.substr(0, 5) == "test ")
+    {
+        Config::TestCase = atoi(cmd.substr(5).c_str());
+        InitObjects();
+        return true;
+    }
+    if (cmd == "init" || cmd == "reinitialize")
+    {
+        InitObjects();
+        return true;
+    }
+    if (cmd.substr(0, 6) == "speed ")
+    {
+        Config::Speed = atof(cmd.substr(6).c_str());
+        return true;
+    }
+    return false;
+}
+
+bool SceneTest::FrameUpdate(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
@@ -577,8 +621,8 @@ bool SceneTest::Update(float deltaTime)
     }
 
     T_total += deltaTime;
-    if (!FL_mouse_down && !FL_pause)
-        Physics::PhysicalWorld().Interact(deltaTime, figures[Config::TestCase]);
+    if (!FL_mouse_down && !FL_pause && deltaTime*Config::Speed < 2.f)
+        Physics::PhysicalWorld().Interact(deltaTime*Config::Speed, figures[Config::TestCase]);
 
     if (!im.GetInputState(IC_LClick) && FL_mouse_down)
     {
@@ -622,201 +666,10 @@ bool SceneTest::Update(float deltaTime)
 }
 
 
-void RenderFigure(const xIFigure3d *figure)
+
+
+bool SceneTest::FrameRender()
 {
-    glPushMatrix();
-    glTranslatef(figure->P_center.x,figure->P_center.y,figure->P_center.z);
-
-    ////////////////////////////// Sphere
-
-    if (figure->Type == xIFigure3d::Sphere)
-    {
-        const xSphere &object = *((xSphere*) figure);
-
-        const xBYTE I_steps = 20;
-        xQuaternion QT_step; QT_step.init(sin(PI / I_steps), 0,0, cos(PI / I_steps));
-        xQuaternion QT_bigs; QT_bigs.init(0, 0, sin(PI / (2*I_steps)), cos(PI / (2*I_steps)));
-        xMatrix  MX_bigs = xMatrixFromQuaternion(QT_bigs);
-
-        xPoint3 P_points[I_steps];
-        P_points[0] = xVector3::Create(0,1,0) * object.S_radius;
-        for (int i = 1; i < I_steps; ++i)
-            P_points[i] = xQuaternion::rotate(QT_step, P_points[i-1]);
-
-        for (int i = 0; i < I_steps; ++i)
-        {
-            glBegin(GL_POLYGON);
-            for (int j = 0; j < I_steps; ++j)
-                glVertex3fv(P_points[j].xyz);
-            glEnd();
-
-            glMultMatrixf(&MX_bigs.x0);
-        }
-    }
-
-    ////////////////////////////// Capsule
-
-    if (figure->Type == xIFigure3d::Capsule)
-    {
-        const xCapsule &object = *((xCapsule*) figure);
-
-        const xBYTE I_steps = 10;
-        xVector3 N_side = xVector3::CrossProduct(object.N_top, xVector3::Create(0,1,0));
-        if (N_side.lengthSqr() < EPSILON2)
-            N_side = xVector3::CrossProduct(object.N_top, xVector3::Create(1,0,0));
-        N_side.normalize();
-
-        xQuaternion QT_step; QT_step.init(xVector3::CrossProduct(object.N_top, N_side) * -sin(PI / (2*I_steps)),
-                                       cos(PI / (2*I_steps)));
-        xQuaternion QT_bigs = QT_bigs.init(object.N_top * sin(PI / (2*I_steps)), cos(PI / (2*I_steps)));
-        xMatrix     MX_bigs = xMatrixFromQuaternion(QT_bigs);
-
-        xVector3 P_points[I_steps * 2];
-        P_points[0] = N_side * object.S_radius;
-        for (int i = 1; i < I_steps; ++i)
-            P_points[i] = xQuaternion::rotate(QT_step, P_points[i-1]);
-
-        P_points[I_steps] = -N_side * object.S_radius;
-        for (int i = I_steps+1; i < 2*I_steps; ++i)
-            P_points[i] = xQuaternion::rotate(QT_step, P_points[i-1]);
-
-        xVector3 NW_top = object.N_top * object.S_top;
-
-        for (int i = 0; i < I_steps; ++i)
-        {
-            glBegin(GL_POLYGON);
-            for (int j = 0; j < I_steps; ++j)
-                glVertex3fv((P_points[j] + NW_top).xyz);
-            for (int j = I_steps; j < 2*I_steps; ++j)
-                glVertex3fv((P_points[j] - NW_top).xyz);
-            glEnd();
-
-            glMultMatrixf(&MX_bigs.x0);
-        }
-    }
-
-    ////////////////////////////// Cube
-
-    if (figure->Type == xIFigure3d::BoxOriented)
-    {
-        const xBoxO &object = *((xBoxO*) figure);
-
-        glBegin(GL_LINES);
-            glVertex3f(0,0,0);
-            glVertex3fv((object.N_top*object.S_top).xyz);
-            glVertex3f(0,0,0);
-            glVertex3fv((object.N_side*object.S_side).xyz);
-            glVertex3f(0,0,0);
-            glVertex3fv((object.N_front*object.S_front).xyz);
-        glEnd();
-
-        const xBYTE I_steps = 10;
-        xVector3 P_points[4];
-        P_points[0] = object.N_top*object.S_top + object.N_side*object.S_side;
-        P_points[1] = object.N_top*object.S_top - object.N_side*object.S_side;
-        P_points[2] = -object.N_top*object.S_top - object.N_side*object.S_side;
-        P_points[3] = -object.N_top*object.S_top + object.N_side*object.S_side;
-
-        xVector3 NW_shift = object.N_front*object.S_front;
-        glPushMatrix();
-        glTranslatef(NW_shift.x,NW_shift.y,NW_shift.z);
-        NW_shift /= -I_steps*0.5f;
-        for (int i = 0; i < I_steps+1; ++i)
-        {
-            glBegin(GL_QUADS);
-            for (int j = 0; j < 4; ++j)
-                glVertex3fv(P_points[j].xyz);
-            glEnd();
-
-            glTranslatef(NW_shift.x,NW_shift.y,NW_shift.z);
-        }
-        glPopMatrix();
-
-        P_points[0] = object.N_top*object.S_top + object.N_front*object.S_front;
-        P_points[1] = object.N_top*object.S_top - object.N_front*object.S_front;
-        P_points[2] = -object.N_top*object.S_top - object.N_front*object.S_front;
-        P_points[3] = -object.N_top*object.S_top + object.N_front*object.S_front;
-
-        NW_shift = object.N_side*object.S_side;
-        glTranslatef(NW_shift.x,NW_shift.y,NW_shift.z);
-        NW_shift /= -I_steps*0.5f;
-        for (int i = 0; i < I_steps+1; ++i)
-        {
-            glBegin(GL_QUADS);
-            for (int j = 0; j < 4; ++j)
-                glVertex3fv(P_points[j].xyz);
-            glEnd();
-
-            glTranslatef(NW_shift.x,NW_shift.y,NW_shift.z);
-        }
-    }
-
-    ////////////////////////////// Cylinder
-
-    if (figure->Type == xIFigure3d::Cylinder)
-    {
-        const xCylinder &object = *((xCylinder*) figure);
-    }
-
-    ////////////////////////////// Mesh
-
-    if (figure->Type == xIFigure3d::Mesh)
-    {
-        const xMesh &object = *((xMesh*) figure);
-
-        glPopMatrix();
-
-        glBegin(GL_TRIANGLES);
-
-        xDWORD  *L_FaceIndex_Itr     = object.L_FaceIndices;
-        for (int i = object.I_FaceIndices; i; --i, ++L_FaceIndex_Itr)
-        {
-            xWORD3 &Face = object.MeshData->GetFace(*L_FaceIndex_Itr);
-            for (int j=0; j<3; ++j)
-            {
-                if (j == 1) glColor3f(0.f,0.f,1.f);
-                else
-                if (j == 2) glColor3f(0.f,1.f,1.f);
-                glVertex3fv(object.MeshData->L_VertexData_Transf[Face[j]].xyz);
-            }
-        }
-
-        glPushMatrix();
-
-
-        glBegin(GL_LINES);
-
-        L_FaceIndex_Itr     = object.L_FaceIndices;
-        for (int i = object.I_FaceIndices; i; --i, ++L_FaceIndex_Itr)
-        {
-            xWORD3 &Face = object.MeshData->GetFace(*L_FaceIndex_Itr);
-            glColor3f(1.f,0.f,1.f);
-
-            const xPoint3 &P_A = object.MeshData->GetVertexTransf(Face[0]);
-            const xPoint3 &P_B = object.MeshData->GetVertexTransf(Face[1]);
-            const xPoint3 &P_C = object.MeshData->GetVertexTransf(Face[2]);
-            xVector3 N_tri = xVector3::CrossProduct(P_B-P_A, P_C-P_A).normalize() * 0.1f;
-            glVertex3fv(P_A.xyz);
-            glVertex3fv(P_A.xyz);
-            glVertex3fv((P_A + N_tri).xyz);
-        }
-
-        glPushMatrix();
-
-        glEnd();
-    }
-
-    glPopMatrix();
-}
-
-bool SceneTest::Render()
-{
-    if (Config::Initialize)
-    {
-        Config::Initialize = false;
-        InitObjects();
-    }
-
     glDisable (GL_LINE_SMOOTH);
     glDisable (GL_POLYGON_SMOOTH);                    // produces errors on many cards... use FSAA!
     glDisable(GL_LIGHT0); glDisable(GL_LIGHT1); glDisable(GL_LIGHT2); glDisable(GL_LIGHT3);
@@ -842,6 +695,7 @@ bool SceneTest::Render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     ::Physics::Colliders::CollisionSet cset;
+    RendererGL renderer;
 
     for (int i = 0; i < 2; ++i)
     {
@@ -853,7 +707,7 @@ bool SceneTest::Render()
             glColor3f(1.f, 0.f, 0.f);
         else
             glColor3f(1.f, 1.f, 1.f);
-        RenderFigure(figures[Config::TestCase][i]->BVHierarchy.GetTransformed());
+        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy);
     }
 
     if (cset.collisions.size())
@@ -867,17 +721,17 @@ bool SceneTest::Render()
             glBegin(GL_POINTS);
             {
                 glColor3f(1.f,0.f,1.f);
-                glVertex3fv(iter->P_collision_1.xyz);
+                glVertex3fv(iter->CPoint1_Get().P_collision.xyz);
                 glColor3f(0.5f,0.5f,1.f);
-                glVertex3fv(iter->P_collision_2.xyz);
+                glVertex3fv(iter->CPoint2_Get().P_collision.xyz);
             }
             glEnd();
 
             glColor3f(0.5f,0.5f,0.5f);
             glBegin(GL_LINES);
             {
-                glVertex3fv(iter->P_collision_1.xyz);
-                glVertex3fv((iter->P_collision_1 + iter->NW_fix_1).xyz);
+                glVertex3fv(iter->CPoint1_Get().P_collision.xyz);
+                glVertex3fv((iter->CPoint1_Get().P_collision + iter->CPoint1_Get().NW_fix).xyz);
             }
             glEnd();
         }
@@ -907,10 +761,11 @@ bool SceneTest::Render()
 
 void SceneTest :: RenderSelect(const xFieldOfView *FOV)
 {
+    RendererGL renderer;
     for (int i = 0; i < 2; ++i)
     {
         glLoadName(i);
-        RenderFigure(figures[Config::TestCase][i]->BVHierarchy.GetTransformed());
+        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy);
     }
 }
 

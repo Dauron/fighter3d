@@ -15,7 +15,7 @@
 #define MULT_STEP   60.0f
 
 /************************** INPUT **************************************/
-bool SceneSkeleton::Update(float deltaTime)
+bool SceneSkeleton::FrameUpdate(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
@@ -768,7 +768,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
                 vSystem.I_constraints = spine.I_constraints;
                 vSystem.C_constraints = spine.C_constraints;
                 vSystem.Spine = &spine;
-                vEngine.Init(&vSystem);
+                vEngine.Init(vSystem);
                 vEngine.I_passes = 10;
 
                 xBone       *bone    = spine.L_bones;

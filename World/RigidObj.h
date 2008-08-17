@@ -23,6 +23,7 @@ public:
 
     VConstraintCollisionVector collisionConstraints;
     VerletSystem               verletSystem;
+    Math::Figures::xMeshData  *MeshData;
 
     xMatrix        MX_WorldToLocal;
     xMatrix        MX_LocalToWorld_prev;
@@ -61,7 +62,7 @@ public:
     }
     virtual void Finalize   ();
 
-    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL, bool physicalNotLocked = false, bool phantom = true);
+    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL);
     /********* LIFETIME : END *********/
 
     /******** UPDATE : BEGIN ********/

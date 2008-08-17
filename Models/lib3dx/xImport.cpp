@@ -206,7 +206,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
         }
     }
 
-    elem->collisionData.Fill(xmodel, elem);
+    elem->collisionData.Fill(*xmodel, *elem);
 
     xElement *laste = NULL;
     for (Lib3dsNode *snode = node->childs; snode != NULL; snode = snode->next)

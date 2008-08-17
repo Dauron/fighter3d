@@ -22,12 +22,13 @@ struct xModel {
     bool       FL_transparent;     // Are there any transparent faces?
     bool       FL_opaque;          // Are there any opaque faces?
 
-    void   Free();
-    void   BoneDelete( xBYTE ID_bone );
-    void   SkeletonAdd();
-    void   SkeletonReset();
+    void Free();
+    void BoneDelete( xBYTE ID_bone );
+    void SkeletonAdd();
+    void SkeletonReset();
 
-    void CreateBVH(Math::Figures::xBVHierarchy &BVH_node);
+    void CreateBVH(Math::Figures::xBVHierarchy &BVH_node, Math::Figures::xMeshData *&MeshData);
+    void ReFillBVH(Math::Figures::xBVHierarchy &BVH_node, Math::Figures::xMeshData *&MeshData);
 
     static xModel *Load( const char *fileName, bool FL_create_CollisionInfo = true );
            void    Save();

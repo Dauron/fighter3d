@@ -31,11 +31,14 @@ bool SceneGame::Initialize(int left, int top, unsigned int width, unsigned int h
     FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
 
     if (!world.objects.size())
+    {
         world.Initialize();
+        world.InitialUpdate();
+    }
     return InitGL();
 }
 
-bool SceneGame::InitGL()
+bool SceneGame :: InitGL()
 {
     glClearDepth(1.f);                      // Mapped draw distance ([0-1])
     glDepthFunc(GL_LEQUAL);                 // Depth testing function
@@ -63,13 +66,13 @@ bool SceneGame::InitGL()
     return true;
 }
 
-bool SceneGame::Invalidate()
+bool SceneGame :: Invalidate()
 {
     world.Invalidate();
     return true;
 }
 
-void SceneGame::InitInputMgr()
+void SceneGame :: InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
     im.SetScene(sceneName);
@@ -106,18 +109,113 @@ void SceneGame::InitInputMgr()
     im.SetInputCode(VK_F11, IC_FullScreen);
 }
 
-void SceneGame::Terminate()
+void SceneGame :: Terminate()
 {
     DefaultCamera = NULL;
     world.Finalize();
-    g_FontMgr.DeleteFont(m_Font1);
-    m_Font1 = HFont();
-    g_FontMgr.DeleteFont(m_Font2);
-    m_Font2 = HFont();
     Scene::Terminate();
 }
 
-bool SceneGame::Update(float deltaTime)
+
+bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
+{
+    if (cmd == "?" || cmd == "help")
+    {
+        output.append("\n\
+  Available shell comands for [game]:\n\
+    Full command        | Short command | Description\n\
+    ------------------------------------------------------------------------\n\
+    help                | ?             | print this help screen\n\
+    ------------------------------------------------------------------------\n\
+    toggle_lights       | tls           | turns the lighting on and off\n\
+    toggle_shadows      | tshadow       | toggles shadow rendering\n\
+    toggle_shadow_vol   | tshadowv      | toggles shadow volume rendering\n\
+    reinitialize        | init          | reinitialize objects, etc.\n\
+    toggle_shader       | tshd          | toggles custom shader\n\
+    toggle_polygon_mode | tpm           | toggle polygon mode\n\
+    ------------------------------------------------------------------------\n\
+    level {int}         | level {int}   | load 'level_{int}.map' scene\n\
+    speed {float}       | speed {float} | enter clock speed multiplier\n");
+        return true;
+    }
+    if (cmd.substr(0, 6) == "level ")
+    {
+        Config::TestCase = atoi(cmd.substr(6).c_str());
+        world.Finalize();
+        world.Initialize();
+        world.Interact(0.f, world.objects);
+        return true;
+    }
+    if (cmd == "init" || cmd == "reinitialize")
+    {
+        world.Finalize();
+        world.Initialize();
+        world.InitialUpdate();
+        return true;
+    }
+    if (cmd.substr(0, 6) == "speed ")
+    {
+        Config::Speed = atof(cmd.substr(6).c_str());
+        return true;
+    }
+    if (cmd == "tls" || cmd == "toggle_lights")
+    {
+        if (Config::EnableLighting = !Config::EnableLighting)
+            output.append("\nThe lights are ON.\n");
+        else
+            output.append("\nThe lights are OFF.\n");
+        return true;
+    }
+    if (cmd.substr(0, 4) == "tls ")
+    {
+        unsigned int id = (unsigned int)atoi(cmd.substr(4).c_str());
+        if (id >= 0 && id < world.lights.size())
+            world.lights[id].turned_on = !world.lights[id].turned_on;
+        return true;
+    }
+    if (cmd == "tshadow" || cmd == "toggle_shadows")
+    {
+        if (Config::EnableShadows = !Config::EnableShadows)
+            output.append("\nThe shadows are ON.\n");
+        else
+            output.append("\nThe shadows are OFF.\n");
+        return true;
+    }
+    if (cmd == "tshadowv" || cmd == "toggle_shadow_vol")
+    {
+        if (Config::DisplayShadowVolumes = !Config::DisplayShadowVolumes)
+            output.append("\nThe shadow volumes are ON.\n");
+        else
+            output.append("\nThe shadow volumes are OFF.\n");
+        return true;
+    }
+    if (cmd == "tshd" || cmd == "toggle_shader")
+    {
+        if (Config::EnableShaders = !Config::EnableShaders)
+            output.append("\nThe shaders are ON.\n");
+        else
+            output.append("\nThe shaders are OFF.\n");
+        return true;
+    }
+    if (cmd == "tpm" || cmd == "toggle_polygon_mode")
+    {
+        switch (Config::PolygonMode)
+        {
+            case GL_FILL:
+                Config::PolygonMode = GL_LINE;
+                output.append("\nPolygon mode: GL_LINE.\n");
+                break;
+            case GL_LINE:
+                Config::PolygonMode = GL_FILL;
+                output.append("\nPolygon mode: GL_FILL.\n");
+                break;
+        }
+        return true;
+    }
+    return false;
+}
+
+bool SceneGame::FrameUpdate(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
@@ -208,7 +306,7 @@ bool SceneGame::Update(float deltaTime)
         glLoadMatrixf(&FOV.ViewTransform.x0);
         RigidObj *obj = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
-            g_Application.SetCurrentScene(new SceneSkeleton(/*this*/ &g_Application.CurrentScene(),
+            g_Application.SetCurrentScene(new SceneSkeleton(this,
                 obj->GetModelGr()->FileName, obj->GetModelPh()->FileName), false);
 /*
         float near_height = 0.1f * tan(45.0f * PI / 360.0f);
@@ -232,7 +330,7 @@ bool SceneGame::Update(float deltaTime)
         return true;
     }
 
-    world.Update(deltaTime);
+    world.FrameUpdate(deltaTime);
     return true;
 }
 
@@ -267,22 +365,13 @@ void SceneGame::SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_S
     GLShader::SetLightType(light.type, t_Ambient, t_Diffuse, t_Specular);
 }
 
-bool SceneGame::Render()
+bool SceneGame::FrameRender()
 {
-    if (!g_FontMgr.IsHandleValid(m_Font1))
-        m_Font1 = g_FontMgr.GetFont("Courier New", 12);
-    if (!g_FontMgr.IsHandleValid(m_Font2))
-        m_Font2 = g_FontMgr.GetFont("Courier New", 15);
+    world.FrameRender();
 
     static xLight dayLight;
     static xLightVector dayLightVec;
 
-    if (Config::Initialize)
-    {
-        world.Finalize();
-        world.Initialize();
-        Config::Initialize = false;
-    }
     if (dayLight.id == 0)
     {
         dayLight.create();
@@ -486,6 +575,16 @@ bool SceneGame::Render()
             }
             GLShader::Suspend();
 */
+            GLShader::EnableTexturing(xState_Disable);
+            GLShader::SetLightType(xLight_NONE);
+            GLShader::Start();
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_CULL_FACE);
+            glColor3f(1.f, 1.f, 1.f);
+            for ( i = begin ; i != end ; ++i )
+                ((RigidObj*)*i)->renderer.RenderBVH((**i).BVHierarchy);
+            GLShader::Suspend();
         }
         else
         {

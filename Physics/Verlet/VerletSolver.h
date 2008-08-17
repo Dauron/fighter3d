@@ -111,12 +111,12 @@ public:
     static const float FRICTION_AIR;
 
 public:
-    void Init(VerletSystem *system)
+    void Init(VerletSystem &system)
     {
         I_passes = 1;
         A_gravity.zero();
 
-        this->system = system;
+        this->system = &system;
     }
 
     void TimeStep()

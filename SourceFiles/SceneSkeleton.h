@@ -24,11 +24,11 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate() {
         Model.Invalidate();
-        return PrevScene->Invalidate();
+        return Scene::Invalidate();
     }
     virtual void Terminate();
-    virtual bool Update(float deltaTime);
-    virtual bool Render();
+    virtual bool FrameUpdate(float deltaTime);
+    virtual bool FrameRender();
 
   private:
     void         InitInputMgr();
@@ -49,7 +49,6 @@ class SceneSkeleton : public Scene, public ISelectionProvider
         emLoadAnimation, emSaveAnimation, emLast
     } EditMode;
 
-    Scene     * PrevScene;
     HFont       Font;
     RigidObj    Model;
 

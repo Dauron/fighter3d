@@ -18,37 +18,39 @@ position    0 0 10
 [model]
 model	dojo/floor0_F.3dx
 position    0 0 -0.21
-physical    0
 phantom     0
 
-[model]
+[skip model]
 fastm	crate_fst.3dx
 model	crate.3dx
-rotation    0 10 0
-position    -0.5 -2 1.2
-physical    1
+skip rotation    0 10 0
+position    -0.5 -2 0.2
+restitution 0.9
+physical    0
 locked      0
 phantom     0
 mass        20
+
 #
 
-[skip skeletized]
+[skeletized]
 fastm	human2_fst.3dx
 model	human2.3dx
 rotation    0 0 180
-position    -0.7 -3.3 0.2
+position    -0.7 -3.3 -0.4
 physical    1
 locked      0
 phantom     0
 mass        70
 shadows     0
+restitution 0.1
 skip animation	anims/human/garda.ska	0		0
 animation	anims/human/position.ska	0		4200
-animation	anims/human/yoko-geri2.ska	4000	5300
-animation	anims/human/position.ska	5200
+animation	anims/human/yoko-geri2.ska	4200	5300
+animation	anims/human/position.ska	5300
 skip animation	anims/human/position.ska	0
 
-[skip skeletized]
+[skeletized]
 fastm	human2_fst.3dx
 model	human2.3dx
 #position   -0.5 -1.5 -0.2
@@ -59,7 +61,7 @@ phantom     0
 mass        70
 shadows     0
 skip animation	anims/human/garda.ska
-skip animation	anims/human/stoi.ska 0 0
+animation	anims/human/stoi.ska 0 0
 skip animation	anims/human/garda.ska	0	4700
 skip animation	anims/human/skulony.ska	4700	4700
 skip animation	anims/human/kiwa_sie.ska	4700	4700

@@ -35,8 +35,10 @@ class SceneTest : public Scene, private ISelectionProvider
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate();
     virtual void Terminate();
-    virtual bool Update(float deltaTime);
-    virtual bool Render();
+    virtual bool FrameUpdate(float deltaTime);
+    virtual bool FrameRender();
+
+    virtual bool ShellCommand(std::string &cmd, std::string &output);
 
     virtual void Resize(int left, int top, unsigned int width, unsigned int height)
     {

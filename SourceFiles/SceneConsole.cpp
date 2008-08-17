@@ -1,5 +1,6 @@
 #include "SceneConsole.h"
 #include "SceneGame.h"
+#include "SceneTest.h"
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
@@ -9,9 +10,28 @@
 #include "../Utils/GraphicsModes.h"
 #include "../Models/ModelMgr.h"
 
+Scene * SceneConsole :: SetCurrentScene(Scene* scene, bool destroyPrev)
+ {
+    if (!scene)
+        throw "The scene cannot be null";
+
+    bool res = scene->Initialize(0,0,g_Application.MainWindow().Width(), g_Application.MainWindow().Height());
+
+    if (PrevScene && destroyPrev)
+    {
+        PrevScene->Terminate();
+        delete PrevScene;
+    }
+    else
+        scene->PrevScene = PrevScene;
+    PrevScene = scene;
+
+    return this;
+}
+
 bool SceneConsole::Initialize(int left, int top, unsigned int width, unsigned int height)
 {
-    if (prevScene) prevScene->Initialize(left, top, width, height);
+    if (PrevScene) PrevScene->Initialize(left, top, width, height);
     Scene::Initialize(left, top, width, height);
 
     InitInputMgr();
@@ -22,6 +42,9 @@ bool SceneConsole::Initialize(int left, int top, unsigned int width, unsigned in
     histLines = 1;
     scroll_v = 0;
 
+    if (!visible)
+        g_InputMgr.SetScene(PrevScene->sceneName);
+
     return true;
 }
 
@@ -29,11 +52,13 @@ void SceneConsole::Resize(int left, int top, unsigned int width, unsigned int he
 {
     if (Initialized)
     {
-        if (prevScene) prevScene->Resize(left, top, width, height);
+        if (PrevScene) PrevScene->Resize(left, top, width, height);
         Scene::Resize(left, top, width, height);
 
         if (!g_FontMgr.IsHandleValid(font))
             font = g_FontMgr.GetFont("Courier New", 12); // it takes about second to create a font
+        if (!g_FontMgr.IsHandleValid(font15))
+            font15 = g_FontMgr.GetFont("Courier New", 15); // it takes about second to create a font
         const GLFont* pFont = g_FontMgr.GetFont(font);
 
         pageSize = (int)(height/2.0f/pFont->LineH()) - 3;
@@ -67,14 +92,17 @@ void SceneConsole::Terminate()
 {
     g_FontMgr.DeleteFont(font);
     font = HFont();
-    if (prevScene)
+    g_FontMgr.DeleteFont(font15);
+    font15 = HFont();
+    if (PrevScene)
     {
-        prevScene->Terminate();
-        delete prevScene;
-        prevScene = NULL;
+        PrevScene->Terminate();
+        delete PrevScene;
+        PrevScene = NULL;
     }
     Scene::Terminate();
 }
+
 
 void SceneConsole::AppendConsole(std::string text)
 {
@@ -91,7 +119,7 @@ void SceneConsole::AppendConsole(std::string text)
     if (scroll_v < histLines -1-pageSize) scroll_v = histLines-1-pageSize;
 }
 
-bool SceneConsole::Update(float deltaTime)
+bool SceneConsole :: FrameUpdate(float deltaTime)
 {
     float curTick = GetTick();
     if (curTick - carretTick > 500.f)
@@ -104,12 +132,17 @@ bool SceneConsole::Update(float deltaTime)
 
     if (im.GetInputStateAndClear(IC_Console))
     {
-        overlayInput = !overlayInput;
-        overlayClock = overlayInput;
-        if (overlayInput)
-            im.SetScene(prevScene->sceneName);
+        if (visible && !overlayInput && PrevScene)
+        {
+            overlayInput = true;
+            overlayClock = true;
+            im.SetScene(PrevScene->sceneName);
+        }
         else
         {
+            overlayInput = false;
+            overlayClock = false;
+            visible = true;
             im.SetScene(sceneName);
             justOpened = true;
         }
@@ -118,21 +151,42 @@ bool SceneConsole::Update(float deltaTime)
     else
     if (im.GetInputStateAndClear(IC_Reject))
     {
-        if (prevScene)
+        if (visible && PrevScene)
         {
-            Scene *tmp = prevScene;
-            prevScene = NULL;
+            visible = false;
+            im.SetScene(PrevScene->sceneName);
+        }
+        else
+        if (PrevScene->PrevScene)
+        {
+            im.SetInputState(IC_Reject, true);
+            PrevScene->FrameUpdate(0.f);
+        }
+        else
+            g_Application.MainWindow().Terminate();
+        /*
+        if (PrevScene)
+        {
+            Scene *tmp = PrevScene;
+            PrevScene = NULL;
             g_Application.SetCurrentScene(tmp);
         }
         else
             g_Application.MainWindow().Terminate();
+        */
+        return true;
+    }
+
+    if (!visible)
+    {
+        PrevScene->FrameUpdate(deltaTime);
         return true;
     }
 
     if (overlayClock)
     {
         im.enable = overlayInput;
-        bool res = prevScene->Update(deltaTime);
+        bool res = PrevScene->FrameUpdate(deltaTime);
         if (overlayInput)
             return res;
         else
@@ -145,8 +199,13 @@ bool SceneConsole::Update(float deltaTime)
     if (im.GetInputStateAndClear(IC_Accept))
     {
         AppendConsole(currCmd);
-        if (!ProcessCmd(currCmd))
+        std::string output;
+        bool result = ShellCommand(currCmd, output);
+        if (PrevScene) result |= PrevScene->ShellCommand(currCmd, output);
+        if (!result)
             AppendConsole("\nUnknown command: " + currCmd);
+        else
+            AppendConsole(output);
 
         if (history.size())
             AppendConsole("\n>");
@@ -156,14 +215,20 @@ bool SceneConsole::Update(float deltaTime)
         currCmd.clear();
     }
     else
-    if (im.GetInputState(IC_Con_LineUp))
+    if (im.GetInputState(IC_Con_LineUp) || im.mouseWheel > 0)
     {
+        if (im.mouseWheel > 100) im.mouseWheel -= 100;
+        else                     im.mouseWheel = 0;
         if (scroll_v) --scroll_v;
+        else          im.mouseWheel = 0;
     }
     else
-    if (im.GetInputState(IC_Con_LineDown))
+    if (im.GetInputState(IC_Con_LineDown) || im.mouseWheel < 0)
     {
+        if (im.mouseWheel < -100) im.mouseWheel += 100;
+        else                      im.mouseWheel = 0;
         if (scroll_v < histLines -1 -pageSize) ++scroll_v;
+        else                                   im.mouseWheel = 0;
     }
     else
     if (im.GetInputStateAndClear(IC_Con_PageUp))
@@ -206,34 +271,24 @@ bool SceneConsole::Update(float deltaTime)
     return true;
 }
 
-bool SceneConsole::ProcessCmd(std::string cmd)
+bool SceneConsole :: ShellCommand(std::string &cmd, std::string &output)
 {
     if (cmd == "?" || cmd == "help")
     {
-        AppendConsole("\n\
-  Available console comands:\n\
+        output.append("\n\
+  Available shell comands for [console]:\n\
     Full command        | Short command | Description\n\
     ------------------------------------------------------------------------\n\
     help                | ?             | print this help screen\n\
     clear_console       | clr           | clear console history\n\
+    zero_fps_counters   | clrfps        | clears min & max fps counters\n\
     terminate           | qqq           | terminate application\n\
     `                   | `             | enable full overlay mode\n\
     toggle_clock        | tcl           | toggles the clock overlay mode\n\
     ------------------------------------------------------------------------\n\
     graphical_mode_list | gml           | list possible pixel formats\n\
     opengl_extensions   | ext           | list available OpenGL extensions\n\
-    ------------------------------------------------------------------------\n\
-    toggle_lights       | tls           | turns the lighting on and off\n\
-    toggle_shadows      | tshadow       | toggles shadow rendering\n\
-    toggle_shadow_vol   | tshadowv      | toggles shadow volume rendering\n\
-    reinitialize        | init          | reinitialize objects, etc.\n\
-    toggle_shader       | tshd          | toggles custom shader\n\
-    toggle_polygon_mode | tpm           | toggle polygon mode\n\
-    zero_fps_counters   | clrfps        | clears min & max fps counters\n\
-    ------------------------------------------------------------------------\n\
     status              | status        | show execution status\n\
-    level {int}         | level {int}   | load 'level_{int}.map' scene\n\
-    speed {float}       | speed {float} | enter clock speed multiplier\n\
     ------------------------------------------------------------------------\n\
     log message         | log message   | adds given message to the log file\n\
     log_tail            | tail          | displays tail of the log file\n\
@@ -257,9 +312,9 @@ bool SceneConsole::ProcessCmd(std::string cmd)
     {
         overlayClock = !overlayClock;
         if (overlayClock)
-            AppendConsole("\nThe clock is ON.\n");
+            output.append("\nThe clock is ON.\n");
         else
-            AppendConsole("\nThe clock is OFF.\n");
+            output.append("\nThe clock is OFF.\n");
         return true;
     }
     if (cmd == "gml" || cmd == "graphical_mode_list")
@@ -272,13 +327,13 @@ bool SceneConsole::ProcessCmd(std::string cmd)
 
         for (int i=0; i<gm_count; ++i)
         {
-            AppendConsole("\n  Pixel Format " + itos(i+1) + '\n');
-            AppendConsole(gm.ModeToString(pfds[i]));
+            output.append("\n  Pixel Format " + itos(i+1) + '\n');
+            output.append(gm.ModeToString(pfds[i]));
         }
 
         delete[] pfds;
 #else
-        AppendConsole("\nImplemented only for Windows\n");
+        output.append("\nImplemented only for Windows\n");
 #endif
         return true;
     }
@@ -288,41 +343,10 @@ bool SceneConsole::ProcessCmd(std::string cmd)
         int len=strlen(extensions);
         for (int i=0; i<len; i++)              // Separate It By Newline Instead Of Blank
             if (extensions[i]==' ') extensions[i]='\n';
-        AppendConsole("\nAvailable OpenGL extensions:\n");
-        AppendConsole(extensions);
+        output.append("\nAvailable OpenGL extensions:\n");
+        output.append(extensions);
         delete[] extensions;
 
-        return true;
-    }
-    if (cmd == "tls" || cmd == "toggle_lights")
-    {
-        if (Config::EnableLighting = !Config::EnableLighting)
-            AppendConsole("\nThe lights are ON.\n");
-        else
-            AppendConsole("\nThe lights are OFF.\n");
-        return true;
-    }
-    if (cmd.substr(0, 4) == "tls ")
-    {
-        unsigned int id = (unsigned int)atoi(cmd.substr(4).c_str());
-        if (id >= 0 && id < ((SceneGame*)prevScene)->world.lights.size())
-            ((SceneGame*)prevScene)->world.lights[id].turned_on = !((SceneGame*)prevScene)->world.lights[id].turned_on;
-        return true;
-    }
-    if (cmd == "tshadow" || cmd == "toggle_shadows")
-    {
-        if (Config::EnableShadows = !Config::EnableShadows)
-            AppendConsole("\nThe shadows are ON.\n");
-        else
-            AppendConsole("\nThe shadows are OFF.\n");
-        return true;
-    }
-    if (cmd == "tshadowv" || cmd == "toggle_shadow_vol")
-    {
-        if (Config::DisplayShadowVolumes = !Config::DisplayShadowVolumes)
-            AppendConsole("\nThe shadow volumes are ON.\n");
-        else
-            AppendConsole("\nThe shadow volumes are OFF.\n");
         return true;
     }
     if (cmd == "status")
@@ -336,49 +360,10 @@ test  = ";
     ss << Config::TestCase;  ss >> txt2; txt += txt2 + '\n';
     AppendConsole(txt);
     if (g_AnimSkeletal.HardwareEnabled())
-        AppendConsole("hardware skeletal animation ENABLED\n");
+        output.append("hardware skeletal animation ENABLED\n");
     else
-        AppendConsole("hardware skeletal animation DISABLED\n");
+        output.append("hardware skeletal animation DISABLED\n");
     return true;
-    }
-    if (cmd == "init" || cmd == "reinitialize")
-    {
-        Config::Initialize = true;
-        return true;
-    }
-    if (cmd.substr(0, 6) == "level ")
-    {
-        Config::TestCase = atoi(cmd.substr(6).c_str());
-        Config::Initialize = true;
-        return true;
-    }
-    if (cmd.substr(0, 6) == "speed ")
-    {
-        Config::Speed = atof(cmd.substr(6).c_str());
-        return true;
-    }
-    if (cmd == "tshd" || cmd == "toggle_shader")
-    {
-        if (Config::EnableShaders = !Config::EnableShaders)
-            AppendConsole("\nThe shaders are ON.\n");
-        else
-            AppendConsole("\nThe shaders are OFF.\n");
-        return true;
-    }
-    if (cmd == "tpm" || cmd == "toggle_polygon_mode")
-    {
-        switch (Config::PolygonMode)
-        {
-            case GL_FILL:
-                Config::PolygonMode = GL_LINE;
-                AppendConsole("\nPolygon mode: GL_LINE.\n");
-                break;
-            case GL_LINE:
-                Config::PolygonMode = GL_FILL;
-                AppendConsole("\nPolygon mode: GL_FILL.\n");
-                break;
-        }
-        return true;
     }
     if (cmd == "clrfps" || cmd == "zero_fps_counters")
     {
@@ -394,15 +379,15 @@ test  = ";
     if (cmd == "tail" || cmd == "log_tail")
     {
         char *res = log_tail();
-        AppendConsole("\nLog tail:\n");
-        AppendConsole(res);
+        output.append("\nLog tail:\n");
+        output.append(res);
         return true;
     }
     if (cmd == "read" || cmd == "log_read")
     {
         char *res = log_read();
-        AppendConsole("\nLog file:\n");
-        AppendConsole(res);
+        output.append("\nLog file:\n");
+        output.append(res);
         return true;
     }
     if (cmd == "clrlog" || cmd == "log_clear")
@@ -410,12 +395,33 @@ test  = ";
         log_clear();
         return true;
     }
+    if (cmd.substr(0, 6) == "scene ")
+    {
+        if (PrevScene)
+        {
+            PrevScene->Terminate();
+            delete PrevScene;
+            PrevScene = NULL;
+        }
+        if (cmd == "scene test") PrevScene = new SceneTest();
+        else
+        if (cmd == "scene game") PrevScene = new SceneGame();
+        PrevScene->Initialize(Left, Top, Width, Height);
+        if (visible)
+        {
+            overlayClock = false;
+            overlayInput = false;
+            g_InputMgr.SetScene(sceneName);
+        }
+        return true;
+    }
     return false;
 }
 
-bool SceneConsole::Render()
+bool SceneConsole::FrameRender()
 {
-    if (prevScene) prevScene->Render();
+    if (PrevScene) PrevScene->FrameRender();
+    if (!visible) return true;
 
     GLint cHeight = Height/2;
 
@@ -437,6 +443,8 @@ bool SceneConsole::Render()
 
     if (!g_FontMgr.IsHandleValid(font))
         font = g_FontMgr.GetFont("Courier New", 12);
+    if (!g_FontMgr.IsHandleValid(font15))
+        font15 = g_FontMgr.GetFont("Courier New", 15);
     const GLFont* pFont = g_FontMgr.GetFont(font);
 
     float lineHeight = pFont->LineH();

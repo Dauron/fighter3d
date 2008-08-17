@@ -448,7 +448,7 @@ void SkeletizedBody :: CalculateMovement(SkeletizedObj *model, float T_delta)
     model->verletSystem.T_step = T_delta;
 
     VerletSolver engine;
-    engine.Init(& model->verletSystem);
+    engine.Init(model->verletSystem);
     engine.I_passes = 50;
     engine.Verlet();
     engine.SatisfyConstraints();

@@ -9,13 +9,20 @@ namespace Math { namespace Figures {
 
     struct xMeshData
     {
+        xBYTE    ID;
+
         xMatrix  MX_LocalToWorld;
         xMatrix  MX_MeshToLocal;
+        xMatrix *MX_Bones;
 
         xBYTE   *L_FaceData;
         xDWORD   I_FaceStride;
         xDWORD   I_FaceCount;
 
+        xWORD3 *GetFacePtr(xDWORD I_FaceIndex)
+        {
+            return (xWORD3*) (L_FaceData + I_FaceIndex * I_FaceStride);
+        }
         xWORD3 &GetFace(xDWORD I_FaceIndex)
         {
             return *(xWORD3*) (L_FaceData + I_FaceIndex * I_FaceStride);
@@ -28,6 +35,14 @@ namespace Math { namespace Figures {
         xPoint3 &GetVertex(xDWORD I_VertexIndex)
         {
             return *(xPoint3*) (L_VertexData + I_VertexIndex * I_VertexStride);
+        }
+
+        xBYTE   *L_BoneData;
+        xDWORD   I_BoneStride;
+
+        xFLOAT4 &GetBone(xDWORD I_VertexIndex)
+        {
+            return *(xFLOAT4*) (L_BoneData + I_VertexIndex * I_BoneStride);
         }
 
         xPoint3 *L_VertexData_Transf;
@@ -52,38 +67,11 @@ namespace Math { namespace Figures {
             P_center = box.P_min + NW_dims;
         }
 
-        xBoxA BoundingBox()
-        {
-            xBoxA res;
-            if (!I_VertexCount)
-            {
-                res.P_min.zero();
-                res.P_max.zero();
-                return res;
-            }
+        xBoxA BoundingBox() const;
+        virtual void Transform(const xMatrix  &MX_LocalToWorld);
 
-            res.P_max = res.P_min = *(xPoint3*) L_VertexData;
-            xDWORD vertexC = I_VertexCount - 1;
-            xBYTE *vertexP = L_VertexData + I_VertexStride;
-
-            for (; vertexC; --vertexC, vertexP += I_VertexStride)
-            {
-                xPoint3 &P = *(xPoint3*) vertexP;
-                if (P.x > res.P_max.x) res.P_max.x = P.x;
-                else
-                if (P.x < res.P_min.x) res.P_min.x = P.x;
-                if (P.y > res.P_max.y) res.P_max.y = P.y;
-                else
-                if (P.y < res.P_min.y) res.P_min.y = P.y;
-                if (P.z > res.P_max.z) res.P_max.z = P.z;
-                else
-                if (P.z < res.P_min.z) res.P_min.z = P.z;
-            }
-
-            return res;
-        }
-
-        xMeshData() : L_VertexData_Transf(NULL), FL_VertexIsTransf(NULL) { MX_LocalToWorld.identity(); }
+        xMeshData() : L_VertexData_Transf(NULL), FL_VertexIsTransf(NULL), L_BoneData(NULL), MX_Bones(NULL)
+        { MX_LocalToWorld.identity(); }
     };
 
     struct xMesh : xIFigure3d
@@ -100,13 +88,17 @@ namespace Math { namespace Figures {
 
         virtual void free(bool transformationOnly = false)
         {
+            if (transformationOnly)
+            {
+                memset(MeshData->FL_VertexIsTransf, 0, sizeof(bool) * MeshData->I_VertexCount);
+                return;
+            }
+
             if ( MeshData->L_VertexData_Transf )
             {
                 delete[] MeshData->L_VertexData_Transf; MeshData->L_VertexData_Transf = NULL;
                 delete[] MeshData->FL_VertexIsTransf;   MeshData->FL_VertexIsTransf   = NULL;
             }
-
-            if (transformationOnly) return;
 
             delete[] L_FaceIndices;   L_FaceIndices   = NULL;
             delete[] L_VertexIndices; L_VertexIndices = NULL;
@@ -131,40 +123,7 @@ namespace Math { namespace Figures {
             }
         }
 
-        virtual xIFigure3d *Transform(const xMatrix  &MX_LocalToWorld)
-        {
-            if ( ! MeshData->L_VertexData_Transf )
-            {
-                MeshData->L_VertexData_Transf = new xPoint3[MeshData->I_VertexCount];
-                MeshData->FL_VertexIsTransf   = new bool[MeshData->I_VertexCount];
-                memset(MeshData->FL_VertexIsTransf, 0, sizeof(bool) * MeshData->I_VertexCount);
-            }
-
-            if (MX_LocalToWorld != MeshData->MX_LocalToWorld)
-            {
-                memset(MeshData->FL_VertexIsTransf, 0, sizeof(bool) * MeshData->I_VertexCount);
-                MeshData->MX_LocalToWorld = MX_LocalToWorld;
-            }
-
-            xMatrix  MX_MeshToWorld = MeshData->MX_MeshToLocal * MX_LocalToWorld;
-
-            xDWORD  *L_VertexIndex_Itr     = L_VertexIndices;
-            for (int i = I_VertexIndices; i; --i, ++L_VertexIndex_Itr)
-            {
-                const xDWORD &index = *L_VertexIndex_Itr;
-
-                if (MeshData->FL_VertexIsTransf[index]) continue;
-
-                MeshData->L_VertexData_Transf[index] = MX_MeshToWorld.preTransformP(
-                                                           MeshData->GetVertex(index) );
-                MeshData->FL_VertexIsTransf[index] = true;
-            }
-
-            xMesh *res = new xMesh();
-            //res->P_center = MX_LocalToWorld.preTransformP(res->P_center);
-            *res = *this;
-            return res;
-        }
+        virtual xIFigure3d *Transform(const xMatrix  &MX_LocalToWorld);
 
         virtual xFLOAT S_Radius_Sqr_Get() { return MeshData->S_radius*MeshData->S_radius; }
         virtual xFLOAT W_Volume_Get()     { return MeshData->NW_dims.x * MeshData->NW_dims.y * MeshData->NW_dims.z * 8.f; }

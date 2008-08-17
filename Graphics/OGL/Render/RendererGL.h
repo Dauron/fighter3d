@@ -31,12 +31,14 @@ class RendererGL : public Renderer
 
     virtual void RenderSkeletonSelection ( xModel &model, xModelInstance &instance, bool selectConstraint = false );
 
-    virtual void RenderShadowVolume    ( xModel &model, xModelInstance &instance,
-                                         xLight &light, xFieldOfView &FOV );
-    virtual void RenderShadowMap       ( xModel &model, xModelInstance &instance,
-                                         const xShadowMap &shadowMap, const xFieldOfView &FOV );
-    virtual void CreateShadowMapTexture( xModel &model, xModelInstance &instance, xDWORD &shadowMapTexId,
-                                         xWORD width, xMatrix &mtxBlockerToLight );
+    virtual void RenderBVH               ( const Math::Figures::xBVHierarchy &bvh, int I_level = 0 );
+
+    virtual void RenderShadowVolume      ( xModel &model, xModelInstance &instance,
+                                           xLight &light, xFieldOfView &FOV );
+    virtual void RenderShadowMap         ( xModel &model, xModelInstance &instance,
+                                           const xShadowMap &shadowMap, const xFieldOfView &FOV );
+    virtual void CreateShadowMapTexture  ( xModel &model, xModelInstance &instance, xDWORD &shadowMapTexId,
+                                           xWORD width, xMatrix &mtxBlockerToLight );
 
     RendererGL() : UseVBO(GLExtensions::Exists_ARB_VertexBufferObject), UseList(true) {};
 

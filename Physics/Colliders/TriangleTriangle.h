@@ -273,7 +273,6 @@ inline bool SegmentSegmentFixDistanceAbs(const xVector3 &N_fix, const xPoint3 &P
     return false;
 }
 
-
 xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const xPoint3 &P_a3,
                                const xPoint3 &P_b1, const xPoint3 &P_b2, const xPoint3 &P_b3,
                                const xIFigure3d &figure1, xDWORD ID_tri_1,

@@ -4,6 +4,7 @@
 #include "../Models/lib3dx/xModel.h"
 #include "../Math/xFieldOfView.h"
 #include "../Math/xLight.h"
+#include "../Math/Figures/xBVHierarchy.h"
 
 struct xShadowMap
 {
@@ -37,12 +38,15 @@ public:
 
     virtual void RenderSkeletonSelection ( xModel &model, xModelInstance &instance, bool selectConstraint = false ) = 0;
 
-    virtual void RenderShadowVolume    ( xModel &model, xModelInstance &instance,
-                                         xLight &light, xFieldOfView &FOV ) = 0;
-    virtual void RenderShadowMap       ( xModel &model, xModelInstance &instance,
-                                         const xShadowMap &shadowMap, const xFieldOfView &FOV ) = 0;
-    virtual void CreateShadowMapTexture( xModel &model, xModelInstance &instance, xDWORD &shadowMapTexId,
-                                         xWORD width, xMatrix &mtxBlockerToLight ) = 0;
+    virtual void RenderBVH               ( const Math::Figures::xBVHierarchy &bvh, int I_level = 0 ) = 0;
+
+
+    virtual void RenderShadowVolume      ( xModel &model, xModelInstance &instance,
+                                           xLight &light, xFieldOfView &FOV ) = 0;
+    virtual void RenderShadowMap         ( xModel &model, xModelInstance &instance,
+                                           const xShadowMap &shadowMap, const xFieldOfView &FOV ) = 0;
+    virtual void CreateShadowMapTexture  ( xModel &model, xModelInstance &instance, xDWORD &shadowMapTexId,
+                                           xWORD width, xMatrix &mtxBlockerToLight ) = 0;
 
     virtual void InvalidateGraphics(xModel &model, xModelInstance &instance) = 0;
     virtual void FreeGraphics      (xModel &model, xModelInstance &instance, bool freeShared = true) = 0;

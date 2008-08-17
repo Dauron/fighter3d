@@ -8,60 +8,76 @@
 namespace Physics { namespace Colliders {
     using namespace ::Math::Figures;
 
+    struct BoneWeight {
+        xBYTE  I_bone;
+        xFLOAT W_bone;
+    };
+
+    struct CollisionPoint {
+        const xIFigure3d *Figure;
+        xDWORD            ID_subobj;
+
+        xPoint3           P_collision;
+        xVector3          NW_fix;
+        xVector3          V_response;
+
+        xFLOAT            W_fix;
+
+        BoneWeight        W_Bones[12];
+        xBYTE             I_Bones;
+
+        CollisionPoint()
+        {}
+        CollisionPoint(const xPoint3 &p_collision)
+            : Figure(NULL), P_collision(p_collision), I_Bones(0)
+        {}
+        CollisionPoint(const xIFigure3d &figure, const xPoint3 &p_collision,
+                       const xVector3 &nw_fix, xDWORD id_subobj = 0)
+            : Figure(&figure), P_collision(p_collision), NW_fix(nw_fix), ID_subobj(id_subobj)
+        { SetBoneWeights(); }
+
+        void SetBoneWeights();
+    };
+
     struct CollisionInfo {
-        const xIFigure3d *Figure1;
-        const xIFigure3d *Figure2;
+    private:
+        CollisionPoint object1;
+        CollisionPoint object2;
+        bool           inverted;
 
-        xPoint3  P_collision_1;
-        xPoint3  P_collision_2;
+    public:
+        CollisionPoint &CPoint1_Get() { return inverted ? object2 : object1; }
+        CollisionPoint &CPoint2_Get() { return inverted ? object1 : object2; }
 
-        xDWORD   ID_subobj_1;
-        xDWORD   ID_subobj_2;
-
-        xVector3 NW_fix_1;
-        //xVector3 NW_fix_2; // = - NW_fix_1
-
-
-        CollisionInfo () {}
+        CollisionInfo () : inverted(false) {}
 
         CollisionInfo (const xIFigure3d &figure1,    const xIFigure3d &figure2,
                        const xPoint3 &p_collision_1, const xPoint3 &p_collision_2)
-              : Figure1       (&figure1)
-              , Figure2       (&figure2)
-              , NW_fix_1      (p_collision_2-p_collision_1)
-              , P_collision_1 (p_collision_1)
-              , P_collision_2 (p_collision_2)
+              : object1(figure1, p_collision_1, p_collision_2-p_collision_1)
+              , object2(figure2, p_collision_2, p_collision_1-p_collision_2)
+              , inverted(false)
         {}
 
         CollisionInfo (const xIFigure3d &figure1,    const xIFigure3d &figure2,
                        const xVector3 &nw_fix_1,
                        const xPoint3 &p_collision_1, const xPoint3 &p_collision_2)
-              : Figure1       (&figure1)
-              , Figure2       (&figure2)
-              , NW_fix_1      (nw_fix_1)
-              , P_collision_1 (p_collision_1)
-              , P_collision_2 (p_collision_2)
+              : object1(figure1, p_collision_1,  nw_fix_1)
+              , object2(figure2, p_collision_2, -nw_fix_1)
+              , inverted(false)
         {}
 
         CollisionInfo (const xIFigure3d &figure1,    const xIFigure3d &figure2,
                        xDWORD id_subobj_1,           xDWORD id_subobj_2,
                        const xVector3 &nw_fix_1,
                        const xPoint3 &p_collision_1, const xPoint3 &p_collision_2)
-              : Figure1       (&figure1)
-              , Figure2       (&figure2)
-              , ID_subobj_1   (id_subobj_1)
-              , ID_subobj_2   (id_subobj_2)
-              , NW_fix_1      (nw_fix_1)
-              , P_collision_1 (p_collision_1)
-              , P_collision_2 (p_collision_2)
+              : object1(figure1, p_collision_1,  nw_fix_1, id_subobj_1)
+              , object2(figure2, p_collision_2, -nw_fix_1, id_subobj_2)
+              , inverted(false)
         {}
 
         CollisionInfo &invert()
         {
-            NW_fix_1.invert();
-            xPoint3 swp = P_collision_1; P_collision_1 = P_collision_2; P_collision_2 = swp;
-            const xIFigure3d *fswp = Figure1; Figure1 = Figure2; Figure2 = fswp;
-            xDWORD iswp = ID_subobj_1; ID_subobj_1 = ID_subobj_2; ID_subobj_2 = iswp;
+            inverted = !inverted;
             return *this;
         }
     };
@@ -109,39 +125,40 @@ namespace Physics { namespace Colliders {
             CollisionVec::iterator iter, end = collisions.end();
             for (iter = collisions.begin(); iter != end; ++iter)
             {
-                P_collision_1 += iter->P_collision_1;
-                P_collision_2 += iter->P_collision_2;
-                NW_fix_1 += iter->NW_fix_1;
-                S_minLen = min (S_minLen, iter->NW_fix_1.lengthSqr());
+                CollisionPoint &cp1 = iter->CPoint1_Get();
+                P_collision_1 += cp1.P_collision;
+                P_collision_2 += iter->CPoint2_Get().P_collision;
+                NW_fix_1 += cp1.NW_fix;
+                S_minLen = min (S_minLen, cp1.NW_fix.lengthSqr());
 
-                if (iter->NW_fix_1.x > EPSILON)
+                if (cp1.NW_fix.x > EPSILON)
                 {
-                    if (iter->NW_fix_1.x > NW_Max.x) NW_Max.x = iter->NW_fix_1.x;
+                    if (cp1.NW_fix.x > NW_Max.x) NW_Max.x = cp1.NW_fix.x;
                     ++I_MaxX;
                 }
                 else
                 {
-                    if (iter->NW_fix_1.x < NW_Min.x) NW_Min.x = iter->NW_fix_1.x;
+                    if (cp1.NW_fix.x < NW_Min.x) NW_Min.x = cp1.NW_fix.x;
                     ++I_MinX;
                 }
-                if (iter->NW_fix_1.y > EPSILON)
+                if (cp1.NW_fix.y > EPSILON)
                 {
-                    if (iter->NW_fix_1.y > NW_Max.y) NW_Max.y = iter->NW_fix_1.y;
+                    if (cp1.NW_fix.y > NW_Max.y) NW_Max.y = cp1.NW_fix.y;
                     ++I_MaxY;
                 }
                 else
                 {
-                    if (iter->NW_fix_1.y < NW_Min.y) NW_Min.y = iter->NW_fix_1.y;
+                    if (cp1.NW_fix.y < NW_Min.y) NW_Min.y = cp1.NW_fix.y;
                     ++I_MinY;
                 }
-                if (iter->NW_fix_1.z > EPSILON)
+                if (cp1.NW_fix.z > EPSILON)
                 {
-                    if (iter->NW_fix_1.z > NW_Max.z) NW_Max.z = iter->NW_fix_1.z;
+                    if (cp1.NW_fix.z > NW_Max.z) NW_Max.z = cp1.NW_fix.z;
                     ++I_MaxZ;
                 }
                 else
                 {
-                    if (iter->NW_fix_1.z < NW_Min.z) NW_Min.z = iter->NW_fix_1.z;
+                    if (cp1.NW_fix.z < NW_Min.z) NW_Min.z = cp1.NW_fix.z;
                     ++I_MinZ;
                 }
             }

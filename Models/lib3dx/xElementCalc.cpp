@@ -317,31 +317,80 @@ void xElement :: FillShadowEdges ()
     delete[] tmp;
 }
 
+#include "../../Math/Figures/xSphere.h"
 #include "../../Math/Figures/xBoxO.h"
 #include "../../Math/Figures/xMesh.h"
 using namespace Math::Figures;
 
-xBoxA xElement :: FillBVHNode(xCollisionHierarchy &CH_node,
-                              xBVHierarchy        &BVH_node,
-                              xMeshData           *MeshData)
+xBoxA xElement :: ReFillBVHNode(xBVHierarchy        &BVH_node,
+                                xMeshData           &MeshData)
 {
     xBoxA boxA;
-
-    if (CH_node.I_kids)
+    if (BVH_node.I_items)
     {
         boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
         boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
 
-        BVH_node.init(*new xBoxO());
-        BVH_node.I_items = CH_node.I_kids;
-        BVH_node.L_items = new xBVHierarchy[BVH_node.I_items];
-
         xBoxA boxAc;
-        xCollisionHierarchy *CH_kid  = CH_node.L_kids;
-        xBVHierarchy        *BVH_kid = BVH_node.L_items;
-        for (int i = CH_node.I_kids; i; --i, ++CH_kid, ++BVH_kid)
+        xBVHierarchy *BVH_kid = BVH_node.L_items;
+        for (int i = BVH_node.I_items; i; --i, ++BVH_kid)
         {
-            boxAc = FillBVHNode(*CH_kid, *BVH_kid, MeshData);
+            boxAc = ReFillBVHNode(*BVH_kid, MeshData);
+            if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
+            if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
+            if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
+            if (boxAc.P_max.x > boxA.P_max.x) boxA.P_max.x = boxAc.P_max.x;
+            if (boxAc.P_max.y > boxA.P_max.y) boxA.P_max.y = boxAc.P_max.y;
+            if (boxAc.P_max.z > boxA.P_max.z) boxA.P_max.z = boxAc.P_max.z;
+        }
+
+        xVector3 NW_extends = (boxA.P_max - boxA.P_min) * 0.5f;
+        xBoxO &boxO = *(xBoxO*) BVH_node.Figure;
+        boxO.P_center = boxA.P_min + NW_extends;
+        boxO.S_side  = NW_extends.x;
+        boxO.S_front = NW_extends.y;
+        boxO.S_top   = NW_extends.z;
+    }
+    else
+    {
+        xMesh &mesh = *(xMesh*) BVH_node.Figure;
+
+        boxA.P_max = boxA.P_min = MeshData.GetVertexTransf(mesh.L_VertexIndices[0]);
+
+        xDWORD *MV_iter = mesh.L_VertexIndices;
+        for (xDWORD i = mesh.I_VertexIndices; i; --i, ++MV_iter)
+        {
+            xPoint3 &P_tmp = MeshData.GetVertexTransf(*MV_iter);
+            if (P_tmp.x < boxA.P_min.x) boxA.P_min.x = P_tmp.x;
+            else
+            if (P_tmp.x > boxA.P_max.x) boxA.P_max.x = P_tmp.x;
+            if (P_tmp.y < boxA.P_min.y) boxA.P_min.y = P_tmp.y;
+            else
+            if (P_tmp.y > boxA.P_max.y) boxA.P_max.y = P_tmp.y;
+            if (P_tmp.z < boxA.P_min.z) boxA.P_min.z = P_tmp.z;
+            else
+            if (P_tmp.z > boxA.P_max.z) boxA.P_max.z = P_tmp.z;
+        }
+    }
+
+    return boxA;
+}
+
+xBoxA xElement :: ReFillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData  )
+{
+    xBVHierarchy &BVH_node  = L_BVH[ID];
+    xMeshData    &Mesh_node = MeshData[ID];
+
+    xBoxA boxA, boxAc;
+    boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
+    boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
+
+    if (BVH_node.I_items)
+    {
+        xBVHierarchy *BVH_kid = BVH_node.L_items;
+        for (int i = collisionData.I_kids; i; --i, ++BVH_kid)
+        {
+            boxAc = ReFillBVHNode(*BVH_kid, Mesh_node);
             if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
             if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
             if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
@@ -359,78 +408,86 @@ xBoxA xElement :: FillBVHNode(xCollisionHierarchy &CH_node,
         boxO.N_side.init(1.f, 0.f, 0.f);
         boxO.N_front.init(0.f, 1.f, 0.f);
         boxO.N_top.init(0.f, 0.f, 1.f);
-
-        return boxA;
     }
 
-    BVH_node.I_items = 0;
-    BVH_node.L_items = NULL;
-
-    BVH_node.init(*new xMesh());
-    xMesh &mesh   = *(xMesh*) BVH_node.Figure;
-    mesh.MeshData = MeshData;
-    mesh.I_FaceIndices = CH_node.I_faces;
-    mesh.L_FaceIndices = new xDWORD[mesh.I_FaceIndices];
-    xDWORD *MF_iter = mesh.L_FaceIndices;
-    xFace **CF_iter = CH_node.L_faces;
-    for (xDWORD i = mesh.I_FaceIndices; i; --i, ++MF_iter, ++CF_iter)
-        *MF_iter = (*CF_iter - L_faces);// % MeshData->I_FaceStride;
-
-    boxA.P_max = boxA.P_min = MeshData->GetVertex(CH_node.L_vertices[0]);
-
-    mesh.I_VertexIndices = CH_node.I_vertices;
-    mesh.L_VertexIndices = new xDWORD[mesh.I_VertexIndices];
-    xDWORD *MV_iter = mesh.L_VertexIndices;
-    xWORD  *CV_iter = CH_node.L_vertices;
-    for (xDWORD i = mesh.I_VertexIndices; i; --i, ++MV_iter, ++CV_iter)
+    xElement *elem = L_kids;
+    for (; elem; elem = elem->Next)
     {
-        xPoint3 &P_tmp = MeshData->GetVertex(*MV_iter = *CV_iter);
-        if (P_tmp.x < boxA.P_min.x) boxA.P_min.x = P_tmp.x;
-        else
-        if (P_tmp.x > boxA.P_max.x) boxA.P_max.x = P_tmp.x;
-        if (P_tmp.y < boxA.P_min.y) boxA.P_min.y = P_tmp.y;
-        else
-        if (P_tmp.y > boxA.P_max.y) boxA.P_max.y = P_tmp.y;
-        if (P_tmp.z < boxA.P_min.z) boxA.P_min.z = P_tmp.z;
-        else
-        if (P_tmp.z > boxA.P_max.z) boxA.P_max.z = P_tmp.z;
-    }
-
-    return boxA;
-}
-
-xBoxA xElement :: FillBVH  ( xBVHierarchy *L_BVH )
-{
-    xBVHierarchy &BVH_node = L_BVH[ID];
-    BVH_node.init(*new xBoxO());
-
-    BVH_node.I_items = collisionData.I_kids;
-    BVH_node.L_items = new xBVHierarchy[BVH_node.I_items];
-
-    xMeshData *MeshData = new xMeshData();
-    MeshData->I_FaceCount    = I_faces;
-    MeshData->I_FaceStride   = sizeof(xFace);
-    MeshData->L_FaceData     = (xBYTE*) L_faces;
-    MeshData->I_VertexCount  = I_vertices;
-    MeshData->I_VertexStride = GetVertexStride();
-    MeshData->L_VertexData   = (xBYTE*) L_vertices;
-    MeshData->MX_MeshToLocal = MX_MeshToLocal;
-
-    xBoxA boxA, boxAc;
-    boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
-    boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
-
-    xCollisionHierarchy *CH_kid  = collisionData.L_kids;
-    xBVHierarchy        *BVH_kid = BVH_node.L_items;
-    for (int i = collisionData.I_kids; i; --i, ++CH_kid, ++BVH_kid)
-    {
-        boxAc = FillBVHNode(*CH_kid, *BVH_kid, MeshData);
+        boxAc = elem->ReFillBVH( L_BVH, MeshData );
         if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
         if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
         if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
         if (boxAc.P_max.x > boxA.P_max.x) boxA.P_max.x = boxAc.P_max.x;
         if (boxAc.P_max.y > boxA.P_max.y) boxA.P_max.y = boxAc.P_max.y;
         if (boxAc.P_max.z > boxA.P_max.z) boxA.P_max.z = boxAc.P_max.z;
+    }
+
+    return boxA;
+}
+
+xBoxA xElement :: FillBVHNode(xCollisionHierarchy &CH_node,
+                              xBVHierarchy        &BVH_node,
+                              xMeshData           &MeshData)
+{
+    xBoxA boxA;
+    BVH_node.init(*new xBoxO());
+
+    if (CH_node.I_kids)
+    {
+        boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
+        boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
+
+        BVH_node.I_items = CH_node.I_kids;
+        BVH_node.L_items = new xBVHierarchy[BVH_node.I_items];
+
+        xBoxA boxAc;
+        xCollisionHierarchy *CH_kid  = CH_node.L_kids;
+        xBVHierarchy        *BVH_kid = BVH_node.L_items;
+        for (int i = CH_node.I_kids; i; --i, ++CH_kid, ++BVH_kid)
+        {
+            boxAc = FillBVHNode(*CH_kid, *BVH_kid, MeshData);
+            if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
+            if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
+            if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
+            if (boxAc.P_max.x > boxA.P_max.x) boxA.P_max.x = boxAc.P_max.x;
+            if (boxAc.P_max.y > boxA.P_max.y) boxA.P_max.y = boxAc.P_max.y;
+            if (boxAc.P_max.z > boxA.P_max.z) boxA.P_max.z = boxAc.P_max.z;
+        }
+    }
+    else
+    {
+        BVH_node.I_items = 1;
+        BVH_node.L_items = new xBVHierarchy[1];
+
+        BVH_node.L_items[0].init(*new xMesh());
+        xMesh &mesh   = *(xMesh*) BVH_node.L_items[0].Figure;
+        mesh.MeshData = &MeshData;
+        mesh.I_FaceIndices = CH_node.I_faces;
+        mesh.L_FaceIndices = new xDWORD[mesh.I_FaceIndices];
+        xDWORD *MF_iter = mesh.L_FaceIndices;
+        xFace **CF_iter = CH_node.L_faces;
+        for (xDWORD i = mesh.I_FaceIndices; i; --i, ++MF_iter, ++CF_iter)
+            *MF_iter = (*CF_iter - L_faces);// % MeshData->I_FaceStride;
+
+        boxA.P_max = boxA.P_min = MeshData.GetVertex(CH_node.L_vertices[0]);
+
+        mesh.I_VertexIndices = CH_node.I_vertices;
+        mesh.L_VertexIndices = new xDWORD[mesh.I_VertexIndices];
+        xDWORD *MV_iter = mesh.L_VertexIndices;
+        xWORD  *CV_iter = CH_node.L_vertices;
+        for (xDWORD i = mesh.I_VertexIndices; i; --i, ++MV_iter, ++CV_iter)
+        {
+            xPoint3 &P_tmp = MeshData.GetVertex(*MV_iter = *CV_iter);
+            if (P_tmp.x < boxA.P_min.x) boxA.P_min.x = P_tmp.x;
+            else
+            if (P_tmp.x > boxA.P_max.x) boxA.P_max.x = P_tmp.x;
+            if (P_tmp.y < boxA.P_min.y) boxA.P_min.y = P_tmp.y;
+            else
+            if (P_tmp.y > boxA.P_max.y) boxA.P_max.y = P_tmp.y;
+            if (P_tmp.z < boxA.P_min.z) boxA.P_min.z = P_tmp.z;
+            else
+            if (P_tmp.z > boxA.P_max.z) boxA.P_max.z = P_tmp.z;
+        }
     }
 
     xVector3 NW_extends = (boxA.P_max - boxA.P_min) * 0.5f;
@@ -443,9 +500,91 @@ xBoxA xElement :: FillBVH  ( xBVHierarchy *L_BVH )
     boxO.N_front.init(0.f, 1.f, 0.f);
     boxO.N_top.init(0.f, 0.f, 1.f);
 
+    return boxA;
+}
+
+xBoxA xElement :: FillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData  )
+{
+    xBVHierarchy &BVH_node  = L_BVH[ID];
+    xMeshData    &Mesh_node = MeshData[ID];
+
+    xBoxA boxA, boxAc;
+    boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
+    boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
+
+    if (collisionData.I_kids)
+    {
+        BVH_node.init(*new xBoxO());
+        BVH_node.I_items = collisionData.I_kids;
+        BVH_node.L_items = new xBVHierarchy[BVH_node.I_items];
+
+        //xMeshData *MeshData = new xMeshData();
+        Mesh_node.ID = ID;
+        Mesh_node.I_FaceCount    = I_faces;
+        Mesh_node.I_FaceStride   = sizeof(xFace);
+        Mesh_node.L_FaceData     = (xBYTE*) L_faces;
+        Mesh_node.I_VertexCount  = I_vertices;
+        Mesh_node.I_VertexStride = GetVertexStride();
+        Mesh_node.L_VertexData   = (xBYTE*) L_vertices;
+        Mesh_node.MX_MeshToLocal = MX_MeshToLocal;
+        if (FL_skeletized)
+        {
+            Mesh_node.L_BoneData   = (xBYTE*) L_verticesS->bone;
+            Mesh_node.I_BoneStride = Mesh_node.I_VertexStride;
+        }
+
+        xCollisionHierarchy *CH_kid  = collisionData.L_kids;
+        xBVHierarchy        *BVH_kid = BVH_node.L_items;
+        for (int i = collisionData.I_kids; i; --i, ++CH_kid, ++BVH_kid)
+        {
+            boxAc = FillBVHNode(*CH_kid, *BVH_kid, Mesh_node);
+            if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
+            if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
+            if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
+            if (boxAc.P_max.x > boxA.P_max.x) boxA.P_max.x = boxAc.P_max.x;
+            if (boxAc.P_max.y > boxA.P_max.y) boxA.P_max.y = boxAc.P_max.y;
+            if (boxAc.P_max.z > boxA.P_max.z) boxA.P_max.z = boxAc.P_max.z;
+        }
+
+        xVector3 NW_extends = (boxA.P_max - boxA.P_min) * 0.5f;
+        xBoxO &boxO = *(xBoxO*) BVH_node.Figure;
+        boxO.P_center = boxA.P_min + NW_extends;
+        boxO.S_side  = NW_extends.x;
+        boxO.S_front = NW_extends.y;
+        boxO.S_top   = NW_extends.z;
+        boxO.N_side.init(1.f, 0.f, 0.f);
+        boxO.N_front.init(0.f, 1.f, 0.f);
+        boxO.N_top.init(0.f, 0.f, 1.f);
+    }
+    else
+    {
+        BVH_node.init(*new xSphere());
+        xSphere &sphere = *(xSphere*) BVH_node.Figure;
+        sphere.P_center.zero();
+        sphere.S_radius = 0.f;
+
+        Mesh_node.I_FaceCount    = 0;
+        Mesh_node.I_FaceStride   = 0;
+        Mesh_node.L_FaceData     = 0;
+        Mesh_node.I_VertexCount  = 0;
+        Mesh_node.I_VertexStride = 0;
+        Mesh_node.L_VertexData   = 0;
+        Mesh_node.MX_MeshToLocal = MX_MeshToLocal;
+        Mesh_node.L_BoneData     = 0;
+        Mesh_node.I_BoneStride   = 0;
+    }
+
     xElement *elem = L_kids;
     for (; elem; elem = elem->Next)
-        elem->FillBVH( L_BVH );
+    {
+        boxAc = elem->FillBVH( L_BVH, MeshData );
+        if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
+        if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
+        if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
+        if (boxAc.P_max.x > boxA.P_max.x) boxA.P_max.x = boxAc.P_max.x;
+        if (boxAc.P_max.y > boxA.P_max.y) boxA.P_max.y = boxAc.P_max.y;
+        if (boxAc.P_max.z > boxA.P_max.z) boxA.P_max.z = boxAc.P_max.z;
+    }
 
     return boxA;
 }

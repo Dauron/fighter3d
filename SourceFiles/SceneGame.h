@@ -18,14 +18,19 @@ class SceneGame : public Scene, private ISelectionProvider
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate();
     virtual void Terminate();
-    virtual bool Update(float deltaTime);
-    virtual bool Render();
+
+    virtual void FrameStart() {  world.FrameStart(); }
+    virtual bool FrameUpdate(float deltaTime);
+    virtual bool FrameRender();
+    virtual void FrameEnd() { world.FrameEnd(); }
 
     virtual void Resize(int left, int top, unsigned int width, unsigned int height)
     {
         Scene::Resize(left, top, width, height);
         FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
     }
+
+    virtual bool ShellCommand(std::string &cmd, std::string &output);
 
     World          world;
 
@@ -38,9 +43,6 @@ class SceneGame : public Scene, private ISelectionProvider
     float stepAccum;
 
     CameraHuman    hCamera;
-
-    HFont          m_Font1;
-    HFont          m_Font2;
 
     xFieldOfView   FOV;
 

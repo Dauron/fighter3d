@@ -44,17 +44,17 @@ namespace Math { namespace Figures {
                 MX_RawToLocal = mx_RawToLocal;
             }
         }
-        const xMatrix &MX_RawToLocal_Get()
+        const xMatrix &MX_RawToLocal_Get() const
         {
             if (FL_RawToLocal)
                 return MX_RawToLocal;
             return xMatrix::Identity();
         }
-        const xMatrix &MX_LocalToWorld_Get()
+        const xMatrix &MX_LocalToWorld_Get() const
         {
             return MX_LocalToWorld;
         }
-        const xMatrix &MX_RawToWorld_Get()
+        const xMatrix &MX_RawToWorld_Get() const
         {
             return MX_RawToWorld;
         }
@@ -69,6 +69,8 @@ namespace Math { namespace Figures {
             Figure  = &figure;
             FigureTransformed = NULL;
             FL_RawToLocal = false;
+            MX_LocalToWorld.identity();
+            MX_RawToWorld.identity();
         }
 
         void invalidateTransformation()

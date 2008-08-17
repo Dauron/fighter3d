@@ -5,10 +5,13 @@
 #define NULL    0
 #endif
 
+#include <string>
+
 class Scene
 {
 public:
-    char *sceneName;
+    Scene * PrevScene;
+    char  * sceneName;
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height)
     {
@@ -16,10 +19,17 @@ public:
         Resize (left, top, width, height);
         return true;
     }
-    virtual bool Invalidate() { return true; }
+    virtual bool Invalidate()
+    { return PrevScene ? PrevScene->Invalidate() : true; }
     virtual void Terminate() { Initialized = false; }
-    virtual bool Update(float deltaTime) = 0;
-    virtual bool Render() = 0;
+
+    virtual void FrameStart() {}
+    virtual bool FrameUpdate(float deltaTime) = 0;
+    virtual bool FrameRender() = 0;
+    virtual void FrameEnd() {}
+
+    virtual bool ShellCommand(std::string &cmd, std::string &output) { return false; }
+    virtual Scene *SetCurrentScene(Scene* scene, bool destroyPrev = true);
 
     virtual void Resize(int left, int top, unsigned int width, unsigned int height)
     {
@@ -30,7 +40,7 @@ public:
         AspectRatio = ((float)width)/height;
     }
 
-    Scene() { sceneName = NULL; Initialized = false; }
+    Scene() { sceneName = NULL; Initialized = false; PrevScene = NULL; }
     virtual ~Scene() {}
 
 protected:

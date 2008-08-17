@@ -11,31 +11,34 @@ class SceneConsole : public Scene
   public:
     SceneConsole(Scene *prevScene)
     {
-        this->prevScene = prevScene;
+        PrevScene = prevScene;
         carretTick = 0;
         font = HFont();
         overlayInput = false;
         overlayClock = false;
-        sceneName = "[Console]";
+        visible      = !PrevScene;
+        sceneName    = "[Console]";
     }
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
-    virtual bool Invalidate() {
-        return prevScene ? prevScene->Invalidate() : true;
-    }
     virtual void Resize(int left, int top, unsigned int width, unsigned int height);
     virtual void Terminate();
-    virtual bool Update(float deltaTime);
-    virtual bool Render();
+
+    virtual void FrameStart() { if (PrevScene) PrevScene->FrameStart(); }
+    virtual bool FrameUpdate(float deltaTime);
+    virtual bool FrameRender();
+    virtual void FrameEnd() { if (PrevScene) PrevScene->FrameEnd(); }
+
+    Scene * SceneConsole :: SetCurrentScene(Scene* scene, bool destroyPrev = true);
 
     void AppendConsole(std::string text);
-    bool ProcessCmd(std::string cmd);
+    virtual bool ShellCommand(std::string &cmd, std::string &output);
 
   private:
     void InitInputMgr();
 
-    Scene   *prevScene;
     HFont    font;
+    HFont    font15;
 
     float    carretTick;
     bool     carretVisible;
@@ -44,6 +47,7 @@ class SceneConsole : public Scene
     int      pageSize;
 
     bool     justOpened; // skip the key that has opened the console
+    bool     visible;
     bool     overlayInput;
     bool     overlayClock;
 

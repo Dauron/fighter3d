@@ -21,16 +21,15 @@ bool Application::SetCurrentScene(Scene* scene, bool destroyPrev)
 {
     if (!scene)
         throw "The scene cannot be null";
-    Scene* oldScene = m_scene;
-    m_scene = scene;
-    bool res = m_scene->Initialize(0,0,m_window->Width(), m_window->Height());
-    if (oldScene && destroyPrev)
+
+    if (m_scene)
     {
-        oldScene->Terminate();
-        delete oldScene;
+        m_scene = m_scene->SetCurrentScene(scene, destroyPrev);
+        return m_scene == scene;
     }
 
-    return res;
+    m_scene = scene;
+    return m_scene->Initialize(0,0,m_window->Width(), m_window->Height());
 }
 
 bool Application::Invalidate()
@@ -58,6 +57,8 @@ int Application::Run()
     {
         if (!m_window->ProcessMessages()) break;
 
+        m_scene->FrameStart();
+
         prevTick = curTick;
         curTick = GetTick();
         float realTicks   = curTick - prevTick;
@@ -69,6 +70,8 @@ int Application::Run()
 
         preRenderTick = GetTick();
         this->Render();
+
+        m_scene->FrameEnd();
     }
     return 0;
 }
@@ -78,7 +81,7 @@ bool Application::Update(float deltaTime)
     if (m_window->Terminated()) return false;
 
     if (m_window->Active())
-        return m_scene->Update(deltaTime);
+        return m_scene->FrameUpdate(deltaTime);
 
     return true;
 }
@@ -89,7 +92,7 @@ bool Application::Render()
 
     if (m_window->Active())
     {
-        bool res = m_scene->Render();
+        bool res = m_scene->FrameRender();
         m_window->SwapBuffers();
         return res;
     }

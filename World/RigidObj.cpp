@@ -7,6 +7,8 @@ void RigidObj :: ApplyDefaults()
 {
     PhysicalBody::ApplyDefaults();
 
+    FL_stationary = true;
+    FL_physical   = false;
     M_mass       = 0.f;
     S_radius     = 0.f;
 }
@@ -31,7 +33,7 @@ void RigidObj :: Initialize ()
     UpdateMatrices();
 }
 
-void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename, bool physicalNotLocked, bool phantom)
+void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
 {
     modelInstanceGr.Zero();
     modelInstancePh.Zero();
@@ -53,7 +55,7 @@ void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename, b
         mdl->IncReferences();
     }
 
-    xModelPh->CreateBVH(BVHierarchy);
+    xModelPh->CreateBVH(BVHierarchy, MeshData);
 
     if (!IsDefaultsApplied()) ApplyDefaults();
 
@@ -61,9 +63,9 @@ void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename, b
     collisionInfo = NULL;
     //renderer.UseVBO = forceNotStatic;
 
-    this->FL_phantom    = phantom;
-    this->FL_physical   = physicalNotLocked;
-    this->FL_stationary = !physicalNotLocked;
+    //this->FL_phantom    = phantom;
+    //this->FL_physical   = physicalNotLocked;
+    //this->FL_stationary = !physicalNotLocked;
 
     Initialize();
 
@@ -96,7 +98,10 @@ void RigidObj :: Finalize ()
     g_ModelMgr.DeleteModel(hModelPhysical);
 
     BVHierarchy.free();
+    delete[] MeshData;
 }
+
+
 
 void RigidObj :: FreeInstanceData()
 {
@@ -168,6 +173,8 @@ void RigidObj :: CalculateSkeleton()
     renderer.InvalidateBonePositions(modelInstanceGr);
     renderer.InvalidateBonePositions(modelInstancePh);
 }
+
+
 
 void RigidObj :: CreateVerletSystem()
 {
@@ -245,7 +252,6 @@ void RigidObj :: UpdateVerletSystem()
 
 
 
-
 void RigidObj:: PreUpdate(float deltaTime)
 {
     RigidBody::CalculateCollisions(this, deltaTime);
@@ -297,7 +303,7 @@ void RigidObj::CollisionInfo_Fill(xElement *elem, xCollisionHierarchyBoundsRoot 
     if (firstTime)
     {
         if (!elem->collisionData.L_kids)
-            elem->collisionData.Fill(xModelPh, elem);
+            elem->collisionData.Fill(*xModelPh, *elem);
         eci.kids = NULL;
         eci.L_vertices = NULL;
     }

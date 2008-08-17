@@ -61,12 +61,16 @@ struct xElement {
     void         CalculateSmoothVertices();
     xSkinnedData GetSkinnedVertices(const xMatrix *bones) const;
 
-    Math::Figures::xBoxA FillBVH  ( Math::Figures::xBVHierarchy *L_BVH );
+    void                 FillCollisionInfo (xModel &xmodel);
+    Math::Figures::xBoxA FillBVH  ( Math::Figures::xBVHierarchy *L_BVH, Math::Figures::xMeshData *MeshData );
+    Math::Figures::xBoxA ReFillBVH( Math::Figures::xBVHierarchy *L_BVH, Math::Figures::xMeshData *MeshData );
 
 private:
     Math::Figures::xBoxA FillBVHNode(xCollisionHierarchy            &CH_node,
                                      Math::Figures::xBVHierarchy    &BVH_node,
-                                     Math::Figures::xMeshData       *MeshData);
+                                     Math::Figures::xMeshData       &MeshData);
+    Math::Figures::xBoxA ReFillBVHNode(Math::Figures::xBVHierarchy    &BVH_node,
+                                       Math::Figures::xMeshData       &MeshData);
 };
 
 // Other methods

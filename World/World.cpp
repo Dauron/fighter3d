@@ -27,10 +27,12 @@ RigidObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
 */
 const xFLOAT TIME_STEP = 0.02f;
 
-void World:: Update(float T_delta)
+void World:: FrameUpdate(float T_delta)
 {
     if (T_delta > 0.05f) T_delta = 0.05f;
     T_delta *= Config::Speed;
+
+    bool FL_firstStep = true;
 
     float T_step = TIME_STEP;
     while (T_delta > EPSILON)
@@ -38,7 +40,15 @@ void World:: Update(float T_delta)
         T_delta -= T_step;
         if (T_delta < 0.f) { T_step += T_delta; }
 
+        if (FL_firstStep)
+            FL_firstStep = false;
+        else
+            FrameStart();
+
         Interact(T_step, objects);
+
+        if (T_delta > EPSILON)
+            FrameEnd();
 
 /*
         xObjectVector::iterator i, j, begin = objects.begin(), end = objects.end();
@@ -257,11 +267,18 @@ void World:: Load(const char *mapFileName)
                     model->M_mass = mass;
                     continue;
                 }
-                if (StartsWith(buffer, "resilience"))
+                if (StartsWith(buffer, "restitution"))
                 {
-                    float resilience;
-                    sscanf(buffer, "resilience\t%f", &resilience);
-                    model->W_resilience = resilience;
+                    float restitution;
+                    sscanf(buffer, "restitution\t%f", &restitution);
+                    model->W_restitution = restitution;
+                    continue;
+                }
+                if (StartsWith(buffer, "restitution_self"))
+                {
+                    float restitution;
+                    sscanf(buffer, "restitution_self\t%f", &restitution);
+                    model->W_restitution_self = restitution;
                     continue;
                 }
                 if (StartsWith(buffer, "shadows"))
