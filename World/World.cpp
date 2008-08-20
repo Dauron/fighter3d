@@ -1,30 +1,7 @@
 #include <fstream>
 #include "World.h"
 #include "../Utils/Filesystem.h"
-/*
-RigidObj * World:: CollideWithRay(xVector3 rayPos, xVector3 rayDir)
-{
-    xVector3 rayEnd = rayPos + rayDir.normalize() * 1000.0f;
 
-    RigidObj *res = NULL;
-    xVector3  colPoint;
-    float     colDist = 0.f, minDist = 0.f;
-    bool      collided = false;
-
-    xObjectVector::iterator i, j, begin = objects.begin(), end = objects.end();
-    for ( i = begin ; i != end ; ++i ) {
-        if (cd_RayToMesh.Collide(*i, rayPos, rayEnd, colPoint, colDist)) {
-            if (!collided || minDist > colDist) {
-                res = *i;
-                minDist = colDist;
-            }
-            collided = true;
-        }
-    }
-
-    return res;
-}
-*/
 const xFLOAT TIME_STEP = 0.02f;
 
 void World:: FrameUpdate(float T_delta)
@@ -40,6 +17,8 @@ void World:: FrameUpdate(float T_delta)
         T_delta -= T_step;
         if (T_delta < 0.f) { T_step += T_delta; }
 
+        Performance.T_world += T_step;
+
         if (FL_firstStep)
             FL_firstStep = false;
         else
@@ -49,24 +28,6 @@ void World:: FrameUpdate(float T_delta)
 
         if (T_delta > EPSILON)
             FrameEnd();
-
-/*
-        xObjectVector::iterator i, j, begin = objects.begin(), end = objects.end();
-        for ( i = begin ; i != end ; ++i )
-            if (! (*i)->FL_phantom)
-                for ( j = i + 1; j != end; ++j )
-                    if (!(*i)->FL_stationary || !(*j)->FL_stationary)
-                        if (!(*j)->FL_phantom && cd_MeshToMesh.Collide(*i, *j))
-                        {
-                            // process collision
-                        }
-
-        for ( i = begin ; i != end ; ++i )
-            (*i)->PreUpdate(delta);
-
-        for ( i = begin ; i != end ; ++i )
-            (*i)->Update(delta);
-*/
     }
 }
 
@@ -118,7 +79,7 @@ void World:: Load(const char *mapFileName)
         char buffer[255];
         int  len;
         RigidObj *model = NULL;
-        std::string fastModelFile;
+        std::string fastModelFile, modelFile;
 
         xLight light;
         light.modified = false;
@@ -154,22 +115,52 @@ void World:: Load(const char *mapFileName)
                 }
                 if (StartsWith(buffer, "[model]"))
                 {
+                    if (model)
+                    {
+                        if (modelFile.size() && fastModelFile.size())
+                        {
+                            model->Initialize(modelFile.c_str(), fastModelFile.c_str());
+                            objects.push_back(model);
+                        }
+                        else
+                        if (modelFile.size())
+                        {
+                            model->Initialize(modelFile.c_str());
+                            objects.push_back(model);
+                        }
+                        else
+                            delete model;
+                    }
                     mode = LoadMode_Model;
-                    if (model != NULL)
-                        objects.push_back(model);
                     model = new RigidObj();
                     model->ApplyDefaults();
                     fastModelFile.clear();
+                    modelFile.clear();
                     continue;
                 }
                 if (StartsWith(buffer, "[skeletized]"))
                 {
+                    if (model)
+                    {
+                        if (modelFile.size() && fastModelFile.size())
+                        {
+                            model->Initialize(modelFile.c_str(), fastModelFile.c_str());
+                            objects.push_back(model);
+                        }
+                        else
+                        if (modelFile.size())
+                        {
+                            model->Initialize(modelFile.c_str());
+                            objects.push_back(model);
+                        }
+                        else
+                            delete model;
+                    }
                     mode = LoadMode_Model;
-                    if (model != NULL)
-                        objects.push_back(model);
                     model = new SkeletizedObj();
                     model->ApplyDefaults();
                     fastModelFile.clear();
+                    modelFile.clear();
                     continue;
                 }
                 if (StartsWith(buffer, "[light]"))
@@ -206,11 +197,14 @@ void World:: Load(const char *mapFileName)
                 }
                 if (StartsWith(buffer, "model"))
                 {
-                    std::string modelFile = Filesystem::GetFullPath(dir + "/" + (buffer+6));
-                    if (fastModelFile.size())
-                        model->Initialize(modelFile.c_str(), fastModelFile.c_str());
-                    else
-                        model->Initialize(modelFile.c_str());
+                    modelFile = Filesystem::GetFullPath(dir + "/" + (buffer+6));
+                    continue;
+                }
+                if (StartsWith(buffer, "customBVH"))
+                {
+                    int customBVH;
+                    sscanf(buffer, "customBVH\t%f", &customBVH);
+                    model->FL_customBVH = customBVH;
                     continue;
                 }
                 if (StartsWith(buffer, "position"))
@@ -231,11 +225,6 @@ void World:: Load(const char *mapFileName)
                 {
                     float x,y,z;
                     sscanf(buffer, "velocity\t%f\t%f\t%f", &x,&y,&z);
-                    xVector3 *A_iter = model->verletSystem.A_forces;
-                    xFLOAT TIME_STEP_INV = 1.f / TIME_STEP;
-                    xVector3 speed; speed.init(x*TIME_STEP_INV, y*TIME_STEP_INV, z*TIME_STEP_INV);
-                    for (xWORD i = model->verletSystem.I_particles; i; --i, ++A_iter)
-                        *A_iter = speed;
                     model->ApplyAcceleration(xVector3::Create(x,y,z), 1.f);
                     continue;
                 }
@@ -398,8 +387,22 @@ void World:: Load(const char *mapFileName)
                 }
             }
         }
-        if (model != NULL)
-            objects.push_back(model);
+        if (model)
+        {
+            if (modelFile.size() && fastModelFile.size())
+            {
+                model->Initialize(modelFile.c_str(), fastModelFile.c_str());
+                objects.push_back(model);
+            }
+            else
+            if (modelFile.size())
+            {
+                model->Initialize(modelFile.c_str());
+                objects.push_back(model);
+            }
+            else
+                delete model;
+        }
         if (light.modified)
             lights.push_back(light);
 

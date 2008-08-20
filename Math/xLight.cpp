@@ -49,10 +49,10 @@ void xLight::update()
 
 bool xLight :: elementReceivesLight(const xVector3 &bsCenter, float bsRadius) const
 {
-    if (type == xLight_INFINITE || radius < 0)
+    if (type == xLight_INFINITE || radius < 0.f)
         return true;
 
-    if (bsRadius == 0) return false;
+    if (bsRadius == 0.f) return false;
 
     xFLOAT   dist   = (bsCenter - position).lengthSqr();
     xFLOAT  rdist   = radius + bsRadius;

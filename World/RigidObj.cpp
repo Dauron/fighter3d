@@ -1,16 +1,17 @@
 #include "RigidObj.h"
+#include "../Models/lib3dx/xUtils.h"
 #include "../AppFramework/System.h"
-#include "../Physics/RigidBody.h"
 #include "../Math/Figures/xCapsule.h"
 
 void RigidObj :: ApplyDefaults()
 {
     PhysicalBody::ApplyDefaults();
 
-    FL_stationary = true;
-    FL_physical   = false;
-    M_mass       = 0.f;
-    S_radius     = 0.f;
+    FL_stationary   = true;
+    FL_physical     = false;
+    FL_customBVH    = true;
+    M_mass          = 0.f;
+    S_radius        = 0.f;
 }
 
 void RigidObj :: Initialize ()
@@ -27,7 +28,6 @@ void RigidObj :: Initialize ()
             S_radius = 0.75 * ((Math::Figures::xCapsule*) BVHierarchy.Figure)->S_radius
                      + 0.25 * ((Math::Figures::xCapsule*) BVHierarchy.Figure)->S_top;
     }
-    P_center = BVHierarchy.Figure->P_center;
 
     Type = Model_Rigid;
     UpdateMatrices();
@@ -55,12 +55,28 @@ void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
         mdl->IncReferences();
     }
 
-    xModelPh->CreateBVH(BVHierarchy, MeshData);
-
     if (!IsDefaultsApplied()) ApplyDefaults();
 
+    MeshData = NULL;
+    if (FL_customBVH)
+    {
+        if (xModelGr->BVHierarchy)
+            xModelGr->BVHierarchy->Clone(BVHierarchy);
+        else
+        if (xModelPh->BVHierarchy)
+            xModelPh->BVHierarchy->Clone(BVHierarchy);
+        else
+            FL_customBVH = false;
+    }
+    if (!FL_customBVH)
+    {
+        xModelPh->CreateBVH(BVHierarchy, MeshData);
+        P_center = BVHierarchy.Figure->P_center;
+    }
+    else
+        UpdateCustomBVH();
+
     smap.texId = 0;
-    collisionInfo = NULL;
     //renderer.UseVBO = forceNotStatic;
 
     //this->FL_phantom    = phantom;
@@ -69,7 +85,6 @@ void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
 
     Initialize();
 
-    CreateVerletSystem();
     VerticesChanged(true);
 }
 
@@ -86,22 +101,61 @@ void RigidObj :: Finalize ()
     Model3dx *mdlPh = g_ModelMgr.GetModel(hModelPhysical);
     renderer.FreeGraphics(*xModelGr, modelInstanceGr, mdlGr->m_References == 1);
     renderer.FreeGraphics(*xModelPh, modelInstancePh, mdlPh->m_References == 1);
-    if (collisionInfo)
-    {
-        CollisionInfo_Free(GetModelPh()->L_kids, collisionInfo);
-        delete[] collisionInfo;
-        collisionInfo = NULL;
-    }
     FreeInstanceData();
-    DestroyVerletSystem();
     g_ModelMgr.DeleteModel(hModelGraphics);
     g_ModelMgr.DeleteModel(hModelPhysical);
 
-    BVHierarchy.free();
-    delete[] MeshData;
+    PhysicalBody::Finalize();
+
+    if (MeshData)
+        delete[] MeshData;
 }
 
 
+
+void RigidObj :: UpdateCustomBVH()
+{
+    if (!FL_customBVH || !BVHierarchy.Figure) return;
+
+    BVHierarchy.invalidateTransformation();
+
+    if (modelInstanceGr.MX_bones)
+        for (int i = 0; i < BVHierarchy.I_items; ++i)
+            BVHierarchy.L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( modelInstanceGr.MX_bones[BVHierarchy.L_items[i].ID_Bone] ));
+    else
+        for (int i = 0; i < BVHierarchy.I_items; ++i)
+            BVHierarchy.L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( xMatrix::Identity() ));
+
+    Math::Figures::xBoxA box = BVHierarchy.childBounds(MX_LocalToWorld_Get());
+    Math::Figures::xSphere &sphere   = *(Math::Figures::xSphere*) BVHierarchy.Figure;
+    Math::Figures::xSphere &sphere_T = *(Math::Figures::xSphere*) BVHierarchy.GetTransformed(MX_LocalToWorld_Get());
+    sphere.S_radius = sphere_T.S_radius = (box.P_max - box.P_min).length() * 0.5f;
+    sphere_T.P_center = (box.P_max + box.P_min) * 0.5f;
+    sphere.P_center = MX_WorldToLocal.preTransformP(sphere_T.P_center);
+
+    P_center = sphere.P_center;
+}
+
+void RigidObj :: UpdateGeneratedBVH()
+{
+    if (FL_customBVH || !BVHierarchy.Figure) return;
+
+    BVHierarchy.invalidateTransformation();
+
+    for (int i = 0; i < modelInstancePh.I_elements; ++i)
+    {
+        MeshData[i].MX_Bones = modelInstancePh.MX_bones;
+        MeshData[i].I_Bones  = modelInstancePh.I_bones;
+    }
+
+    for (int i = 0; i < modelInstancePh.I_elements; ++i)
+        MeshData[i].Transform(MX_LocalToWorld_Get());
+
+    GetModelPh()->ReFillBVH(BVHierarchy, MeshData, MX_LocalToWorld_Get());
+
+    P_center_Trfm = BVHierarchy.GetTransformed()->P_center;
+    P_center      = MX_WorldToLocal.preTransformP(P_center_Trfm);
+}
 
 void RigidObj :: FreeInstanceData()
 {
@@ -143,17 +197,20 @@ void RigidObj :: VerticesChanged(bool free)
 
     xBoneCalculateMatrices (xModelGr->Spine, &modelInstanceGr);
     xBoneCalculateQuats    (xModelGr->Spine, &modelInstanceGr);
-    modelInstancePh.MX_bones   = modelInstanceGr.MX_bones;
-    modelInstancePh.QT_bones   = modelInstanceGr.QT_bones;
+    modelInstancePh.MX_bones    = modelInstanceGr.MX_bones;
+    modelInstancePh.QT_bones    = modelInstanceGr.QT_bones;
     modelInstancePh.FL_modified = modelInstanceGr.FL_modified;
-    modelInstancePh.I_bones   = modelInstanceGr.I_bones;
+    modelInstancePh.I_bones     = modelInstanceGr.I_bones;
 
-    xModel_SkinElementInstance(xModelGr, modelInstanceGr);
-    modelInstancePh.P_center = modelInstanceGr.P_center = xModel_GetBounds(modelInstanceGr);
-    if (hModelGraphics != hModelPhysical)
+    if (false && free)
     {
-        xModel_SkinElementInstance(xModelPh, modelInstancePh);
-        modelInstancePh.P_center = xModel_GetBounds(modelInstancePh);
+        xModel_SkinElementInstance(xModelGr, modelInstanceGr);
+        modelInstancePh.P_center = modelInstanceGr.P_center = xModel_GetBounds(modelInstanceGr);
+        if (hModelGraphics != hModelPhysical)
+        {
+            xModel_SkinElementInstance(xModelPh, modelInstancePh);
+            modelInstancePh.P_center = xModel_GetBounds(modelInstancePh);
+        }
     }
 }
 
@@ -176,207 +233,10 @@ void RigidObj :: CalculateSkeleton()
 
 
 
-void RigidObj :: CreateVerletSystem()
-{
-    verletSystem.Free();
-    verletSystem.Init(4);
-    verletSystem.C_constraints = new VConstraint*[6];
-    verletSystem.I_constraints = 6;
-    verletSystem.C_collisions = &collisionConstraints;
-    verletSystem.C_lengthConst = NULL;
-
-    VConstraintLengthEql *constr;
-    verletSystem.C_constraints[0] = constr = new VConstraintLengthEql();
-    constr->particleA = 0;
-    constr->particleB = 1;
-    constr->restLength = constr->restLengthSqr = 1;
-
-    verletSystem.C_constraints[1] = constr = new VConstraintLengthEql();
-    constr->particleA = 0;
-    constr->particleB = 2;
-    constr->restLength = constr->restLengthSqr = 1;
-
-    verletSystem.C_constraints[2] = constr = new VConstraintLengthEql();
-    constr->particleA = 0;
-    constr->particleB = 3;
-    constr->restLength = constr->restLengthSqr = 1;
-
-    xFLOAT sqrt2 = sqrtf(2.f);
-    verletSystem.C_constraints[3] = constr = new VConstraintLengthEql();
-    constr->particleA = 1;
-    constr->particleB = 2;
-    constr->restLengthSqr = 2;
-    constr->restLength    = sqrt2;
-
-    verletSystem.C_constraints[4] = constr = new VConstraintLengthEql();
-    constr->particleA = 1;
-    constr->particleB = 3;
-    constr->restLengthSqr = 2;
-    constr->restLength    = sqrt2;
-
-    verletSystem.C_constraints[5] = constr = new VConstraintLengthEql();
-    constr->particleA = 2;
-    constr->particleB = 3;
-    constr->restLengthSqr = 2;
-    constr->restLength    = sqrt2;
-
-    verletSystem.P_current[0] = verletSystem.P_previous[0] = MX_LocalToWorld_Get().preTransformP( modelInstanceGr.P_center + xVector3::Create(0,0,0) );
-    verletSystem.P_current[1] = verletSystem.P_previous[1] = MX_LocalToWorld_Get().preTransformP( modelInstanceGr.P_center + xVector3::Create(1,0,0) );
-    verletSystem.P_current[2] = verletSystem.P_previous[2] = MX_LocalToWorld_Get().preTransformP( modelInstanceGr.P_center + xVector3::Create(0,1,0) );
-    verletSystem.P_current[3] = verletSystem.P_previous[3] = MX_LocalToWorld_Get().preTransformP( modelInstanceGr.P_center + xVector3::Create(0,0,1) );
-
-    verletSystem.M_weight_Inv[0] = verletSystem.M_weight_Inv[1] =
-        verletSystem.M_weight_Inv[2] = verletSystem.M_weight_Inv[3] = 4.f / M_mass;
-
-    verletSystem.A_forces[0].zero();
-    verletSystem.A_forces[1].zero();
-    verletSystem.A_forces[2].zero();
-    verletSystem.A_forces[3].zero();
-}
-
-void RigidObj :: DestroyVerletSystem()
-{
-    if (verletSystem.C_constraints)
-        delete[] verletSystem.C_constraints;
-    verletSystem.Free();
-}
-
-void RigidObj :: UpdateVerletSystem()
-{
-    verletSystem.P_previous[0] = MX_LocalToWorld_Get().preTransformP( modelInstanceGr.P_center + xVector3::Create(0,0,0) );
-    verletSystem.P_previous[1] = MX_LocalToWorld_Get().preTransformP( modelInstanceGr.P_center + xVector3::Create(1,0,0) );
-    verletSystem.P_previous[2] = MX_LocalToWorld_Get().preTransformP( modelInstanceGr.P_center + xVector3::Create(0,1,0) );
-    verletSystem.P_previous[3] = MX_LocalToWorld_Get().preTransformP( modelInstanceGr.P_center + xVector3::Create(0,0,1) );
-    //verletSystem.SwapPositions();
-}
-
-
-
-void RigidObj:: PreUpdate(float deltaTime)
-{
-    RigidBody::CalculateCollisions(this, deltaTime);
-}
-
-void RigidObj:: Update(float deltaTime)
-{
-    RigidBody::CalculateMovement(this, deltaTime);
-}
-
-xCollisionHierarchyBoundsRoot *RigidObj::GetCollisionInfo()
-{
-    if (collisionInfo) return collisionInfo;
-
-    float delta = GetTick();
-
-    idx.clear();
-    UpdatePointers();
-    collisionInfoC = xModelPh->I_elements;
-    collisionInfo  = new xCollisionHierarchyBoundsRoot[collisionInfoC];
-
-    for (xElement *elem = xModelPh->L_kids; elem; elem = elem->Next)
-        CollisionInfo_Fill(elem, collisionInfo, true);
-
-    Performance.CollisionDataFillMS += GetTick() - delta;
-
-    return collisionInfo;
-}
-
-void RigidObj::CollisionInfo_ReFill()
-{
-    smap.texId = 0;
-    if (collisionInfo)
-    {
-        float   delta  = GetTick();
-        UpdatePointers();
-        for (xElement *elem = xModelPh->L_kids; elem; elem = elem->Next)
-            CollisionInfo_Fill(elem, collisionInfo, false);
-        Performance.CollisionDataFillMS += GetTick() - delta;
-    }
-}
-
-void RigidObj::CollisionInfo_Fill(xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime)
-{
-    xCollisionHierarchyBoundsRoot &eci = ci[elem->ID];
-    UpdatePointers();
-
-    // Create Hierarchy, if not exists
-    if (firstTime)
-    {
-        if (!elem->collisionData.L_kids)
-            elem->collisionData.Fill(*xModelPh, *elem);
-        eci.kids = NULL;
-        eci.L_vertices = NULL;
-    }
-
-    if (eci.I_vertices != modelInstancePh.L_elements[elem->ID].I_vertices)
-    {
-        eci.I_vertices = modelInstancePh.L_elements[elem->ID].I_vertices;
-        if (eci.L_vertices) delete[] eci.L_vertices;
-        eci.L_vertices = new xVector4[eci.I_vertices];
-    }
-
-    xVector4 *iterS = modelInstancePh.L_elements[elem->ID].L_vertices, *iterD = eci.L_vertices;
-    xMatrix   MX_ElementToWorld = elem->MX_MeshToLocal * MX_LocalToWorld_Get();
-    for (int i = eci.I_vertices; i; --i, ++iterS, ++iterD)
-        iterD->init(MX_ElementToWorld.preTransformP(iterS->vector3), 1.f);
-
-    // Fill collision bounding boxes
-    xElement_CalcCollisionHierarchyBox(eci.L_vertices, &elem->collisionData, &eci);
-
-    // Fill CI for subelements
-    for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
-        CollisionInfo_Fill(celem, ci, firstTime);
-}
-
-void RigidObj::CollisionInfo_Free(xElement *elem, xCollisionHierarchyBoundsRoot *ci)
-{
-    if (!elem) return;
-    xElement_FreeCollisionHierarchyBounds(&elem->collisionData, ci[elem->ID].kids);
-    for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
-        CollisionInfo_Free(celem, ci);
-}
-
-void RenderCI(xCollisionHierarchy *ch, xCollisionHierarchyBounds *chb)
-{
-    if (ch->I_kids)
-    {
-        for (int i=0; i<ch->I_kids; ++i)
-            RenderCI(ch->L_kids + i, chb->kids + i);
-    }
-    else
-    {
-        glBegin(GL_QUAD_STRIP);
-        {
-            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_max.y, chb->bounding.P_max.z);
-            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_max.y, chb->bounding.P_min.z);
-            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_min.y, chb->bounding.P_max.z);
-            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_min.y, chb->bounding.P_min.z);
-
-            glVertex3f(chb->bounding.P_min.x, chb->bounding.P_min.y, chb->bounding.P_max.z);
-            glVertex3f(chb->bounding.P_min.x, chb->bounding.P_min.y, chb->bounding.P_min.z);
-
-            glVertex3f(chb->bounding.P_min.x, chb->bounding.P_max.y, chb->bounding.P_max.z);
-            glVertex3f(chb->bounding.P_min.x, chb->bounding.P_max.y, chb->bounding.P_min.z);
-
-            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_max.y, chb->bounding.P_max.z);
-            glVertex3f(chb->bounding.P_max.x, chb->bounding.P_max.y, chb->bounding.P_min.z);
-        }
-        glEnd();
-    }
-}
-
-void RigidObj::CollisionInfo_Render(xElement *elem, xCollisionHierarchyBoundsRoot *ci)
-{
-    if (elem->I_vertices)
-        for (int i=0; i<elem->collisionData.I_kids; ++i)
-            RenderCI(elem->collisionData.L_kids + i, ci[elem->ID].kids + i);
-    for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
-        CollisionInfo_Render(celem, ci);
-}
 
 void RigidObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width)
 {
-    xVector3 centerOfTheMassG = (xVector4::Create(modelInstancePh.P_center, 1.f)*modelInstancePh.MX_LocalToWorld).vector3;
+    xVector3 centerOfTheMassG = (xVector4::Create(P_center, 1.f)*MX_LocalToWorld_Get()).vector3;
     xVector3 lFAxis = (light->position - centerOfTheMassG).normalize();
     xVector3 tmp;
     if (fabs(lFAxis.x) <= fabs(lFAxis.y))
@@ -397,15 +257,17 @@ void RigidObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     MX_WorldToView.row3.init(0.f,0.f,0.f,1.f);
     MX_WorldToView.postTranslate(-light->position).transpose();
 
+    xMatrix MX_ModelToView = modelInstancePh.MX_LocalToWorld * MX_WorldToView;
+
     // Find the horizontal and vertical angular spreads to find out FOV and aspect ratio
     float RxMax = 0.f, RyMax = 0.f;
-    xCollisionHierarchyBoundsRoot* ci = GetCollisionInfo();
-    for (int i=collisionInfoC; i; --i, ++ci)
+    for (int ie = 0; ie < modelInstanceGr.I_elements; ++ie)
     {
-        xVector4 *iter = ci->L_vertices;
-        for (int j=ci->I_vertices; j; --j, ++iter)
+        xMatrix MX_ElementToView = xModelPh->L_kids->ById(ie)->MX_MeshToLocal * MX_WorldToView;
+        xVector4 *iter = modelInstancePh.L_elements[ie].L_vertices;
+        for (int iv = modelInstancePh.L_elements[ie].I_vertices; iv; --iv, ++iter)
         {
-            xVector4 v = MX_WorldToView * *iter;
+            xVector4 v = MX_ElementToView * *iter;
             v.z = 1.f / v.z;
             v.x *= v.z; v.y *= v.z;
 

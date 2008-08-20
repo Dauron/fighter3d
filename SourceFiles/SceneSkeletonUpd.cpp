@@ -9,10 +9,16 @@
 #include "../Physics/Verlet/VConstraintLengthMax.h"
 #include "../Physics/Verlet/VConstraintAngular.h"
 
+#include "../Math/Figures/xSphere.h"
+#include "../Math/Figures/xCapsule.h"
+#include "../Math/Figures/xBoxO.h"
+
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
+
+using namespace Math::Figures;
 
 /************************** INPUT **************************************/
 bool SceneSkeleton::FrameUpdate(float deltaTime)
@@ -49,6 +55,16 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
         {
             Constraint.boneB = xBYTE_MAX;
             EditMode = emCreateConstraint_Node;
+        }
+        else
+        if (EditMode == emEditBVH)
+            EditMode = emMain;
+        else
+        if (EditMode == emCreateBVH || EditMode == emSelectBVHBone || EditMode == emEditVolume)
+        {
+            EditMode = emEditBVH;
+            Selection.BVHNode   = NULL;
+            Selection.BVHNodeID = xBYTE_MAX;
         }
         else
         if (EditMode == emSelectVertex)
@@ -137,6 +153,19 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
             Animation.Instance->CurrentFrame = Animation.Instance->L_frames;
         Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
         Model.CalculateSkeleton();
+
+        xBVHierarchy *root = (State.DisplayPhysical)
+            ? Model.GetModelPh()->BVHierarchy
+            : Model.GetModelGr()->BVHierarchy;
+        if (root)
+        {
+            xModelInstance mi;
+            mi.Zero();
+            xBoneCalculateMatrices(Model.GetModelGr()->Spine, &mi);
+            for (int i = 0; i < root->I_items; ++i)
+                root->L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( mi.MX_bones[root->L_items[i].ID_Bone] ));
+            mi.ClearSkeleton();
+        }
     }
 
     if (EditMode == emEditAnimation)
@@ -178,6 +207,19 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
                     Animation.Instance->CurrentFrame = Animation.Instance->L_frames;
                 Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
                 Model.CalculateSkeleton();
+
+                xBVHierarchy *root = (State.DisplayPhysical)
+                    ? Model.GetModelPh()->BVHierarchy
+                    : Model.GetModelGr()->BVHierarchy;
+                if (root)
+                {
+                    xModelInstance mi;
+                    mi.Zero();
+                    xBoneCalculateMatrices(Model.GetModelGr()->Spine, &mi);
+                    for (int i = 0; i < root->I_items; ++i)
+                        root->L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( mi.MX_bones[root->L_items[i].ID_Bone] ));
+                    mi.ClearSkeleton();
+                }
                 return true;
             }
         }
@@ -207,6 +249,28 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             Selection.Bone = Model.GetModelGr()->Spine.L_bones;
             Model.GetModelGr()->Spine.ResetQ();
             Model.CalculateSkeleton();
+
+            xBVHierarchy *root = (State.DisplayPhysical)
+                    ? Model.GetModelPh()->BVHierarchy
+                    : Model.GetModelGr()->BVHierarchy;
+            if (root)
+                for (int i = 0; i < root->I_items; ++i)
+                    root->L_items[i].MX_LocalToFig_Set(xMatrix::Identity());
+        }
+        else
+        if (button.Action == IC_BE_ModeBVH)
+        {
+            EditMode = emEditBVH;
+            UpdateButton(Buttons[emEditBVH][1]);
+            Model.GetModelGr()->Spine.ResetQ();
+            Model.CalculateSkeleton();
+
+            xBVHierarchy *root = (State.DisplayPhysical)
+                ? Model.GetModelPh()->BVHierarchy
+                : Model.GetModelGr()->BVHierarchy;
+            if (root)
+                for (int i = 0; i < root->I_items; ++i)
+                    root->L_items[i].MX_LocalToFig_Set(xMatrix::Identity());
         }
         else // must be skeletized to perform skinning
         if (button.Action == IC_BE_ModeSkin && Model.GetModelGr()->Spine.L_bones)
@@ -260,6 +324,114 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             EditMode = emCreateConstraint_Node;
         }
         return true;
+    }
+    if (EditMode == emEditBVH)
+    {
+        if (button.Action == IC_BE_Create)
+        {
+            Selection.Bone = Model.GetModelGr()->Spine.L_bones;
+            if (Model.GetModelGr()->Spine.L_bones)
+                EditMode = emSelectBVHBone;
+            else
+                EditMode = emCreateBVH;
+        }
+        return true;
+    }
+    if (EditMode == emCreateBVH)
+    {
+        xModel &model = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
+        if (!model.BVHierarchy)
+        {
+            model.BVHierarchy = new xBVHierarchy();
+            model.BVHierarchy->init(*(new xSphere()));
+            xSphere &sphere = *(xSphere*) model.BVHierarchy->Figure;
+
+            if (model.Spine.L_bones)
+                sphere.P_center = model.Spine.L_bones[0].P_begin;
+            else
+                sphere.P_center.zero();
+            sphere.S_radius = 0.f;
+        }
+        Selection.BVHNode = model.BVHierarchy;
+
+        if (button.Action == IC_BE_CreateSphere)
+        {
+            xSphere *sphere = new xSphere();
+            Selection.BVHNode->add(*sphere);
+            Selection.BVHNode = Selection.BVHNode->L_items + (Selection.BVHNode->I_items-1);
+            if (model.Spine.L_bones)
+            {
+                Selection.BVHNode->ID_Bone = Selection.Bone->ID;
+                sphere->P_center = 0.5f * (model.Spine.L_bones[Selection.Bone->ID].P_begin + model.Spine.L_bones[Selection.Bone->ID].P_end);
+                sphere->S_radius = 0.5f * (model.Spine.L_bones[Selection.Bone->ID].P_begin - model.Spine.L_bones[Selection.Bone->ID].P_end).length();
+                if (sphere->S_radius < 0.01f) sphere->S_radius = 0.1f;
+
+            }
+            else
+            {
+                Selection.BVHNode->ID_Bone = 0;
+                sphere->P_center.zero();
+                sphere->S_radius = 0.1f;
+            }
+        }
+        if (button.Action == IC_BE_CreateCapsule)
+        {
+            xCapsule *capsule = new xCapsule();
+            Selection.BVHNode->add(*capsule);
+            Selection.BVHNode = Selection.BVHNode->L_items + (Selection.BVHNode->I_items-1);
+            if (model.Spine.L_bones)
+            {
+                Selection.BVHNode->ID_Bone = Selection.Bone->ID;
+                capsule->S_radius = 0.05f;
+                capsule->P_center = 0.5f * (model.Spine.L_bones[Selection.Bone->ID].P_begin + model.Spine.L_bones[Selection.Bone->ID].P_end);
+                capsule->N_top    = 0.5f * (model.Spine.L_bones[Selection.Bone->ID].P_begin - model.Spine.L_bones[Selection.Bone->ID].P_end);
+                capsule->S_top    = capsule->N_top.length();
+                capsule->N_top.normalize();
+                if (capsule->S_top < 0.01f) { capsule->S_top = 0.1f; capsule->N_top.init(0,0,1); }
+            }
+            else
+            {
+                Selection.BVHNode->ID_Bone = 0;
+                capsule->P_center.zero();
+                capsule->S_radius = 0.05f;
+                capsule->S_top = 0.1f;
+                capsule->N_top.init(0,0,1);
+            }
+        }
+        if (button.Action == IC_BE_CreateBox)
+        {
+            xBoxO *boxO = new xBoxO();
+            Selection.BVHNode->add(*boxO);
+            Selection.BVHNode = Selection.BVHNode->L_items + (Selection.BVHNode->I_items-1);
+            if (model.Spine.L_bones)
+            {
+                Selection.BVHNode->ID_Bone = Selection.Bone->ID;
+                boxO->S_side   = 0.05f;
+                boxO->S_front  = 0.05f;
+                boxO->N_front.init(0,1,0);
+                boxO->P_center = 0.5f * (model.Spine.L_bones[Selection.Bone->ID].P_begin + model.Spine.L_bones[Selection.Bone->ID].P_end);
+                boxO->N_top    = 0.5f * (model.Spine.L_bones[Selection.Bone->ID].P_begin - model.Spine.L_bones[Selection.Bone->ID].P_end);
+                boxO->S_top    = boxO->N_top.length();
+                boxO->N_top.normalize();
+                if (boxO->S_top < 0.01f) { boxO->S_top = 0.1f; boxO->N_top.init(0,0,1); }
+                boxO->N_side = xVector3::CrossProduct(boxO->N_top, boxO->N_front);
+                boxO->N_front = xVector3::CrossProduct(boxO->N_top, boxO->N_side);
+            }
+            else
+            {
+                Selection.BVHNode->ID_Bone = 0;
+                boxO->P_center.zero();
+                boxO->S_side  = 0.05f;
+                boxO->S_front = 0.05f;
+                boxO->S_top   = 0.1f;
+                boxO->N_top.init(0,0,1);
+                boxO->N_front.init(0,1,0);
+                boxO->N_side.init(1,0,0);
+            }
+        }
+        xBYTE cid = 0;
+        Selection.BVHNodeID = GetBVH_ID(*model.BVHierarchy, Selection.BVHNode, cid);
+        EditMode = emEditVolume;
     }
     if (EditMode == emSelectAnimation)
     {
@@ -479,7 +651,7 @@ void SceneSkeleton::UpdateMouse(float deltaTime)
     }
 }
 
-void SceneSkeleton::MouseLDown(int X, int Y)
+void SceneSkeleton::MouseLDown (int X, int Y)
 {
     if (EditMode == emSelectVertex)
     {
@@ -488,9 +660,11 @@ void SceneSkeleton::MouseLDown(int X, int Y)
     }
     else if (EditMode == emAnimateBones && Selection.Bone)
         Animation.PreviousQuaternion = Selection.Bone->QT_rotation;
+    else if (EditMode == emEditVolume)
+        MouseLDown_BVH(X, Y);
 }
 
-void SceneSkeleton::MouseLUp(int X, int Y)
+void SceneSkeleton::MouseLUp   (int X, int Y)
 {
     std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
     std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
@@ -609,6 +783,29 @@ void SceneSkeleton::MouseLUp(int X, int Y)
         }
     }
     else
+    if (EditMode == emEditBVH)
+    {
+        xBVHierarchy *bvh = SelectBVH(X,Y);
+        if (bvh)
+        {
+            xModel &model = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
+            if (State.CurrentAction == IC_BE_Edit)
+            {
+                Selection.BVHNode = bvh;
+                xBYTE cid = 0;
+                Selection.BVHNodeID = GetBVH_ID(*model.BVHierarchy, bvh, cid);
+                EditMode = emEditVolume;
+            }
+            else
+            if (State.CurrentAction == IC_BE_Delete)
+            {
+                model.BVHierarchy->remove(bvh);
+                Selection.BVHNode   = NULL;
+                Selection.BVHNodeID = xBYTE_MAX;
+            }
+        }
+    }
+    else
     if (EditMode == emSelectElement) // select element
     {
         Selection.ElementId = (int) SelectElement(X,Y);
@@ -662,6 +859,14 @@ void SceneSkeleton::MouseLUp(int X, int Y)
         InputState.String.clear();
     }
     else
+    if (EditMode == emSelectBVHBone) // select bone and switch to the Create BVH Mode
+    {
+        Selection.Bone = SelectBone(X,Y);
+        if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->Spine.L_bones;
+
+        EditMode = emCreateBVH;
+    }
+    else
     if (EditMode == emAnimateBones && State.CurrentAction != IC_BE_Move) // select bone
     {
         Selection.Bone = SelectBone(X,Y);
@@ -679,17 +884,17 @@ void SceneSkeleton::MouseLUp(int X, int Y)
     }
 }
 
-void SceneSkeleton::MouseRDown(int X, int Y)
+void SceneSkeleton::MouseRDown (int X, int Y)
 {
 }
-void SceneSkeleton::MouseRUp(int X, int Y)
+void SceneSkeleton::MouseRUp   (int X, int Y)
 {
     if (EditMode == emSelectVertex)
         Selection.Vertices.clear();
 }
 
 
-void SceneSkeleton::MouseMove(int X, int Y)
+void SceneSkeleton::MouseMove  (int X, int Y)
 {
     std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
     std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
@@ -714,6 +919,8 @@ void SceneSkeleton::MouseMove(int X, int Y)
         Model.CalculateSkeleton();                           // refresh model in GPU
         spine.FillBoneConstraints();
     }
+    else if (EditMode == emEditVolume && InputState.MouseLIsDown)
+        MouseLMove_BVH(X, Y);
     else
     if (EditMode == emSelectVertex)
     {
@@ -815,7 +1022,7 @@ void SceneSkeleton::MouseMove(int X, int Y)
     InputState.LastY = Y;
 }
 
-/*************************** 3D ****************************************/
+/***************************** 3D **************************************/
 xVector3 SceneSkeleton::CastPoint(xPoint3 P_pointToCast, xPoint3 P_onPlane)
 {
     // get plane of ray intersection
@@ -858,7 +1065,7 @@ xVector3 SceneSkeleton::Get3dPos(int X, int Y, xPoint3 P_onPlane)
     return PN_plane.intersectRay(P_ray, N_ray);
 }
 
-/************************* CONSTRAINTS ************************************/
+/************************* CONSTRAINTS *********************************/
 void SceneSkeleton::GetConstraintParams()
 {
     InputMgr &im = g_InputMgr;
@@ -975,7 +1182,7 @@ void SceneSkeleton::GetConstraintParams()
         GetCommand();
 }
 
-/************************* SKININIG ************************************/
+/************************** SKININIG ***********************************/
 void SceneSkeleton::GetBoneIdAndWeight()
 {
     InputMgr &im = g_InputMgr;
@@ -1028,7 +1235,7 @@ void SceneSkeleton::GetBoneIdAndWeight()
         GetCommand();
 }
 
-/************************* ANIMATION ***********************************/
+/************************** ANIMATION **********************************/
 void SceneSkeleton::GetFrameParams()
 {
     InputMgr &im = g_InputMgr;
@@ -1088,7 +1295,7 @@ void SceneSkeleton::FillDirectoryBtns(bool files, const char *mask)
         }
     }
 }
-/************************** CAMERA *************************************/
+/*************************** CAMERA ************************************/
 void SceneSkeleton::UpdateDisplay(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
@@ -1202,5 +1409,168 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
             Cameras.Current->center = center;
             Cameras.Current->Orbit (0.0f, -deltaTmp);
         }
+    }
+}
+
+/**************************** BVH **************************************/
+void SceneSkeleton::MouseLDown_BVH(int X, int Y)
+{
+    BVH.P_prevMouse = Get3dPos(X, Y, Selection.BVHNode->Figure->P_center);
+    xFLOAT S_dist = (BVH.P_prevMouse - Selection.BVHNode->Figure->P_center).lengthSqr();
+    Selection.FigureDim = 0;
+
+    if (g_InputMgr.GetInputState(IC_BE_Modifier))
+        return;
+
+    if (Selection.BVHNode->Figure->Type == xIFigure3d::Sphere)
+        Selection.FigureDim = 1;
+    else
+    if (Selection.BVHNode->Figure->Type == xIFigure3d::Capsule)
+    {
+        const xCapsule &object = *(xCapsule*) Selection.BVHNode->Figure;
+
+        xVector3 P_topCap = object.P_center + object.S_top * object.N_top;
+        xVector3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+        xFLOAT   S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
+
+        Selection.FigureDim = 3;
+
+        if (S_dist2 < S_dist)
+        {
+            Selection.FigureDim = 1;
+            BVH.P_prevMouse = P_mouse2;
+        }
+        else
+        {
+            P_topCap = object.P_center - object.S_top * object.N_top;
+            P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+            S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
+            if (S_dist2 < S_dist)
+            {
+                Selection.FigureDim = 2;
+                BVH.P_prevMouse = P_mouse2;
+            }
+        }
+    }
+    else
+    if (Selection.BVHNode->Figure->Type == xIFigure3d::BoxOriented)
+    {
+        const xBoxO &object = *(xBoxO*) Selection.BVHNode->Figure;
+
+        xVector3 P_topCap = object.P_center + object.S_top * object.N_top;
+        xVector3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+        xFLOAT   S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
+
+        if (S_dist2 < S_dist)
+        {
+            S_dist = S_dist2;
+            Selection.FigureDim = 3;
+            BVH.P_prevMouse = P_mouse2;
+        }
+
+        P_topCap = object.P_center + object.S_side * object.N_side;
+        P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+        S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
+
+        if (S_dist2 < S_dist)
+        {
+            S_dist = S_dist2;
+            Selection.FigureDim = 2;
+            BVH.P_prevMouse = P_mouse2;
+        }
+
+        P_topCap = object.P_center + object.S_front * object.N_front;
+        P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+        S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
+
+        if (S_dist2 < S_dist)
+        {
+            S_dist = S_dist2;
+            Selection.FigureDim = 1;
+            BVH.P_prevMouse = P_mouse2;
+        }
+    }
+}
+
+void SceneSkeleton::MouseLMove_BVH(int X, int Y)
+{
+    if (Selection.FigureDim == 0)
+    {
+        xPoint3 P_currMouse = Get3dPos(X, Y, Selection.BVHNode->Figure->P_center);
+        xVector3 NW_shift = P_currMouse - BVH.P_prevMouse;
+        Selection.BVHNode->Figure->P_center += NW_shift;
+        BVH.P_prevMouse = P_currMouse;
+    }
+    else
+    if (Selection.BVHNode->Figure->Type == xIFigure3d::Sphere)
+    {
+        xSphere &object = *(xSphere*) Selection.BVHNode->Figure;
+        xPoint3 P_mouse2 = Get3dPos(X, Y, Selection.BVHNode->Figure->P_center);
+        object.S_radius = (P_mouse2 - Selection.BVHNode->Figure->P_center).length();
+    }
+    else
+    if (Selection.BVHNode->Figure->Type == xIFigure3d::Capsule)
+    {
+        xCapsule &object = *(xCapsule*) Selection.BVHNode->Figure;
+        if (Selection.FigureDim == 1)
+        {
+            xPoint3 P_topCap = object.P_center + object.S_top * object.N_top;
+            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            xVector3 NW_shift = P_mouse2 - object.P_center;
+            object.S_top = NW_shift.length();
+            if (g_InputMgr.GetInputState(IC_RunModifier))
+                object.N_top = NW_shift / object.S_top;
+        }
+        else
+        if (Selection.FigureDim == 2)
+        {
+            xPoint3 P_topCap = object.P_center - object.S_top * object.N_top;
+            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            xVector3 NW_shift = object.P_center - P_mouse2;
+            object.S_top = NW_shift.length();
+            if (g_InputMgr.GetInputState(IC_RunModifier))
+                object.N_top = NW_shift / object.S_top;
+        }
+        else
+        {
+            xPoint3 P_mouse2 = Get3dPos(X, Y, Selection.BVHNode->Figure->P_center);
+            object.S_radius = (P_mouse2 - Selection.BVHNode->Figure->P_center).length();
+        }
+    }
+    else
+    if (Selection.BVHNode->Figure->Type == xIFigure3d::BoxOriented)
+    {
+        xBoxO &object = *(xBoxO*) Selection.BVHNode->Figure;
+
+        xQuaternion QT_rotation; QT_rotation.zeroQ();
+
+        if (Selection.FigureDim == 1)
+        {
+            xPoint3 P_topCap = object.P_center + object.S_front * object.N_front;
+            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            if (g_InputMgr.GetInputState(IC_RunModifier))
+                QT_rotation = xQuaternion::getRotation(object.N_front, P_mouse2-object.P_center);
+            object.S_front = (P_mouse2 - object.P_center).length();
+        }
+        else
+        if (Selection.FigureDim == 2)
+        {
+            xPoint3 P_topCap = object.P_center + object.S_side * object.N_side;
+            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            if (g_InputMgr.GetInputState(IC_RunModifier))
+                QT_rotation = xQuaternion::getRotation(object.N_side, P_mouse2-object.P_center);
+            object.S_side = (P_mouse2 - object.P_center).length();
+        }
+        else
+        {
+            xPoint3 P_topCap = object.P_center + object.S_top * object.N_top;
+            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            if (g_InputMgr.GetInputState(IC_RunModifier))
+                QT_rotation = xQuaternion::getRotation(object.N_top, P_mouse2-object.P_center);
+            object.S_top = (P_mouse2 - object.P_center).length();
+        }
+        object.N_top   = xQuaternion::rotate(QT_rotation, object.N_top).normalize();
+        object.N_side  = xQuaternion::rotate(QT_rotation, object.N_side).normalize();
+        object.N_front = xQuaternion::rotate(QT_rotation, object.N_front).normalize();
     }
 }

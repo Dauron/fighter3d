@@ -103,6 +103,7 @@ void HitPointsCapsuleTriangle(const xCapsule &cp2, const xPoint3 P_closest[3],
 
 xDWORD CollideCapsuleTriangle (const xCapsule &cp1, const xPoint3 &P_A,
                                const xPoint3 &P_B, const xPoint3 &P_C,
+                               IPhysicalBody *body1, IPhysicalBody *body2,
                                const xIFigure3d &figure2, xDWORD ID_tri, CollisionSet &cset)
 {
     AxisSpans spans[16];
@@ -166,13 +167,14 @@ xDWORD CollideCapsuleTriangle (const xCapsule &cp1, const xPoint3 &P_A,
 
     HitPointsCapsuleTriangle(cp1, P_closest, P_hits, I_hits);
     for (int i = 0; i < I_hits; ++i)
-        cset.Add(CollisionInfo(cp1, figure2, 0, ID_tri, NW_fix, P_hits[i], P_hits[i]+NW_fix));
+        cset.Add(CollisionInfo(body1, body2, cp1, figure2, 0, ID_tri, NW_fix, P_hits[i], P_hits[i]+NW_fix));
 
     //tr2.PointRelation(P_collision, xFLOAT_HUGE_POSITIVE, N_tri, P_closest, NW_closest, ID_edge);
     return I_hits;
 }
 
-xDWORD CollideCapsuleTriangle (const xCapsule &cp1, const xTriangle &tr2, CollisionSet &cset)
+xDWORD CollideCapsuleTriangle (const xCapsule &cp1, const xTriangle &tr2,
+                               IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
-    return CollideCapsuleTriangle (cp1, tr2.P_A, tr2.P_B, tr2.P_C, tr2, 0, cset);
+    return CollideCapsuleTriangle (cp1, tr2.P_A, tr2.P_B, tr2.P_C, body1, body2, tr2, 0, cset);
 }

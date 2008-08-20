@@ -107,24 +107,6 @@ void CreateHierarchyFromVertices(const xElement                   &elem,
                                  std::vector<std::vector<xWORD>>  &bVertices,
                                  std::vector<xCollisionHierarchy> &cHierarchy);
 
-inline void GetMinMax3(xFLOAT v1, xFLOAT v2, xFLOAT v3, xFLOAT &minV, xFLOAT &maxV)
-{
-    if (v1 >= v2)
-    {
-        if (v1 >= v3)
-        { maxV = v1; minV = min(v2, v3); }
-        else
-        { maxV = v3; minV = v2; }
-    }
-    else
-    {
-        if (v2 >= v3)
-        { maxV = v2; minV = min(v1, v3); }
-        else
-        { maxV = v3; minV = v1; }
-    }
-}
-
 void xCollisionData :: Fill (xModel &xmodel, xElement &elem)
 {
     if (this->L_kids) // force Octree recalculation

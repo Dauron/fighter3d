@@ -27,7 +27,7 @@ namespace Math { namespace Figures {
             else
             {
                 xFLOAT dNaNt = xVector3::DotProduct(N_axis, N_top);
-                S_span = fabs(dNaNt) * S_top + S_radius
+                S_span = fabs(dNaNt) * S_top +
                        + S_radius * sqrt (N_axis.lengthSqr() - dNaNt*dNaNt);
             }
             P_min = P_middle-S_span;
@@ -44,6 +44,16 @@ namespace Math { namespace Figures {
             return res;
         }
 
+        virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max )
+        {
+            P_min = P_max = P_center;
+            xFLOAT s = fabs(N_top.x) * S_top + S_radius * sqrt(1 - N_top.x*N_top.x);
+            P_min.x -= s; P_max.x += s;
+            s = fabs(N_top.y) * S_top + S_radius * sqrt(1 - N_top.y*N_top.y);
+            P_min.y -= s; P_max.y += s;
+            s = fabs(N_top.z) * S_top + S_radius * sqrt(1 - N_top.z*N_top.z);
+            P_min.z -= s; P_max.z += s;
+        }
         virtual xFLOAT S_Radius_Sqr_Get() { return S_top * S_top + S_radius * S_radius; }
         virtual xFLOAT W_Volume_Get()     { return S_top * PI * S_radius * S_radius; }
     };

@@ -2,8 +2,6 @@
 #define __incl_World_h
 
 #include "SkeletizedObj.h"
-#include "../Physics/CD_MeshToMesh.h"
-#include "../Physics/CD_RayToMesh.h"
 #include "../Physics/PhysicalWorld.h"
 
 class World : public Physics::PhysicalWorld
@@ -17,8 +15,6 @@ public:
 public:
 
     World( void ) : skyBox(NULL) {}
-
-    //RigidObj *CollideWithRay(xVector3 rayPos, xVector3 rayDir);
 
     void Initialize ();
     void Finalize   ();

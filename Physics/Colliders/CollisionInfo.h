@@ -5,7 +5,11 @@
 #include "../../Math/xMath.h"
 #include "../../Math/Figures/xIFigure3d.h"
 
-namespace Physics { namespace Colliders {
+namespace Physics {
+
+  class IPhysicalBody;
+
+  namespace Colliders {
     using namespace ::Math::Figures;
 
     struct BoneWeight {
@@ -14,12 +18,15 @@ namespace Physics { namespace Colliders {
     };
 
     struct CollisionPoint {
+        IPhysicalBody    *Offender;
+
         const xIFigure3d *Figure;
         xDWORD            ID_subobj;
 
         xPoint3           P_collision;
         xVector3          NW_fix;
-        xVector3          V_response;
+        xVector3          V_action;
+        xVector3          V_reaction;
 
         xFLOAT            W_fix;
 
@@ -28,12 +35,15 @@ namespace Physics { namespace Colliders {
 
         CollisionPoint()
         {}
-        CollisionPoint(const xPoint3 &p_collision)
-            : Figure(NULL), P_collision(p_collision), I_Bones(0)
+        CollisionPoint(IPhysicalBody *offender, const xPoint3 &p_collision)
+            : Offender(offender), Figure(NULL), P_collision(p_collision), I_Bones(0)
         {}
-        CollisionPoint(const xIFigure3d &figure, const xPoint3 &p_collision,
+        CollisionPoint(IPhysicalBody *offender, const xIFigure3d &figure, const xPoint3 &p_collision, xDWORD id_subobj = 0)
+            : Offender(offender), Figure(&figure), P_collision(p_collision), ID_subobj(id_subobj)
+        { SetBoneWeights(); }
+        CollisionPoint(IPhysicalBody *offender, const xIFigure3d &figure, const xPoint3 &p_collision,
                        const xVector3 &nw_fix, xDWORD id_subobj = 0)
-            : Figure(&figure), P_collision(p_collision), NW_fix(nw_fix), ID_subobj(id_subobj)
+            : Offender(offender), Figure(&figure), P_collision(p_collision), NW_fix(nw_fix), ID_subobj(id_subobj)
         { SetBoneWeights(); }
 
         void SetBoneWeights();
@@ -51,27 +61,32 @@ namespace Physics { namespace Colliders {
 
         CollisionInfo () : inverted(false) {}
 
-        CollisionInfo (const xIFigure3d &figure1,    const xIFigure3d &figure2,
+        CollisionInfo (const CollisionPoint &cp1, const CollisionPoint &cp2) : object1(cp1), object2(cp2), inverted(false) {}
+
+        CollisionInfo (IPhysicalBody    *body1,      IPhysicalBody    *body2,
+                       const xIFigure3d &figure1,    const xIFigure3d &figure2,
                        const xPoint3 &p_collision_1, const xPoint3 &p_collision_2)
-              : object1(figure1, p_collision_1, p_collision_2-p_collision_1)
-              , object2(figure2, p_collision_2, p_collision_1-p_collision_2)
+              : object1(body2, figure1, p_collision_1, p_collision_2-p_collision_1)
+              , object2(body1, figure2, p_collision_2, p_collision_1-p_collision_2)
               , inverted(false)
         {}
 
-        CollisionInfo (const xIFigure3d &figure1,    const xIFigure3d &figure2,
+        CollisionInfo (IPhysicalBody    *body1,      IPhysicalBody    *body2,
+                       const xIFigure3d &figure1,    const xIFigure3d &figure2,
                        const xVector3 &nw_fix_1,
                        const xPoint3 &p_collision_1, const xPoint3 &p_collision_2)
-              : object1(figure1, p_collision_1,  nw_fix_1)
-              , object2(figure2, p_collision_2, -nw_fix_1)
+              : object1(body2, figure1, p_collision_1,  nw_fix_1)
+              , object2(body1, figure2, p_collision_2, -nw_fix_1)
               , inverted(false)
         {}
 
-        CollisionInfo (const xIFigure3d &figure1,    const xIFigure3d &figure2,
+        CollisionInfo (IPhysicalBody    *body1,      IPhysicalBody    *body2,
+                       const xIFigure3d &figure1,    const xIFigure3d &figure2,
                        xDWORD id_subobj_1,           xDWORD id_subobj_2,
                        const xVector3 &nw_fix_1,
                        const xPoint3 &p_collision_1, const xPoint3 &p_collision_2)
-              : object1(figure1, p_collision_1,  nw_fix_1, id_subobj_1)
-              , object2(figure2, p_collision_2, -nw_fix_1, id_subobj_2)
+              : object1(body2, figure1, p_collision_1,  nw_fix_1, id_subobj_1)
+              , object2(body1, figure2, p_collision_2, -nw_fix_1, id_subobj_2)
               , inverted(false)
         {}
 

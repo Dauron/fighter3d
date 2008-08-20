@@ -87,6 +87,8 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
 
     xFLOAT w1 = system->M_weight_Inv[particle];
     xFLOAT w2 = system->M_weight_Inv[particleRootE];
+    if (system->FL_attached[particle])      w1 *= 0.1f;
+    if (system->FL_attached[particleRootE]) w2 *= 0.1f;
     if (w1 == 0.f && w2 == 0.f) return false;
     w1 /= (w1+w2);
     w2 = 1.f - w1;

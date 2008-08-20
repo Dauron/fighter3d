@@ -12,7 +12,8 @@ bool   TestSphereSphere (const xSphere &sp1, const xSphere &sp2)
     return true;
 }
 
-xDWORD CollideSphereSphere (const xSphere &sp1, const xSphere &sp2, CollisionSet &cset)
+xDWORD CollideSphereSphere (const xSphere &sp1, const xSphere &sp2,
+                            IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
     xVector3 NW_center     = sp1.P_center - sp2.P_center;
     xFLOAT   S_radius_dist = sp1.S_radius + sp2.S_radius;
@@ -22,7 +23,7 @@ xDWORD CollideSphereSphere (const xSphere &sp1, const xSphere &sp2, CollisionSet
 
     S_center_dist     = sqrt(S_center_dist);
     xVector3 N_center = NW_center / S_center_dist;
-    cset.Add(CollisionInfo(sp1, sp2,
+    cset.Add(CollisionInfo(body1, body2, sp1, sp2,
                            N_center * (S_radius_dist - S_center_dist),
                            sp1.P_center - N_center * sp1.S_radius,
                            sp2.P_center + N_center * sp2.S_radius));

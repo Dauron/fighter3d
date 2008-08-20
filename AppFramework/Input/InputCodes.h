@@ -75,8 +75,12 @@
 #define IC_BE_CreateConstrEql IC_BE_Create+16
 #define IC_BE_CreateConstrAng IC_BE_Create+17
 #define IC_BE_CreateConstrWeight IC_BE_Create+18
+#define IC_BE_ModeBVH         IC_BE_Create+19
+#define IC_BE_CreateSphere    IC_BE_Create+20
+#define IC_BE_CreateCapsule   IC_BE_Create+21
+#define IC_BE_CreateBox       IC_BE_Create+22
 
-#define IC_TS_Pause           IC_BE_CreateConstrWeight+10
+#define IC_TS_Pause           IC_BE_Create+32
 #define IC_TS_Stop            IC_TS_Pause+1
 #define IC_TS_Test0           IC_TS_Pause+2
 #define IC_TS_Test1           IC_TS_Test0+1

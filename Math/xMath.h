@@ -70,4 +70,22 @@ typedef xVector4 xColor;
 
 #include "xMatrix.h"
 
+inline void GetMinMax3(xFLOAT v1, xFLOAT v2, xFLOAT v3, xFLOAT &minV, xFLOAT &maxV)
+{
+    if (v1 >= v2)
+    {
+        if (v1 >= v3)
+        { maxV = v1; minV = min(v2, v3); }
+        else
+        { maxV = v3; minV = v2; }
+    }
+    else
+    {
+        if (v2 >= v3)
+        { maxV = v2; minV = min(v1, v3); }
+        else
+        { maxV = v3; minV = v1; }
+    }
+}
+
 #endif

@@ -77,6 +77,12 @@ namespace Math { namespace Figures {
             return res;
         }
 
+        virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max )
+        {
+            GetMinMax3(P_A.x,P_B.x,P_C.x, P_min.x, P_max.x);
+            GetMinMax3(P_A.y,P_B.y,P_C.y, P_min.y, P_max.y);
+            GetMinMax3(P_A.z,P_B.z,P_C.z, P_min.z, P_max.z);
+        }
         virtual xFLOAT S_Radius_Sqr_Get()
         {
             xFLOAT a2 = (P_B - P_C).lengthSqr();

@@ -51,7 +51,7 @@ namespace Physics {
         virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time) = 0;
         virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time, const CollisionPoint &CP_point) = 0;
 
-        IPhysicalBody() : FL_initialized(false), FL_defaults_applied(false) {}
+        IPhysicalBody() : FL_initialized(false), FL_defaults_applied(false) { BVHierarchy.zero(); }
 
         virtual void     ApplyDefaults() {
             FL_defaults_applied = true;
@@ -71,7 +71,7 @@ namespace Physics {
         virtual void     FrameUpdate(xFLOAT T_time) {}
         virtual void     FrameRender()              {}
         virtual void     FrameEnd()                 {}
-        virtual void     Finalize()                 { FL_initialized = false; }
+        virtual void     Finalize()                 { FL_initialized = false; BVHierarchy.free(); BVHierarchy.zero(); }
     };
 
 } // namespace Physics

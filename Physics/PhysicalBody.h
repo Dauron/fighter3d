@@ -69,13 +69,23 @@ namespace Physics {
         { ApplyAcceleration(NW_force / GetMass(), T_time, CP_point); }
 
     public:
-        virtual void LocationChanged() {}
+        virtual void LocationChanged() { BVHierarchy.invalidateTransformation(); }
 
         void Translate(xFLOAT x, xFLOAT y, xFLOAT z)
-        { Stop(); MX_LocalToWorld *= xMatrixTranslateT(x,y,z); LocationChanged(); FL_modified = true; }
+        {
+            Stop();
+            MX_LocalToWorld *= xMatrixTranslateT(x,y,z);
+            if (IsInitialized()) LocationChanged();
+            FL_modified = true;
+        }
 
         void Rotate(xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
-        { Stop(); MX_LocalToWorld *= xMatrixRotateRad(DegToRad(rotX), DegToRad(rotY), DegToRad(rotZ)); LocationChanged(); FL_modified = true; }
+        {
+            Stop();
+            MX_LocalToWorld *= xMatrixRotateRad(DegToRad(rotX), DegToRad(rotY), DegToRad(rotZ));
+            if (IsInitialized()) LocationChanged();
+            FL_modified = true;
+        }
 
     public:
         virtual void ApplyDefaults()

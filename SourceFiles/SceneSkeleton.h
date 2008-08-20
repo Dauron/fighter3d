@@ -44,9 +44,11 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     {
         emMain, emCreateBone,
         emCreateConstraint_Type, emCreateConstraint_Node, emCreateConstraint_Params,
+        emEditBVH, emSelectBVHBone, emCreateBVH, emEditVolume,
         emSelectElement, emSelectVertex, emSelectBone, emInputWght,
         emSelectAnimation, emEditAnimation, emAnimateBones, emFrameParams,
-        emLoadAnimation, emSaveAnimation, emLast
+        emLoadAnimation, emSaveAnimation,
+        emLast
     } EditMode;
 
     HFont       Font;
@@ -99,6 +101,10 @@ class SceneSkeleton : public Scene, public ISelectionProvider
                 xFLOAT4    angles;
             };
         } Constraint;
+        // BVH
+        struct _BVH {
+            xPoint3 P_prevMouse;
+        } BVH;
         // Skinning
         struct _Skin {
             struct {
@@ -125,6 +131,9 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     // Selected objects
     struct _Selection {
         xBone             * Bone;
+        xBVHierarchy      * BVHNode;
+        xBYTE               BVHNodeID;
+        xBYTE               FigureDim;
         xElement          * Element;
         xWORD               ElementId;
         std::vector<xDWORD> Vertices;
@@ -134,6 +143,12 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     xDWORD          HoveredVert;
 
     void        RenderProgressBar();
+
+    /* BVH */
+    xBYTE         GetBVH_Count (xBVHierarchy &bvhNode);
+    xBYTE         GetBVH_ID (xBVHierarchy &bvhNode, xBVHierarchy *selected, xBYTE &ID);
+    xBVHierarchy *GetBVH_byID (xBVHierarchy &bvhNode, xBYTE ID_selected, xBYTE &ID);
+
 
     /* INPUT & CAMERAS */
     bool        UpdateButton(GLButton &button);
@@ -145,6 +160,8 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     void        MouseRDown (int X, int Y);
     void        MouseRUp   (int X, int Y);
     void        MouseMove  (int X, int Y);
+    void        MouseLDown_BVH(int X, int Y);
+    void        MouseLMove_BVH(int X, int Y);
     /* 3D */
     xVector3    Get3dPos  (int X, int Y, xVector3 planeP);
     xVector3    CastPoint (xVector3 rayPos, xVector3 planeP);
@@ -161,9 +178,9 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     virtual unsigned int CountSelectable();
     std::vector<xDWORD> *SelectCommon  (int X, int Y, int W = 1, int H = 1);
     xBone               *SelectBone    (int X, int Y);
+    xBVHierarchy        *SelectBVH     (int X, int Y);
     xWORD                SelectElement (int X, int Y);
 
 };
 
 #endif
-

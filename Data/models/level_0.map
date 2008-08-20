@@ -38,31 +38,36 @@ fastm	human2_fst.3dx
 model	human2.3dx
 rotation    0 0 180
 position    -0.7 -3.3 -0.4
+customBVH	0
 physical    1
 locked      0
 phantom     0
 mass        70
 shadows     0
-restitution 0.1
-skip animation	anims/human/garda.ska	0		0
-animation	anims/human/position.ska	0		4200
-animation	anims/human/yoko-geri2.ska	4200	5300
-animation	anims/human/position.ska	5300
-skip animation	anims/human/position.ska	0
+restitution 0.9
+#animation	anims/human/garda.ska	0		0
+animation	anims/human/position.ska	0		2200
+animation	anims/human/yoko-geri2.ska	2200	3300
+animation	anims/human/position.ska	3300
+#animation	anims/human/position.ska	0
 
 [skeletized]
 fastm	human2_fst.3dx
 model	human2.3dx
+#rotation    0 45 0
 #position   -0.5 -1.5 -0.2
 position    -0.5 -2   -0.2
+customBVH	0
 physical    1
 locked      0
 phantom     0
 mass        70
 shadows     0
-skip animation	anims/human/garda.ska
-animation	anims/human/stoi.ska 0 0
-skip animation	anims/human/garda.ska	0	4700
-skip animation	anims/human/skulony.ska	4700	4700
-skip animation	anims/human/kiwa_sie.ska	4700	4700
+restitution 0.9
+#animation	anims/human/garda.ska 0
+#animation	anims/human/stoi.ska 0
+#animation	anims/human/garda.ska	0	4700
+animation	anims/human/skulony.ska	0
+animation	anims/human/kiwa_sie.ska	0
+#animation	anims/human/idzie.ska 0
 

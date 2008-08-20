@@ -207,7 +207,7 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
         }
     }
 
-    if (xmodel->FL_save_bvh)
+    if (xmodel->FL_save_cinfo)
         elem->collisionData.Load(file, elem);
 
     return elem;
@@ -261,7 +261,7 @@ void      xElement :: Save(FILE *file, const xModel *xmodel)
 
     this->Name = name;
 
-    if (xmodel->FL_save_bvh)
+    if (xmodel->FL_save_cinfo)
         this->collisionData.Save(file, this);
 }
 

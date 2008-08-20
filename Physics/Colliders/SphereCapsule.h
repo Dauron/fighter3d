@@ -19,7 +19,8 @@ bool   TestSphereCapsule (const xSphere &sp1, const xCapsule &cp2)
     return true;
 }
 
-xDWORD CollideSphereCapsule (const xSphere &sp1, const xCapsule &cp2, CollisionSet &cset)
+xDWORD CollideSphereCapsule (const xSphere &sp1, const xCapsule &cp2,
+                             IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
     xFLOAT S_projection = xVector3::DotProduct(sp1.P_center - cp2.P_center, cp2.N_top);
     if (S_projection >  cp2.S_top) S_projection =  cp2.S_top;
@@ -35,7 +36,7 @@ xDWORD CollideSphereCapsule (const xSphere &sp1, const xCapsule &cp2, CollisionS
 
     S_center_dist     = sqrt(S_center_dist);
     xVector3 N_center = NW_correction / S_center_dist;
-    cset.Add(CollisionInfo(sp1, cp2,
+    cset.Add(CollisionInfo(body1, body2, sp1, cp2,
                            N_center * (S_radius_dist - S_center_dist),
                            sp1.P_center - N_center * sp1.S_radius,
                            P_closest    + N_center * cp2.S_radius));

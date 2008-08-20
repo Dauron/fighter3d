@@ -139,55 +139,56 @@ inline xDWORD CSInvert (xDWORD I_lastCount, CollisionSet &cset)
     return I_lastCount;
 }
 
-xDWORD FigureCollider :: Collide (const xIFigure3d *figure1, const xIFigure3d *figure2, CollisionSet &cset)
+xDWORD FigureCollider :: Collide (IPhysicalBody *body1,      IPhysicalBody *body2,
+                                  const xIFigure3d *figure1, const xIFigure3d *figure2, CollisionSet &cset)
 {
     // Sphere
     if (figure1->Type == xIFigure3d::Sphere && figure2->Type == xIFigure3d::Sphere)
-        return CollideSphereSphere ( *((xSphere*) figure1), *((xSphere*) figure2), cset );
+        return CollideSphereSphere ( *((xSphere*) figure1), *((xSphere*) figure2), body1, body2, cset );
 
     if (figure1->Type == xIFigure3d::Sphere && figure2->Type == xIFigure3d::Capsule)
-        return CollideSphereCapsule ( *((xSphere*) figure1), *((xCapsule*) figure2), cset );
+        return CollideSphereCapsule ( *((xSphere*) figure1), *((xCapsule*) figure2), body1, body2, cset );
 
     if (figure1->Type == xIFigure3d::Sphere && figure2->Type == xIFigure3d::BoxOriented)
-        return CollideSphereBoxO ( *((xSphere*) figure1), *((xBoxO*) figure2), cset );
+        return CollideSphereBoxO ( *((xSphere*) figure1), *((xBoxO*) figure2), body1, body2, cset );
 
     if (figure1->Type == xIFigure3d::Sphere && figure2->Type == xIFigure3d::Cylinder)
         return false;
 
     if (figure1->Type == xIFigure3d::Sphere && figure2->Type == xIFigure3d::Mesh)
-        return CollideSphereMesh ( *((xSphere*) figure1), *((xMesh*) figure2), cset );
+        return CollideSphereMesh ( *((xSphere*) figure1), *((xMesh*) figure2), body1, body2, cset );
 
     // Capsule
     if (figure1->Type == xIFigure3d::Capsule && figure2->Type == xIFigure3d::Sphere)
-        return CSInvert (CollideSphereCapsule ( *((xSphere*) figure2), *((xCapsule*) figure1), cset ), cset);
+        return CSInvert (CollideSphereCapsule ( *((xSphere*) figure2), *((xCapsule*) figure1), body2, body1, cset ), cset);
 
     if (figure1->Type == xIFigure3d::Capsule && figure2->Type == xIFigure3d::Capsule)
-        return CollideCapsuleCapsule ( *((xCapsule*) figure1), *((xCapsule*) figure2), cset );
+        return CollideCapsuleCapsule ( *((xCapsule*) figure1), *((xCapsule*) figure2), body1, body2, cset );
 
     if (figure1->Type == xIFigure3d::Capsule && figure2->Type == xIFigure3d::BoxOriented)
-        return CollideCapsuleBoxO ( *((xCapsule*) figure1), *((xBoxO*) figure2), cset );
+        return CollideCapsuleBoxO ( *((xCapsule*) figure1), *((xBoxO*) figure2), body1, body2, cset );
 
     if (figure1->Type == xIFigure3d::Capsule && figure2->Type == xIFigure3d::Cylinder)
         return false;
 
     if (figure1->Type == xIFigure3d::Capsule && figure2->Type == xIFigure3d::Mesh)
-        return CollideCapsuleMesh ( *((xCapsule*) figure1), *((xMesh*) figure2), cset );
+        return CollideCapsuleMesh ( *((xCapsule*) figure1), *((xMesh*) figure2), body1, body2, cset );
 
     // Box Oriented
     if (figure1->Type == xIFigure3d::BoxOriented && figure2->Type == xIFigure3d::Sphere)
-        return CSInvert (CollideSphereBoxO ( *((xSphere*) figure2), *((xBoxO*) figure1), cset ), cset);
+        return CSInvert (CollideSphereBoxO ( *((xSphere*) figure2), *((xBoxO*) figure1), body2, body1, cset ), cset);
 
     if (figure1->Type == xIFigure3d::BoxOriented && figure2->Type == xIFigure3d::Capsule)
-        return CSInvert (CollideCapsuleBoxO ( *((xCapsule*) figure2), *((xBoxO*) figure1), cset ), cset);
+        return CSInvert (CollideCapsuleBoxO ( *((xCapsule*) figure2), *((xBoxO*) figure1), body2, body1, cset ), cset);
 
     if (figure1->Type == xIFigure3d::BoxOriented && figure2->Type == xIFigure3d::BoxOriented)
-        return CollideBoxOBoxO ( *((xBoxO*) figure1), *((xBoxO*) figure2), cset );
+        return CollideBoxOBoxO ( *((xBoxO*) figure1), *((xBoxO*) figure2), body1, body2, cset );
 
     if (figure1->Type == xIFigure3d::BoxOriented && figure2->Type == xIFigure3d::Cylinder)
         return false;
 
     if (figure1->Type == xIFigure3d::BoxOriented && figure2->Type == xIFigure3d::Mesh)
-        return CollideBoxOMesh ( *((xBoxO*) figure1), *((xMesh*) figure2), cset );
+        return CollideBoxOMesh ( *((xBoxO*) figure1), *((xMesh*) figure2), body1, body2, cset );
 
     // Cylinder
     if (figure1->Type == xIFigure3d::Cylinder && figure2->Type == xIFigure3d::Sphere)
@@ -207,19 +208,19 @@ xDWORD FigureCollider :: Collide (const xIFigure3d *figure1, const xIFigure3d *f
 
     // Mesh
     if (figure1->Type == xIFigure3d::Mesh && figure2->Type == xIFigure3d::Sphere)
-        return CSInvert (CollideSphereMesh ( *((xSphere*) figure2), *((xMesh*) figure1), cset ), cset);
+        return CSInvert (CollideSphereMesh ( *((xSphere*) figure2), *((xMesh*) figure1), body2, body1, cset ), cset);
 
     if (figure1->Type == xIFigure3d::Mesh && figure2->Type == xIFigure3d::Capsule)
-        return CSInvert (CollideCapsuleMesh ( *((xCapsule*) figure2), *((xMesh*) figure1), cset ), cset);
+        return CSInvert (CollideCapsuleMesh ( *((xCapsule*) figure2), *((xMesh*) figure1), body2, body1, cset ), cset);
 
     if (figure1->Type == xIFigure3d::Mesh && figure2->Type == xIFigure3d::BoxOriented)
-        return CSInvert (CollideBoxOMesh ( *((xBoxO*) figure2), *((xMesh*) figure1), cset), cset);
+        return CSInvert (CollideBoxOMesh ( *((xBoxO*) figure2), *((xMesh*) figure1), body2, body1, cset), cset);
 
     if (figure1->Type == xIFigure3d::Mesh && figure2->Type == xIFigure3d::Cylinder)
         return false;
 
     if (figure1->Type == xIFigure3d::Mesh && figure2->Type == xIFigure3d::Mesh)
-        return CollideMeshMesh ( *((xMesh*) figure1), *((xMesh*) figure2), cset );
+        return CollideMeshMesh ( *((xMesh*) figure1), *((xMesh*) figure2), body1, body2, cset );
 
     return false;
 }

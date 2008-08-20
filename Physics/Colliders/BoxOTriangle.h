@@ -81,6 +81,7 @@ void HitPointsBoxOTriangle(const xBoxO &bo2, const xPoint3 P_closest[3],
 
 xDWORD CollideBoxOTriangle (const xBoxO &bo1, const xPoint3 &P_A,
                             const xPoint3 &P_B, const xPoint3 &P_C,
+                            IPhysicalBody *body1, IPhysicalBody *body2,
                             const xIFigure3d &figure2, xDWORD ID_tri, CollisionSet &cset)
 {
     AxisSpans spans[13];
@@ -122,7 +123,7 @@ xDWORD CollideBoxOTriangle (const xBoxO &bo1, const xPoint3 &P_A,
 
     HitPointsBoxOTriangle(bo1, P_closest, P_hits, I_hits);
     for (int i = 0; i < I_hits; ++i)
-        cset.Add(CollisionInfo(bo1, figure2, 0, ID_tri, NW_fix, P_hits[i], P_hits[i]+NW_fix));
+        cset.Add(CollisionInfo(body1, body2, bo1, figure2, 0, ID_tri, NW_fix, P_hits[i], P_hits[i]+NW_fix));
 
     //xPoint3       P_closest;
     //xVector3      NW_closest;
@@ -132,7 +133,8 @@ xDWORD CollideBoxOTriangle (const xBoxO &bo1, const xPoint3 &P_A,
     return I_hits;
 }
 
-inline xDWORD CollideBoxOTriangle (const xBoxO &bo1, const xTriangle &tr2, CollisionSet &cset)
+inline xDWORD CollideBoxOTriangle (const xBoxO &bo1, const xTriangle &tr2,
+                                   IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
-    return CollideBoxOTriangle(bo1, tr2.P_A, tr2.P_B, tr2.P_C, tr2, 0, cset);
+    return CollideBoxOTriangle(bo1, tr2.P_A, tr2.P_B, tr2.P_C, body1, body2, tr2, 0, cset);
 }

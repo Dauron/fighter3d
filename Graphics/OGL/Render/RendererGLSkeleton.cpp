@@ -305,6 +305,7 @@ void RendererGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWO
         }
         else
         {
+            /*
             glTranslatef(instance.P_center.x,instance.P_center.y,instance.P_center.z);
             glBegin(GL_LINES);
                 glColor4f(1.f,0.f,0.f,1.f);
@@ -319,6 +320,7 @@ void RendererGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWO
                 glVertex3f(0,0,0);
                 glVertex3f(0,0,1.f);
             glEnd();
+            */
         }
 
         glPopMatrix();

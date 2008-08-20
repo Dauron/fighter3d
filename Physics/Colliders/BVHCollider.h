@@ -6,12 +6,14 @@
 #include <vector>
 
 namespace Physics { namespace Colliders {
+    using namespace ::Physics;
     using namespace ::Physics::Colliders;
     using namespace ::Math::Figures;
 
     struct BVHCollider {
 
-        xDWORD Collide(xBVHierarchy &bvh1, xBVHierarchy &bvh2,
+        xDWORD Collide(IPhysicalBody *body1, IPhysicalBody *body2,
+                       xBVHierarchy  &bvh1,  xBVHierarchy &bvh2,
                        const xMatrix &MX_LocalToWorld1,
                        const xMatrix &MX_LocalToWorld2,
                        CollisionSet &cset);

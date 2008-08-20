@@ -90,4 +90,3 @@ class SceneTest : public Scene, private ISelectionProvider
 };
 
 #endif
-

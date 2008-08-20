@@ -22,7 +22,8 @@ bool   TestCapsuleCapsule (const xCapsule &cp1, const xCapsule &cp2)
     return true;
 }
 
-xDWORD CollideCapsuleCapsule (const xCapsule &cp1, const xCapsule &cp2, CollisionSet &cset)
+xDWORD CollideCapsuleCapsule (const xCapsule &cp1, const xCapsule &cp2,
+                              IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
     xVector3 NW_top_1 = cp1.N_top * cp1.S_top;
     xVector3 NW_top_2 = cp2.N_top * cp2.S_top;
@@ -40,7 +41,7 @@ xDWORD CollideCapsuleCapsule (const xCapsule &cp1, const xCapsule &cp2, Collisio
     if ( S_distance + EPSILON2 > S_radius_dist*S_radius_dist ) return false;
     S_distance = sqrt(S_distance);
     NW_correction /= S_distance;
-    cset.Add(CollisionInfo(cp1, cp2,
+    cset.Add(CollisionInfo(body1, body2, cp1, cp2,
                            NW_correction * (S_radius_dist - S_distance),
                            P_closest_1 - NW_correction * cp1.S_radius,
                            P_closest_2 + NW_correction * cp2.S_radius));

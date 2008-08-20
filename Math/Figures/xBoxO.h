@@ -58,8 +58,38 @@ namespace Math { namespace Figures {
         PointPosition PointRelation(const xVector3 &P_test, xVector3 &NW_closest) const;
         PointPosition PointsClosestToPlane(const xVector3 &NW_plane, xPoint3 P_points[4]) const ;
 
+        virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max )
+        {
+            P_min = P_max = P_center;
+            xFLOAT s = fabs(N_top.x) * S_top + fabs(N_side.x) * S_side + fabs(N_front.x) * S_front;
+            P_min.x -= s; P_max.x += s;
+            s = fabs(N_top.y) * S_top + fabs(N_side.y) * S_side + fabs(N_front.y) * S_front;
+            P_min.y -= s; P_max.y += s;
+            s = fabs(N_top.z) * S_top + fabs(N_side.z) * S_side + fabs(N_front.z) * S_front;
+            P_min.z -= s; P_max.z += s;
+        }
         virtual xFLOAT S_Radius_Sqr_Get() { return S_top*S_top+S_side*S_side+S_front*S_front; }
         virtual xFLOAT W_Volume_Get()     { return S_top * S_side * S_front * 8.f; }
+
+    protected:
+        virtual void loadInstance( FILE *file )
+        {
+            fread(&S_top,   sizeof(S_top), 1, file);
+            fread(&N_top,   sizeof(N_top), 1, file);
+            fread(&S_front, sizeof(S_front), 1, file);
+            fread(&N_front, sizeof(N_front), 1, file);
+            fread(&S_side,  sizeof(S_side), 1, file);
+            fread(&N_side,  sizeof(N_side), 1, file);
+        }
+        virtual void saveInstance( FILE *file )
+        {
+            fwrite(&S_top, sizeof(S_top), 1, file);
+            fwrite(&N_top, sizeof(N_top), 1, file);
+            fwrite(&S_front, sizeof(S_front), 1, file);
+            fwrite(&N_front, sizeof(N_front), 1, file);
+            fwrite(&S_side,  sizeof(S_side), 1, file);
+            fwrite(&N_side,  sizeof(N_side), 1, file);
+        }
     };
 
 } } // namespace Math.Figures

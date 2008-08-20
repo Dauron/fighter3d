@@ -26,6 +26,7 @@ inline bool   TestSphereTriangle (const xSphere &sp1, const xTriangle &tr2)
 
 xDWORD CollideSphereTriangle (const xSphere &sp1, const xPoint3 &P_A,
                               const xPoint3 &P_B, const xPoint3 &P_C,
+                              IPhysicalBody *body1, IPhysicalBody *body2,
                               const xIFigure3d &figure2, xDWORD ID_tri, CollisionSet &cset)
 {
     xVector3      N_tri;
@@ -44,14 +45,14 @@ xDWORD CollideSphereTriangle (const xSphere &sp1, const xPoint3 &P_A,
     {
         S_distance = sqrt(S_distance);
         NW_closest /= S_distance;
-        return cset.Add(CollisionInfo(sp1, figure2, 0, ID_tri,
+        return cset.Add(CollisionInfo(body1, body2, sp1, figure2, 0, ID_tri,
                                       NW_closest * (sp1.S_radius - S_distance),
                                       sp1.P_center - NW_closest * sp1.S_radius,
                                       P_closest)), 1;
     }
 
     if (Position == POINT_Inside)
-        return cset.Add(CollisionInfo(sp1, figure2, 0, ID_tri,
+        return cset.Add(CollisionInfo(body1, body2, sp1, figure2, 0, ID_tri,
                                       N_tri * sp1.S_radius,
                                       sp1.P_center - N_tri * sp1.S_radius,
                                       P_closest)), 1;
@@ -60,7 +61,7 @@ xDWORD CollideSphereTriangle (const xSphere &sp1, const xPoint3 &P_A,
     {
         xPoint3 P_tri_center = (P_A + P_B + P_C) * 0.3333333333333333f;
         NW_closest = (P_closest - P_tri_center).normalize();
-        return cset.Add(CollisionInfo(sp1, figure2, 0, ID_tri,
+        return cset.Add(CollisionInfo(body1, body2, sp1, figure2, 0, ID_tri,
                                       NW_closest * sp1.S_radius,
                                       sp1.P_center - NW_closest * sp1.S_radius,
                                       P_closest)), 1;
@@ -76,14 +77,15 @@ xDWORD CollideSphereTriangle (const xSphere &sp1, const xPoint3 &P_A,
         else
         if (ID_edge == 3)
             NW_closest = xVector3::CrossProduct(P_C - P_B, N_tri).normalize();
-        return cset.Add(CollisionInfo(sp1, figure2, 0, ID_tri,
+        return cset.Add(CollisionInfo(body1, body2, sp1, figure2, 0, ID_tri,
                                       NW_closest * sp1.S_radius,
                                       sp1.P_center - NW_closest * sp1.S_radius,
                                       P_closest)), 1;
     }
 }
 
-inline xDWORD CollideSphereTriangle (const xSphere &sp1, const xTriangle &tr2, CollisionSet &cset)
+inline xDWORD CollideSphereTriangle (const xSphere &sp1, const xTriangle &tr2,
+                                     IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
-    return CollideSphereTriangle(sp1, tr2.P_A, tr2.P_B, tr2.P_C, tr2, 0, cset);
+    return CollideSphereTriangle(sp1, tr2.P_A, tr2.P_B, tr2.P_C, body1, body2, tr2, 0, cset);
 }

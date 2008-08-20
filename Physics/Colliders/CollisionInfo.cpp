@@ -23,6 +23,10 @@ void CollisionPoint :: SetBoneWeights()
     W_vert[0] = 1.f - W_vert[0] * W_scale;
     W_vert[1] = 1.f - W_vert[1] * W_scale;
     W_vert[2] = 1.f - W_vert[2] * W_scale;
+    W_scale = 1.f / (W_vert[0] + W_vert[1] + W_vert[2]);
+    W_vert[0] *= W_scale;
+    W_vert[1] *= W_scale;
+    W_vert[2] *= W_scale;
 
     for (int i = 0; i < 3; ++i)
     {

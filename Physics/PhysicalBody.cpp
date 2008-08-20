@@ -34,10 +34,15 @@ void PhysicalBody :: FrameUpdate(xFLOAT T_time)
 
             xPoint3 P_mean_support; P_mean_support.zero();
             xFLOAT  W_sum = 0.f;
+            xFLOAT  W_colCount_Inv = 1.f / Collisions.size();
 
             for (; iter_cur != iter_end; ++iter_cur)
             {
-                xFLOAT W_cos = xVector3::DotProduct(iter_cur->V_response.normalize(), NW_velocity_new);
+                iter_cur->W_fix *= W_colCount_Inv;
+                ApplyFix(*iter_cur);
+
+                xVector3 N_reaction = xVector3::Normalize(iter_cur->V_reaction);
+                xFLOAT W_cos = xVector3::DotProduct(N_reaction, NW_velocity_new);
                 if (W_cos < 0.f)
                 {
                     W_sum += W_cos;
@@ -48,7 +53,7 @@ void PhysicalBody :: FrameUpdate(xFLOAT T_time)
             {
                 P_mean_support /= W_sum;
                 W_sum /= Collisions.size();
-                ApplyAcceleration(NW_velocity_new * W_sum, T_time, CollisionPoint(P_mean_support));
+                ApplyAcceleration(NW_velocity_new * W_sum, T_time, CollisionPoint(NULL, P_mean_support));
             }
         }
     }

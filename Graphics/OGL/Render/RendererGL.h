@@ -31,8 +31,6 @@ class RendererGL : public Renderer
 
     virtual void RenderSkeletonSelection ( xModel &model, xModelInstance &instance, bool selectConstraint = false );
 
-    virtual void RenderBVH               ( const Math::Figures::xBVHierarchy &bvh, int I_level = 0 );
-
     virtual void RenderShadowVolume      ( xModel &model, xModelInstance &instance,
                                            xLight &light, xFieldOfView &FOV );
     virtual void RenderShadowMap         ( xModel &model, xModelInstance &instance,
@@ -81,6 +79,10 @@ class RendererGL : public Renderer
 
     static void InitVBO (xElement *elem);
     static void SetMaterial(xColor color, xMaterial *mat, bool toggleShader = true);
+
+  protected:
+    virtual void RenderBVHExt            ( Math::Figures::xBVHierarchy &bvh, const xMatrix &MX_LocalToWorld, xBYTE I_level,
+                                           xBYTE &ID, xBYTE ID_selected = xBYTE_MAX, bool FL_selection = false);
 
   private:
     void InitTextures(xModel &model);

@@ -149,7 +149,8 @@ void HitPointsCapsuleBoxO(const xBoxO    &bo2,
     */
 }
 
-xDWORD CollideCapsuleBoxO(const xCapsule &cp1, const xBoxO &bo2, CollisionSet &cset)
+xDWORD CollideCapsuleBoxO(const xCapsule &cp1, const xBoxO &bo2,
+                          IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
     AxisSpans spans[8];
     if (AxisSpans::AxisNotOverlap(bo2, cp1, spans[0].init(bo2.N_axis[0]), 0) ||
@@ -215,7 +216,7 @@ xDWORD CollideCapsuleBoxO(const xCapsule &cp1, const xBoxO &bo2, CollisionSet &c
         }
 
     for (int i = 0; i < I_hits; ++i)
-        cset.Add(CollisionInfo(cp1, bo2, NW_fix, P_hits[i], P_hits[i]+NW_fix));
+        cset.Add(CollisionInfo(body1, body2, cp1, bo2, NW_fix, P_hits[i], P_hits[i]+NW_fix));
 
     return I_hits;
 }

@@ -33,7 +33,8 @@ bool   TestSphereBoxO (const xSphere &sp1, const xBoxO &bo2)
     return true;
 }
 
-xDWORD CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2, CollisionSet &cset)
+xDWORD CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2,
+                         IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
     // Intersection test
     xFLOAT   S_radius_Sqr = sp1.S_radius * sp1.S_radius,
@@ -82,7 +83,7 @@ xDWORD CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2, CollisionSet &cse
 
         S_distance = sqrt(S_distance);
         N_fix /= S_distance;
-        cset.Add(CollisionInfo(sp1, bo2,
+        cset.Add(CollisionInfo(body1, body2, sp1, bo2,
                                N_fix * (sp1.S_radius - S_distance),
                                sp1.P_center - N_fix * sp1.S_radius,
                                P_collision));
@@ -120,7 +121,7 @@ xDWORD CollideSphereBoxO(const xSphere &sp1, const xBoxO &bo2, CollisionSet &cse
             }
         }
 
-        cset.Add(CollisionInfo(sp1, bo2,
+        cset.Add(CollisionInfo(body1, body2, sp1, bo2,
                                N_fix * (sp1.S_radius + S_fix),
                                sp1.P_center - N_fix * sp1.S_radius,
                                sp1.P_center + N_fix * S_fix));

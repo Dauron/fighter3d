@@ -30,7 +30,8 @@ bool   TestBoxOMesh (const xBoxO &bo1, const xMesh &ms2)
     return false;
 }
 
-xDWORD CollideBoxOMesh (const xBoxO &bo1, const xMesh &ms2, CollisionSet &cset)
+xDWORD CollideBoxOMesh (const xBoxO &bo1, const xMesh &ms2,
+                        IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
     xDWORD *L_FaceIndex_Itr = ms2.L_FaceIndices;
     xDWORD  I_cols = 0;
@@ -42,6 +43,7 @@ xDWORD CollideBoxOMesh (const xBoxO &bo1, const xMesh &ms2, CollisionSet &cset)
                                           ms2.MeshData->GetVertexTransf(Face[0]),
                                           ms2.MeshData->GetVertexTransf(Face[1]),
                                           ms2.MeshData->GetVertexTransf(Face[2]),
+                                          body1, body2,
                                           ms2, *L_FaceIndex_Itr, cset);
         }
     else
@@ -52,6 +54,7 @@ xDWORD CollideBoxOMesh (const xBoxO &bo1, const xMesh &ms2, CollisionSet &cset)
                                           ms2.MeshData->GetVertex(Face[0]),
                                           ms2.MeshData->GetVertex(Face[1]),
                                           ms2.MeshData->GetVertex(Face[2]),
+                                          body1, body2,
                                           ms2, *L_FaceIndex_Itr, cset);
         }
     return I_cols;

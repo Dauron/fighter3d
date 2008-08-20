@@ -52,8 +52,32 @@ namespace Math { namespace Figures {
             return POINT_NearCorner;
         }
 
+        virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max )
+        {
+            P_min = P_max = P_center;
+            xFLOAT s = fabs(N_top.x) * S_top + S_radius;
+            P_min.x -= s; P_max.x += s;
+            s = fabs(N_top.y) * S_top + S_radius;
+            P_min.y -= s; P_max.y += s;
+            s = fabs(N_top.z) * S_top + S_radius;
+            P_min.z -= s; P_max.z += s;
+        }
         virtual xFLOAT S_Radius_Sqr_Get() { return (S_top+S_radius)*(S_top+S_radius); }
         virtual xFLOAT W_Volume_Get()     { return (1.333333333333333f * S_radius + 2.f * S_top ) * PI * S_radius * S_radius; }
+
+    protected:
+        virtual void loadInstance( FILE *file )
+        {
+            fread(&S_radius, sizeof(S_radius), 1, file);
+            fread(&S_top, sizeof(S_top), 1, file);
+            fread(&N_top, sizeof(N_top), 1, file);
+        }
+        virtual void saveInstance( FILE *file )
+        {
+            fwrite(&S_radius, sizeof(S_radius), 1, file);
+            fwrite(&S_top, sizeof(S_top), 1, file);
+            fwrite(&N_top, sizeof(N_top), 1, file);
+        }
     };
 
 } } // namespace Math.Figures

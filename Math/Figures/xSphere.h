@@ -27,8 +27,25 @@ namespace Math { namespace Figures {
             return res;
         }
 
+        virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max )
+        {
+            P_min = P_max = P_center;
+            P_min.x -= S_radius; P_max.x += S_radius;
+            P_min.y -= S_radius; P_max.y += S_radius;
+            P_min.z -= S_radius; P_max.z += S_radius;
+        }
         virtual xFLOAT S_Radius_Sqr_Get() { return S_radius*S_radius; }
         virtual xFLOAT W_Volume_Get()     { return 1.333333333333333f * PI * S_radius * S_radius * S_radius; }
+
+    protected:
+        virtual void loadInstance( FILE *file )
+        {
+            fread(&S_radius, sizeof(S_radius), 1, file);
+        }
+        virtual void saveInstance( FILE *file )
+        {
+            fwrite(&S_radius, sizeof(S_radius), 1, file);
+        }
     };
 
 } } // namespace Math.Figures

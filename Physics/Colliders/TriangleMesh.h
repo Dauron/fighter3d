@@ -36,6 +36,7 @@ inline bool   TestTriangleMesh (const xTriangle &tr1, const xMesh &ms2)
 }
 
 xDWORD CollideTriangleMesh (const xPoint3 &P_A, const xPoint3 &P_B, const xPoint3 &P_C, const xMesh &ms2,
+                            IPhysicalBody *body1, IPhysicalBody *body2,
                             const xIFigure3d &figure1, xDWORD ID_tri_1, CollisionSet &cset)
 {
     xDWORD *L_FaceIndex_Itr = ms2.L_FaceIndices;
@@ -48,6 +49,7 @@ xDWORD CollideTriangleMesh (const xPoint3 &P_A, const xPoint3 &P_B, const xPoint
                                               ms2.MeshData->GetVertexTransf(Face[0]),
                                               ms2.MeshData->GetVertexTransf(Face[1]),
                                               ms2.MeshData->GetVertexTransf(Face[2]),
+                                              body1, body2,
                                               figure1, ID_tri_1, ms2, *L_FaceIndex_Itr, cset);
         }
     else
@@ -58,12 +60,14 @@ xDWORD CollideTriangleMesh (const xPoint3 &P_A, const xPoint3 &P_B, const xPoint
                                               ms2.MeshData->GetVertex(Face[0]),
                                               ms2.MeshData->GetVertex(Face[1]),
                                               ms2.MeshData->GetVertex(Face[2]),
+                                              body1, body2,
                                               figure1, ID_tri_1, ms2, *L_FaceIndex_Itr, cset);
         }
     return I_cols;
 }
 
-inline xDWORD CollideTriangleMesh (const xTriangle &tr1, const xMesh &ms2, CollisionSet &cset)
+inline xDWORD CollideTriangleMesh (const xTriangle &tr1, const xMesh &ms2,
+                                   IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
-    return CollideTriangleMesh(tr1.P_A, tr1.P_B, tr1.P_C, ms2, tr1, 0, cset);
+    return CollideTriangleMesh(tr1.P_A, tr1.P_B, tr1.P_C, ms2, body1, body2, tr1, 0, cset);
 }

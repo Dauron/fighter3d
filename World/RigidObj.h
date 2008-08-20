@@ -2,9 +2,9 @@
 #define __incl_ModelObj_h
 
 #include "../Physics/PhysicalBody.h"
+#include "../Math/Figures/xSphere.h"
 
 #include "../Models/ModelMgr.h"
-#include "../Physics/CollisionInfo.h"
 #include "../Physics/Verlet/VerletSolver.h"
 #include "../Graphics/OGL/Render/RendererGL.h"
 
@@ -19,11 +19,11 @@ public:
         Model_Verlet
     } Type;
 
-    bool           FL_shadowcaster;
+    bool FL_shadowcaster;
+    bool FL_customBVH;
 
-    VConstraintCollisionVector collisionConstraints;
-    VerletSystem               verletSystem;
-    Math::Figures::xMeshData  *MeshData;
+    VConstraintCollisionVector  collisionConstraints;
+    Math::Figures::xMeshData   *MeshData;
 
     xMatrix        MX_WorldToLocal;
     xMatrix        MX_LocalToWorld_prev;
@@ -32,14 +32,9 @@ public:
     xModelInstance modelInstanceGr;
     xModelInstance modelInstancePh;
 
-    //xVector3       cp, com, cno, cro;
 protected:
     bool           forceNotStatic;
     xShadowMap     smap;
-
-    xCollisionHierarchyBoundsRoot *collisionInfo;
-    xWORD                          collisionInfoC;
-    std::vector<xDWORD> idx;
 
     /******** CONSTRUCTORS : BEGIN ********/
 public:
@@ -56,49 +51,30 @@ public:
         renderer.InvalidateGraphics(*xModelPh,modelInstancePh);
         smap.texId = 0;
     }
-    virtual void FrameEnd   () {
-        if (IsModified()) UpdateMatrices();
-        PhysicalBody::FrameEnd();
-    }
     virtual void Finalize   ();
 
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL);
     /********* LIFETIME : END *********/
 
-    /******** UPDATE : BEGIN ********/
+    /******** PHYSICS : BEGIN ********/
 public:
-    virtual void PreUpdate(float deltaTime);
-    virtual void Update(float deltaTime);
     void UpdateMatrices()
     {
         MX_LocalToWorld_prev = MX_LocalToWorld_Get();
         xMatrix::Invert(MX_LocalToWorld_Get(), MX_WorldToLocal);
     }
-    /********* UPDATE : END *********/
-
-    /******** PHYSICS : BEGIN ********/
-public:
-    xCollisionHierarchyBoundsRoot  *GetCollisionInfo();
-    xWORD                           GetCollisionInfoC() { return collisionInfoC; }
-    void                            CollisionInfo_ReFill ();
-    std::vector<CollisionWithModel> CollidedModels;
-protected:
-    void CollisionInfo_Fill   (xElement *elem, xCollisionHierarchyBoundsRoot *ci, bool firstTime);
-    void CollisionInfo_Free   (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
-    void CollisionInfo_Render (xElement *elem, xCollisionHierarchyBoundsRoot *ci);
-
-    virtual void LocationChanged() {
-        xMatrix::Invert(MX_LocalToWorld_Get(), MX_WorldToLocal);
-        UpdateVerletSystem();
-        verletSystem.SwapPositions();
-        UpdateVerletSystem();
-        memset(verletSystem.A_forces, 0, sizeof(xVector3)*verletSystem.I_particles);
-        memset(verletSystem.NW_shift, 0, sizeof(xVector3)*verletSystem.I_particles);
+    void UpdateCustomBVH();
+    void UpdateGeneratedBVH();
+    virtual void FrameEnd   () {
+        if (IsModified()) UpdateMatrices();
+        PhysicalBody::FrameEnd();
     }
-
-    virtual void CreateVerletSystem();
-    virtual void DestroyVerletSystem();
-    virtual void UpdateVerletSystem();
+protected:
+    virtual void LocationChanged() {
+        PhysicalBody::LocationChanged();
+        UpdateMatrices();
+        UpdateCustomBVH();
+    }
     /********* PHYSICS : END *********/
 
     /******** RENDERING : BEGIN ********/

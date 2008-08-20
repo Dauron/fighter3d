@@ -225,6 +225,7 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
 {
     xModel *xmodel = new xModel();
 
+    xmodel->BVHierarchy = NULL;
     xmodel->L_material = 0;
     xmodel->I_material = 0;
     xmodel->FL_textures_loaded = false;
@@ -232,7 +233,7 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
     xmodel->FL_opaque = false;
     xmodel->Spine.I_bones = 0;
     xmodel->Spine.L_bones = NULL;
-    xmodel->FL_save_bvh = true;
+    xmodel->FL_save_cinfo = true;
     xmodel->FileName = 0;
 
     xMaterial *lastm = NULL;

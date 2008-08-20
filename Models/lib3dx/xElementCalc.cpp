@@ -323,7 +323,8 @@ void xElement :: FillShadowEdges ()
 using namespace Math::Figures;
 
 xBoxA xElement :: ReFillBVHNode(xBVHierarchy        &BVH_node,
-                                xMeshData           &MeshData)
+                                xMeshData           &MeshData,
+                                const xMatrix &MX_LocalToWorld)
 {
     xBoxA boxA;
     if (BVH_node.I_items)
@@ -335,7 +336,7 @@ xBoxA xElement :: ReFillBVHNode(xBVHierarchy        &BVH_node,
         xBVHierarchy *BVH_kid = BVH_node.L_items;
         for (int i = BVH_node.I_items; i; --i, ++BVH_kid)
         {
-            boxAc = ReFillBVHNode(*BVH_kid, MeshData);
+            boxAc = ReFillBVHNode(*BVH_kid, MeshData, MX_LocalToWorld);
             if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
             if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
             if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
@@ -345,7 +346,7 @@ xBoxA xElement :: ReFillBVHNode(xBVHierarchy        &BVH_node,
         }
 
         xVector3 NW_extends = (boxA.P_max - boxA.P_min) * 0.5f;
-        xBoxO &boxO = *(xBoxO*) BVH_node.Figure;
+        xBoxO &boxO = *(xBoxO*) BVH_node.GetTransformed(MX_LocalToWorld);
         boxO.P_center = boxA.P_min + NW_extends;
         boxO.S_side  = NW_extends.x;
         boxO.S_front = NW_extends.y;
@@ -353,12 +354,12 @@ xBoxA xElement :: ReFillBVHNode(xBVHierarchy        &BVH_node,
     }
     else
     {
-        xMesh &mesh = *(xMesh*) BVH_node.Figure;
+        xMesh &mesh = *(xMesh*) BVH_node.GetTransformed(MX_LocalToWorld);
 
         boxA.P_max = boxA.P_min = MeshData.GetVertexTransf(mesh.L_VertexIndices[0]);
 
-        xDWORD *MV_iter = mesh.L_VertexIndices;
-        for (xDWORD i = mesh.I_VertexIndices; i; --i, ++MV_iter)
+        xDWORD *MV_iter = mesh.L_VertexIndices + 1;
+        for (xDWORD i = mesh.I_VertexIndices-1; i; --i, ++MV_iter)
         {
             xPoint3 &P_tmp = MeshData.GetVertexTransf(*MV_iter);
             if (P_tmp.x < boxA.P_min.x) boxA.P_min.x = P_tmp.x;
@@ -376,7 +377,8 @@ xBoxA xElement :: ReFillBVHNode(xBVHierarchy        &BVH_node,
     return boxA;
 }
 
-xBoxA xElement :: ReFillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData  )
+xBoxA xElement :: ReFillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData,
+                               const xMatrix &MX_LocalToWorld )
 {
     xBVHierarchy &BVH_node  = L_BVH[ID];
     xMeshData    &Mesh_node = MeshData[ID];
@@ -390,7 +392,7 @@ xBoxA xElement :: ReFillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData  )
         xBVHierarchy *BVH_kid = BVH_node.L_items;
         for (int i = collisionData.I_kids; i; --i, ++BVH_kid)
         {
-            boxAc = ReFillBVHNode(*BVH_kid, Mesh_node);
+            boxAc = ReFillBVHNode(*BVH_kid, Mesh_node, MX_LocalToWorld);
             if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
             if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
             if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
@@ -400,7 +402,7 @@ xBoxA xElement :: ReFillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData  )
         }
 
         xVector3 NW_extends = (boxA.P_max - boxA.P_min) * 0.5f;
-        xBoxO &boxO = *(xBoxO*) BVH_node.Figure;
+        xBoxO &boxO = *(xBoxO*) BVH_node.GetTransformed(MX_LocalToWorld);
         boxO.P_center = boxA.P_min + NW_extends;
         boxO.S_side  = NW_extends.x;
         boxO.S_front = NW_extends.y;
@@ -413,7 +415,7 @@ xBoxA xElement :: ReFillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData  )
     xElement *elem = L_kids;
     for (; elem; elem = elem->Next)
     {
-        boxAc = elem->ReFillBVH( L_BVH, MeshData );
+        boxAc = elem->ReFillBVH( L_BVH, MeshData, MX_LocalToWorld );
         if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
         if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
         if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;

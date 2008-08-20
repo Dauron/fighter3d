@@ -47,7 +47,7 @@ struct xLight
     bool isVisible(xFieldOfView *FOV) const
     {
         if (type == xLight_INFINITE || radius < 0) return true;
-        return FOV->CheckBox(boundingPoints);
+        return true; //FOV->CheckBox(boundingPoints);
     }
 
     bool elementReceivesLight(const xVector3 &bsCenter, float bsRadius) const;

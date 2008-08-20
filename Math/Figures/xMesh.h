@@ -14,6 +14,20 @@ namespace Math { namespace Figures {
         xMatrix  MX_LocalToWorld;
         xMatrix  MX_MeshToLocal;
         xMatrix *MX_Bones;
+        xBYTE    I_Bones;
+
+        xMatrix  MX_MeshToWorld;
+        xMatrix *MX_BonesToWorld;
+
+        void CalculateLocalBones(const xMatrix &mx_LocalToWorld)
+        {
+            if (!MX_BonesToWorld) MX_BonesToWorld = new xMatrix[I_Bones];
+            MX_LocalToWorld = mx_LocalToWorld;
+            MX_MeshToWorld = MX_MeshToLocal * mx_LocalToWorld;
+            if (MX_Bones)
+                for (int i = 0; i < I_Bones; ++i)
+                    MX_BonesToWorld[i] = xMatrix::Transpose(MX_Bones[i]) * MX_MeshToWorld;
+        }
 
         xBYTE   *L_FaceData;
         xDWORD   I_FaceStride;
@@ -47,6 +61,7 @@ namespace Math { namespace Figures {
 
         xPoint3 *L_VertexData_Transf;
         bool    *FL_VertexIsTransf;
+        bool     FL_MeshIsTransf;
 
         xPoint3 &GetVertexTransf(xDWORD I_VertexIndex)
         {
@@ -70,7 +85,13 @@ namespace Math { namespace Figures {
         xBoxA BoundingBox() const;
         virtual void Transform(const xMatrix  &MX_LocalToWorld);
 
-        xMeshData() : L_VertexData_Transf(NULL), FL_VertexIsTransf(NULL), L_BoneData(NULL), MX_Bones(NULL)
+        xMeshData()
+            : L_VertexData_Transf(NULL)
+            , FL_VertexIsTransf(NULL)
+            , FL_MeshIsTransf(false)
+            , L_BoneData(NULL)
+            , MX_Bones(NULL)
+            , MX_BonesToWorld(NULL)
         { MX_LocalToWorld.identity(); }
     };
 
@@ -88,6 +109,8 @@ namespace Math { namespace Figures {
 
         virtual void free(bool transformationOnly = false)
         {
+            MeshData->FL_MeshIsTransf = false;
+
             if (transformationOnly)
             {
                 memset(MeshData->FL_VertexIsTransf, 0, sizeof(bool) * MeshData->I_VertexCount);
@@ -125,6 +148,29 @@ namespace Math { namespace Figures {
 
         virtual xIFigure3d *Transform(const xMatrix  &MX_LocalToWorld);
 
+        virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max )
+        {
+            assert ( MeshData->L_VertexData_Transf );
+
+            xDWORD *L_VertexIndex_Itr = L_VertexIndices;
+
+            P_min = P_max = MeshData->L_VertexData_Transf[*L_VertexIndex_Itr];
+            ++L_VertexIndex_Itr;
+
+            for (int i = I_VertexIndices-1; i; --i, ++L_VertexIndex_Itr)
+            {
+                xPoint3 &P_a = MeshData->L_VertexData_Transf[*L_VertexIndex_Itr];
+                if (P_a.x < P_min.x) { P_min.x = P_a.x; }
+                else
+                if (P_a.x > P_max.x) { P_max.x = P_a.x; }
+                if (P_a.y < P_min.y) { P_min.y = P_a.y; }
+                else
+                if (P_a.y > P_max.y) { P_max.y = P_a.y; }
+                if (P_a.z < P_min.z) { P_min.z = P_a.z; }
+                else
+                if (P_a.z > P_max.z) { P_max.z = P_a.z; }
+            }
+        }
         virtual xFLOAT S_Radius_Sqr_Get() { return MeshData->S_radius*MeshData->S_radius; }
         virtual xFLOAT W_Volume_Get()     { return MeshData->NW_dims.x * MeshData->NW_dims.y * MeshData->NW_dims.z * 8.f; }
     };

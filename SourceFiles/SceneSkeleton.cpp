@@ -36,10 +36,11 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
 
     Buttons.resize(emLast);
     Buttons[emMain].push_back(GLButton("Create Skeleton",  10, 2, 145, 15, IC_BE_ModeSkeletize));
-    Buttons[emMain].push_back(GLButton("Skinning",        160, 2,  80, 15, IC_BE_ModeSkin));
-    Buttons[emMain].push_back(GLButton("Animating",       245, 2,  90, 15, IC_BE_ModeAnimate));
-    Buttons[emMain].push_back(GLButton("Graph/Phys",      340, 2, 100, 15, IC_BE_Select));
-    Buttons[emMain].push_back(GLButton("Save",            445, 2,  45, 15, IC_BE_Save));
+    Buttons[emMain].push_back(GLButton("Edit BVH",        160, 2,  80, 15, IC_BE_ModeBVH));
+    Buttons[emMain].push_back(GLButton("Skinning",        245, 2,  80, 15, IC_BE_ModeSkin));
+    Buttons[emMain].push_back(GLButton("Animating",       330, 2,  90, 15, IC_BE_ModeAnimate));
+    Buttons[emMain].push_back(GLButton("Graph/Phys",      425, 2, 100, 15, IC_BE_Select));
+    Buttons[emMain].push_back(GLButton("Save",            530, 2,  45, 15, IC_BE_Save));
 
     Buttons[emCreateBone].push_back(GLButton("Select", 100, 2, 65, 15, IC_BE_Select, true, true));
     Buttons[emCreateBone].push_back(GLButton("Create", 170, 2, 65, 15, IC_BE_Create, true));
@@ -53,6 +54,14 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
     Buttons[emCreateConstraint_Type].push_back(GLButton("Const",  285, 2, 55, 15, IC_BE_CreateConstrEql));
     Buttons[emCreateConstraint_Type].push_back(GLButton("Ang",    345, 2, 35, 15, IC_BE_CreateConstrAng));
     Buttons[emCreateConstraint_Type].push_back(GLButton("Weight", 385, 2, 65, 15, IC_BE_CreateConstrWeight));
+
+    Buttons[emEditBVH].push_back(GLButton("Create", 120, 2, 65, 15, IC_BE_Create));
+    Buttons[emEditBVH].push_back(GLButton("Edit",   190, 2, 45, 15, IC_BE_Edit, true, true));
+    Buttons[emEditBVH].push_back(GLButton("Delete", 240, 2, 65, 15, IC_BE_Delete, true));
+
+    Buttons[emCreateBVH].push_back(GLButton("Sphere",  120, 2, 65, 15, IC_BE_CreateSphere));
+    Buttons[emCreateBVH].push_back(GLButton("Capsule", 190, 2, 75, 15, IC_BE_CreateCapsule));
+    Buttons[emCreateBVH].push_back(GLButton("Box",     270, 2, 35, 15, IC_BE_CreateBox));
 
     Buttons[emSelectAnimation].push_back(GLButton("New",  110, 2, 35, 15, IC_BE_Create));
     Buttons[emSelectAnimation].push_back(GLButton("Load", 150, 2, 45, 15, IC_BE_Select));
@@ -292,8 +301,15 @@ bool SceneSkeleton::FrameRender()
         render.RenderVertices(model, modelInstance, Renderer::smNone, Selection.ElementId, &Selection.Vertices);
     if (State.ShowBonesAlways || EditMode == emSelectBone || EditMode == emCreateBone ||
         EditMode == emCreateConstraint_Node || EditMode == emCreateConstraint_Params ||
-        EditMode == emInputWght  || (EditMode == emAnimateBones && !State.HideBonesOnAnim))
+        EditMode == emInputWght  || (EditMode == emAnimateBones && !State.HideBonesOnAnim) ||
+        EditMode == emSelectBVHBone || EditMode == emEditVolume)
         render.RenderSkeleton(model, modelInstance, Selection.Bone ? Selection.Bone->ID : xWORD_MAX);
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if ((EditMode == emEditBVH || EditMode == emEditVolume || EditMode == emEditAnimation) && model.BVHierarchy)
+        render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), 0, Selection.BVHNodeID);
 
     GLShader::Suspend();
 
@@ -301,7 +317,6 @@ bool SceneSkeleton::FrameRender()
 
     //////////////////////////// Overlay
 
-    glDisable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     // Set text output projection
@@ -396,6 +411,14 @@ bool SceneSkeleton::FrameRender()
             pFont->PrintF(5.f, 25, 0.f, "Length: (%2.2f) %s", Constraint.S_length, InputState.String.c_str());
         pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | Input parameters of the constraint");
     }
+    else if (EditMode == emEditBVH)
+        pFont->PrintF(5.f, 5.f, 0.f, "BVH Editor |");
+    else if (EditMode == emSelectBVHBone)
+        pFont->PrintF(5.f, 5.f, 0.f, "BVH Editor | Click: Select Bone");
+    else if (EditMode == emCreateBVH)
+        pFont->PrintF(5.f, 5.f, 0.f, "BVH Editor |");
+    else if (EditMode == emEditVolume)
+        pFont->PrintF(5.f, 5.f, 0.f, "BVH Editor | Drag: Edit bounding volume");
     else if (EditMode == emSelectElement)
         pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Click: Select Element");
     else if (EditMode == emSelectVertex)
@@ -527,6 +550,40 @@ void SceneSkeleton::RenderProgressBar()
 }
 
 /************************** SELECTIONS *************************************/
+xBYTE SceneSkeleton::GetBVH_Count (xBVHierarchy &bvhNode)
+{
+    xBYTE res = 1;
+
+    for (int i = 0; i < bvhNode.I_items; ++i)
+        res += GetBVH_Count(bvhNode.L_items[i]);
+
+    return res;
+}
+
+xBYTE SceneSkeleton::GetBVH_ID (xBVHierarchy &bvhNode, xBVHierarchy *selected, xBYTE &ID)
+{
+    if (&bvhNode == selected) return ID;
+
+    for (int i = 0; i < bvhNode.I_items; ++i)
+    {
+        xBYTE id = GetBVH_ID(bvhNode.L_items[i], selected, ++ID);
+        if (id != xBYTE_MAX) return id;
+    }
+    return xBYTE_MAX;
+}
+
+xBVHierarchy *SceneSkeleton::GetBVH_byID (xBVHierarchy &bvhNode, xBYTE ID_selected, xBYTE &ID)
+{
+    if (ID == ID_selected) return &bvhNode;
+
+    for (int i = 0; i < bvhNode.I_items; ++i)
+    {
+        xBVHierarchy *bvh = GetBVH_byID(bvhNode.L_items[i], ID_selected, ++ID);
+        if (bvh) return bvh;
+    }
+    return NULL;
+}
+
 void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 {
     xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
@@ -534,11 +591,15 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
     Renderer       &render        = Model.renderer;
 
     if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
-        EditMode == emSelectBone || EditMode == emAnimateBones)
+        EditMode == emSelectBone || EditMode == emAnimateBones ||
+        EditMode == emSelectBVHBone)
         if (EditMode == emCreateBone && State.CurrentAction == IC_BE_DeleteConstr)
             render.RenderSkeletonSelection(model, modelInstance, true);
         else
             render.RenderSkeletonSelection(model, modelInstance, false);
+    else
+    if (EditMode == emEditBVH && model.BVHierarchy)
+        render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), 0, 0, true);
     else
     if (EditMode == emSelectElement)
         render.RenderVertices(model, modelInstance, Renderer::smElement);
@@ -548,18 +609,24 @@ void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
 }
 unsigned int SceneSkeleton::CountSelectable()
 {
+    xModel &model = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
+
     if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
-        EditMode == emSelectBone || EditMode == emAnimateBones)
+        EditMode == emSelectBone || EditMode == emAnimateBones ||
+        EditMode == emSelectBVHBone)
         if (EditMode == emCreateBone && State.CurrentAction == IC_BE_DeleteConstr)
-            return Model.GetModelGr()->Spine.I_constraints;
+            return model.Spine.I_constraints;
         else
-            return Model.GetModelGr()->Spine.I_bones;
+            return model.Spine.I_bones;
+    else
+    if (EditMode == emEditBVH)
+        if (model.BVHierarchy)
+            return GetBVH_Count(*model.BVHierarchy);
+        else
+            return 0;
     else
     if (EditMode == emSelectElement)
-        if (State.DisplayPhysical)
-            return Model.GetModelPh()->I_elements;
-        else
-            return Model.GetModelGr()->I_elements;
+            return model.I_elements;
     else
     if (EditMode == emSelectVertex)
         return Selection.Element->I_vertices;
@@ -587,12 +654,36 @@ xBone *SceneSkeleton::SelectBone(int X, int Y)
 {
     std::vector<xDWORD> *sel = SelectCommon(X, Y);
 
-    if (sel && sel->size()) {
-        GLuint id = sel->back();
+    if (sel)
+    {
+        if (sel->size()) {
+            GLuint id = sel->back();
+            delete sel;
+            return Model.GetModelGr()->Spine.L_bones + id;
+        }
         delete sel;
-        return Model.GetModelGr()->Spine.L_bones + id;
     }
-    delete sel;
+    return NULL;
+}
+
+xBVHierarchy *SceneSkeleton::SelectBVH(int X, int Y)
+{
+    std::vector<xDWORD> *sel = SelectCommon(X, Y);
+
+    if (sel)
+    {
+        if (sel->size()) {
+            GLuint id = sel->back();
+            delete sel;
+            if (Model.GetModelGr()->BVHierarchy)
+            {
+                xBYTE cid = 0;
+                return GetBVH_byID(*Model.GetModelGr()->BVHierarchy, id, cid);
+            }
+            return NULL;
+        }
+        delete sel;
+    }
     return NULL;
 }
 
@@ -600,11 +691,14 @@ xWORD SceneSkeleton::SelectElement(int X, int Y)
 {
     std::vector<xDWORD> *sel = SelectCommon(X, Y);
 
-    if (sel && sel->size()) {
-        GLuint id = sel->back();
+    if (sel)
+    {
+        if (sel->size()) {
+            GLuint id = sel->back();
+            delete sel;
+            return (xWORD)id;
+        }
         delete sel;
-        return (xWORD)id;
     }
-    delete sel;
     return xWORD_MAX;
 }

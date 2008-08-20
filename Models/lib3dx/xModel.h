@@ -18,9 +18,11 @@ struct xModel {
     xSkeleton  Spine;
 
     bool       FL_textures_loaded; // Are textures handles loaded from the TextureManager
-    bool       FL_save_bvh;        // Save bounding volumes hierarchy?
+    bool       FL_save_cinfo;      // Save collision info?
     bool       FL_transparent;     // Are there any transparent faces?
     bool       FL_opaque;          // Are there any opaque faces?
+
+    xBVHierarchy *BVHierarchy;
 
     void Free();
     void BoneDelete( xBYTE ID_bone );
@@ -28,7 +30,7 @@ struct xModel {
     void SkeletonReset();
 
     void CreateBVH(Math::Figures::xBVHierarchy &BVH_node, Math::Figures::xMeshData *&MeshData);
-    void ReFillBVH(Math::Figures::xBVHierarchy &BVH_node, Math::Figures::xMeshData *&MeshData);
+    void ReFillBVH(Math::Figures::xBVHierarchy &BVH_node, Math::Figures::xMeshData *&MeshData, const xMatrix &MX_LocalToWorld );
 
     static xModel *Load( const char *fileName, bool FL_create_CollisionInfo = true );
            void    Save();

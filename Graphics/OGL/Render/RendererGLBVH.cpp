@@ -204,58 +204,58 @@ void RenderMesh(const xMesh &object)
 
 // BVH
 
-int counter = 0;
-
-void RendererGL :: RenderBVH ( const xBVHierarchy &bvh, int I_level )
+void RendererGL :: RenderBVHExt ( xBVHierarchy &bvh, const xMatrix &MX_LocalToWorld,
+                                  xBYTE I_level, xBYTE &ID, xBYTE ID_selected, bool FL_selection )
 {
-    int hit = 0;
-    int prevCounter = counter;
-    if (counter != hit) ++counter;
-
     if (I_level == 0)
     {
         glPushMatrix();
-        glMultMatrixf(& bvh.MX_LocalToWorld_Get().x0);
-        counter = 0;
+        //glMultMatrixf(& bvh.MX_LocalToWorld_Get().x0);
     }
     else
     if (I_level == 1)
     {
         glPushMatrix();
-        glMultMatrixf(& bvh.MX_RawToLocal_Get().x0);
+        //glMultMatrixf(& bvh.MX_RawToLocal_Get().x0);
     }
+
+    if (FL_selection)
+        glLoadName(ID);
+    else
+    if (ID == ID_selected)
+        glColor3f(1.f,1.f,0.f);
+    else
+        glColor3f(1.f,1.f,1.f);
 
     // Sphere
     if (bvh.Figure->Type == xIFigure3d::Sphere)
-    {}//    RenderSphere(*(xSphere*)bvh.Figure);
+        RenderSphere(*(xSphere*)bvh.GetTransformed(MX_LocalToWorld));
     else
 
     // Capsule
     if (bvh.Figure->Type == xIFigure3d::Capsule)
-        RenderCapsule(*(xCapsule*)bvh.Figure);
+        RenderCapsule(*(xCapsule*)bvh.GetTransformed(MX_LocalToWorld));
     else
 
     // BoxO
-    if (bvh.Figure->Type == xIFigure3d::BoxOriented && counter == hit)
-    {}//    RenderBoxO(*(xBoxO*)bvh.Figure, I_level);
+    if (bvh.Figure->Type == xIFigure3d::BoxOriented)
+        RenderBoxO(*(xBoxO*)bvh.GetTransformed(MX_LocalToWorld), I_level);
     else
 
     // Cylinder
     if (bvh.Figure->Type == xIFigure3d::Cylinder)
-        RenderCylinder(*(xCylinder*)bvh.Figure);
+        RenderCylinder(*(xCylinder*)bvh.GetTransformed(MX_LocalToWorld));
     else
 
     // Mesh
-    if (bvh.Figure->Type == xIFigure3d::Mesh && counter == hit)
-        RenderMesh(*(xMesh*)bvh.Figure);
+    if (bvh.Figure->Type == xIFigure3d::Mesh)
+        RenderMesh(*(xMesh*)bvh.GetTransformed(MX_LocalToWorld));
 
     xBVHierarchy *bvh_cur = bvh.L_items,
                  *bvh_end = bvh.L_items + bvh.I_items;
     for (; bvh_cur != bvh_end; ++bvh_cur)
-        RenderBVH ( *bvh_cur, I_level + 1 );
+        RenderBVHExt ( *bvh_cur, MX_LocalToWorld, I_level + 1, ++ID, ID_selected, FL_selection );
 
     if (I_level == 0 || I_level == 1)
         glPopMatrix();
-
-    if (prevCounter+1 == hit) ++counter;
 }

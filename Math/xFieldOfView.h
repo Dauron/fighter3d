@@ -2,6 +2,7 @@
 #define __incl_lib3dx_xFieldOfView_h
 
 #include "xMath.h"
+#include "Figures/xBoxA.h"
 
 struct xFieldOfView
 {
@@ -21,6 +22,8 @@ public:
     xMatrix ViewTransform;
     xPoint3 Corners3D[5];
     xPlane  Planes[5];
+
+    xFieldOfView() : Empty(true) {}
 
     void update()
     {
@@ -75,7 +78,7 @@ public:
 
     bool CheckSphere(const xVector3 &sphereCenter, xFLOAT sphereRadius) const
     {
-        if (Empty) return true;
+        if (Empty || sphereRadius == 0.f) return true;
 
         float dist;
 
@@ -121,9 +124,11 @@ public:
         return true;
     }
 
-    bool CheckBox(const xVector3 boundingPoints[8]) const
+    bool CheckBox(Math::Figures::xBoxA &box, const xMatrix &MX_LtoW) const
     {
-        if (Empty) return true;
+        if (Empty || box.P_min == box.P_max) return true;
+
+        const xVector3 *boundingPoints = box.fillCornersTransformed(MX_LtoW);
 
         xVector3 viewPos[8];
         const xVector3 *iterS;

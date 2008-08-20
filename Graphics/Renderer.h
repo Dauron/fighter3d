@@ -38,8 +38,12 @@ public:
 
     virtual void RenderSkeletonSelection ( xModel &model, xModelInstance &instance, bool selectConstraint = false ) = 0;
 
-    virtual void RenderBVH               ( const Math::Figures::xBVHierarchy &bvh, int I_level = 0 ) = 0;
-
+    void RenderBVH              ( Math::Figures::xBVHierarchy &bvh, const xMatrix &MX_LocalToWorld,
+                                  xBYTE I_level = 0, xBYTE ID_selected = xBYTE_MAX, bool FL_selection = false)
+    {
+        xBYTE ID = 0;
+        RenderBVHExt(bvh, MX_LocalToWorld, I_level, ID, ID_selected, FL_selection);
+    }
 
     virtual void RenderShadowVolume      ( xModel &model, xModelInstance &instance,
                                            xLight &light, xFieldOfView &FOV ) = 0;
@@ -51,6 +55,11 @@ public:
     virtual void InvalidateGraphics(xModel &model, xModelInstance &instance) = 0;
     virtual void FreeGraphics      (xModel &model, xModelInstance &instance, bool freeShared = true) = 0;
     virtual void InvalidateBonePositions(xModelInstance &instance)    = 0;
+
+protected:
+    virtual void RenderBVHExt            ( Math::Figures::xBVHierarchy &bvh, const xMatrix &MX_LocalToWorld,
+                                           xBYTE I_level, xBYTE &ID, xBYTE ID_selected = xBYTE_MAX,
+                                           bool FL_selection = false) = 0;
 };
 
 #endif

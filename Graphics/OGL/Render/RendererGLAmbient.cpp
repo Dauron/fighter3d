@@ -16,7 +16,7 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
     xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
     xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
     if (!FOV.CheckSphere(center, instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox, mtxTrasformation) )
     {
         ++Performance.CulledElements;
         return;
@@ -26,7 +26,7 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
     xColor ambient; ambient.init(0.f,0.f,0.f,1.f);
     xLightVector::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
-        if (iterL->elementReceivesLight(center, instance.bsRadius))
+        if (instance.bsRadius == 0.f || iterL->elementReceivesLight(center, instance.bsRadius))
         {
             ambient.vector3 += iterL->ambient.vector3;
             ++lightsC;
@@ -163,7 +163,7 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
     xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
     xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
     if (!FOV.CheckSphere(center, instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox.fillCornersTransformed(mtxTrasformation)) )
+        !FOV.CheckBox(instance.bbBox, mtxTrasformation) )
     {
         ++Performance.CulledElements;
         return;
@@ -174,7 +174,7 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
     xLightVector::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
     {
-        if (iterL->elementReceivesLight(center, instance.bsRadius))
+        if (instance.bsRadius == 0.f || iterL->elementReceivesLight(center, instance.bsRadius))
         {
             ambient.vector3 += iterL->ambient.vector3;
             ++lightsC;

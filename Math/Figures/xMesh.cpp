@@ -41,20 +41,14 @@ void  xMeshData :: Transform(const xMatrix  &MX_LocalToWorld)
         FL_VertexIsTransf   = new bool[I_VertexCount];
         memset(FL_VertexIsTransf, 0, sizeof(bool) * I_VertexCount);
     }
-
-    if (MX_LocalToWorld != this->MX_LocalToWorld)
-    {
-        memset(FL_VertexIsTransf, 0, sizeof(bool) * I_VertexCount);
-        this->MX_LocalToWorld = MX_LocalToWorld;
-    }
-
-    xMatrix  MX_MeshToWorld = MX_MeshToLocal * MX_LocalToWorld;
+    CalculateLocalBones(MX_LocalToWorld);
+    FL_MeshIsTransf = true;
 
     xBYTE   *L_VertexSource_Itr = L_VertexData;
     xPoint3 *L_VertexDest_Itr   = L_VertexData_Transf;
     bool    *L_FLTransf_Itr     = FL_VertexIsTransf;
 
-    if (!MX_Bones || !L_BoneData)
+    if (!MX_BonesToWorld || !L_BoneData)
         for (int i = I_VertexCount; i; --i, ++L_VertexDest_Itr, L_VertexSource_Itr += I_VertexStride, ++L_FLTransf_Itr)
         {
             const xPoint3 &point = *(xPoint3*)L_VertexSource_Itr;
@@ -90,9 +84,8 @@ void  xMeshData :: Transform(const xMatrix  &MX_LocalToWorld)
             for (int b=0; b<4; ++b)
             {
                 if (wght[b] < 0.001) break;
-                P_vert += MX_Bones[idx[b]].postTransformP(P_src) * (wght[b]*10.f);
+                P_vert += MX_BonesToWorld[idx[b]].preTransformP(P_src) * (wght[b]*10.f);
             }
-            P_vert = MX_MeshToWorld.preTransformP( P_vert );
 
             *L_FLTransf_Itr = true;
         }
@@ -106,15 +99,20 @@ xIFigure3d * xMesh :: Transform(const xMatrix  &MX_LocalToWorld)
         MeshData->L_VertexData_Transf = new xPoint3[MeshData->I_VertexCount];
         MeshData->FL_VertexIsTransf   = new bool[MeshData->I_VertexCount];
         memset(MeshData->FL_VertexIsTransf, 0, sizeof(bool) * MeshData->I_VertexCount);
+        MeshData->FL_MeshIsTransf = false;
     }
 
     if (MX_LocalToWorld != MeshData->MX_LocalToWorld)
     {
         memset(MeshData->FL_VertexIsTransf, 0, sizeof(bool) * MeshData->I_VertexCount);
-        MeshData->MX_LocalToWorld = MX_LocalToWorld;
+        MeshData->CalculateLocalBones(MX_LocalToWorld);
+        MeshData->FL_MeshIsTransf = false;
     }
 
-    xMatrix  MX_MeshToWorld = MeshData->MX_MeshToLocal * MX_LocalToWorld;
+    xMesh *res = new xMesh();
+    //res->P_center = MX_LocalToWorld.preTransformP(res->P_center);
+    *res = *this;
+    if (MeshData->FL_MeshIsTransf) return res;
 
     xDWORD  *L_VertexIndex_Itr     = L_VertexIndices;
     if (!MeshData->MX_Bones || !MeshData->L_BoneData)
@@ -124,7 +122,7 @@ xIFigure3d * xMesh :: Transform(const xMatrix  &MX_LocalToWorld)
 
             if (MeshData->FL_VertexIsTransf[index]) continue;
 
-            MeshData->L_VertexData_Transf[index] = MX_MeshToWorld.preTransformP(
+            MeshData->L_VertexData_Transf[index] = MeshData->MX_MeshToWorld.preTransformP(
                                                        MeshData->GetVertex(index) );
             MeshData->FL_VertexIsTransf[index] = true;
         }
@@ -155,15 +153,11 @@ xIFigure3d * xMesh :: Transform(const xMatrix  &MX_LocalToWorld)
             for (int b=0; b<4; ++b)
             {
                 if (wght[b] < 0.001) break;
-                P_vert += MeshData->MX_Bones[idx[b]].postTransformP(P_src) * (wght[b]*10.f);
+                P_vert += MeshData->MX_BonesToWorld[idx[b]].preTransformP(P_src) * (wght[b]*10.f);
             }
-            P_vert = MX_MeshToWorld.preTransformP( P_vert );
 
             MeshData->FL_VertexIsTransf[index] = true;
         }
 
-    xMesh *res = new xMesh();
-    //res->P_center = MX_LocalToWorld.preTransformP(res->P_center);
-    *res = *this;
     return res;
 }

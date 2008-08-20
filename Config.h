@@ -65,6 +65,8 @@ public:
     float FPSmax;
     float FPSsnap;
 
+    float T_world;
+
     void Reset();
     void NextFrame(float ticks);
 };

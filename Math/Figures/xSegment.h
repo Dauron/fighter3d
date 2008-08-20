@@ -147,6 +147,18 @@ namespace Math { namespace Figures {
             else            P_closest_2 = P_axis_2 + mub * NW_axis_2;
         }
 
+        virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max )
+        {
+            xPoint3 P_a = P_center + N_dir * S_dir;
+            xPoint3 P_b = P_center - N_dir * S_dir;
+
+            if (P_a.x >= P_b.x) { P_min.x = P_b.x; P_max.x = P_a.x; }
+            else                { P_min.x = P_a.x; P_max.x = P_b.x; }
+            if (P_a.y >= P_b.y) { P_min.y = P_b.y; P_max.y = P_a.y; }
+            else                { P_min.y = P_a.y; P_max.y = P_b.y; }
+            if (P_a.z >= P_b.z) { P_min.z = P_b.z; P_max.z = P_a.z; }
+            else                { P_min.z = P_a.z; P_max.z = P_b.z; }
+        }
         virtual xFLOAT S_Radius_Sqr_Get() { return S_dir * 2.f; }
         virtual xFLOAT W_Volume_Get()     { return 0.f; }
     };

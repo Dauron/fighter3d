@@ -575,6 +575,7 @@ bool SceneGame::FrameRender()
             }
             GLShader::Suspend();
 */
+            /*
             GLShader::EnableTexturing(xState_Disable);
             GLShader::SetLightType(xLight_NONE);
             GLShader::Start();
@@ -583,8 +584,9 @@ bool SceneGame::FrameRender()
             glDisable(GL_CULL_FACE);
             glColor3f(1.f, 1.f, 1.f);
             for ( i = begin ; i != end ; ++i )
-                ((RigidObj*)*i)->renderer.RenderBVH((**i).BVHierarchy);
+                ((RigidObj*)*i)->renderer.RenderBVH((**i).BVHierarchy, (**i).MX_LocalToWorld_Get());
             GLShader::Suspend();
+            */
         }
         else
         {

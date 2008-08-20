@@ -1,5 +1,6 @@
 #include "SkeletizedObj.h"
-#include "../Physics/SkeletizedBody.h"
+#include "../AppFramework/System.h"
+#include "../Config.h"
 
 void SkeletizedObj :: ApplyDefaults()
 {
@@ -13,9 +14,9 @@ void SkeletizedObj :: Initialize ()
     RigidObj::Initialize();
     Type = Model_Verlet;
 
-    verletTime = 0.f; // 1000.f;
-    verletWeight = 0.f;
-    verletTimeMaxInv = 0.f; // 0.002f;
+    T_verlet     = 0.f; // 1000.f;
+    W_verlet     = 0.f;
+    T_verlet_Max = 0.f; // 0.002f;
     postHit = 0.f;
 
     I_bones =  GetModelPh()->Spine.I_bones;
@@ -39,11 +40,17 @@ void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filena
 {
     forceNotStatic = true;
     RigidObj::Initialize(gr_filename, ph_filename);
+    CreateVerletSystem();
+    QT_verlet = new xQuaternion[verletSystem.I_particles];
 }
 
 void SkeletizedObj :: Finalize ()
 {
     RigidObj::Finalize();
+
+    DestroyVerletSystem();
+    delete[] QT_verlet;
+
     if (actions.L_actions.size())
     {
         std::vector<xAction>::iterator iterF = actions.L_actions.begin(), iterE = actions.L_actions.end();
@@ -126,11 +133,6 @@ void SkeletizedObj :: UpdateVerletSystem()
     }
 }
 
-void SkeletizedObj :: PreUpdate(float deltaTime)
-{
-    SkeletizedBody::CalculateCollisions(this, deltaTime);
-}
-
 xVector3 SkeletizedObj :: GetVelocity(const Physics::Colliders::CollisionPoint &CP_point) const
 {
     if (CP_point.Figure && CP_point.Figure->Type == xIFigure3d::Mesh)
@@ -167,8 +169,8 @@ void SkeletizedObj :: ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time,
 void SkeletizedObj :: FrameStart()
 {
     RigidObj::FrameStart();
-    BVHierarchy.invalidateTransformation();
     collisionConstraints.clear();
+    memset(verletSystem.FL_attached, 0, sizeof(bool)*verletSystem.I_particles);
 }
 
 xVector3 SkeletizedObj :: MergeCollisions()
@@ -184,23 +186,30 @@ xVector3 SkeletizedObj :: MergeCollisions()
     xDWORD   I_MinY = 0;
     xDWORD   I_MinZ = 0;
     xFLOAT   S_minLen = xFLOAT_HUGE_POSITIVE;
+    xFLOAT   S_maxLen = xFLOAT_HUGE_NEGATIVE;
 
     xVector3 NW_fix; NW_fix.zero();
+    xVector3 V_reaction; V_reaction.zero();
+    xVector3 V_action;   V_action.zero();
+
+    SkeletizedObj *Offender = NULL;
 
     std::vector<Physics::Colliders::CollisionPoint>::iterator
                             iter_cur = Collisions.begin(),
                             iter_end = Collisions.end();
     for (; iter_cur != iter_end; ++iter_cur)
     {
-        if (iter_cur->V_response.lengthSqr() > 0.1f)
-        {
-            verletTime = 5.f;
-            verletTimeMaxInv = 1.f / verletTime;
-        }
+        if (iter_cur->V_action.lengthSqr() > V_action.lengthSqr())
+            V_action =  iter_cur->V_action;
+        V_reaction += iter_cur->V_reaction;
+        if (iter_cur->Offender && ((RigidObj*)iter_cur->Offender)->Type == Model_Verlet)
+            Offender = ((SkeletizedObj*)iter_cur->Offender);
 
-        xVector3 NW_tmp = iter_cur->NW_fix * iter_cur->W_fix;
+        xVector3 NW_tmp = iter_cur->NW_fix;// * iter_cur->W_fix;
         NW_fix += NW_tmp;
-        S_minLen = min (S_minLen, NW_tmp.lengthSqr());
+        xFLOAT S_len = NW_tmp.lengthSqr();
+        S_minLen = min (S_minLen, S_len);
+        S_maxLen = max (S_maxLen, S_len);
 
         if (NW_tmp.x > EPSILON)
         {
@@ -234,6 +243,13 @@ xVector3 SkeletizedObj :: MergeCollisions()
         }
     }
 
+    if (V_reaction.lengthSqr() > 5.f && postHit == 0.f)
+    {
+        T_verlet_Max = T_verlet = 5.f;
+        if (Offender)
+            Offender->postHit = 5.f;
+    }
+
     xFLOAT I_count_Inv = 1.f / (xFLOAT)Collisions.size();
     NW_fix *= I_count_Inv;
     //if (NW_fix.lengthSqr() >= S_minLen)
@@ -261,14 +277,14 @@ xVector3 SkeletizedObj :: MergeCollisions()
     else
         NW_fix.z = 0.f;
 
-    if (NW_fix.lengthSqr() < EPSILON) NW_fix.init(0.f, 0.f, 0.0f); // add random fix if locked
+    if (NW_fix.lengthSqr() < 0.000001f) NW_fix.init(0.f, 0.f, 0.1f); // add random fix if locked
     return NW_fix;
 }
 
 void SkeletizedObj :: FrameUpdate(float T_time)
 {
-    //SkeletizedBody::CalculateMovement(this, T_time);
-    //CollidedModels.clear();
+    float delta = GetTick();
+
     RigidObj::FrameUpdate(T_time);
 
     //////////////////////////////////////////////////////// Update Verlets
@@ -305,7 +321,10 @@ void SkeletizedObj :: FrameUpdate(float T_time)
                 }
 
                 if (I_count)
+                {
                     NW_VerletVelocity_new[bi] += NW_dump / I_count;
+                    verletSystem.FL_attached[bi] = true;
+                }
             }
             if (!I_count)
             {
@@ -341,11 +360,17 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     xVector3 NW_translation;
     if (Collisions.size())
-        NW_translation = MergeCollisions();
+    {
+        NW_translation = MergeCollisions() * 0.9f;
+        if (W_verlet == 1.f || NW_translation.lengthSqr() < 0.0001f)
+            NW_translation.zero();
+    }
     else
         NW_translation = verletSystem.P_current[0]-verletSystem.P_previous[0];
 
-    UpdateMatrices();
+    // Update Matrices
+    MX_LocalToWorld_Set().postTranslateT(NW_translation);
+    xMatrix::Invert(MX_LocalToWorld_Get(), MX_WorldToLocal);
 
     xSkeleton &spine = GetModelPh()->Spine;
     verletSystem.C_constraints = spine.C_constraints;
@@ -359,9 +384,12 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     VerletSolver engine;
     engine.Init(verletSystem);
-    engine.I_passes = 50;
+    engine.I_passes = 5;
     //engine.Verlet();
     engine.SatisfyConstraints();
+
+    Performance.CollisionDeterminationMS += GetTick() - delta;
+    delta = GetTick();
 
     if (T_time > EPSILON)
     {
@@ -401,25 +429,16 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     spine.CalcQuats(verletSystem.P_current, verletSystem.QT_boneSkew,
         0, verletSystem.MX_WorldToModel_T, xVector3::Create(0.f,0.f,0.f));
-
-    if (!verletQuaternions)
-        verletQuaternions = new xQuaternion[verletSystem.I_particles];
-    spine.QuatsToArray(verletQuaternions);
+    spine.QuatsToArray(QT_verlet);
 
     if (postHit != 0.f)
         postHit = max(0.f, postHit-T_time);
-    if (verletTime != 0.f)
-        verletTime = max(0.f, verletTime-T_time);
-    if (verletTime != 0.f)
-        verletWeight = verletTime * verletTimeMaxInv;
-    else
-        verletWeight = 0.f;
-
-    MX_LocalToWorld_Set().postTranslateT(NW_translation);
-    xMatrix::Invert(MX_LocalToWorld_Get(), MX_WorldToLocal);
+    if (T_verlet != 0.f)
+        T_verlet = max(0.f, T_verlet-T_time);
+    W_verlet = (T_verlet <= 2.f) ? T_verlet * 0.5f : 1.f;
 
     spine.L_bones->QT_rotation.zeroQ();
-    verletQuaternions[0].zeroQ();
+    QT_verlet[0].zeroQ();
 
     //////////////////////////////////////////////////////// Update Animation
 
@@ -455,26 +474,22 @@ void SkeletizedObj :: FrameUpdate(float T_time)
             bones[i].zeroQ();
     }
 
-    if (verletQuaternions && bones && verletWeight > 0.f)
-        xAnimation::Average(verletQuaternions, bones, modelInstanceGr.I_bones, 1.f-verletWeight, bones);
+    if (bones && W_verlet > 0.f)
+        xAnimation::Average(QT_verlet, bones, modelInstanceGr.I_bones, 1.f-W_verlet, bones);
 
     if (bones)
     {
         GetModelGr()->Spine.QuatsFromArray(bones);
         delete[] bones;
-
         CalculateSkeleton();
-        CollisionInfo_ReFill();
     }
     else
-    if (verletQuaternions)
     {
-        GetModelGr()->Spine.QuatsFromArray(verletQuaternions);
+        GetModelGr()->Spine.QuatsFromArray(QT_verlet);
         CalculateSkeleton();
-        CollisionInfo_ReFill();
     }
-    else
-        GetModelGr()->Spine.ResetQ();
+    //else
+    //    GetModelGr()->Spine.ResetQ();
 
     //////////////////////////////////////////////////////// Update Physical Representation
 
@@ -490,11 +505,10 @@ void SkeletizedObj :: FrameUpdate(float T_time)
         for (int i = 0; i < I_bones; ++i)
             NW_VerletVelocity_total[i].zero();
 
-    for (int i = 0; i < modelInstancePh.I_elements; ++i)
-        MeshData[i].MX_Bones = modelInstancePh.MX_bones;
+    if (FL_customBVH)
+        UpdateCustomBVH();
+    else
+        UpdateGeneratedBVH();
 
-    BVHierarchy.invalidateTransformation();
-    for (int i = 0; i < modelInstancePh.I_elements; ++i)
-        MeshData[i].Transform(xMatrix::Identity());
-    GetModelPh()->ReFillBVH(BVHierarchy, MeshData);
+    Performance.CollisionDataFillMS += GetTick() - delta;
 }

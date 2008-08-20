@@ -219,6 +219,13 @@ void   xModel :: Free()
         currE = nextE;
     }
     this->Spine.Clear();
+
+    if (this->BVHierarchy)
+    {
+        this->BVHierarchy->free();
+        delete this->BVHierarchy;
+    }
+
     delete this;
 }
 
@@ -238,9 +245,13 @@ xModel *xModel :: Load(const char *fileName, bool FL_create_CollisionInfo)
             xmodel->FL_transparent = false;
             xmodel->FL_opaque = false;
 
+            bool FL_save_bvh = false;
+
             xDWORD len;
             fread(&len, sizeof(len), 1, file);
-            fread(&xmodel->FL_save_bvh, sizeof(xmodel->FL_save_bvh), 1, file);
+            fread(&xmodel->FL_save_cinfo, sizeof(xmodel->FL_save_cinfo), 1, file);
+            if (len > 1)
+                fread(&FL_save_bvh, sizeof(FL_save_bvh), 1, file);
 
             xmodel->L_material = NULL;
             xmodel->L_kids = NULL;
@@ -292,7 +303,13 @@ xModel *xModel :: Load(const char *fileName, bool FL_create_CollisionInfo)
             if (skeletized)
                 xmodel->Spine.Load(file);
 
-            if (xmodel->I_kids && FL_create_CollisionInfo && !xmodel->FL_save_bvh)
+            if (FL_save_bvh)
+            {
+                xmodel->BVHierarchy = new xBVHierarchy();
+                xmodel->BVHierarchy->Load(file);
+            }
+
+            if (xmodel->I_kids && FL_create_CollisionInfo && !xmodel->FL_save_cinfo)
                 xmodel->L_kids->FillCollisionInfo(*xmodel);
         }
         fclose(file);
@@ -307,9 +324,12 @@ void   xModel :: Save()
     file = fopen(this->FileName, "wb");
     if (file)
     {
-        xDWORD len = sizeof(this->FL_save_bvh);
+        bool   FL_save_bvh = BVHierarchy != NULL;
+
+        xDWORD len = 2;
         fwrite(&len, sizeof(len), 1, file);
-        fwrite(&this->FL_save_bvh, sizeof(this->FL_save_bvh), 1, file);
+        fwrite(&this->FL_save_cinfo, sizeof(this->FL_save_cinfo), 1, file);
+        fwrite(&FL_save_bvh, sizeof(FL_save_bvh), 1, file);
 
         fwrite(&this->I_material, sizeof(xBYTE), 1, file);
         if (this->I_material)
@@ -333,6 +353,9 @@ void   xModel :: Save()
         if (skeletized)
             this->Spine.Save(file);
 
+        if (FL_save_bvh)
+            BVHierarchy->Save(file);
+
         fclose(file);
     }
 }
@@ -340,9 +363,9 @@ void   xModel :: Save()
 #include "../../Math/Figures/xSphere.h"
 using namespace Math::Figures;
 
-void xModel::ReFillBVH(xBVHierarchy &BVH_node, xMeshData *&MeshData)
+void xModel::ReFillBVH(xBVHierarchy &BVH_node, xMeshData *&MeshData, const xMatrix &MX_LocalToWorld)
 {
-    xSphere &sphere = *(xSphere*) BVH_node.Figure;
+    xSphere &sphere = *(xSphere*) BVH_node.GetTransformed(MX_LocalToWorld);
 
     if (!this->I_kids)
         return;
@@ -354,7 +377,7 @@ void xModel::ReFillBVH(xBVHierarchy &BVH_node, xMeshData *&MeshData)
     xElement *elem = L_kids;
     for (; elem; elem = elem->Next)
     {
-        boxAc = elem->ReFillBVH( BVH_node.L_items, MeshData );
+        boxAc = elem->ReFillBVH( BVH_node.L_items, MeshData, MX_LocalToWorld );
         if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
         if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
         if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;

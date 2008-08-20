@@ -11,8 +11,9 @@ void CheckShadowVolumeInFrustum(const xMatrix &transformation, const xMatrix &tr
                                 const xLight &light, const xFieldOfView &FOV,
                                 bool &outModelInFrustum, bool &outExtrusionInFrustum, bool &outBackCapInFrustum)
 {
-    outModelInFrustum = FOV.CheckSphere(transformation.preTransformP(instance.bsCenter), instance.bsRadius)
-        &&  FOV.CheckBox(instance.bbBox.fillCornersTransformed(transformation));
+    outModelInFrustum = FOV.CheckSphere(transformation.preTransformP(instance.bsCenter), instance.bsRadius) &&
+        FOV.CheckBox(instance.bbBox, transformation);
+
 
     xVector4 bounds[16];
     for (int i = 0; i < 8; ++i)
@@ -274,7 +275,7 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
     xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
     xMatrix  mtxWorldToObject = (elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).invert();
-    if (!light.elementReceivesLight(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius)) return;
+    if (instance.bsRadius != 0.f && !light.elementReceivesLight(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius)) return;
 
     bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.MX_LocalToWorld, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;
@@ -511,7 +512,7 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
 
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
 
-    if (!light.elementReceivesLight((elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).preTransformP(instance.bsCenter), instance.bsRadius)) return;
+    if (instance.bsRadius != 0.f && !light.elementReceivesLight((elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).preTransformP(instance.bsCenter), instance.bsRadius)) return;
 
     bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.MX_LocalToWorld, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;

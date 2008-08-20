@@ -1,6 +1,7 @@
 #ifndef __incl_Math_xIFigure3d_h
 #define __incl_Math_xIFigure3d_h
 
+#include <cstdio>
 #include "../xMath.h"
 
 namespace Math { namespace Figures {
@@ -30,6 +31,7 @@ namespace Math { namespace Figures {
 
         xVector3 P_center;
 
+        virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max ) = 0;
         virtual xFLOAT S_Radius_Sqr_Get() = 0;
         virtual xFLOAT W_Volume_Get() = 0;
 
@@ -38,6 +40,13 @@ namespace Math { namespace Figures {
         virtual xIFigure3d * Transform(const xMatrix  &MX_LocalToWorld) = 0;
 
         virtual void free(bool transformationOnly = false) {}
+
+        void               Save( FILE *file );
+        static xIFigure3d *Load( FILE *file );
+
+    protected:
+        virtual void saveInstance( FILE *file ) {}
+        virtual void loadInstance( FILE *file ) {}
     };
 
 } } // namespace Math.Figures

@@ -275,6 +275,7 @@ inline bool SegmentSegmentFixDistanceAbs(const xVector3 &N_fix, const xPoint3 &P
 
 xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const xPoint3 &P_a3,
                                const xPoint3 &P_b1, const xPoint3 &P_b2, const xPoint3 &P_b3,
+                               IPhysicalBody *body1, IPhysicalBody *body2,
                                const xIFigure3d &figure1, xDWORD ID_tri_1,
                                const xIFigure3d &figure2, xDWORD ID_tri_2,
                                CollisionSet &cset)
@@ -522,6 +523,44 @@ xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const x
         }
     }
 
+    xPoint3 P_collision = (p1+p2)*0.5f;
+
+    CollisionPoint cp1 = CollisionPoint(body2, figure1, P_collision, ID_tri_1);
+    CollisionPoint cp2 = CollisionPoint(body1, figure2, P_collision, ID_tri_2);
+
+    xVector3 NW_velocity1 = body1->GetVelocity(cp1);
+    xVector3 NW_velocity2 = body2->GetVelocity(cp2);
+
+    if (!NW_velocity1.isZero() || !NW_velocity2.isZero())
+    {
+        if (!NW_velocity1.isZero())
+        {
+            cp1.NW_fix = NW_velocity1;
+            cp1.NW_fix.normalize();
+            AxisSpans spans;
+            xTriangle::ComputeSpan(P_a1,P_a2,P_a3, cp1.NW_fix, spans.P_min1, spans.P_max1);
+            xTriangle::ComputeSpan(P_b1,P_b2,P_b3, cp1.NW_fix, spans.P_min2, spans.P_max2);
+            cp1.NW_fix *= spans.P_min2 - spans.P_max1;
+        }
+        if (!NW_velocity2.isZero())
+        {
+            cp2.NW_fix = NW_velocity2;
+            cp2.NW_fix.normalize();
+            AxisSpans spans;
+            xTriangle::ComputeSpan(P_a1,P_a2,P_a3, cp2.NW_fix, spans.P_min1, spans.P_max1);
+            xTriangle::ComputeSpan(P_b1,P_b2,P_b3, cp2.NW_fix, spans.P_min2, spans.P_max2);
+            cp2.NW_fix *= spans.P_min1 - spans.P_max2;
+        }
+        else
+            cp2.NW_fix = -cp1.NW_fix;
+        if (NW_velocity1.isZero())
+            cp1.NW_fix = -cp2.NW_fix;
+
+        cset.Add(CollisionInfo(cp1, cp2));
+
+        return 1;
+    }
+
     xVector3 N_fix_min;
     xFLOAT   S_minmax = xFLOAT_HUGE_POSITIVE;
     xFLOAT   S_a_min, S_b_min;
@@ -658,21 +697,22 @@ xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const x
     N_fix_min *= S_minmax;
 
     if (S_a_min > S_b_min)
-        return cset.Add(CollisionInfo(figure1, figure2, ID_tri_1, ID_tri_2,
+        return cset.Add(CollisionInfo(body1, body2, figure1, figure2, ID_tri_1, ID_tri_2,
                                       N_fix_min, *P_fix_min_a, *P_fix_min_a + N_fix_min)), 1;
     if (S_a_min < S_b_min)
-        return cset.Add(CollisionInfo(figure1, figure2, ID_tri_1, ID_tri_2,
+        return cset.Add(CollisionInfo(body1, body2, figure1, figure2, ID_tri_1, ID_tri_2,
                                       N_fix_min, *P_fix_min_b, *P_fix_min_b + N_fix_min)), 1;
 
-    cset.Add(CollisionInfo(figure1, figure2, ID_tri_1, ID_tri_2,
+    cset.Add(CollisionInfo(body1, body2, figure1, figure2, ID_tri_1, ID_tri_2,
                                       N_fix_min, *P_fix_min_a, *P_fix_min_a + N_fix_min));
-    cset.Add(CollisionInfo(figure1, figure2, ID_tri_1, ID_tri_2,
+    cset.Add(CollisionInfo(body1, body2, figure1, figure2, ID_tri_1, ID_tri_2,
                                       N_fix_min, *P_fix_min_b, *P_fix_min_b + N_fix_min));
     return 2;
 }
 
 
-inline xDWORD CollideTriangleTriangle(const xTriangle &tr1, const xTriangle &tr2, CollisionSet &cset)
+inline xDWORD CollideTriangleTriangle(const xTriangle &tr1, const xTriangle &tr2,
+                                      IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
-    return CollideTriangleTriangle(tr1.P_A, tr1.P_B, tr1.P_C, tr2.P_A, tr2.P_B, tr2.P_C, tr1, 0, tr2, 0, cset);
+    return CollideTriangleTriangle(tr1.P_A, tr1.P_B, tr1.P_C, tr2.P_A, tr2.P_B, tr2.P_C, body1, body2, tr1, 0, tr2, 0, cset);
 }

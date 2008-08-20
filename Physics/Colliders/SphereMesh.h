@@ -30,7 +30,8 @@ bool   TestSphereMesh (const xSphere &sp1, const xMesh &ms2)
     return false;
 }
 
-xDWORD CollideSphereMesh (const xSphere &sp1, const xMesh &ms2, CollisionSet &cset)
+xDWORD CollideSphereMesh (const xSphere &sp1, const xMesh &ms2,
+                          IPhysicalBody *body1, IPhysicalBody *body2, CollisionSet &cset)
 {
     xDWORD *L_FaceIndex_Itr = ms2.L_FaceIndices;
     xDWORD   I_cols = 0;
@@ -42,6 +43,7 @@ xDWORD CollideSphereMesh (const xSphere &sp1, const xMesh &ms2, CollisionSet &cs
                                             ms2.MeshData->GetVertexTransf(Face[0]),
                                             ms2.MeshData->GetVertexTransf(Face[1]),
                                             ms2.MeshData->GetVertexTransf(Face[2]),
+                                            body1, body2,
                                             ms2, *L_FaceIndex_Itr, cset);
         }
     else
@@ -52,6 +54,7 @@ xDWORD CollideSphereMesh (const xSphere &sp1, const xMesh &ms2, CollisionSet &cs
                                             ms2.MeshData->GetVertex(Face[0]),
                                             ms2.MeshData->GetVertex(Face[1]),
                                             ms2.MeshData->GetVertex(Face[2]),
+                                            body1, body2,
                                             ms2, *L_FaceIndex_Itr, cset);
         }
     return I_cols;

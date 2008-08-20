@@ -637,7 +637,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
 
         CollisionSet cs, cs2;
         xVector3 NW_fix_1;
-        if (false && FigureCollider().Collide(figures[Config::TestCase][0]->BVHierarchy.GetTransformed(), figures[Config::TestCase][1]->BVHierarchy.GetTransformed(), cs))
+        if (false && FigureCollider().Collide(NULL, NULL, figures[Config::TestCase][0]->BVHierarchy.GetTransformed(), figures[Config::TestCase][1]->BVHierarchy.GetTransformed(), cs))
         {
             xPoint3  P1, P2;
             cs.MergeCollisions(P1, P2, NW_fix_1);
@@ -648,7 +648,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
             figures[Config::TestCase][0]->FrameUpdate(0);
             figures[Config::TestCase][1]->FrameUpdate(0);
         }
-        if (false && FigureCollider().Collide(figures[Config::TestCase][0]->BVHierarchy.GetTransformed(), figures[Config::TestCase][1]->BVHierarchy.GetTransformed(), cs2))
+        if (false && FigureCollider().Collide(NULL, NULL, figures[Config::TestCase][0]->BVHierarchy.GetTransformed(), figures[Config::TestCase][1]->BVHierarchy.GetTransformed(), cs2))
         {
             //xPoint3  P1, P2;
             //xVector3 NW_fix_1;
@@ -702,12 +702,13 @@ bool SceneTest::FrameRender()
         if (i == selected)
             glColor3f(1.f, 1.f, 0.f);
         else
-        if (selected != -1 && FigureCollider().Collide( figures[Config::TestCase][0]->BVHierarchy.GetTransformed(),
+        if (selected != -1 && FigureCollider().Collide( NULL, NULL,
+                                                        figures[Config::TestCase][0]->BVHierarchy.GetTransformed(),
                                                         figures[Config::TestCase][1]->BVHierarchy.GetTransformed(), cset) )
             glColor3f(1.f, 0.f, 0.f);
         else
             glColor3f(1.f, 1.f, 1.f);
-        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy);
+        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy, figures[Config::TestCase][i]->MX_LocalToWorld_Get());
     }
 
     if (cset.collisions.size())
@@ -765,7 +766,7 @@ void SceneTest :: RenderSelect(const xFieldOfView *FOV)
     for (int i = 0; i < 2; ++i)
     {
         glLoadName(i);
-        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy);
+        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy, figures[Config::TestCase][i]->MX_LocalToWorld_Get());
     }
 }
 
