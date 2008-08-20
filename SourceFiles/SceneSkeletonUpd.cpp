@@ -12,6 +12,7 @@
 #include "../Math/Figures/xSphere.h"
 #include "../Math/Figures/xCapsule.h"
 #include "../Math/Figures/xBoxO.h"
+#include "../Models/lib3dx/xUtils.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
@@ -19,6 +20,66 @@
 #define MULT_STEP   60.0f
 
 using namespace Math::Figures;
+
+void SceneSkeleton::UpdateBBox()
+{
+    xModel *model = (State.DisplayPhysical)
+        ? Model.GetModelPh()
+        : Model.GetModelGr();
+
+    xModelInstance modelInstance;
+    modelInstance.Zero();
+    modelInstance.MX_LocalToWorld.identity();
+    modelInstance.I_elements = model->I_elements;
+    modelInstance.L_elements = new xElementInstance[model->I_elements];
+    modelInstance.ZeroElements();
+    xBoneCalculateMatrices(model->Spine, &modelInstance);
+
+    xModel_SkinElementInstance(model, modelInstance);
+    modelInstance.P_center = xModel_GetBounds(modelInstance);
+
+    xBoxA box;
+    box.P_min.init(xFLOAT_HUGE_POSITIVE,xFLOAT_HUGE_POSITIVE,xFLOAT_HUGE_POSITIVE);
+    box.P_max.init(xFLOAT_HUGE_NEGATIVE,xFLOAT_HUGE_NEGATIVE,xFLOAT_HUGE_NEGATIVE);
+
+    for (int i = 0; i < modelInstance.I_elements; ++i)
+    {
+        xElementInstance &ei = modelInstance.L_elements[i];
+        if (ei.bbBox.P_min == ei.bbBox.P_max) continue;
+        if (ei.bbBox.P_min.x < box.P_min.x) box.P_min.x = ei.bbBox.P_min.x;
+        if (ei.bbBox.P_min.y < box.P_min.y) box.P_min.y = ei.bbBox.P_min.y;
+        if (ei.bbBox.P_min.z < box.P_min.z) box.P_min.z = ei.bbBox.P_min.z;
+        if (ei.bbBox.P_max.x > box.P_max.x) box.P_max.x = ei.bbBox.P_max.x;
+        if (ei.bbBox.P_max.y > box.P_max.y) box.P_max.y = ei.bbBox.P_max.y;
+        if (ei.bbBox.P_max.z > box.P_max.z) box.P_max.z = ei.bbBox.P_max.z;
+    }
+    modelInstance.Clear();
+    Animation.Skeleton.Bounds = box;
+}
+
+void SceneSkeleton::UpdateCustomBVH()
+{
+    xBVHierarchy *BVHierarchy = (State.DisplayPhysical)
+        ? Model.GetModelPh()->BVHierarchy
+        : Model.GetModelGr()->BVHierarchy;
+    if (BVHierarchy)
+    {
+        BVHierarchy->invalidateTransformation();
+        xModelInstance mi;
+        mi.Zero();
+        xBoneCalculateMatrices(Model.GetModelGr()->Spine, &mi);
+        for (int i = 0; i < BVHierarchy->I_items; ++i)
+            BVHierarchy->L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( mi.MX_bones[BVHierarchy->L_items[i].ID_Bone] ));
+        mi.ClearSkeleton();
+
+        Math::Figures::xBoxA box = BVHierarchy->childBounds(xMatrix::Identity());
+        Math::Figures::xSphere &sphere   = *(Math::Figures::xSphere*) BVHierarchy->Figure;
+        Math::Figures::xSphere &sphere_T = *(Math::Figures::xSphere*) BVHierarchy->GetTransformed(xMatrix::Identity());
+        sphere.S_radius = sphere_T.S_radius = (box.P_max - box.P_min).length() * 0.5f;
+        sphere_T.P_center = (box.P_max + box.P_min) * 0.5f;
+        sphere.P_center = sphere_T.P_center;
+    }
+}
 
 /************************** INPUT **************************************/
 bool SceneSkeleton::FrameUpdate(float deltaTime)
@@ -154,18 +215,7 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
         Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
         Model.CalculateSkeleton();
 
-        xBVHierarchy *root = (State.DisplayPhysical)
-            ? Model.GetModelPh()->BVHierarchy
-            : Model.GetModelGr()->BVHierarchy;
-        if (root)
-        {
-            xModelInstance mi;
-            mi.Zero();
-            xBoneCalculateMatrices(Model.GetModelGr()->Spine, &mi);
-            for (int i = 0; i < root->I_items; ++i)
-                root->L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( mi.MX_bones[root->L_items[i].ID_Bone] ));
-            mi.ClearSkeleton();
-        }
+        UpdateCustomBVH();
     }
 
     if (EditMode == emEditAnimation)
@@ -208,18 +258,7 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
                 Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
                 Model.CalculateSkeleton();
 
-                xBVHierarchy *root = (State.DisplayPhysical)
-                    ? Model.GetModelPh()->BVHierarchy
-                    : Model.GetModelGr()->BVHierarchy;
-                if (root)
-                {
-                    xModelInstance mi;
-                    mi.Zero();
-                    xBoneCalculateMatrices(Model.GetModelGr()->Spine, &mi);
-                    for (int i = 0; i < root->I_items; ++i)
-                        root->L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( mi.MX_bones[root->L_items[i].ID_Bone] ));
-                    mi.ClearSkeleton();
-                }
+                UpdateCustomBVH();
                 return true;
             }
         }
@@ -441,6 +480,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             Animation.Instance->Reset(Model.GetModelGr()->Spine.I_bones);
             Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
+            UpdateCustomBVH();
             Buttons[emEditAnimation][5].Down = false;
             EditMode = emEditAnimation;
             AnimationName.clear();
@@ -472,6 +512,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             Animation.Instance->T_progress = 0;
             Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
+            UpdateBBox();
         }
         if (button.Action == IC_BE_Move)
         {
@@ -535,6 +576,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         if (button.Action == IC_BE_Save)
         {
             Animation.Instance->CurrentFrame->LoadFromSkeleton(Model.GetModelGr()->Spine);
+            UpdateCustomBVH();
             EditMode = emEditAnimation;
         }
         else
@@ -607,6 +649,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             Animation.Instance->Load(filePath.c_str());
             Animation.Instance->SaveToSkeleton(Model.GetModelGr()->Spine);
             Model.CalculateSkeleton();
+            UpdateCustomBVH();
             EditMode = emEditAnimation;
             Buttons[emEditAnimation][5].Down = Animation.Instance->L_frames && Animation.Instance->L_frames->Prev;
         }
@@ -659,7 +702,7 @@ void SceneSkeleton::MouseLDown (int X, int Y)
         Selection.RectStartY = Y;
     }
     else if (EditMode == emAnimateBones && Selection.Bone)
-        Animation.PreviousQuaternion = Selection.Bone->QT_rotation;
+        Animation.Skeleton.PreviousQuaternion = Selection.Bone->QT_rotation;
     else if (EditMode == emEditVolume)
         MouseLDown_BVH(X, Y);
 }
@@ -867,11 +910,16 @@ void SceneSkeleton::MouseLUp   (int X, int Y)
         EditMode = emCreateBVH;
     }
     else
-    if (EditMode == emAnimateBones && State.CurrentAction != IC_BE_Move) // select bone
+    if (EditMode == emAnimateBones)
     {
-        Selection.Bone = SelectBone(X,Y);
-        if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->Spine.L_bones;
-        UpdateButton(Buttons[emAnimateBones][1]); // switch to move mode
+        if (State.CurrentAction != IC_BE_Move) // select bone
+        {
+            Selection.Bone = SelectBone(X,Y);
+            if (!Selection.Bone) Selection.Bone = Model.GetModelGr()->Spine.L_bones;
+            UpdateButton(Buttons[emAnimateBones][1]); // switch to move mode
+        }
+        else
+            UpdateBBox();
     }
     else
     if (EditMode == emLoadAnimation || EditMode == emSaveAnimation)
@@ -946,7 +994,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
             bool useVerlet = false;
             if (!useVerlet)
             {
-                Selection.Bone->QT_rotation = Animation.PreviousQuaternion;
+                Selection.Bone->QT_rotation = Animation.Skeleton.PreviousQuaternion;
                 Model.CalculateSkeleton();
                 xMatrix  MX_bone  = Model.modelInstanceGr.MX_bones[Selection.Bone->ID]; // get current bone matrix
                 xVector3 P_begin  = MX_bone.postTransformP(Selection.Bone->P_begin);  // get parent skeletized position

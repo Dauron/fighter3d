@@ -305,12 +305,35 @@ bool SceneSkeleton::FrameRender()
         EditMode == emSelectBVHBone || EditMode == emEditVolume)
         render.RenderSkeleton(model, modelInstance, Selection.Bone ? Selection.Bone->ID : xWORD_MAX);
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    if (EditMode == emAnimateBones)
+    {
+        glColor3f(0.2f, 0.5f, 0.2f);
+        glBegin(GL_QUADS);
+        {
+            glVertex3f(Animation.Skeleton.Bounds.P_min.x, Animation.Skeleton.Bounds.P_max.y, Animation.Skeleton.Bounds.P_min.z);
+            glVertex3f(Animation.Skeleton.Bounds.P_min.x, Animation.Skeleton.Bounds.P_min.y, Animation.Skeleton.Bounds.P_min.z);
+            glVertex3f(Animation.Skeleton.Bounds.P_max.x, Animation.Skeleton.Bounds.P_min.y, Animation.Skeleton.Bounds.P_min.z);
+            glVertex3f(Animation.Skeleton.Bounds.P_max.x, Animation.Skeleton.Bounds.P_max.y, Animation.Skeleton.Bounds.P_min.z);
+        }
+        glEnd();
+        glBegin(GL_LINES);
+        {
+            glVertex3f(Animation.Skeleton.Bounds.P_min.x, Animation.Skeleton.Bounds.P_max.y, Animation.Skeleton.Bounds.P_min.z);
+            glVertex3f(Animation.Skeleton.Bounds.P_min.x, Animation.Skeleton.Bounds.P_min.y, Animation.Skeleton.Bounds.P_min.z);
+            glVertex3f(Animation.Skeleton.Bounds.P_max.x, Animation.Skeleton.Bounds.P_min.y, Animation.Skeleton.Bounds.P_min.z);
+            glVertex3f(Animation.Skeleton.Bounds.P_max.x, Animation.Skeleton.Bounds.P_max.y, Animation.Skeleton.Bounds.P_min.z);
+        }
+        glEnd();
+    }
+/*
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     if ((EditMode == emEditBVH || EditMode == emEditVolume || EditMode == emEditAnimation) && model.BVHierarchy)
         render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), 0, Selection.BVHNodeID);
-
+*/
     GLShader::Suspend();
 
     glFlush();

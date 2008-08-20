@@ -1,6 +1,8 @@
 #include "SkeletizedObj.h"
 #include "../AppFramework/System.h"
 #include "../Config.h"
+#include "../MotionCapture/CaptureInput.h"
+#include "../Multiplayer/NetworkInput.h"
 
 void SkeletizedObj :: ApplyDefaults()
 {
@@ -42,6 +44,12 @@ void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filena
     RigidObj::Initialize(gr_filename, ph_filename);
     CreateVerletSystem();
     QT_verlet = new xQuaternion[verletSystem.I_particles];
+
+    if (ControlType == Control_ComBoardInput)
+    {
+        comBoard.Init();
+        comBoard.Load("Data/comboard.txt");
+    }
 }
 
 void SkeletizedObj :: Finalize ()
@@ -64,14 +72,8 @@ void SkeletizedObj :: Finalize ()
         delete[] NW_VerletVelocity_new;   NW_VerletVelocity_new = NULL;
         delete[] NW_VerletVelocity_total; NW_VerletVelocity_total = NULL;
     }
-}
 
-void SkeletizedObj :: AddAnimation(const char *fileName, xDWORD T_start, xDWORD T_end)
-{
-    actions.L_actions.resize(actions.L_actions.size()+1);
-    actions.L_actions.rbegin()->hAnimation = g_AnimationMgr.GetAnimation(fileName);
-    actions.L_actions.rbegin()->T_start = T_start;
-    actions.L_actions.rbegin()->T_end   = T_end;
+    comBoard.Init();
 }
 
 
@@ -453,10 +455,18 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
         if (actions.T_progress > 10000) actions.T_progress = 0;
     }
+
+
     if (ControlType == Control_CaptureInput)
         bones2 = g_CaptureInput.GetTransformations();
-    //if (ControlType == Control_NetworkInput)
-    //    bones2 = g_NetworkInput.GetTransformations();
+    else
+    if (ControlType == Control_NetworkInput)
+        bones2 = g_NetworkInput.GetTransformations();
+    if (ControlType == Control_ComBoardInput && comBoard.L_actions.size())
+    {
+        comBoard.Update(T_time * 1000);
+        bones2 = comBoard.L_actions[comBoard.ID_action_cur].anims.GetTransformations();
+    }
 
     if (bones2)
         if (bones)

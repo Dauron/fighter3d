@@ -3,8 +3,7 @@
 
 #include "RigidObj.h"
 #include "../Models/lib3dx/xAction.h"
-#include "../MotionCapture/CaptureInput.h"
-#include "../Multiplayer/NetworkInput.h"
+#include "../SourceFiles/ComBoard.h"
 
 class SkeletizedObj : public RigidObj
 {
@@ -23,11 +22,14 @@ public:
     xFLOAT        T_verlet_Max;
     xFLOAT        postHit;
 
+    ComBoard      comBoard;
+
     enum EControlType
     {
-        Control_AI           = 0,
-        Control_CaptureInput = 1,
-        Control_NetworkInput = 2
+        Control_AI            = 0,
+        Control_CaptureInput  = 1,
+        Control_NetworkInput  = 2,
+        Control_ComBoardInput = 3
     } ControlType;
 
 public:
@@ -58,8 +60,6 @@ public:
     virtual void Finalize ();
 
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL);
-
-    void AddAnimation(const char *fileName, xDWORD T_start = 0, xDWORD T_end = 0);
 
     virtual void FrameStart();
     virtual void FrameUpdate(float T_time);

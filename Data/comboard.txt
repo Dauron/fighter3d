@@ -1,0 +1,71 @@
+#[action]
+#name   reference name of action
+#anim   animation file [animation start time] [animation stop time]
+#time   duration of the whole animation (0 for infinity)
+#post   destination action after finishing current action (default first action)
+#(combo)
+#action destination action of combo
+#key    key that activates combo
+#first  the first time the combo may be activated (default 0)
+#last   the last time the combo may be activated  (default 0 = infinity)
+#time   initial time of the destination combo (+ time since first, if last != 0, default = 0)
+
+[action]
+name	position
+anim	models/anims/human/position.ska 0
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+
+[action]
+name	mai_geri_front_mid
+anim	models/anims/human/mai-geri-front-mid.ska 0
+time	600
+(combo)
+action	mai_geri_front_high
+key		LeftKick
+first   0
+last    200
+
+[action]
+name	mai_geri_front_high
+anim	models/anims/human/mai-geri-front-high.ska 0
+time	600
+(combo)
+action	mai_geri_front_mid
+key		LeftKick
+first   0
+last    200
+
+[action]
+name    jaku_zuki_mid
+anim    models/anims/human/jaku-zuki-mid.ska 0
+time    300
+(combo)
+action	jaku_zuki_high
+key		LeftPunch
+first   0
+last    75
+
+[action]
+name    jaku_zuki_high
+anim    models/anims/human/jaku-zuki-high.ska 0
+time    300
+(combo)
+action	jaku_zuki_low
+key		LeftPunch
+first   0
+last    75
+
+[action]
+name    jaku_zuki_low
+anim    models/anims/human/jaku-zuki-low.ska 0
+time    300
+(combo)
+action	jaku_zuki_mid
+key		LeftPunch
+first   0
+last    75

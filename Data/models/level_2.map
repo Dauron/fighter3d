@@ -18,4 +18,4 @@ physical	0
 phantom	0
 mass	70
 shadows 0
-camera_controled
+control camera

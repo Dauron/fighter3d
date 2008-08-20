@@ -122,7 +122,10 @@ class SceneSkeleton : public Scene, public ISelectionProvider
                     xLONG duration;
                 } KeyFrame;
                 // Bone rotation
-                xQuaternion PreviousQuaternion;
+                struct {
+                    Math::Figures::xBoxA Bounds;
+                    xQuaternion          PreviousQuaternion;
+                } Skeleton;
             };
             xAnimation * Instance;
         } Animation;
@@ -148,7 +151,8 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     xBYTE         GetBVH_Count (xBVHierarchy &bvhNode);
     xBYTE         GetBVH_ID (xBVHierarchy &bvhNode, xBVHierarchy *selected, xBYTE &ID);
     xBVHierarchy *GetBVH_byID (xBVHierarchy &bvhNode, xBYTE ID_selected, xBYTE &ID);
-
+    void          UpdateCustomBVH();
+    void          UpdateBBox();
 
     /* INPUT & CAMERAS */
     bool        UpdateButton(GLButton &button);

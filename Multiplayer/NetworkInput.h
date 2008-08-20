@@ -1,9 +1,12 @@
 #ifndef __incl_MotionCapture_NetworkInput_h
 #define __incl_MotionCapture_NetworkInput_h
 
+#include "../Utils/Singleton.h"
 #include "../Models/lib3dx/xSkeleton.h"
 
-class NetworkInput
+#define g_NetworkInput NetworkInput::GetSingleton()
+
+class NetworkInput : public Singleton<NetworkInput>
 {
 private:
     const xSkeleton *Spine;

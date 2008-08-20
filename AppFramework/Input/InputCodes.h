@@ -29,7 +29,20 @@
 #define IC_RunModifier   IC_MoveForward+6
 #define IC_RunLock       IC_MoveForward+7
 
-#define IC_Con_BackSpace IC_RunLock+1
+#define IC_CB_LeftPunch      IC_RunLock+1
+#define IC_CB_LeftKick       IC_CB_LeftPunch+1
+#define IC_CB_LeftHandGuard  IC_CB_LeftPunch+2
+#define IC_CB_LeftLegGuard   IC_CB_LeftPunch+3
+#define IC_CB_RightPunch     IC_CB_LeftPunch+4
+#define IC_CB_RightKick      IC_CB_LeftPunch+5
+#define IC_CB_RightHandGuard IC_CB_LeftPunch+6
+#define IC_CB_RightLegGuard  IC_CB_LeftPunch+7
+#define IC_CB_Forward        IC_CB_LeftPunch+8
+#define IC_CB_Backward       IC_CB_LeftPunch+9
+#define IC_CB_Left           IC_CB_LeftPunch+10
+#define IC_CB_Right          IC_CB_LeftPunch+11
+
+#define IC_Con_BackSpace IC_CB_Right+1
 #define IC_Con_LineUp    IC_Con_BackSpace+1
 #define IC_Con_LineDown  IC_Con_BackSpace+2
 #define IC_Con_PageUp    IC_Con_BackSpace+3

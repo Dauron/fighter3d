@@ -19,4 +19,14 @@ struct istring_less
 void itos(int in, std::string &out);
 std::string itos(int in);
 
+inline bool StartsWith(const char *buff, const char *string)
+{
+    if (!string || !buff) return false;
+
+    for(; *string && *buff; ++string, ++buff)
+        if (tolower(*string) != tolower(*buff))
+            return false;
+    return !*string;
+}
+
 #endif

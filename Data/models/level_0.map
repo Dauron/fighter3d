@@ -45,11 +45,12 @@ phantom     0
 mass        70
 shadows     0
 restitution 0.9
-#animation	anims/human/garda.ska	0		0
-animation	anims/human/position.ska	0		2200
-animation	anims/human/yoko-geri2.ska	2200	3300
-animation	anims/human/position.ska	3300
+#animation	anims/human/garda.ska	0
 #animation	anims/human/position.ska	0
+#animation	anims/human/yoko-geri2.ska	2200	3300
+#animation	anims/human/position.ska	3300
+#animation	anims/human/position.ska	0
+control comboard
 
 [skeletized]
 fastm	human2_fst.3dx

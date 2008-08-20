@@ -86,25 +86,38 @@ void SceneGame :: InitInputMgr()
 #endif
     im.SetInputCode(VK_LBUTTON, IC_LClick);
 
-    im.SetInputCode(VK_UP, IC_TurnUp);
-    im.SetInputCode(VK_DOWN, IC_TurnDown);
-    im.SetInputCode(VK_LEFT, IC_TurnLeft);
-    im.SetInputCode(VK_RIGHT, IC_TurnRight);
-    im.SetInputCode('Q', IC_RollLeft);
-    im.SetInputCode('E', IC_RollRight);
+    im.SetInputCode(VK_HOME,   IC_TurnUp);
+    im.SetInputCode(VK_END,    IC_TurnDown);
+    im.SetInputCode(VK_DELETE, IC_TurnLeft);
+    im.SetInputCode(VK_NEXT,   IC_TurnRight);
+    im.SetInputCode('Y', IC_RollLeft);
+    im.SetInputCode('I', IC_RollRight);
 
-    im.SetInputCode('U', IC_OrbitUp);
-    im.SetInputCode('J', IC_OrbitDown);
-    im.SetInputCode('H', IC_OrbitLeft);
-    im.SetInputCode('K', IC_OrbitRight);
+    //im.SetInputCode('U', IC_OrbitUp);
+    //im.SetInputCode('J', IC_OrbitDown);
+    //im.SetInputCode('H', IC_OrbitLeft);
+    //im.SetInputCode('K', IC_OrbitRight);
 
-    im.SetInputCode('W', IC_MoveForward);
-    im.SetInputCode('S', IC_MoveBack);
-    im.SetInputCode('A', IC_MoveLeft);
-    im.SetInputCode('D', IC_MoveRight);
-    im.SetInputCode('R', IC_MoveUp);
-    im.SetInputCode('F', IC_MoveDown);
+    im.SetInputCode('U', IC_MoveForward);
+    im.SetInputCode('J', IC_MoveBack);
+    im.SetInputCode('H', IC_MoveLeft);
+    im.SetInputCode('K', IC_MoveRight);
+    im.SetInputCode('O', IC_MoveUp);
+    im.SetInputCode('L', IC_MoveDown);
     im.SetInputCode(VK_LSHIFT, IC_RunModifier);
+
+    im.SetInputCode('S', IC_CB_LeftPunch);
+    im.SetInputCode('A', IC_CB_LeftHandGuard);
+    im.SetInputCode('X', IC_CB_LeftKick);
+    im.SetInputCode('Z', IC_CB_LeftLegGuard);
+    im.SetInputCode('D', IC_CB_RightPunch);
+    im.SetInputCode('F', IC_CB_RightHandGuard);
+    im.SetInputCode('C', IC_CB_RightKick);
+    im.SetInputCode('V', IC_CB_RightLegGuard);
+    im.SetInputCode(VK_UP,    IC_CB_Forward);
+    im.SetInputCode(VK_DOWN,  IC_CB_Backward);
+    im.SetInputCode(VK_LEFT,  IC_CB_Left);
+    im.SetInputCode(VK_RIGHT, IC_CB_Right);
 
     im.SetInputCode(VK_F11, IC_FullScreen);
 }

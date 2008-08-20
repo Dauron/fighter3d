@@ -181,6 +181,14 @@
 			Name="Source Files"
 			>
 			<File
+				RelativePath="..\Source Files\ComBoard.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Source Files\ComBoard.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Source Files\main.cpp"
 				>
 			</File>

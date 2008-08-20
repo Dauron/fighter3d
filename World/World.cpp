@@ -1,6 +1,8 @@
 #include <fstream>
 #include "World.h"
 #include "../Utils/Filesystem.h"
+#include "../MotionCapture/CaptureInput.h"
+#include "../Multiplayer/NetworkInput.h"
 
 const xFLOAT TIME_STEP = 0.02f;
 
@@ -56,16 +58,6 @@ void World:: Finalize()
     }
     objects.clear();
     lights.clear();
-}
-
-bool StartsWith(const char *buff, const char *string)
-{
-    if (!string || !buff) return false;
-
-    for(; *string && *buff; ++string, ++buff)
-        if (tolower(*string) != tolower(*buff))
-            return false;
-    return !*string;
 }
 
 void World:: Load(const char *mapFileName)
@@ -285,19 +277,37 @@ void World:: Load(const char *mapFileName)
                     sscanf(buffer, "animation\t%s\t%d\t%d", file, &start, &end);
                     std::string animFile = Filesystem::GetFullPath(dir + "/" + file);
                     if (end <= start)
-                        ((SkeletizedObj*)model)->AddAnimation(animFile.c_str(), start);
+                        ((SkeletizedObj*)model)->actions.AddAnimation(animFile.c_str(), start);
                     else
-                        ((SkeletizedObj*)model)->AddAnimation(animFile.c_str(), start, end);
+                        ((SkeletizedObj*)model)->actions.AddAnimation(animFile.c_str(), start, end);
                     continue;
                 }
 
-                if (StartsWith(buffer, "camera_controled"))
+                if (StartsWith(buffer, "control"))
                 {
-                    g_CaptureInput.Finalize();
-                    bool captureOK = g_CaptureInput.Initialize(model->GetModelGr()->Spine);
-                    ((SkeletizedObj*)model)->ControlType = (captureOK)
-                        ? SkeletizedObj::Control_CaptureInput
-                        : SkeletizedObj::Control_AI;
+                    char name[255];
+                    sscanf(buffer, "control\t%s", name);
+
+                    if (StartsWith(name, "camera"))
+                    {
+                        g_CaptureInput.Finalize();
+                        bool captureOK = g_CaptureInput.Initialize(model->GetModelGr()->Spine);
+                        ((SkeletizedObj*)model)->ControlType = (captureOK)
+                            ? SkeletizedObj::Control_CaptureInput
+                            : SkeletizedObj::Control_ComBoardInput;
+                    }
+                    else
+                    if (StartsWith(name, "network"))
+                    {
+                        g_NetworkInput.Finalize();
+                        bool networkOK = g_NetworkInput.Initialize(model->GetModelGr()->Spine);
+                        ((SkeletizedObj*)model)->ControlType = (networkOK)
+                            ? SkeletizedObj::Control_NetworkInput
+                            : SkeletizedObj::Control_AI;
+                    }
+                    else
+                    if (StartsWith(name, "comboard"))
+                        ((SkeletizedObj*)model)->ControlType = SkeletizedObj::Control_ComBoardInput;
                     continue;
                 }
             }
