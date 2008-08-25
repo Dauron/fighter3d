@@ -1,0 +1,17 @@
+[Graphics]
+# 0 = none, 1 = basic, 2 = full
+Lighting        2
+Shadows         1
+ShadowVolumes   0
+Shaders         1
+ShadowMap       512
+WindowX         800
+WindowY         600
+FullScreenX    1680
+FullScreenY    1050
+
+[Gameplay]
+Level           3
+Speed           1
+# 0 = almost none, 1 = important errors, 2 = all errors, 3 = all errors + warnings
+Logging         3

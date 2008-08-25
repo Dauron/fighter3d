@@ -25,7 +25,7 @@ void RenderBoneCore ( const xBone &bone )
         g_AnimSkeletal.SetVertex(bone.P_end.xyz);
         g_AnimSkeletal.SetVertex(bone.P_begin.xyz);
         g_AnimSkeletal.SetVertex(P_third.xyz);
-        P_third = xQuaternion::rotate(QT_rot, P_third-P_fifth)+P_fifth;
+        P_third = QT_rot.rotate(P_third, P_fifth);
     }
 }
 
@@ -108,8 +108,8 @@ void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *MX_bones,
     }
     else
     {
-        N_up    = xQuaternion::rotate(QT_bones[boneRB.ID*2], N_up);
-        N_front = xQuaternion::rotate(QT_bones[boneRB.ID*2], bone.getFront());
+        N_up    = QT_bones[boneRB.ID*2].rotate(N_up);
+        N_front = QT_bones[boneRB.ID*2].rotate(bone.getFront());
     }
 
     xMatrix MX_BoneToWorld = xMatrixFromVectors(N_front, N_up).transpose();

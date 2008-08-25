@@ -221,6 +221,38 @@ xMatrix xMatrixFromQuaternion(xQuaternion q)
     return res;
 }
 
+xMatrix xMatrixFromQuaternionT(xQuaternion q)
+{
+    float xx = q.x * q.x;
+    float xy = q.x * q.y;
+    float xz = q.x * q.z;
+    float xw = q.x * q.w;
+    float yy = q.y * q.y;
+    float yz = q.y * q.z;
+    float yw = q.y * q.w;
+    float zz = q.z * q.z;
+    float zw = q.z * q.w;
+
+    xMatrix res;
+    res.row0.init(
+             1.f - 2.f * (yy + zz),
+                   2.f * (xy + zw),
+                   2.f * (xz - yw),
+                   0.f);
+    res.row1.init(
+                   2.f * (xy - zw),
+             1.f - 2.f * (xx + zz),
+                   2.f * (yz + xw),
+                   0.f);
+    res.row2.init(
+                   2.f * (xz + yw),
+                   2.f * (yz - xw),
+             1.f - 2.f * (xx + yy),
+                   0.f);
+    res.row3.init(0.f, 0.f, 0.f, 1.f);
+    return res;
+}
+
 xQuaternion xMatrixToQuaternion(const xMatrix &m)
 {
     xQuaternion q;

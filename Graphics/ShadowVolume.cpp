@@ -14,8 +14,9 @@ namespace ShadowVolume
             return;
         }
 
-        xVector4 *src  = shadowData.L_vertices;
-        for (int i = elem->I_vertices; i; --i, ++src, ++dest)
+        xVector4 *src  = shadowData.L_vertices,
+                 *last = dest;
+        for (; src != last; ++src, ++dest)
             dest->init(src->vector3 - lightPos, 0.f);
     }
 
@@ -25,11 +26,11 @@ namespace ShadowVolume
         if (backFaces == NULL)
             backFaces = new bool[elem->I_faces];
 
-        bool     *dest = backFaces;
-        xFace    *face = elem->L_faces;
-        xVector4 *extrVerticesP = shadowData.L_vertices + elem->I_vertices;
-        xFaceList *iterL = elem->L_faceLists;
-        xWORD      maxOffset = iterL->I_offset+iterL->I_count-1;
+        bool      *dest          = backFaces;
+        xFace     *face          = elem->L_faces;
+        xVector4  *extrVerticesP = shadowData.L_vertices + instance.I_vertices;
+        xFaceList *iterL         = elem->L_faceLists;
+        xWORD      maxOffset     = iterL->I_offset + iterL->I_count - 1;
 
         if (infiniteL)
         {
@@ -64,7 +65,7 @@ namespace ShadowVolume
         }
         else
         {
-            if (elem->FL_skeletized)
+            if (elem->FL_skeletized && instance.L_normals)
             {
                 xVector3 faceNormal;
                 for (int i = 0; i < elem->I_faces; ++i, ++face, ++dest)
@@ -98,7 +99,7 @@ namespace ShadowVolume
     xDWORD buffSize = 0;
 
     void GetSilhouette(const xElement *elem, bool infiniteL, bool optimizeBackCap,
-                                const bool *facingFlag, xShadowData &shadowData)
+                       const bool *facingFlag, xShadowData &shadowData)
     {
         shadowData.I_sides = 0;
         shadowData.I_fronts = 0;
@@ -273,8 +274,8 @@ namespace ShadowVolume
         }
     }
 
-    bool ViewportMaybeShadowed (const xElement *elem, xElementInstance &instance,
-                                         const xMatrix &location, const xFieldOfView &FOV, const xLight& light)
+    bool ViewportMaybeShadowed (const xElement *elem, xElementInstance &instance, const xMatrix &location,
+                                const Math::Cameras::FieldOfView &FOV, const xLight& light)
     {
         xPlane occlusionPyramid[6];
         int numPlanes = 5;

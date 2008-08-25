@@ -14,6 +14,11 @@ namespace Math { namespace Figures {
 
         virtual void ComputeSpan(const xVector3 &N_axis, xFLOAT &P_min, xFLOAT &P_max, int axis = -1) const
         {
+            ComputeSpan(P_center, S_radius, N_axis, P_min, P_max, axis);
+        }
+        static void ComputeSpan(const xPoint3 &P_center, xFLOAT S_radius,
+                                const xVector3 &N_axis, xFLOAT &P_min, xFLOAT &P_max, int axis = -1)
+        {
             xFLOAT P_middle = xVector3::DotProduct(N_axis, P_center);
             P_min = P_middle - S_radius;
             P_max = P_middle + S_radius;
@@ -28,6 +33,11 @@ namespace Math { namespace Figures {
         }
 
         virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max )
+        {
+            P_MinMax_Get(P_center, S_radius, P_min, P_max);
+        }
+        static void P_MinMax_Get( const xPoint3 &P_center, xFLOAT S_radius,
+                                  xPoint3 &P_min, xPoint3 &P_max )
         {
             P_min = P_max = P_center;
             P_min.x -= S_radius; P_max.x += S_radius;

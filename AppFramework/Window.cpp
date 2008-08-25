@@ -22,13 +22,13 @@ bool IWindow::SetFullScreen(bool fullscreen)
 //#ifndef NDEBUG
     if (fullscreen)
     {
-        width = 1680;
-        height = 1050;
+        width  = Config::FullScreenX;
+        height = Config::FullScreenY;
     }
     else
     {
-        width = 800;
-        height = 600;
+        width  = Config::WindowX;
+        height = Config::WindowY;
     }
 //#endif
 

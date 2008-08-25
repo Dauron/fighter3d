@@ -4,6 +4,10 @@ struct xPlane : xVector4
     {
         return xVector3::DotProduct(vector3,P_point) + w;
     }
+    xFLOAT distanceToPoint(const xPoint4 &P_point) const
+    {
+        return xVector4::DotProduct(*this,P_point);
+    }
     xPlane &init(const xVector3 &N_normal, const xPoint3 &P_point)
     {
         vector3 = N_normal;

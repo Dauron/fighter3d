@@ -37,9 +37,9 @@ struct xBone
     xQuaternion getSkew(const xQuaternion &QT_bone) const
     {
         xPoint3 P_def  = P_end-P_begin;
-        xPoint3 P_rot  = xQuaternion::rotate(QT_bone, P_def);
-        xQuaternion QT_rot = xQuaternion::getRotation(P_rot, P_def);
-        return xQuaternion::product(QT_bone, QT_rot);
+        xPoint3 P_rot  = QT_bone.rotate(P_def);
+        xQuaternion QT_rot = xQuaternion::GetRotation(P_rot, P_def);
+        return xQuaternion::Product(QT_bone, QT_rot);
     }
 
     xVector3 getFront() const

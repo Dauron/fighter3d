@@ -2,14 +2,14 @@
 
 using namespace Physics;
 
-void PhysicalWorld :: Interact(xFLOAT T_time, ObjectVector &L_objects)
+void PhysicalWorld :: Interact(xFLOAT T_time, Vec_Object &L_objects)
 {
     if (!L_objects.size()) return;
 
-    ObjectVector::iterator Object_1,
-                           Object_2,
-                           Object_2_Last = L_objects.end(),
-                           Object_1_Last = Object_2_Last - 1;
+    Vec_Object::iterator Object_1,
+                         Object_2,
+                         Object_2_Last = L_objects.end(),
+                         Object_1_Last = Object_2_Last - 1;
 
     BVHCollider  Collider;
     CollisionSet cset;
@@ -51,27 +51,34 @@ void PhysicalWorld :: Interact(xFLOAT T_time, ObjectVector &L_objects)
                             xFLOAT W_V2_1 = 2.f * M_mass_2 * W_M1M2_Inv * W_hits_Inv * pBody2.W_restitution;
                             xFLOAT W_V2_2 = (M_mass_2 - M_mass_1) * W_M1M2_Inv * W_hits_Inv * pBody2.W_restitution_self;
 
-                            xFLOAT W_fix_1 = M_mass_1 * W_M1M2_Inv; //* W_hits_Inv;
-                            xFLOAT W_fix_2 = M_mass_2 * W_M1M2_Inv; //* W_hits_Inv;
-
-                            //pBody1.MX_LocalToWorld_Set().postTranslateT(NW_best_fix_1 * W_fix_1);
-                            //pBody2.MX_LocalToWorld_Set().postTranslateT(NW_best_fix_1 * -W_fix_2);
+                            xFLOAT W_fix_1 = M_mass_1 * W_M1M2_Inv;
+                            xFLOAT W_fix_2 = M_mass_2 * W_M1M2_Inv;
 
                             for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
                             {
                                 CollisionPoint &cp1 = collision->CPoint1_Get();
                                 CollisionPoint &cp2 = collision->CPoint2_Get();
                                 cp1.V_action = pBody1.GetVelocity(cp1);
+                                cp1.V_reaction.zero();
                                 cp2.V_action = pBody2.GetVelocity(cp2);
-                                cp1.V_reaction = cp1.V_action * W_V1_1 + cp2.V_action * W_V2_1;
-                                cp2.V_reaction = cp1.V_action * W_V1_2 + cp2.V_action * W_V2_2;
+                                cp2.V_reaction.zero();
+
+                                xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp1.V_action), xVector3::Normalize(cp1.NW_fix));
+                                if (W_cos > 0.f)
+                                {
+                                    cp1.V_reaction = cp1.V_action * (W_cos * W_V1_1);
+                                    cp2.V_reaction = cp1.V_action * (W_cos * W_V1_2);
+                                }
+                                W_cos = -xVector3::DotProduct(xVector3::Normalize(cp2.V_action), xVector3::Normalize(cp2.NW_fix));
+                                if (W_cos < 0.f)
+                                {
+                                    cp1.V_reaction += cp2.V_action * (W_cos * W_V2_1);
+                                    cp2.V_reaction += cp2.V_action * (W_cos * W_V2_2);
+                                }
                                 cp1.W_fix      = W_fix_1;
                                 cp2.W_fix      = W_fix_2;
 
-                                pBody1.ApplyAcceleration(cp1.V_reaction, 1.f, cp1);
                                 pBody1.Collisions.push_back(cp1);
-
-                                pBody2.ApplyAcceleration(cp2.V_reaction, 1.f, cp2);
                                 pBody2.Collisions.push_back(cp2);
                             }
                         }
@@ -80,16 +87,16 @@ void PhysicalWorld :: Interact(xFLOAT T_time, ObjectVector &L_objects)
                         {
                             xFLOAT W_V1_1 = -1.f * W_hits_Inv * pBody1.W_restitution_self;
 
-                            //pBody1.MX_LocalToWorld_Set().postTranslateT(NW_best_fix_1);
-
                             for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
                             {
                                 CollisionPoint &cp1 = collision->CPoint1_Get();
                                 cp1.V_action   = pBody1.GetVelocity(cp1);
-                                cp1.V_reaction = cp1.V_action * W_V1_1;
+                                cp1.V_reaction.zero();
+                                xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp1.V_action), xVector3::Normalize(cp1.NW_fix));
+                                if (W_cos > 0.f)
+                                    cp1.V_reaction = cp1.V_action * (W_cos * W_V1_1);
+                                //cp1.V_reaction = cp1.V_action * W_V1_1;
                                 cp1.W_fix      = 1.f;
-
-                                pBody1.ApplyAcceleration(cp1.V_reaction, 1.f, cp1);
                                 pBody1.Collisions.push_back(cp1);
                             }
                         }
@@ -98,16 +105,16 @@ void PhysicalWorld :: Interact(xFLOAT T_time, ObjectVector &L_objects)
                         {
                             xFLOAT W_V2_2 = -1.f * W_hits_Inv * pBody2.W_restitution_self;
 
-                            //pBody2.MX_LocalToWorld_Set().postTranslateT(-NW_best_fix_1);
-
                             for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
                             {
                                 CollisionPoint &cp2 = collision->CPoint2_Get();
                                 cp2.V_action   = pBody2.GetVelocity(cp2);
-                                cp2.V_reaction = cp2.V_action * W_V2_2;
+                                cp2.V_reaction.zero();
+                                xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp2.V_action), xVector3::Normalize(cp2.NW_fix));
+                                if (W_cos > 0.f)
+                                    cp2.V_reaction = cp2.V_action * (W_cos * W_V2_2);
+                                //cp2.V_reaction = cp2.V_action * W_V2_2;
                                 cp2.W_fix      = 1.f;
-
-                                pBody2.ApplyAcceleration(cp2.V_reaction, 1.f, cp2);
                                 pBody2.Collisions.push_back(cp2);
                             }
                         }

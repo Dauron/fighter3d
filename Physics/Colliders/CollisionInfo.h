@@ -24,6 +24,7 @@ namespace Physics {
         xDWORD            ID_subobj;
 
         xPoint3           P_collision;
+        xVector3          N_fix;
         xVector3          NW_fix;
         xVector3          V_action;
         xVector3          V_reaction;

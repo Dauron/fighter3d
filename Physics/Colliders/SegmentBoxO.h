@@ -7,7 +7,7 @@
 bool SegmentBoxOMinMax(const xPoint3 &P_A, const xPoint3 &P_B, const xBoxO &bo2,
                        xPoint3 &P_min, xPoint3 &P_max)
 {
-    AxisSpans spans[3];
+    AxisSpans spans[4];
     xBYTE S_AV[3];
 
     for (int i = 0; i < 3; ++i)
@@ -17,7 +17,19 @@ bool SegmentBoxOMinMax(const xPoint3 &P_A, const xPoint3 &P_B, const xBoxO &bo2,
         S_AV[i] = xSegment::ComputeSpan(P_A, P_B, spans[i].N_axis, spans[i].P_min2, spans[i].P_max2);
         if (spans[i].P_min1 > spans[i].P_max2 + EPSILON2 || spans[i].P_max1 + EPSILON2 < spans[i].P_min2) return false;
     }
+/*
+    spans[3].init(sg1.N_dir);
+    bo2.ComputeSpan(spans[3].N_axis, spans[3].P_min1, spans[3].P_max1);
+    xSegment::ComputeSpan(P_A, P_B, spans[3].N_axis, spans[3].P_min2, spans[3].P_max2, 0);
+    if (spans[3].P_min1 > spans[3].P_max2 + EPSILON2 || spans[3].P_max1 + EPSILON2 < spans[3].P_min2) return false;
 
+    if (
+        AxisSpans::AxisNotOverlapClose(sg1, bo2, spans[3].init(sg1.N_dir), 0)  ||
+        AxisSpans::AxisNotOverlapClose(sg1, bo2, spans[4].init(xVector3::CrossProduct(sg1.N_dir, bo2.N_front)) ) ||
+        AxisSpans::AxisNotOverlapClose(sg1, bo2, spans[5].init(xVector3::CrossProduct(sg1.N_dir, bo2.N_side)) )  ||
+        AxisSpans::AxisNotOverlapClose(sg1, bo2, spans[6].init(xVector3::CrossProduct(sg1.N_dir, bo2.N_top)) ) )
+        return false;
+*/
     xFLOAT S_min = xFLOAT_HUGE_NEGATIVE, S_max = xFLOAT_HUGE_POSITIVE, S_tmp;
 
     for (int i = 0; i < 3; ++i)
@@ -49,7 +61,7 @@ bool SegmentBoxOMinMax(const xPoint3 &P_A, const xPoint3 &P_B, const xBoxO &bo2,
             }
         }
 
-    //if (S_max + EPSILON2 < S_min) return false;
+    if (S_max + EPSILON2 < S_min) return false;
     if (S_max < S_min)
     {
         S_min = S_max = (S_min + S_max) * 0.5f;

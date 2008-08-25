@@ -657,6 +657,10 @@
 			Name="World"
 			>
 			<File
+				RelativePath="..\World\ObjectTypes.h"
+				>
+			</File>
+			<File
 				RelativePath="..\World\RigidObj.cpp"
 				>
 			</File>
@@ -1077,10 +1081,6 @@
 			Name="Math"
 			>
 			<File
-				RelativePath="..\Math\xFieldOfView.h"
-				>
-			</File>
-			<File
 				RelativePath="..\Math\xLight.cpp"
 				>
 			</File>
@@ -1165,6 +1165,22 @@
 					RelativePath="..\Math\Cameras\CameraHuman.h"
 					>
 				</File>
+				<File
+					RelativePath="..\Math\Cameras\CameraSet.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Cameras\CameraSet.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Cameras\FieldOfView.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Cameras\FieldOfView.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="Figures"
@@ -1223,6 +1239,22 @@
 				</File>
 				<File
 					RelativePath="..\Math\Figures\xTriangle.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Tracking"
+				>
+				<File
+					RelativePath="..\Math\Tracking\ObjectTracker.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Tracking\ObjectTracker.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Math\Tracking\TrackedObject.h"
 					>
 				</File>
 			</Filter>

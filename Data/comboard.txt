@@ -3,69 +3,136 @@
 #anim   animation file [animation start time] [animation stop time]
 #time   duration of the whole animation (0 for infinity)
 #post   destination action after finishing current action (default first action)
+#rotate if 1, figure is rotated by last skew of the root bones (default 0)
 #(combo)
 #action destination action of combo
 #key    key that activates combo
 #first  the first time the combo may be activated (default 0)
 #last   the last time the combo may be activated  (default 0 = infinity)
 #time   initial time of the destination combo (+ time since first, if last != 0, default = 0)
+#prec   if 1, no "+time since first" is applied (default 0)
+#shift  if 1, figure is trasformed by last position of the animation (default 1)
 
 [action]
 name	position
-anim	models/anims/human/position.ska 0
+anim	models/anims/karate/position.ska 0
 (combo)
 action  mai_geri_front_mid
 key     LeftKick
 (combo)
 action  jaku_zuki_mid
 key     LeftPunch
+(combo)
+action  step
+key     Forward
+(combo)
+action  step_back
+key     Backward
+(combo)
+action  rotate_left
+key     Left
+
+[action]
+name    step
+anim    models/anims/karate/step.ska 0
+time    400
+(combo)
+action  step_back
+key     Backward
+(combo)
+action  jump_low
+key     Forward
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+
+[action]
+name    rotate_left
+anim    models/anims/karate/rotate-left.ska 0
+time    400
+rotate  1
+
+[action]
+name    step_back
+anim    models/anims/karate/step-back.ska 0
+time    300
+(combo)
+action  step
+key     Forward
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+
+[action]
+name    jump_low
+anim    models/anims/karate/jump-low.ska 0
+time    500
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+first   100
+last    500
+prec    1
 
 [action]
 name	mai_geri_front_mid
-anim	models/anims/human/mai-geri-front-mid.ska 0
+anim	models/anims/karate/mai-geri-front-mid.ska 0
 time	600
 (combo)
 action	mai_geri_front_high
 key		LeftKick
 first   0
 last    200
+shift   0
 
 [action]
 name	mai_geri_front_high
-anim	models/anims/human/mai-geri-front-high.ska 0
+anim	models/anims/karate/mai-geri-front-high.ska 0
 time	600
 (combo)
 action	mai_geri_front_mid
 key		LeftKick
 first   0
 last    200
+shift   0
 
 [action]
 name    jaku_zuki_mid
-anim    models/anims/human/jaku-zuki-mid.ska 0
+anim    models/anims/karate/jaku-zuki-mid.ska 0
 time    300
 (combo)
 action	jaku_zuki_high
-key		LeftPunch
+key		Forward
 first   0
-last    75
+last    100
+(combo)
+action	jaku_zuki_low
+key		Backward
+first   0
+last    100
 
 [action]
 name    jaku_zuki_high
-anim    models/anims/human/jaku-zuki-high.ska 0
-time    300
-(combo)
-action	jaku_zuki_low
-key		LeftPunch
-first   0
-last    75
-
-[action]
-name    jaku_zuki_low
-anim    models/anims/human/jaku-zuki-low.ska 0
+anim    models/anims/karate/jaku-zuki-high.ska 0
 time    300
 (combo)
 action	jaku_zuki_mid
-key		LeftPunch
+key		Backward
 first   0
-last    75
+last    100
+
+[action]
+name    jaku_zuki_low
+anim    models/anims/karate/jaku-zuki-low.ska 0
+time    300
+(combo)
+action	jaku_zuki_mid
+key		Forward
+first   0
+last    100

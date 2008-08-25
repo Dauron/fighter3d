@@ -3,18 +3,21 @@
 #include "../Config.h"
 #include "../MotionCapture/CaptureInput.h"
 #include "../Multiplayer/NetworkInput.h"
+#include "ObjectTypes.h"
 
 void SkeletizedObj :: ApplyDefaults()
 {
     RigidObj::ApplyDefaults();
     W_restitution      = 0.9f;
     W_restitution_self = 0.0f;
+
+    Tracker.Init();
 }
 
 void SkeletizedObj :: Initialize ()
 {
     RigidObj::Initialize();
-    Type = Model_Verlet;
+    Type = AI::ObjectType::Human;
 
     T_verlet     = 0.f; // 1000.f;
     W_verlet     = 0.f;
@@ -59,13 +62,8 @@ void SkeletizedObj :: Finalize ()
     DestroyVerletSystem();
     delete[] QT_verlet;
 
-    if (actions.L_actions.size())
-    {
-        std::vector<xAction>::iterator iterF = actions.L_actions.begin(), iterE = actions.L_actions.end();
-        for (; iterF != iterE; ++iterF)
-            g_AnimationMgr.DeleteAnimation(iterF->hAnimation);
-        actions.L_actions.clear();
-    }
+    actions.Free();
+
     if (NW_VerletVelocity)
     {
         delete[] NW_VerletVelocity;       NW_VerletVelocity     = NULL;
@@ -204,7 +202,7 @@ xVector3 SkeletizedObj :: MergeCollisions()
         if (iter_cur->V_action.lengthSqr() > V_action.lengthSqr())
             V_action =  iter_cur->V_action;
         V_reaction += iter_cur->V_reaction;
-        if (iter_cur->Offender && ((RigidObj*)iter_cur->Offender)->Type == Model_Verlet)
+        if (iter_cur->Offender && iter_cur->Offender->Type == AI::ObjectType::Human)
             Offender = ((SkeletizedObj*)iter_cur->Offender);
 
         xVector3 NW_tmp = iter_cur->NW_fix;// * iter_cur->W_fix;
@@ -287,7 +285,7 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 {
     float delta = GetTick();
 
-    RigidObj::FrameUpdate(T_time);
+    //RigidObj::FrameUpdate(T_time);
 
     //////////////////////////////////////////////////////// Update Verlets
 
@@ -301,10 +299,11 @@ void SkeletizedObj :: FrameUpdate(float T_time)
                 xVector3 NW_dump; NW_dump.zero();
 
                 std::vector<Physics::Colliders::CollisionPoint>::iterator
-                            iter_cur = Collisions.begin(),
-                            iter_end = Collisions.end();
+                            iter_cur, iter_end = Collisions.end();
 
-                for (; iter_cur != iter_end; ++iter_cur)
+                for (iter_cur = Collisions.begin(); iter_cur != iter_end; ++iter_cur)
+                    ApplyAcceleration(iter_cur->V_reaction, 1.f, *iter_cur);
+                for (iter_cur = Collisions.begin(); iter_cur != iter_end; ++iter_cur)
                 {
                     bool supports = false;
                     for (int ci = 0; ci < iter_cur->I_Bones && !supports; ++ci)
@@ -372,7 +371,7 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     // Update Matrices
     MX_LocalToWorld_Set().postTranslateT(NW_translation);
-    xMatrix::Invert(MX_LocalToWorld_Get(), MX_WorldToLocal);
+    UpdateMatrices();
 
     xSkeleton &spine = GetModelPh()->Spine;
     verletSystem.C_constraints = spine.C_constraints;
@@ -442,6 +441,31 @@ void SkeletizedObj :: FrameUpdate(float T_time)
     spine.L_bones->QT_rotation.zeroQ();
     QT_verlet[0].zeroQ();
 
+    //////////////////////////////////////////////////////// Track enemy movement
+
+    if (W_verlet == 0.f && T_time > 0.f)
+    {
+        xPoint3 P_aim = MX_LocalToWorld_Get().preTransformP(xVector3::Create(0.f, -1.f, 1.f));
+        Tracker.UpdateDestination();
+
+        xVector3 NW_aim = P_aim - P_center_Trfm; NW_aim.z = 0.f;
+        xVector3 NW_dst = Tracker.P_destination - P_center_Trfm; NW_dst.z = 0.f;
+
+        xFLOAT      W_cos   = xVector3::DotProduct(NW_aim.normalize(), NW_dst.normalize());
+        xFLOAT      W_angle = acos(W_cos);
+        if ((W_angle > EPSILON3 || W_angle < -EPSILON3) &&
+            (W_angle < DEGTORAD(10) && W_angle > -DEGTORAD(10)) )
+        {
+            //W_angle *= T_time * 0.5f;
+            xFLOAT W_scale = T_time * PI * 0.25f;
+            W_angle = ((W_scale > W_angle) ? W_angle : W_scale) * 0.5f;
+            xFLOAT W_rot_dir = Sign(NW_aim.x*NW_dst.y - NW_aim.y*NW_dst.x);
+
+            xQuaternion QT_rot; QT_rot.init(0.f,0.f,W_rot_dir*sin(W_angle),cos(W_angle));
+            MX_LocalToWorld_Set().preMultiply(xMatrixFromQuaternion(QT_rot).transpose());
+        }
+    }
+
     //////////////////////////////////////////////////////// Update Animation
 
     xQuaternion *bones = NULL, *bones2 = NULL;
@@ -465,7 +489,8 @@ void SkeletizedObj :: FrameUpdate(float T_time)
     if (ControlType == Control_ComBoardInput && comBoard.L_actions.size())
     {
         comBoard.Update(T_time * 1000);
-        bones2 = comBoard.L_actions[comBoard.ID_action_cur].anims.GetTransformations();
+        MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
+        bones2 = comBoard.L_actions[comBoard.ID_action_cur].Anims.GetTransformations();
     }
 
     if (bones2)
@@ -503,7 +528,10 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     //////////////////////////////////////////////////////// Update Physical Representation
 
+    UpdateMatrices();
     UpdateVerletSystem();
+
+    P_center_Trfm = MX_LocalToWorld_Get().preTransformP(P_center);
 
     if (T_time > EPSILON)
     {

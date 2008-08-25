@@ -1,11 +1,11 @@
 #include "ISelectionProvider.h"
 
 #include "../../Config.h"
-#include "../../Math/xMath.h"
 #include "GLShader.h"
 #include <GL/glu.h>
 
-std::vector<xDWORD> * ISelectionProvider:: Select(const xFieldOfView *FOV, int X, int Y, int W, int H)
+std::vector<xDWORD> * ISelectionProvider:: Select(const Math::Cameras::Camera &Camera,
+                                                  int X, int Y, int W, int H)
 {
     if (W == 0) W = 1; if (H == 0) H = 1;
 
@@ -23,26 +23,25 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const xFieldOfView *FOV, int X
     GLShader::SetLightType(xLight_NONE);
     GLShader::EnableTexturing(xState_Disable);
 
-    //Retrieve viewport (x, y, width, height) & projection matrix
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    float projection[16];
-    glGetFloatv(GL_PROJECTION_MATRIX, projection);
     //Select the projection matrix
+    glViewport(Camera.FOV.ViewportLeft, Camera.FOV.ViewportTop, Camera.FOV.ViewportWidth, Camera.FOV.ViewportHeight);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
     {
+        GLint viewport[] = { (GLint)Camera.FOV.ViewportLeft,  (GLint)Camera.FOV.ViewportTop,
+                             (GLint)Camera.FOV.ViewportWidth, (GLint)Camera.FOV.ViewportHeight };
         //Restrict drawing in our picking region.
-        gluPickMatrix(X+W/2, viewport[3]-Y-H/2, W, H, viewport);
+        gluPickMatrix(X+W/2, Y-H/2, W, H, viewport);
         //Defines the viewing volume
-        glMultMatrixf(projection);
+        glMultMatrixf(&Camera.FOV.MX_Projection_Get().x0);
         //Select the modelview matrix for the drawing
         glMatrixMode(GL_MODELVIEW);
+        glLoadMatrixf(&Camera.MX_WorldToView_Get().x0);
         //Draw the scene
         glInitNames();
         glPushName(0);
-        RenderSelect(FOV);
+        RenderSelect(Camera.FOV);
         //Return to render mode, glRenderMode returns the number of hits (only because GL_SELECT was selected before)
         nbRecords = glRenderMode(GL_RENDER);
         State::RenderingSelection = false;

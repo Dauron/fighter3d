@@ -13,14 +13,19 @@ class RendererGL : public Renderer
     bool       UseList;
 
     virtual void RenderModel    ( xModel &model, xModelInstance &instance,
-                                  bool transparent, const xFieldOfView &FOV );
+                                  bool transparent,
+                                  const Math::Cameras::FieldOfView &FOV );
     virtual void RenderDepth    ( xModel &model, xModelInstance &instance,
-                                  bool transparent, const xFieldOfView &FOV );
-    virtual void RenderAmbient  ( xModel &model, xModelInstance &instance, const xLightVector &lights,
-                                  bool transparent, const xFieldOfView &FOV );
-    virtual void RenderDiffuse  ( xModel &model, xModelInstance &instance, const xLight &light,
-                                  bool transparent, const xFieldOfView &FOV );
-    virtual void RenderSkeleton ( xModel &model, xModelInstance &instance, xWORD selBoneId = xWORD_MAX );
+                                  bool transparent,
+                                  const Math::Cameras::FieldOfView &FOV );
+    virtual void RenderAmbient  ( xModel &model, xModelInstance &instance,
+                                  const Vec_xLight &lights, bool transparent,
+                                  const Math::Cameras::FieldOfView &FOV );
+    virtual void RenderDiffuse  ( xModel &model, xModelInstance &instance,
+                                  const xLight &light, bool transparent,
+                                  const Math::Cameras::FieldOfView &FOV );
+    virtual void RenderSkeleton ( xModel &model, xModelInstance &instance,
+                                  xWORD selBoneId = xWORD_MAX );
     virtual void RenderVertices ( xModel &model, xModelInstance &instance,
                                   SelectionMode         selectionMode    = smNone,
                                   xWORD                 selElementId     = xWORD_MAX,
@@ -29,13 +34,17 @@ class RendererGL : public Renderer
                                   xWORD                 selectedElement,
                                   std::vector<xDWORD>  * facesToRender );
 
-    virtual void RenderSkeletonSelection ( xModel &model, xModelInstance &instance, bool selectConstraint = false );
+    virtual void RenderSkeletonSelection ( xModel &model, xModelInstance &instance,
+                                           bool selectConstraint = false );
 
     virtual void RenderShadowVolume      ( xModel &model, xModelInstance &instance,
-                                           xLight &light, xFieldOfView &FOV );
+                                           xLight &light,
+                                           const Math::Cameras::FieldOfView &FOV );
     virtual void RenderShadowMap         ( xModel &model, xModelInstance &instance,
-                                           const xShadowMap &shadowMap, const xFieldOfView &FOV );
-    virtual void CreateShadowMapTexture  ( xModel &model, xModelInstance &instance, xDWORD &shadowMapTexId,
+                                           const xShadowMap &shadowMap,
+                                           const Math::Cameras::FieldOfView &FOV );
+    virtual void CreateShadowMapTexture  ( xModel &model, xModelInstance &instance,
+                                           xDWORD &shadowMapTexId,
                                            xWORD width, xMatrix &mtxBlockerToLight );
 
     RendererGL() : UseVBO(GLExtensions::Exists_ARB_VertexBufferObject), UseList(true) {};
@@ -81,8 +90,12 @@ class RendererGL : public Renderer
     static void SetMaterial(xColor color, xMaterial *mat, bool toggleShader = true);
 
   protected:
-    virtual void RenderBVHExt            ( Math::Figures::xBVHierarchy &bvh, const xMatrix &MX_LocalToWorld, xBYTE I_level,
-                                           xBYTE &ID, xBYTE ID_selected = xBYTE_MAX, bool FL_selection = false);
+    virtual void RenderBVHExt            ( Math::Figures::xBVHierarchy &bvh,
+                                           const xMatrix &MX_LocalToWorld,
+                                           xBYTE          I_level,
+                                           xBYTE         &ID,
+                                           xBYTE          ID_selected = xBYTE_MAX,
+                                           bool           FL_selection = false);
 
   private:
     void InitTextures(xModel &model);

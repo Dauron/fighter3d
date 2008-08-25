@@ -18,8 +18,8 @@
 
 class SceneTest : public Scene, private ISelectionProvider
 {
-  public:
-    Camera *DefaultCamera;
+public:
+    Math::Cameras::Camera *DefaultCamera;
 
     SceneTest() : DefaultCamera(NULL)
         , pf_sphere1(new ::Math::Figures::xSphere())
@@ -43,10 +43,11 @@ class SceneTest : public Scene, private ISelectionProvider
     virtual void Resize(int left, int top, unsigned int width, unsigned int height)
     {
         Scene::Resize(left, top, width, height);
-        FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
+        Camera.FOV.InitPerspective();
+        Camera.FOV.InitViewport(left,top,width,height);
     }
 
-  private:
+private:
 
     ::Physics::PhysicalFigure  pf_sphere1;
     ::Physics::PhysicalFigure  pf_sphere2;
@@ -56,7 +57,7 @@ class SceneTest : public Scene, private ISelectionProvider
     ::Physics::PhysicalFigure  pf_cube2;
     ::Physics::PhysicalFigure  pf_mesh1;
     ::Physics::PhysicalFigure  pf_mesh2;
-    ::Physics::PhysicalWorld::ObjectVector figures[10];
+    ::Physics::PhysicalWorld::Vec_Object figures[10];
 
     xDWORD  selected;
     xDWORD  selectedSub;
@@ -71,22 +72,11 @@ class SceneTest : public Scene, private ISelectionProvider
     bool InitGL();
     void InitInputMgr();
 
-    CameraHuman  fCamera;
-    xFieldOfView FOV;
+    Math::Cameras::CameraHuman Camera;
 
-    virtual void RenderSelect(const xFieldOfView *FOV);
+    virtual void RenderSelect(const Math::Cameras::FieldOfView &FOV);
     virtual unsigned int CountSelectable();
-
-    xVector3 Get3dPos(int X, int Y, xVector3 P_plane);
-
-    xDWORD Select(int X, int Y)
-    {
-        std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(&FOV, X, Y);
-        if (objectIDs == NULL) return -1;
-        xDWORD res = objectIDs->back();
-        delete objectIDs;
-        return res;
-    }
+    xDWORD Select(int X, int Y);
 };
 
 #endif

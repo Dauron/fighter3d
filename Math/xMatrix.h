@@ -213,6 +213,7 @@ bool operator == (const xMatrix &a, const xMatrix &b);
 bool operator != (const xMatrix &a, const xMatrix &b);
 
 xMatrix     xMatrixFromQuaternion(xQuaternion q);
+xMatrix     xMatrixFromQuaternionT(xQuaternion q);
 xQuaternion xMatrixToQuaternion(const xMatrix &m);
 xMatrix     xMatrixRotateRad(xFLOAT radX, xFLOAT radY, xFLOAT radZ);
 xMatrix     xMatrixTranslate(xFLOAT x, xFLOAT y, xFLOAT z);

@@ -11,8 +11,10 @@ struct xAction {
 };
 
 struct xActionSet {
-    std::vector<xAction> L_actions;
-    xDWORD               T_progress;
+    typedef std::vector<xAction> Vec_xAction;
+
+    Vec_xAction   L_actions;
+    xDWORD        T_progress;
 
     void          Update(xDWORD T_delta);
     xQuaternion * GetTransformations();
@@ -25,6 +27,18 @@ struct xActionSet {
         L_actions.rbegin()->hAnimation = g_AnimationMgr.GetAnimation(fileName);
         L_actions.rbegin()->T_start = T_start;
         L_actions.rbegin()->T_end   = T_end;
+    }
+
+    void Free()
+    {
+        if (L_actions.size())
+        {
+            Vec_xAction::iterator A_curr = L_actions.begin(),
+                                  A_last = L_actions.end();
+            for (; A_curr != A_last; ++A_curr)
+                g_AnimationMgr.DeleteAnimation(A_curr->hAnimation);
+            L_actions.clear();
+        }
     }
 };
 

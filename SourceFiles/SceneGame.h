@@ -2,16 +2,15 @@
 #define __incl_SceneGame_h
 
 #include "../AppFramework/Scene.h"
-#include "../Math/xFieldOfView.h"
-#include "../Math/Cameras/CameraHuman.h"
+#include "../Math/Cameras/CameraSet.h"
 #include "../Graphics/OGL/Fonts/FontMgr.h"
 #include "../Graphics/OGL/ISelectionProvider.h"
 #include "../World/World.h"
 
 class SceneGame : public Scene, private ISelectionProvider
 {
-  public:
-    Camera *DefaultCamera;
+public:
+    Math::Cameras::Camera *DefaultCamera;
 
     SceneGame() : DefaultCamera(NULL) { sceneName="[Game]"; };
 
@@ -27,36 +26,31 @@ class SceneGame : public Scene, private ISelectionProvider
     virtual void Resize(int left, int top, unsigned int width, unsigned int height)
     {
         Scene::Resize(left, top, width, height);
-        FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
+        InitCameras();
     }
 
     virtual bool ShellCommand(std::string &cmd, std::string &output);
 
-    World          world;
-
-  private:
+private:
     bool InitGL();
+    bool InitWorld();
+    void InitCameras();
     void InitInputMgr();
+
     void SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular);
 
     long  accum;
     float stepAccum;
 
-    CameraHuman    hCamera;
+    Math::Cameras::CameraSet  Cameras;
 
-    xFieldOfView   FOV;
+    World world;
+    Math::Tracking::TrackingSet Targets;
 
-    virtual void RenderSelect(const xFieldOfView *FOV);
-    virtual unsigned int CountSelectable();
-
-    RigidObj *Select(int X, int Y)
-    {
-        std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(&FOV, X, Y);
-        return objectIDs == NULL ? NULL : (RigidObj*) world.objects[objectIDs->back()];
-    }
-
-
+    virtual void RenderSelect(const Math::Cameras::FieldOfView &FOV);
+    unsigned int CountSelectable()
+    { return world.objects.size(); }
+    RigidObj *Select(int X, int Y);
 };
 
 #endif
-

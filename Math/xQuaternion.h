@@ -15,32 +15,41 @@ public:
         return *this;
     }
 
-    static xQuaternion getRotation     (const xPoint3 &srcP, const xPoint3 &dstP);
+    static xQuaternion GetRotation     (const xPoint3 &srcP, const xPoint3 &dstP);
+    static xQuaternion GetRotation     (const xPoint3 &srcP, const xPoint3 &dstP, const xPoint3 &center)
+    { return GetRotation(srcP-center, dstP-center); }
 
-    static xQuaternion getRotation     (const xPoint3 &srcP, const xPoint3 &dstP, const xPoint3 &center)
+    xPoint3 rotate(const xPoint3 &p) const;
+    xPoint3 rotate(const xPoint3 &p, const xPoint3 &center) const
+    { return rotate(p - center) + center; }
+
+           xVector3    angularVelocity() const;
+    static xQuaternion AngularVelocity(const xVector3 &omega);
+
+    static xQuaternion Product         (const xQuaternion &a, const xQuaternion &b);
+
+           xQuaternion &interpolate     (xFLOAT weight);
+           xQuaternion &interpolateFull (xFLOAT weight);
+    static xQuaternion  Interpolate     (const xQuaternion &q, xFLOAT weight)
     {
-        return getRotation(srcP-center, dstP-center);
+        xQuaternion ret = q;
+        return ret.interpolate(weight);
+    }
+    static xQuaternion  InterpolateFull (const xQuaternion &q, xFLOAT weight)
+    {
+        xQuaternion ret = q;
+        return ret.interpolateFull(weight);
     }
 
-    static xPoint3 rotate              (const xQuaternion &q, const xPoint3 &p);
-    static xPoint3 rotate              (const xQuaternion &q, const xPoint3 &p, const xPoint3 &center);
+    static xQuaternion Exp             (const xQuaternion &q);
+    static xQuaternion Log             (const xQuaternion &q);
 
-    xVector3    angularVelocity() const;
-    static xQuaternion angularVelocity(const xVector3 &omega);
-
-    static xQuaternion product         (const xQuaternion &a, const xQuaternion &b);
-    static xQuaternion interpolate     (const xQuaternion &q, xFLOAT weight);
-    static xQuaternion interpolateFull (const xQuaternion &q, xFLOAT weight);
-
-    static xQuaternion exp             (const xQuaternion &q);
-    static xQuaternion log             (const xQuaternion &q);
-
-    static xQuaternion lerp            (const xQuaternion &q1,const xQuaternion &q2,float t);
-    static xQuaternion slerp           (const xQuaternion &q1,const xQuaternion &q2,float t);
-    static xQuaternion slerpNoInvert   (const xQuaternion &q1,const xQuaternion &q2,float t);
-    static xQuaternion squad           (const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &a,const xQuaternion &b,float t);
-    static xQuaternion squad           (const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &a,float t);
-    static xQuaternion spline          (const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &q3);
+    static xQuaternion Lerp            (const xQuaternion &q1,const xQuaternion &q2,float t);
+    static xQuaternion SLerp           (const xQuaternion &q1,const xQuaternion &q2,float t);
+    static xQuaternion SLerpNoInvert   (const xQuaternion &q1,const xQuaternion &q2,float t);
+    static xQuaternion SQuad           (const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &a,const xQuaternion &b,float t);
+    static xQuaternion SQuad           (const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &a,float t);
+    static xQuaternion Spline          (const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &q3);
 };
 
 inline xQuaternion &xQuaternionCast(xVector4 &QT)

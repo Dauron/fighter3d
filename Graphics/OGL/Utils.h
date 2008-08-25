@@ -3,25 +3,28 @@
 
 #include "ogl.h"
 #include "../../Math/Cameras/Camera.h"
-#include "../../Math/xFieldOfView.h"
+#include "../../Math/Cameras/FieldOfView.h"
 
 void xglPerspective ( GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar );
 void xglPerspective ( GLdouble fovY, GLdouble aspect, GLdouble zNear );
 
-inline void xglPerspectiveInf ( const xFieldOfView &FOV )
+inline void xglPerspectiveInf ( const Math::Cameras::FieldOfView &FOV )
 {
-    xglPerspective( FOV.Angle, FOV.Aspect, FOV.FrontClip/*, FOV.BackClip*/ );
+    xglPerspective( FOV.PerspAngle, FOV.Aspect, FOV.FrontClip/*, FOV.BackClip*/ );
 }
-inline void xglPerspective ( const xFieldOfView &FOV )
+inline void xglPerspective ( const Math::Cameras::FieldOfView &FOV )
 {
-    xglPerspective( FOV.Angle, FOV.Aspect, FOV.FrontClip, FOV.BackClip );
+    xglPerspective( FOV.PerspAngle, FOV.Aspect, FOV.FrontClip, FOV.BackClip );
 }
 
-inline void Camera_Aim_GL(Camera &camera)
+inline void ViewportSet_GL(const Math::Cameras::Camera &camera)
 {
-    xMatrix m;
-    camera.LookAtMatrix(m);
-    glLoadMatrixf(&m.x0);
+    glViewport(camera.FOV.ViewportLeft,  camera.FOV.ViewportTop,
+               camera.FOV.ViewportWidth, camera.FOV.ViewportHeight);
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(&camera.FOV.MX_Projection_Get().x0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(&camera.MX_WorldToView_Get().x0);
 }
 
 #endif

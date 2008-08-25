@@ -5,36 +5,32 @@
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
 #include "../Math/Cameras/CameraHuman.h"
+#include "../Math/Cameras/CameraFree.h"
 
 #include "../Graphics/OGL/GLShader.h"
 #include "../Graphics/OGL/Extensions/EXT_stencil_wrap.h"
 #include "../Graphics/OGL/Extensions/EXT_stencil_two_side.h"
 #include "../Graphics/OGL/Extensions/ARB_multisample.h"
 
+#include "../World/ObjectTypes.h"
+
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
 
-bool SceneGame::Initialize(int left, int top, unsigned int width, unsigned int height)
+bool SceneGame :: Initialize(int left, int top, unsigned int width, unsigned int height)
 {
     Scene::Initialize(left, top, width, height);
 
-    if (DefaultCamera != &hCamera)
-    {
-        hCamera.SetCamera(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
-        DefaultCamera = &hCamera;
-    }
     stepAccum = 0.0f;
     InitInputMgr();
 
-    FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
-
     if (!world.objects.size())
-    {
-        world.Initialize();
-        world.InitialUpdate();
-    }
+        InitWorld();
+    else
+        InitCameras();
+
     return InitGL();
 }
 
@@ -66,10 +62,65 @@ bool SceneGame :: InitGL()
     return true;
 }
 
-bool SceneGame :: Invalidate()
+bool SceneGame :: InitWorld()
 {
-    world.Invalidate();
+    world.Finalize();
+    world.Initialize();
+
+    Targets.L_objects.clear();
+    Physics::PhysicalWorld::Vec_Object::iterator
+        OB_curr = world.objects.begin(),
+        OB_last = world.objects.end();
+    for (; OB_curr != OB_last; ++OB_curr)
+        if ( (**OB_curr).Type == AI::ObjectType::Human )
+        {
+            Targets.L_objects.push_back(*OB_curr);
+            ((SkeletizedObj*)(*OB_curr))->Tracker.Targets = &Targets;
+        }
+
+    Cameras.Free();
+    InitCameras();
+
+    world.InitialUpdate();
+
     return true;
+}
+
+void SceneGame :: InitCameras()
+{
+    if (Cameras.L_cameras.size() == 0)
+    {
+        Cameras.Load("Data/cameras.txt");
+
+        if (Cameras.L_cameras.size() == 0)
+        {
+            Cameras.L_cameras.push_back( new Math::Cameras::CameraFree() );
+            Cameras.L_cameras[0]->Init(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
+            Cameras.L_cameras[0]->FOV.InitPerspective();
+            Cameras.L_cameras[0]->FOV.InitViewportPercent(0.f,0.f,1.f,1.f, Width, Height);
+
+            Cameras.L_cameras[0]->CenterTracker.Targets = &Targets;
+            Cameras.L_cameras[0]->CenterTracker.Mode    = Math::Tracking::ObjectTracker::TRACK_ALL_CENTER;
+            Cameras.L_cameras[0]->EyeTracker.Targets    = &Targets;
+            Cameras.L_cameras[0]->EyeTracker.Mode       = Math::Tracking::ObjectTracker::TRACK_CUSTOM_SCRIPT;
+            Cameras.L_cameras[0]->EyeTracker.ScriptName = Math::Cameras::Camera::SCRIPT_EyeSeeAll_Center;
+            Cameras.L_cameras[0]->EyeTracker.NW_destination_shift.init(0.f,0.f,1.5f);
+        }
+
+        DefaultCamera = Cameras.L_cameras[0];
+    }
+
+    Math::Cameras::CameraSet::Vec_Camera::iterator
+        CAM_curr = Cameras.L_cameras.begin(),
+        CAM_last = Cameras.L_cameras.end();
+    for (; CAM_curr != CAM_last; ++CAM_curr)
+    {
+        (**CAM_curr).FOV.ResizeViewport(Width, Height);
+        (**CAM_curr).CenterTracker.Targets = &Targets;
+        (**CAM_curr).EyeTracker.Targets    = &Targets;
+    }
+
+    Cameras.Update(0.f);
 }
 
 void SceneGame :: InitInputMgr()
@@ -86,24 +137,24 @@ void SceneGame :: InitInputMgr()
 #endif
     im.SetInputCode(VK_LBUTTON, IC_LClick);
 
-    im.SetInputCode(VK_HOME,   IC_TurnUp);
-    im.SetInputCode(VK_END,    IC_TurnDown);
-    im.SetInputCode(VK_DELETE, IC_TurnLeft);
-    im.SetInputCode(VK_NEXT,   IC_TurnRight);
+    //im.SetInputCode(VK_HOME,   IC_TurnUp);
+    //im.SetInputCode(VK_END,    IC_TurnDown);
+    //im.SetInputCode(VK_DELETE, IC_TurnLeft);
+    //im.SetInputCode(VK_NEXT,   IC_TurnRight);
     im.SetInputCode('Y', IC_RollLeft);
     im.SetInputCode('I', IC_RollRight);
 
-    //im.SetInputCode('U', IC_OrbitUp);
-    //im.SetInputCode('J', IC_OrbitDown);
-    //im.SetInputCode('H', IC_OrbitLeft);
-    //im.SetInputCode('K', IC_OrbitRight);
+    im.SetInputCode('U', IC_OrbitUp);
+    im.SetInputCode('J', IC_OrbitDown);
+    im.SetInputCode('H', IC_OrbitLeft);
+    im.SetInputCode('K', IC_OrbitRight);
 
-    im.SetInputCode('U', IC_MoveForward);
-    im.SetInputCode('J', IC_MoveBack);
-    im.SetInputCode('H', IC_MoveLeft);
-    im.SetInputCode('K', IC_MoveRight);
-    im.SetInputCode('O', IC_MoveUp);
-    im.SetInputCode('L', IC_MoveDown);
+    im.SetInputCode(VK_HOME,   IC_MoveForward);
+    im.SetInputCode(VK_END,    IC_MoveBack);
+    im.SetInputCode(VK_NEXT,   IC_MoveLeft);
+    im.SetInputCode(VK_PRIOR,  IC_MoveRight);
+    im.SetInputCode(VK_INSERT, IC_MoveUp);
+    im.SetInputCode(VK_DELETE, IC_MoveDown);
     im.SetInputCode(VK_LSHIFT, IC_RunModifier);
 
     im.SetInputCode('S', IC_CB_LeftPunch);
@@ -122,11 +173,20 @@ void SceneGame :: InitInputMgr()
     im.SetInputCode(VK_F11, IC_FullScreen);
 }
 
+bool SceneGame :: Invalidate()
+{
+    world.Invalidate();
+    return true;
+}
+
 void SceneGame :: Terminate()
 {
     DefaultCamera = NULL;
     world.Finalize();
+    Targets.L_objects.clear();
     Scene::Terminate();
+
+    Cameras.Free();
 }
 
 
@@ -154,16 +214,12 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     if (cmd.substr(0, 6) == "level ")
     {
         Config::TestCase = atoi(cmd.substr(6).c_str());
-        world.Finalize();
-        world.Initialize();
-        world.Interact(0.f, world.objects);
+        InitWorld();
         return true;
     }
     if (cmd == "init" || cmd == "reinitialize")
     {
-        world.Finalize();
-        world.Initialize();
-        world.InitialUpdate();
+        InitWorld();
         return true;
     }
     if (cmd.substr(0, 6) == "speed ")
@@ -228,7 +284,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     return false;
 }
 
-bool SceneGame::FrameUpdate(float deltaTime)
+bool SceneGame :: FrameUpdate(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
@@ -297,26 +353,20 @@ bool SceneGame::FrameUpdate(float deltaTime)
     if (im.GetInputState(IC_MoveDown))
         DefaultCamera->Move (0.0f, 0.0f, -deltaTmp);
 
-    if (moving && &hCamera == DefaultCamera)
+    /*
+    if (moving && &Camera == DefaultCamera)
     {
         stepAccum += deltaTime*MULT_STEP*run;
         if (stepAccum > 1)
         {
-            hCamera.MakeStep(floorf(stepAccum));
+            Camera.MakeStep(floorf(stepAccum));
             stepAccum = fmodf(stepAccum, 1.0f);
         }
     }
+    */
 
     if (im.GetInputStateAndClear(IC_LClick))
     {
-        glViewport(Left, Top, Width, Height);
-        // Set projection
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        xglPerspective(FOV);
-        glMatrixMode(GL_MODELVIEW);
-        DefaultCamera->LookAtMatrix(FOV.ViewTransform);
-        glLoadMatrixf(&FOV.ViewTransform.x0);
         RigidObj *obj = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
             g_Application.SetCurrentScene(new SceneSkeleton(this,
@@ -344,10 +394,11 @@ bool SceneGame::FrameUpdate(float deltaTime)
     }
 
     world.FrameUpdate(deltaTime);
+    Cameras.Update(deltaTime);
     return true;
 }
 
-void SceneGame::SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular)
+void SceneGame :: SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular)
 {
     float light_off[4] = { 0.f, 0.f, 0.f, 0.f };
 
@@ -378,12 +429,12 @@ void SceneGame::SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_S
     GLShader::SetLightType(light.type, t_Ambient, t_Diffuse, t_Specular);
 }
 
-bool SceneGame::FrameRender()
+bool SceneGame :: FrameRender()
 {
     world.FrameRender();
 
-    static xLight dayLight;
-    static xLightVector dayLightVec;
+    static xLight     dayLight;
+    static Vec_xLight dayLightVec;
 
     if (dayLight.id == 0)
     {
@@ -409,29 +460,18 @@ bool SceneGame::FrameRender()
     glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
 
     // Render the contents of the world
-    World::ObjectVector::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
-    xLightVector::iterator light, beginL = world.lights.begin(), endL = world.lights.end();
+    World::Vec_Object::iterator i,j, begin = world.objects.begin(), end = world.objects.end();
+    Vec_xLight::iterator light, beginL = world.lights.begin(), endL = world.lights.end();
+
+    Math::Cameras::CameraSet::Vec_Camera::iterator
+        CAM_curr = Cameras.L_cameras.begin(),
+        CAM_last = Cameras.L_cameras.end();
 
     //////////////////// WORLD - BEGIN
 
-    glViewport(Left, Top, Width, Height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    xglPerspectiveInf(FOV);
-    glMatrixMode(GL_MODELVIEW);
-    DefaultCamera->LookAtMatrix(FOV.ViewTransform);
-    glLoadMatrixf(&FOV.ViewTransform.x0); //Camera_Aim_GL(*DefaultCamera);
-    FOV.update();
-
-    glPushAttrib(GL_ALL_ATTRIB_BITS);
     if (GLExtensions::Exists_ARB_Multisample)
         glDisable(GL_MULTISAMPLE_ARB);
 
-    glShadeModel(GL_SMOOTH);
-    glEnable(GL_DEPTH_TEST);
-    GLShader::Suspend();
-    GLShader::SetLightType(xLight_NONE);
-    GLShader::EnableTexturing(xState_Enable);
     if (Config::EnableFullLighting)
         glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
     else
@@ -440,270 +480,284 @@ bool SceneGame::FrameRender()
     glColorMask(1,1,1,1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    if (Config::EnableLighting)
-        if (Config::EnableFullLighting)
-        {
-            /////// Render the SKY
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            glDisable(GL_STENCIL_TEST);
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_BLEND);
-            if (world.skyBox)
-                world.skyBox->Render(false, FOV);
+    for (; CAM_curr != CAM_last; ++CAM_curr)
+    {
+        ViewportSet_GL(**CAM_curr);
 
-            ////// RENDER Z-ONLY PASS
-            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-            glEnable   (GL_DEPTH_TEST);
-            glDepthMask(1);
-            glDepthFunc(GL_LESS);
-            glEnable   (GL_CULL_FACE);
-            glCullFace (GL_BACK);
-            glColorMask(0,0,0,0);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::EnableTexturing(xState_Off);
-            for ( i = begin ; i != end ; ++i )
-                ((RigidObj*)*i)->RenderDepth(FOV, false);
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-            ////// RENDER GLOBAL AMBIENT PASS
-            for (light=beginL; light!=endL; ++light)
-                light->update();
+        glShadeModel(GL_SMOOTH);
+        glEnable(GL_DEPTH_TEST);
+        GLShader::Suspend();
+        GLShader::SetLightType(xLight_NONE);
+        GLShader::EnableTexturing(xState_Enable);
 
-            //if (GLExtensions::Exists_ARB_Multisample)
-            //    glEnable(GL_MULTISAMPLE_ARB);
-            glDepthMask(0);
-            glDepthFunc(GL_LEQUAL);
-            glColorMask(1,1,1,1);
-            GLShader::SetLightType(xLight_GLOBAL, true, false, false);
-            glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, FOV, false);
-
-            ////// RENDER SHADOWS AND LIGHTS
-            for (light=beginL; light!=endL; ++light)
+        if (Config::EnableLighting)
+            if (Config::EnableFullLighting)
             {
-                if (light->turned_on && light->isVisible(&FOV))
-                {
-                    if (light->type != xLight_INFINITE && light->radius > 0.f)
-                    {
-                        //int x, y, width, height;
-                        // set scissor region optimization
-                        //getScreenBoundingRectangle(vector4to3(curLight.m_position),
-                        //    curLight.m_radius, camera, view,
-                        //    vars.m_winWidth, vars.m_winHeight,
-                        //    x, y, width, height);
-
-                        //glEnable(GL_SCISSOR_TEST);
-                        //glScissor(x, y, width, height);
-                    }
-
-                    ////// SHADOW DETERMINATION PASS
-                    if (Config::EnableShadows)
-                    {
-                        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                        glStencilMask(0xff);
-                        glClear(GL_STENCIL_BUFFER_BIT);
-                        glEnable(GL_STENCIL_TEST);          // write to stencil buffer
-                        if (GLExtensions::Exists_EXT_StencilTwoSide)
-                        {
-                            glDisable(GL_CULL_FACE);
-                            glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
-                            glActiveStencilFaceEXT(GL_BACK);
-                            glStencilMask(0xff);
-                            glStencilFunc(GL_ALWAYS, 0, 0xff);
-                            glActiveStencilFaceEXT(GL_FRONT);
-                        }
-                        else
-                            glEnable(GL_CULL_FACE);
-                        glStencilMask(0xff);                // allow writing to the first byte of buffer
-                        glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
-                        glDepthFunc(GL_LESS);
-                        glColorMask(0, 0, 0, 0);            // do not write to frame buffer
-                        GLShader::EnableTexturing(xState_Disable);
-                        GLShader::SetLightType(xLight_NONE);
-                        GLShader::Suspend();
-                        for ( i = begin ; i != end ; ++i )
-                            if (((RigidObj*)*i)->FL_shadowcaster)
-                                ((RigidObj*)*i)->RenderShadowVolume(*light, FOV);
-                    }
-
-                    ////// ILLUMINATION PASS
-                    glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-                    if (Config::EnableShadows)
-                    {
-                        glStencilMask(0);                 // do not write to stencil buffer
-                        glStencilFunc(GL_EQUAL, 0, 0xff); // set stencil test function
-                    }
-                    glDepthFunc(GL_LEQUAL);
-                    glEnable(GL_CULL_FACE);     // enable face culling
-                    glCullFace(GL_BACK);
-                    glColorMask(1,1,1,1);
-                    glEnable(GL_BLEND);                 // add light contribution to frame buffer
-                    glBlendFunc(GL_ONE, GL_ONE);
-                    GLShader::EnableTexturing(xState_Enable);
-                    SetLight(*light, false, true, true);
-                    glEnable(GL_LIGHT0);
-                    for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderDiffuse(*light, FOV, false);
-
-                    ////// DISPLAY SHADOW VOLUMES PASS
-                    if (Config::DisplayShadowVolumes)
-                    {
-                        glPushAttrib(GL_ALL_ATTRIB_BITS);
-                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                        glDisable(GL_STENCIL_TEST);
-                        glDepthMask(1);
-                        glColorMask(1, 1, 1, 1);
-                        glEnable(GL_BLEND);
-                        GLShader::EnableTexturing(xState_Disable);
-                        GLShader::SetLightType(xLight_NONE);
-                        GLShader::Suspend();
-                        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-                        for ( i = begin ; i != end ; ++i )
-                            if (((RigidObj*)*i)->FL_shadowcaster)
-                                ((RigidObj*)*i)->RenderShadowVolume(*light, FOV);
-                        glPopAttrib();
-                    }
-                }
-                light->modified = false;
-            }
-
-            ////// RENDER TRANSPARENT PASS
-            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-            glDepthMask(0);
-            glDepthFunc(GL_LESS);
-            glDisable(GL_STENCIL_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-            GLShader::EnableTexturing(xState_Enable);
-            GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
-            glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, FOV, true);
-            GLShader::Suspend();
-/*
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Start();
-            for ( i = begin ; i != end ; ++i )
-            {
-                RigidObj &model = **i;
-                model.renderer.RenderSkeleton(*model.GetModelGr(), model.modelInstanceGr, xWORD_MAX);
-            }
-            GLShader::Suspend();
-*/
-            /*
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Start();
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_CULL_FACE);
-            glColor3f(1.f, 1.f, 1.f);
-            for ( i = begin ; i != end ; ++i )
-                ((RigidObj*)*i)->renderer.RenderBVH((**i).BVHierarchy, (**i).MX_LocalToWorld_Get());
-            GLShader::Suspend();
-            */
-        }
-        else
-        {
-            ////// RENDER GLOBAL AMBIENT PASS
-
-            //if (GLExtensions::Exists_ARB_Multisample)
-            //    glEnable(GL_MULTISAMPLE_ARB);
-            glEnable   (GL_DEPTH_TEST);
-            glDepthMask(1);
-            glDepthFunc(GL_LESS);
-            glEnable   (GL_CULL_FACE);
-            glCullFace (GL_BACK);
-            glColorMask(1,1,1,1);
-            GLShader::SetLightType(xLight_GLOBAL, true, false, false);
-            glDisable(GL_BLEND);
-            glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(dayLightVec, FOV, false);
-
-            ////// RENDER SHADOWS AND LIGHTS
-            glDepthMask(0);
-
-            ////// SHADOW DETERMINATION PASS
-            if (Config::EnableShadows)
-            {
+                /////// Render the SKY
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-                glStencilMask(0xff);
-                glClear(GL_STENCIL_BUFFER_BIT);
-                glEnable(GL_STENCIL_TEST);          // write to stencil buffer
-                if (GLExtensions::Exists_EXT_StencilTwoSide)
-                {
-                    glDisable(GL_CULL_FACE);
-                    glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
-                    glActiveStencilFaceEXT(GL_BACK);
-                    glStencilMask(0xff);
-                    glStencilFunc(GL_ALWAYS, 0, 0xff);
-                    glActiveStencilFaceEXT(GL_FRONT);
-                }
-                else
-                    glEnable(GL_CULL_FACE);
-                glStencilMask(0xff);                // allow writing to the first byte of buffer
-                glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
+                glDisable(GL_STENCIL_TEST);
+                glDisable(GL_DEPTH_TEST);
+                glDisable(GL_BLEND);
+                if (world.skyBox)
+                    world.skyBox->Render(false, (**CAM_curr).FOV);
+
+                ////// RENDER Z-ONLY PASS
+                glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+                glEnable   (GL_DEPTH_TEST);
+                glDepthMask(1);
                 glDepthFunc(GL_LESS);
-                glColorMask(0, 0, 0, 0);            // do not write to frame buffer
+                glEnable   (GL_CULL_FACE);
+                glCullFace (GL_BACK);
+                glColorMask(0,0,0,0);
+                GLShader::SetLightType(xLight_NONE);
+                GLShader::EnableTexturing(xState_Off);
+                for ( i = begin ; i != end ; ++i )
+                    ((RigidObj*)*i)->RenderDepth((**CAM_curr).FOV, false);
+
+                ////// RENDER GLOBAL AMBIENT PASS
+                for (light=beginL; light!=endL; ++light)
+                    light->update();
+
+                //if (GLExtensions::Exists_ARB_Multisample)
+                //    glEnable(GL_MULTISAMPLE_ARB);
+                glDepthMask(0);
+                glDepthFunc(GL_LEQUAL);
+                glColorMask(1,1,1,1);
+                GLShader::SetLightType(xLight_GLOBAL, true, false, false);
+                glDisable(GL_LIGHT0);
+                for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, (**CAM_curr).FOV, false);
+
+                ////// RENDER SHADOWS AND LIGHTS
+                for (light=beginL; light!=endL; ++light)
+                {
+                    if (light->turned_on && light->isVisible(&(**CAM_curr).FOV))
+                    {
+                        if (light->type != xLight_INFINITE && light->radius > 0.f)
+                        {
+                            //int x, y, width, height;
+                            // set scissor region optimization
+                            //getScreenBoundingRectangle(vector4to3(curLight.m_position),
+                            //    curLight.m_radius, camera, view,
+                            //    vars.m_winWidth, vars.m_winHeight,
+                            //    x, y, width, height);
+
+                            //glEnable(GL_SCISSOR_TEST);
+                            //glScissor(x, y, width, height);
+                        }
+
+                        ////// SHADOW DETERMINATION PASS
+                        if (Config::EnableShadows)
+                        {
+                            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                            glStencilMask(0xff);
+                            glClear(GL_STENCIL_BUFFER_BIT);
+                            glEnable(GL_STENCIL_TEST);          // write to stencil buffer
+                            if (GLExtensions::Exists_EXT_StencilTwoSide)
+                            {
+                                glDisable(GL_CULL_FACE);
+                                glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+                                glActiveStencilFaceEXT(GL_BACK);
+                                glStencilMask(0xff);
+                                glStencilFunc(GL_ALWAYS, 0, 0xff);
+                                glActiveStencilFaceEXT(GL_FRONT);
+                            }
+                            else
+                                glEnable(GL_CULL_FACE);
+                            glStencilMask(0xff);                // allow writing to the first byte of buffer
+                            glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
+                            glDepthFunc(GL_LESS);
+                            glColorMask(0, 0, 0, 0);            // do not write to frame buffer
+                            GLShader::EnableTexturing(xState_Disable);
+                            GLShader::SetLightType(xLight_NONE);
+                            GLShader::Suspend();
+                            for ( i = begin ; i != end ; ++i )
+                                if (((RigidObj*)*i)->FL_shadowcaster)
+                                    ((RigidObj*)*i)->RenderShadowVolume(*light, (**CAM_curr).FOV);
+                        }
+
+                        ////// ILLUMINATION PASS
+                        glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+                        if (Config::EnableShadows)
+                        {
+                            glStencilMask(0);                 // do not write to stencil buffer
+                            glStencilFunc(GL_EQUAL, 0, 0xff); // set stencil test function
+                        }
+                        glDepthFunc(GL_LEQUAL);
+                        glEnable(GL_CULL_FACE);     // enable face culling
+                        glCullFace(GL_BACK);
+                        glColorMask(1,1,1,1);
+                        glEnable(GL_BLEND);                 // add light contribution to frame buffer
+                        glBlendFunc(GL_ONE, GL_ONE);
+                        GLShader::EnableTexturing(xState_Enable);
+                        SetLight(*light, false, true, true);
+                        glEnable(GL_LIGHT0);
+                        for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderDiffuse(*light, (**CAM_curr).FOV, false);
+
+                        ////// DISPLAY SHADOW VOLUMES PASS
+                        if (Config::DisplayShadowVolumes)
+                        {
+                            glPushAttrib(GL_ALL_ATTRIB_BITS);
+                            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                            glDisable(GL_STENCIL_TEST);
+                            glDepthMask(1);
+                            glColorMask(1, 1, 1, 1);
+                            glEnable(GL_BLEND);
+                            GLShader::EnableTexturing(xState_Disable);
+                            GLShader::SetLightType(xLight_NONE);
+                            GLShader::Suspend();
+                            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+                            for ( i = begin ; i != end ; ++i )
+                                if (((RigidObj*)*i)->FL_shadowcaster)
+                                    ((RigidObj*)*i)->RenderShadowVolume(*light, (**CAM_curr).FOV);
+                            glPopAttrib();
+                        }
+                    }
+                    light->modified = false;
+                }
+
+                ////// RENDER TRANSPARENT PASS
+                glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+                glDepthMask(0);
+                glDepthFunc(GL_LESS);
+                glDisable(GL_STENCIL_TEST);
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+                GLShader::EnableTexturing(xState_Enable);
+                GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
+                glDisable(GL_LIGHT0);
+                for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, (**CAM_curr).FOV, true);
+                GLShader::Suspend();
+    /*
                 GLShader::EnableTexturing(xState_Disable);
                 GLShader::SetLightType(xLight_NONE);
-                GLShader::Suspend();
+                GLShader::Start();
                 for ( i = begin ; i != end ; ++i )
-                    if (((RigidObj*)*i)->FL_shadowcaster)
-                        ((RigidObj*)*i)->RenderShadowVolume(*dayLightVec.begin(), FOV);
+                {
+                    RigidObj &model = **i;
+                    model.renderer.RenderSkeleton(*model.GetModelGr(), model.modelInstanceGr, xWORD_MAX);
+                }
+                GLShader::Suspend();
+    */
+                /*
+                GLShader::EnableTexturing(xState_Disable);
+                GLShader::SetLightType(xLight_NONE);
+                GLShader::Start();
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                glDisable(GL_DEPTH_TEST);
+                glDisable(GL_CULL_FACE);
+                glColor3f(1.f, 1.f, 1.f);
+                for ( i = begin ; i != end ; ++i )
+                    ((RigidObj*)*i)->renderer.RenderBVH((**i).BVHierarchy, (**i).MX_LocalToWorld_Get());
+                GLShader::Suspend();
+                */
             }
-
-            ////// ILLUMINATION PASS
-            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-            if (Config::EnableShadows)
+            else
             {
-                glStencilMask(0);                 // do not write to stencil buffer
-                glStencilFunc(GL_EQUAL, 0, 0xff); // set stencil test function
-            }
-            glDepthFunc(GL_LEQUAL);
-            glEnable(GL_CULL_FACE);     // enable face culling
-            glCullFace(GL_BACK);
-            glColorMask(1,1,1,1);
-            glEnable(GL_BLEND);                 // add light contribution to frame buffer
-            glBlendFunc(GL_ONE, GL_ONE);
-            GLShader::EnableTexturing(xState_Enable);
-            SetLight(dayLight, false, true, true);
-            glEnable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderDiffuse(*dayLightVec.begin(), FOV, false);
+                ////// RENDER GLOBAL AMBIENT PASS
 
-            dayLight.modified = false;
+                //if (GLExtensions::Exists_ARB_Multisample)
+                //    glEnable(GL_MULTISAMPLE_ARB);
+                glEnable   (GL_DEPTH_TEST);
+                glDepthMask(1);
+                glDepthFunc(GL_LESS);
+                glEnable   (GL_CULL_FACE);
+                glCullFace (GL_BACK);
+                glColorMask(1,1,1,1);
+                GLShader::SetLightType(xLight_GLOBAL, true, false, false);
+                glDisable(GL_BLEND);
+                glDisable(GL_LIGHT0);
+                for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(dayLightVec, (**CAM_curr).FOV, false);
+
+                ////// RENDER SHADOWS AND LIGHTS
+                glDepthMask(0);
+
+                ////// SHADOW DETERMINATION PASS
+                if (Config::EnableShadows)
+                {
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    glStencilMask(0xff);
+                    glClear(GL_STENCIL_BUFFER_BIT);
+                    glEnable(GL_STENCIL_TEST);          // write to stencil buffer
+                    if (GLExtensions::Exists_EXT_StencilTwoSide)
+                    {
+                        glDisable(GL_CULL_FACE);
+                        glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+                        glActiveStencilFaceEXT(GL_BACK);
+                        glStencilMask(0xff);
+                        glStencilFunc(GL_ALWAYS, 0, 0xff);
+                        glActiveStencilFaceEXT(GL_FRONT);
+                    }
+                    else
+                        glEnable(GL_CULL_FACE);
+                    glStencilMask(0xff);                // allow writing to the first byte of buffer
+                    glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
+                    glDepthFunc(GL_LESS);
+                    glColorMask(0, 0, 0, 0);            // do not write to frame buffer
+                    GLShader::EnableTexturing(xState_Disable);
+                    GLShader::SetLightType(xLight_NONE);
+                    GLShader::Suspend();
+                    for ( i = begin ; i != end ; ++i )
+                        if (((RigidObj*)*i)->FL_shadowcaster)
+                            ((RigidObj*)*i)->RenderShadowVolume(*dayLightVec.begin(), (**CAM_curr).FOV);
+                }
+
+                ////// ILLUMINATION PASS
+                glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+                if (Config::EnableShadows)
+                {
+                    glStencilMask(0);                 // do not write to stencil buffer
+                    glStencilFunc(GL_EQUAL, 0, 0xff); // set stencil test function
+                }
+                glDepthFunc(GL_LEQUAL);
+                glEnable(GL_CULL_FACE);     // enable face culling
+                glCullFace(GL_BACK);
+                glColorMask(1,1,1,1);
+                glEnable(GL_BLEND);                 // add light contribution to frame buffer
+                glBlendFunc(GL_ONE, GL_ONE);
+                GLShader::EnableTexturing(xState_Enable);
+                SetLight(dayLight, false, true, true);
+                glEnable(GL_LIGHT0);
+                for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderDiffuse(*dayLightVec.begin(), (**CAM_curr).FOV, false);
+
+                dayLight.modified = false;
+
+                ////// RENDER TRANSPARENT PASS
+                glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+                glDepthMask(0);
+                glDepthFunc(GL_LESS);
+                glDisable(GL_STENCIL_TEST);
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+                GLShader::EnableTexturing(xState_Enable);
+                GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
+                glDisable(GL_LIGHT0);
+                for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(dayLightVec, (**CAM_curr).FOV, true);
+                GLShader::Suspend();
+            }
+        else
+        {
+            ////// RENDER OPAQUE PASS
+            glEnable   (GL_DEPTH_TEST);
+            glDepthMask(1);
+            glDepthFunc(GL_LESS);
+            glEnable   (GL_CULL_FACE);
+            glCullFace (GL_BACK);
+            glColorMask(1, 1, 1, 1);
+            GLShader::EnableTexturing(xState_Enable);
+            GLShader::SetLightType(xLight_NONE);
+            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, (**CAM_curr).FOV, false);
 
             ////// RENDER TRANSPARENT PASS
-            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-            glDepthMask(0);
-            glDepthFunc(GL_LESS);
-            glDisable(GL_STENCIL_TEST);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-            GLShader::EnableTexturing(xState_Enable);
-            GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
-            glDisable(GL_LIGHT0);
-            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(dayLightVec, FOV, true);
-            GLShader::Suspend();
+            for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, (**CAM_curr).FOV, true);
         }
-    else
-    {
-        ////// RENDER OPAQUE PASS
-        glEnable   (GL_DEPTH_TEST);
-        glDepthMask(1);
-        glDepthFunc(GL_LESS);
-        glEnable   (GL_CULL_FACE);
-        glCullFace (GL_BACK);
-        glColorMask(1, 1, 1, 1);
-        GLShader::EnableTexturing(xState_Enable);
-        GLShader::SetLightType(xLight_NONE);
-        for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, FOV, false);
 
-        ////// RENDER TRANSPARENT PASS
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderAmbient(world.lights, FOV, true);
+        glPopAttrib();
     }
 
-    glPopAttrib();
     if (GLExtensions::Exists_ARB_Multisample)
         glDisable(GL_MULTISAMPLE_ARB);
 
@@ -715,18 +769,19 @@ bool SceneGame::FrameRender()
 
 ////// ISelectionProvider
 
-void SceneGame :: RenderSelect(const xFieldOfView *FOV)
+void SceneGame :: RenderSelect(const Math::Cameras::FieldOfView &FOV)
 {
     int objectID = -1;
-    World::ObjectVector::iterator iter = world.objects.begin(), end = world.objects.end();
+    World::Vec_Object::iterator iter = world.objects.begin(), end = world.objects.end();
     for ( ; iter != end ; ++iter ) {
         glLoadName(++objectID);
         RigidObj &mdl = *(RigidObj*)*iter;
         mdl.renderer.RenderVertices(*mdl.GetModelGr(), mdl.modelInstanceGr, Renderer::smModel);
     }
 }
-
-unsigned int SceneGame::CountSelectable()
+RigidObj *SceneGame :: Select(int X, int Y)
 {
-    return world.objects.size();
+    if (!DefaultCamera->FOV.ViewportContains(X,Height-Y)) return NULL;
+    std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(*DefaultCamera, X, Height-Y);
+    return objectIDs == NULL ? NULL : (RigidObj*) world.objects[objectIDs->back()];
 }

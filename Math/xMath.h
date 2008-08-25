@@ -10,6 +10,8 @@ const float  PI_inv = 1 / PI;
 const double PI_d   = 3.1415926535897932384626433832795;
 static inline float DegToRad(float a) { return a*0.01745329252f;}
 static inline float RadToDeg(float a) { return a*57.29577951f;}
+#define             DEGTORAD(a)       ((a)*0.01745329252f)
+#define             RADTODEG(a)       ((a)*57.29577951f)
 
 //#ifndef max
 //#define max(a,b)            (((a) > (b)) ? (a) : (b))
@@ -64,6 +66,7 @@ const xBYTE  xBYTE_MAX  = (xBYTE)-1;
 typedef xVector3 xPoint3;
 
 #include "xVector4.h"
+typedef xVector4 xPoint4;
 #include "xPlane.h"
 #include "xQuaternion.h"
 typedef xVector4 xColor;

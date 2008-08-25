@@ -2,7 +2,8 @@
 #include "../GLAnimSkeletal.h"
 
 /********************************* shadows ************************************/
-void RenderShadowMapLST(xElement *elem, xModelInstance &modelInstance, const xFieldOfView &FOV)
+void RenderShadowMapLST(xElement *elem, xModelInstance &modelInstance,
+                        const Math::Cameras::FieldOfView &FOV)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowMapLST(selem, modelInstance, FOV);
@@ -46,7 +47,8 @@ void RenderShadowMapLST(xElement *elem, xModelInstance &modelInstance, const xFi
     glPopMatrix();
 }
 
-void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance, const xFieldOfView &FOV)
+void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance,
+                        const Math::Cameras::FieldOfView &FOV)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowMapVBO(selem, modelInstance, FOV);
@@ -100,7 +102,8 @@ void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance, const xFi
 }
 
 void RendererGL :: RenderShadowMap(xModel &model, xModelInstance &instance,
-                                   const xShadowMap &shadowMap, const xFieldOfView &FOV )
+                                   const xShadowMap &shadowMap,
+                                   const Math::Cameras::FieldOfView &FOV )
 {
     State::RenderingShadows = true;
 

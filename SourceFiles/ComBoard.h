@@ -10,7 +10,7 @@ class ComBoard
 public:
     struct Combo
     {
-        struct Key {
+        struct Keys {
             enum eKey {
                 Undefined      = 0,
 
@@ -32,59 +32,82 @@ public:
         };
 
         xBYTE       ID_action;
-        std::string action;
-        Key::eKey   key;
+        std::string SN_action;
+        Keys::eKey  Key;
         xFLOAT      T_first;
         xFLOAT      T_last;
         xFLOAT      T_time;
+        bool        FL_time_shift;
+        bool        FL_pos_shift;
 
-        void init ()
+        void Init ()
         {
             ID_action = 0;
-            key       = Key::Undefined;
+            Key       = Keys::Undefined;
             T_first = T_last = T_time = 0.f;
-            action.clear();
+            SN_action.clear();
+            FL_time_shift   = true;
+            FL_pos_shift    = true;
         }
     };
 
     struct Action
     {
         xBYTE       ID;
-        std::string name;
-        std::string next;
+        std::string SN_name;
+        std::string SN_next;
         xBYTE       ID_next;
-        xActionSet  anims;
+        xActionSet  Anims;
         xFLOAT      T_duration;
+        bool        FL_pos_rotation;
 
         std::vector<Combo> L_combos;
 
-        void init ()
+        void Init ()
         {
-            name.clear();
-            next.clear();
+            SN_name.clear();
+            SN_next.clear();
             T_duration = 0.f;
             L_combos.clear();
-            anims.T_progress = 0;
-            anims.L_actions.clear();
+            Anims.T_progress = 0;
+            Anims.L_actions.clear();
+            FL_pos_rotation = false;
+        }
+
+        void Free ()
+        {
+            Anims.Free();
         }
     };
 
-    std::vector<Action> L_actions;
+    typedef std::vector<Action> Vec_Action;
 
-    xBYTE  ID_action_cur;
-    xFLOAT T_progress;
+    Vec_Action L_actions;
+
+    xBYTE   ID_action_cur;
+    xFLOAT  T_progress;
+    xMatrix MX_shift;
 
     void Init()
     {
-        L_actions.clear();
+        if (L_actions.size())
+        {
+            Vec_Action::iterator A_curr = L_actions.begin(),
+                                 A_last = L_actions.end();
+            for (; A_curr != A_last; ++A_curr)
+                A_curr->Free();
+            L_actions.clear();
+        }
         ID_action_cur = 0;
         T_progress    = 0.f;
+        MX_shift.identity();
     }
 
     void Update(xFLOAT T_delta);
-
-    void UpdateIDs();
     void Load(char *fileName);
+
+private:
+    void UpdateIDs();
 };
 
 #endif

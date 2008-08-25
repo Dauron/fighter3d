@@ -22,7 +22,7 @@ void RenderSphere(const xSphere &object)
     xPoint3 P_points[I_steps];
     P_points[0] = xVector3::Create(0,1,0) * object.S_radius;
     for (int i = 1; i < I_steps; ++i)
-        P_points[i] = xQuaternion::rotate(QT_step, P_points[i-1]);
+        P_points[i] = QT_step.rotate(P_points[i-1]);
 
     for (int i = 0; i < I_steps; ++i)
     {
@@ -58,11 +58,11 @@ void RenderCapsule(const xCapsule &object)
     xVector3 P_points[I_steps * 2];
     P_points[0] = N_side * object.S_radius;
     for (int i = 1; i < I_steps; ++i)
-        P_points[i] = xQuaternion::rotate(QT_step, P_points[i-1]);
+        P_points[i] = QT_step.rotate(P_points[i-1]);
 
     P_points[I_steps] = -N_side * object.S_radius;
     for (int i = I_steps+1; i < 2*I_steps; ++i)
-        P_points[i] = xQuaternion::rotate(QT_step, P_points[i-1]);
+        P_points[i] = QT_step.rotate(P_points[i-1]);
 
     xVector3 NW_top = object.N_top * object.S_top;
 
@@ -130,6 +130,7 @@ void RenderBoxO(const xBoxO &object, int I_level)
     P_points[3] = -object.N_top*object.S_top + object.N_front*object.S_front;
 
     NW_shift = object.N_side*object.S_side;
+    glPushMatrix();
     glTranslatef(NW_shift.x,NW_shift.y,NW_shift.z);
     NW_shift /= -I_steps*0.5f;
     for (int i = 0; i < I_steps+1; ++i)
@@ -141,6 +142,27 @@ void RenderBoxO(const xBoxO &object, int I_level)
 
         glTranslatef(NW_shift.x,NW_shift.y,NW_shift.z);
     }
+    glPopMatrix();
+
+    P_points[0] = object.N_side*object.S_side + object.N_front*object.S_front;
+    P_points[1] = object.N_side*object.S_side - object.N_front*object.S_front;
+    P_points[2] = -object.N_side*object.S_side - object.N_front*object.S_front;
+    P_points[3] = -object.N_side*object.S_side + object.N_front*object.S_front;
+
+    NW_shift = object.N_top*object.S_top;
+    glPushMatrix();
+    glTranslatef(NW_shift.x,NW_shift.y,NW_shift.z);
+    NW_shift /= -I_steps*0.5f;
+    for (int i = 0; i < I_steps+1; ++i)
+    {
+        glBegin(GL_QUADS);
+        for (int j = 0; j < 4; ++j)
+            glVertex3fv(P_points[j].xyz);
+        glEnd();
+
+        glTranslatef(NW_shift.x,NW_shift.y,NW_shift.z);
+    }
+    glPopMatrix();
 
     glPopMatrix();
 }

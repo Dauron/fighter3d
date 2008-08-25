@@ -29,11 +29,11 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     system->Spine->CalcQuats(system->P_current, system->QT_boneSkew,
                              0, system->MX_WorldToModel_T, xVector3::Create(0.f,0.f,0.f));
     xBoneCalculateQuatForVerlet(*system->Spine, particle, QT_parent, QT_current);
-    QT_current = xQuaternion::product(QT_parent, QT_current);
+    QT_current = xQuaternion::Product(QT_parent, QT_current);
 
     xBone   &bone    = system->Spine->L_bones[particle];
-    xVector3 N_up    = system->MX_ModelToWorld.preTransformV(xQuaternion::rotate(QT_parent, bone.P_end-bone.P_begin)).normalize();
-    xVector3 N_front = system->MX_ModelToWorld.preTransformV(xQuaternion::rotate(QT_current, bone.getFront()));
+    xVector3 N_up    = system->MX_ModelToWorld.preTransformV(QT_parent.rotate(bone.P_end-bone.P_begin)).normalize();
+    xVector3 N_front = system->MX_ModelToWorld.preTransformV(QT_current.rotate(bone.getFront()));
 
     xMatrix  MX_WorldToBone = xMatrixFromVectors( N_front, N_up, - P_rootE ).invert();
     xVector3 P_curr_Local   = MX_WorldToBone.preTransformP( P_curr );
@@ -81,7 +81,7 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
         if (S_curFix_Sqr < S_minFix_Sqr)
         {
             S_minFix_Sqr = S_curFix_Sqr;
-            QT_minFix = xQuaternion::getRotation(N_curr_Local, P_new_Local);
+            QT_minFix = xQuaternion::GetRotation(N_curr_Local, P_new_Local);
         }
     }
 
@@ -93,11 +93,11 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     w1 /= (w1+w2);
     w2 = 1.f - w1;
 
-    xQuaternion QT_curr = xQuaternion::interpolate(QT_minFix, w1);
-    xQuaternion QT_root = xQuaternion::interpolate(QT_minFix, w2);
+    xQuaternion QT_curr = xQuaternion::Interpolate(QT_minFix, w1);
+    xQuaternion QT_root = xQuaternion::Interpolate(QT_minFix, w2);
     xMatrix &MX_BoneToWorld = MX_WorldToBone.invert();
-    P_rootE = MX_BoneToWorld.preTransformP( xQuaternion::rotate(QT_root, -P_curr_Local) + P_curr_Local );
-    P_curr  = MX_BoneToWorld.preTransformP( xQuaternion::rotate(QT_curr, P_curr_Local) );
+    P_rootE = MX_BoneToWorld.preTransformP( QT_root.rotate(-P_curr_Local) + P_curr_Local );
+    P_curr  = MX_BoneToWorld.preTransformP( QT_curr.rotate(P_curr_Local) );
 
     //system->P_previous[particleRootE] = P_rootE;
     //system->P_previous[particle] = P_curr;

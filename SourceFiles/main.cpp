@@ -19,6 +19,7 @@ int main( int argc, char **argv )
     logEx(0, false, "***********************************");
     logEx(0, true, "Game started");
 
+    Config::Load("Data/config.txt");
     GLShader::Load();
 
     Application game;
@@ -26,10 +27,10 @@ int main( int argc, char **argv )
     game.OnApplicationInvalidate = OnApplicationInvalidate;
     game.OnApplicationTerminate  = OnApplicationTerminate;
 #ifndef NDEBUG
-    if (!game.Initialize("Camera Fighter - Debug", 800, 600, false, new SceneConsole(new SceneGame())))
+    if (!game.Initialize("Camera Fighter - Debug", Config::WindowX, Config::WindowY, false, new SceneConsole(new SceneGame())))
         return 1;
 #else
-    if (!game.Initialize("Camera Fighter", 800, 600, false, new SceneConsole(new SceneGame())))
+    if (!game.Initialize("Camera Fighter", Config::WindowX, Config::WindowY, false, new SceneConsole(new SceneGame())))
         return 1;
 #endif
     int res = game.Run();

@@ -6,9 +6,7 @@ void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, c
     xWORD     count  = instance.I_vertices = elem->I_vertices;
     xBYTE    *srcV   = (xBYTE *) elem->L_vertices;
     xVector3 *srcN   = elem->renderData.L_normals;
-    xDWORD stride = elem->FL_skeletized
-        ? (elem->FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel))
-        : (elem->FL_textured ? sizeof(xVertexTex)     : sizeof(xVertex));
+    xDWORD    stride = elem->GetVertexStride();
 
     if (elem->FL_skeletized)
     {

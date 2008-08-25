@@ -20,7 +20,7 @@ bool SceneTest::Initialize(int left, int top, unsigned int width, unsigned int h
 {
     Scene::Initialize(left, top, width, height);
 
-    if (DefaultCamera != &fCamera)
+    if (DefaultCamera != &Camera)
     {
         figures[0].clear();
         figures[0].push_back(&pf_sphere1);
@@ -62,18 +62,20 @@ bool SceneTest::Initialize(int left, int top, unsigned int width, unsigned int h
         figures[9].push_back(&pf_mesh1);
         figures[9].push_back(&pf_mesh2);
 
-        fCamera.SetCamera(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
-        DefaultCamera = &fCamera;
+        Camera.Init(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
+
+        DefaultCamera = &Camera;
         InitObjects();
         Config::TestCase = 0;
         selected         = -1;
         FL_pause         = false;
     }
     InitInputMgr();
-    FOV.init(45.0f, AspectRatio, 0.1f, 1000.0f);
 
     FL_mouse_down = false;
 
+    Camera.FOV.InitPerspective();
+    Camera.FOV.InitViewport(Left,Top,Width,Height);
     return InitGL();
 }
 
@@ -322,31 +324,6 @@ void SceneTest::Terminate()
 }
 
 
-xVector3 SceneTest::Get3dPos(int X, int Y, xVector3 P_onPlane)
-{
-    float norm_x = 1.0f - (float)X/(Width/2.0f);
-    float norm_y = (float)Y/(Height/2.0f) - 1.0f;
-
-    // get model view matrix
-    xMatrix MX_ViewToModel;
-    DefaultCamera->LookAtMatrix(MX_ViewToModel);
-    MX_ViewToModel.invert();
-
-    // get ray of the mouse
-    xVector3 N_ray;
-    xVector3 P_ray;
-
-    float near_height = FOV.FrontClip * tan(DegToRad(FOV.Angle)*0.5f);
-    P_ray = MX_ViewToModel.preTransformP(xVector3::Create(0.0f,0.0f,0.0f));
-    N_ray.init(near_height * AspectRatio * norm_x, near_height * norm_y, FOV.FrontClip);
-    N_ray = MX_ViewToModel.preTransformV(N_ray);
-
-    // get plane of ray intersection
-    xPlane PN_plane; PN_plane.init(
-        (DefaultCamera->eye-DefaultCamera->center).normalize(), P_onPlane);
-    return PN_plane.intersectRay(P_ray, N_ray);
-}
-
 bool SceneTest :: ShellCommand (std::string &cmd, std::string &output)
 {
     if (cmd == "?" || cmd == "help")
@@ -440,8 +417,8 @@ bool SceneTest::FrameUpdate(float deltaTime)
 
     if (im.GetInputStateAndClear(IC_CameraReset))
     {
-        fCamera.SetCamera(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
-        DefaultCamera = &fCamera;
+        Camera.Init(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
+        DefaultCamera = &Camera;
     }
     if (im.GetInputStateAndClear(IC_TS_Stop))
     {
@@ -461,7 +438,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
             Physics::PhysicalFigure &p_figure = *(Physics::PhysicalFigure*)figures[Config::TestCase][selected];
             if (selectedSub == 0)
             {
-                xVector3 P_currMouse = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, p_figure.P_center_Trfm);
+                xVector3 P_currMouse = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, p_figure.P_center_Trfm);
                 xVector3 NW_shift = P_currMouse - P_prevMouse;
                 p_figure.MX_LocalToWorld_Set().postTranslateT(NW_shift);
                 P_prevMouse = P_currMouse;
@@ -475,13 +452,13 @@ bool SceneTest::FrameUpdate(float deltaTime)
                 if (selectedSub == 1)
                 {
                     xVector3 P_topCap = object_T.P_center + object_T.S_top * object_T.N_top;
-                    xVector3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+                    xVector3 P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
                     object.N_top = P_mouse2 - object_T.P_center;
                 }
                 else
                 {
                     xVector3 P_topCap = object.P_center - object.S_top * object.N_top;
-                    xVector3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+                    xVector3 P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
                     object.N_top = object_T.P_center - P_mouse2;
                 }
                 object.S_top = object.N_top.length();
@@ -499,29 +476,29 @@ bool SceneTest::FrameUpdate(float deltaTime)
                 if (selectedSub == 1)
                 {
                     xPoint3 P_topCap = object_T.P_center + object_T.S_front * object_T.N_front;
-                    xPoint3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
-                    QT_rotation = xQuaternion::getRotation(object_T.N_front, P_mouse2-object_T.P_center);
+                    xPoint3 P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
+                    QT_rotation = xQuaternion::GetRotation(object_T.N_front, P_mouse2-object_T.P_center);
                     object.S_front = (P_mouse2 - object_T.P_center).length();
                 }
                 else
                 if (selectedSub == 2)
                 {
                     xPoint3 P_topCap = object_T.P_center + object_T.S_side * object_T.N_side;
-                    xPoint3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
-                    QT_rotation = xQuaternion::getRotation(object_T.N_side, P_mouse2-object_T.P_center);
+                    xPoint3 P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
+                    QT_rotation = xQuaternion::GetRotation(object_T.N_side, P_mouse2-object_T.P_center);
                     object.S_side = (P_mouse2 - object_T.P_center).length();
                 }
                 else
                 {
                     xPoint3 P_topCap = object_T.P_center + object_T.S_top * object_T.N_top;
-                    xPoint3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
-                    QT_rotation = xQuaternion::getRotation(object_T.N_top, P_mouse2-object_T.P_center);
+                    xPoint3 P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
+                    QT_rotation = xQuaternion::GetRotation(object_T.N_top, P_mouse2-object_T.P_center);
                     object.S_top = (P_mouse2 - object_T.P_center).length();
                 }
                 xMatrix MX_WorldToLocal = xMatrix::Invert(p_figure.MX_LocalToWorld_Get());
-                object.N_top   = xQuaternion::rotate(QT_rotation, object.N_top).normalize();
-                object.N_side  = xQuaternion::rotate(QT_rotation, object.N_side).normalize();
-                object.N_front = xQuaternion::rotate(QT_rotation, object.N_front ).normalize();
+                object.N_top   = QT_rotation.rotate(object.N_top).normalize();
+                object.N_side  = QT_rotation.rotate(object.N_side).normalize();
+                object.N_front = QT_rotation.rotate(object.N_front ).normalize();
                 object.N_top = MX_WorldToLocal.preTransformV(object.N_top);
                 object.N_side = MX_WorldToLocal.preTransformV(object.N_side);
                 object.N_front = MX_WorldToLocal.preTransformV(object.N_front);
@@ -530,14 +507,6 @@ bool SceneTest::FrameUpdate(float deltaTime)
         }
         else
         {
-            glViewport(Left, Top, Width, Height);
-            // Set projection
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            xglPerspective(FOV);
-            glMatrixMode(GL_MODELVIEW);
-            DefaultCamera->LookAtMatrix(FOV.ViewTransform);
-            glLoadMatrixf(&FOV.ViewTransform.x0);
             selected = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
 
             if (selected != -1)
@@ -548,7 +517,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
 
                 selectedSub = 0;
                 T_total = 0.f;
-                P_firstMouse = P_prevMouse = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, p_figure.P_center_Trfm);
+                P_firstMouse = P_prevMouse = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, p_figure.P_center_Trfm);
                 xFLOAT S_dist = (P_prevMouse - p_figure.P_center_Trfm).lengthSqr();
 
                 if (p_figure.BVHierarchy.Figure->Type == xIFigure3d::Capsule)
@@ -556,7 +525,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
                     const xCapsule &object_T = *(xCapsule*) p_figure.BVHierarchy.GetTransformed();
 
                     xVector3 P_topCap = object_T.P_center + object_T.S_top * object_T.N_top;
-                    xVector3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+                    xVector3 P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
                     xFLOAT   S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
 
                     if (S_dist2 < S_dist)
@@ -567,7 +536,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
                     else
                     {
                         P_topCap = object_T.P_center - object_T.S_top * object_T.N_top;
-                        P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+                        P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
                         S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
                         if (S_dist2 < S_dist)
                         {
@@ -582,7 +551,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
                     const xBoxO &object_T = *(xBoxO*) p_figure.BVHierarchy.GetTransformed();
 
                     xVector3 P_topCap = object_T.P_center + object_T.S_top * object_T.N_top;
-                    xVector3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+                    xVector3 P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
                     xFLOAT   S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
 
                     if (S_dist2 < S_dist)
@@ -593,7 +562,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
                     }
 
                     P_topCap = object_T.P_center + object_T.S_side * object_T.N_side;
-                    P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+                    P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
                     S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
 
                     if (S_dist2 < S_dist)
@@ -604,7 +573,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
                     }
 
                     P_topCap = object_T.P_center + object_T.S_front * object_T.N_front;
-                    P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+                    P_mouse2 = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
                     S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
 
                     if (S_dist2 < S_dist)
@@ -630,7 +599,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
 
         if ((selected == 0 || selected == 1) && selectedSub == 0)
         {
-            xVector3 P_currMouse = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_firstMouse);
+            xVector3 P_currMouse = DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_firstMouse);
             xVector3 NW_shift_total = P_currMouse - P_firstMouse;
             figures[Config::TestCase][selected]->ApplyAcceleration(NW_shift_total*10.f, 1.f);
         }
@@ -662,6 +631,8 @@ bool SceneTest::FrameUpdate(float deltaTime)
         }
     }
 
+    Camera.Update(deltaTime);
+
     return true;
 }
 
@@ -676,14 +647,7 @@ bool SceneTest::FrameRender()
     glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    glViewport(Left, Top, Width, Height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    xglPerspectiveInf(FOV);
-    glMatrixMode(GL_MODELVIEW);
-    DefaultCamera->LookAtMatrix(FOV.ViewTransform);
-    glLoadMatrixf(&FOV.ViewTransform.x0);
-    FOV.update();
+    ViewportSet_GL(*DefaultCamera);
 
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glShadeModel(GL_SMOOTH);
@@ -746,7 +710,7 @@ bool SceneTest::FrameRender()
         glBegin(GL_LINES);
         {
             glVertex3fv(P_firstMouse.xyz);
-            glVertex3fv(Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_firstMouse).xyz);
+            glVertex3fv(DefaultCamera->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_firstMouse).xyz);
         }
         glEnd();
     }
@@ -760,7 +724,7 @@ bool SceneTest::FrameRender()
 
 ////// ISelectionProvider
 
-void SceneTest :: RenderSelect(const xFieldOfView *FOV)
+void SceneTest :: RenderSelect(const Math::Cameras::FieldOfView &FOV)
 {
     RendererGL renderer;
     for (int i = 0; i < 2; ++i)
@@ -769,7 +733,14 @@ void SceneTest :: RenderSelect(const xFieldOfView *FOV)
         renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy, figures[Config::TestCase][i]->MX_LocalToWorld_Get());
     }
 }
-
+xDWORD SceneTest :: Select(int X, int Y)
+{
+    std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(*DefaultCamera, X, Y);
+    if (objectIDs == NULL) return -1;
+    xDWORD res = objectIDs->back();
+    delete objectIDs;
+    return res;
+}
 unsigned int SceneTest::CountSelectable()
 {
     return 2;

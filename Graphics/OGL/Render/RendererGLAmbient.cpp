@@ -2,8 +2,8 @@
 #include "../GLAnimSkeletal.h"
 
 /********************************* ambient model ************************************/
-void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xLightVector &lights,
-                    xElement *elem, xModelInstance &modelInstance)
+void RenderElementAmbientLST(bool transparent, const Math::Cameras::FieldOfView &FOV,
+                             const Vec_xLight &lights, xElement *elem, xModelInstance &modelInstance)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderElementAmbientLST(transparent, FOV, lights, selem, modelInstance);
@@ -24,7 +24,7 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
 
     int lightsC = 0;
     xColor ambient; ambient.init(0.f,0.f,0.f,1.f);
-    xLightVector::const_iterator iterL = lights.begin(), endL = lights.end();
+    Vec_xLight::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
         if (instance.bsRadius == 0.f || iterL->elementReceivesLight(center, instance.bsRadius))
         {
@@ -149,8 +149,8 @@ void RenderElementAmbientLST(bool transparent, const xFieldOfView &FOV, const xL
     }
     GLShader::EnableSkeleton(xState_Off);
 }
-void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xLightVector &lights,
-                    xElement *elem, xModelInstance &modelInstance)
+void RenderElementAmbientVBO(bool transparent, const Math::Cameras::FieldOfView &FOV,
+                             const Vec_xLight &lights, xElement *elem, xModelInstance &modelInstance)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderElementAmbientVBO(transparent, FOV, lights, selem, modelInstance);
@@ -171,7 +171,7 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
 
     int lightsC = 0;
     xColor ambient; ambient.init(0.f,0.f,0.f,0.f);
-    xLightVector::const_iterator iterL = lights.begin(), endL = lights.end();
+    Vec_xLight::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
     {
         if (instance.bsRadius == 0.f || iterL->elementReceivesLight(center, instance.bsRadius))
@@ -242,8 +242,8 @@ void RenderElementAmbientVBO(bool transparent, const xFieldOfView &FOV, const xL
     glPopMatrix();
 }
 
-void RendererGL :: RenderAmbient(xModel &model, xModelInstance &instance, const xLightVector &lights,
-                              bool transparent, const xFieldOfView &FOV)
+void RendererGL :: RenderAmbient(xModel &model, xModelInstance &instance, const Vec_xLight &lights,
+                              bool transparent, const Math::Cameras::FieldOfView &FOV)
 {
     if ((transparent  && !model.FL_transparent) ||
         (!transparent && !model.FL_opaque)) return;

@@ -4,6 +4,7 @@
 #include "RigidObj.h"
 #include "../Models/lib3dx/xAction.h"
 #include "../SourceFiles/ComBoard.h"
+#include "../Math/Tracking/ObjectTracker.h"
 
 class SkeletizedObj : public RigidObj
 {
@@ -23,6 +24,7 @@ public:
     xFLOAT        postHit;
 
     ComBoard      comBoard;
+    Math::Tracking::ObjectTracker Tracker;
 
     enum EControlType
     {
@@ -98,10 +100,27 @@ public:
         memset(verletSystem.NW_shift, 0, sizeof(xVector3)*verletSystem.I_particles);
     }
 
+    virtual Math::Tracking::TrackedObject &GetSubObject(xBYTE ID_sub)
+    {
+        xBone  &bone = GetModelGr()->Spine.L_bones[ID_sub];
+        xMatrix MX_SubObjectToWorld;
+        if (modelInstanceGr.MX_bones)
+            MX_SubObjectToWorld = xMatrix::Transpose(modelInstanceGr.MX_bones[ID_sub]);
+        else
+            MX_SubObjectToWorld.identity();
+
+        LastTO = Math::Tracking::TrackedObject(
+            MX_SubObjectToWorld, bone.P_end, bone.S_length * 0.5f);
+        return LastTO;
+    }
+
 protected:
     virtual void CreateVerletSystem();
     virtual void DestroyVerletSystem();
     virtual void UpdateVerletSystem();
+
+private:
+    Math::Tracking::TrackedObject LastTO;
 };
 
 #endif

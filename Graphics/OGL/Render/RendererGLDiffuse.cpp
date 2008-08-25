@@ -2,8 +2,8 @@
 #include "../GLAnimSkeletal.h"
 
 /********************************* diffuse model ************************************/
-void RenderElementDiffuseLST(bool transparent, const xFieldOfView &FOV, const xLight &light,
-                    xElement *elem, xModelInstance &modelInstance)
+void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView &FOV,
+                             const xLight &light, xElement *elem, xModelInstance &modelInstance)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderElementDiffuseLST(transparent, FOV, light, selem, modelInstance);
@@ -147,8 +147,8 @@ void RenderElementDiffuseLST(bool transparent, const xFieldOfView &FOV, const xL
     GLShader::EnableSkeleton(xState_Off);
 }
 
-void RenderElementDiffuseVBO(bool transparent, const xFieldOfView &FOV, const xLight &light,
-                    xElement *elem, xModelInstance &modelInstance)
+void RenderElementDiffuseVBO(bool transparent, const Math::Cameras::FieldOfView &FOV,
+                             const xLight &light, xElement *elem, xModelInstance &modelInstance)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderElementDiffuseVBO(transparent, FOV, light, selem, modelInstance);
@@ -243,7 +243,7 @@ void RenderElementDiffuseVBO(bool transparent, const xFieldOfView &FOV, const xL
 }
 
 void RendererGL :: RenderDiffuse(xModel &model, xModelInstance &instance, const xLight &light,
-                              bool transparent, const xFieldOfView &FOV)
+                              bool transparent, const Math::Cameras::FieldOfView &FOV)
 {
     if ((transparent  && !model.FL_transparent) ||
         (!transparent && !model.FL_opaque)) return;

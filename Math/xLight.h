@@ -1,7 +1,7 @@
-#ifndef __incl_lib3dx_xLight_h
-#define __incl_lib3dx_xLight_h
+#ifndef __incl_Math_xLight_h
+#define __incl_Math_xLight_h
 
-#include "xFieldOfView.h"
+#include "Cameras/FieldOfView.h"
 #include <vector>
 
 typedef enum
@@ -44,19 +44,20 @@ struct xLight
     void create() { id = ++counter; modified = true; }
     void update();
 
-    bool isVisible(xFieldOfView *FOV) const
+    bool isVisible(Math::Cameras::FieldOfView *FOV) const
     {
         if (type == xLight_INFINITE || radius < 0) return true;
-        return true; //FOV->CheckBox(boundingPoints);
+        return FOV->CheckBox(boundingPoints);
     }
 
     bool elementReceivesLight(const xVector3 &bsCenter, float bsRadius) const;
-    bool elementReceivesDiffuseLight(const xFieldOfView &FOV, xVector3 boundingPoints[8]) const;
+    bool elementReceivesDiffuseLight(const Math::Cameras::FieldOfView &FOV,
+                                     xVector3 boundingPoints[8]) const;
 
 private:
     static xBYTE counter;
 };
 
-typedef std::vector<xLight> xLightVector;
+typedef std::vector<xLight> Vec_xLight;
 
 #endif

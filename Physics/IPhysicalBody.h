@@ -3,22 +3,26 @@
 
 #include "../Math/xMath.h"
 #include "../Math/Figures/xBVHierarchy.h"
+#include "../Math/Tracking/TrackedObject.h"
 #include "Colliders/CollisionInfo.h"
 #include <vector>
 
 namespace Physics {
     using namespace Math::Figures;
+    using namespace Math::Tracking;
     using namespace Physics::Colliders;
 
-    class IPhysicalBody
+    class IPhysicalBody : public TrackedObject
     {
     private:
         bool         FL_defaults_applied;
         bool         FL_initialized;
+        bool         FL_modified;
 
     protected:
-        bool         IsDefaultsApplied() { return FL_defaults_applied; }
-        bool         IsInitialized()     { return FL_initialized; }
+        bool         IsDefaultsApplied() const { return FL_defaults_applied; }
+        bool         IsInitialized()     const { return FL_initialized; }
+        bool         IsModified()        const { return FL_modified; }
 
     public:
         bool         FL_stationary; // no movement
@@ -32,11 +36,14 @@ namespace Physics {
         xBVHierarchy BVHierarchy;
 
     public:
+        IPhysicalBody &Modify() { FL_modified = true; return *this; }
+
+        virtual       xMatrix &MX_LocalToWorld_Set()
+        { FL_modified = true; return TrackedObject::MX_LocalToWorld_Set(); }
+
         virtual void     Stop() = 0;
 
         virtual xFLOAT   GetMass() const = 0;
-        virtual const xMatrix &MX_LocalToWorld_Get() const = 0;
-        virtual       xMatrix &MX_LocalToWorld_Set() = 0;
 
         virtual xVector3 GetVelocity() const = 0;
         virtual xVector3 GetVelocity(const CollisionPoint &CP_point) const = 0;
@@ -58,19 +65,24 @@ namespace Physics {
             FL_stationary       = false;
             FL_phantom          = false;
             FL_physical         = true;
+            FL_modified         = true;
             W_restitution       = 0.5f;
             W_restitution_self  = 0.5f;
+            S_radius            = 1.f;
+            P_center.zero(); P_center_Trfm.zero();
+            TrackedObject::MX_LocalToWorld_Set().identity();
         }
         virtual void     Initialize()
         {
             if (!IsDefaultsApplied()) ApplyDefaults();
             FL_initialized = true;
+            FL_modified = true;
         }
         virtual void     Invalidate()               {}
         virtual void     FrameStart()               {}
-        virtual void     FrameUpdate(xFLOAT T_time) {}
+        virtual void     FrameUpdate(xFLOAT T_time) { if  (IsModified()) P_center_Trfm = MX_LocalToWorld_Get().preTransformP(P_center); }
         virtual void     FrameRender()              {}
-        virtual void     FrameEnd()                 {}
+        virtual void     FrameEnd()                 { FL_modified = false; }
         virtual void     Finalize()                 { FL_initialized = false; BVHierarchy.free(); BVHierarchy.zero(); }
     };
 

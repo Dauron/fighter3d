@@ -65,14 +65,21 @@ void SceneSkeleton::UpdateCustomBVH()
     if (BVHierarchy)
     {
         BVHierarchy->invalidateTransformation();
-        xModelInstance mi;
-        mi.Zero();
-        xBoneCalculateMatrices(Model.GetModelGr()->Spine, &mi);
-        for (int i = 0; i < BVHierarchy->I_items; ++i)
-            BVHierarchy->L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( mi.MX_bones[BVHierarchy->L_items[i].ID_Bone] ));
-        mi.ClearSkeleton();
 
-        Math::Figures::xBoxA box = BVHierarchy->childBounds(xMatrix::Identity());
+        if (Model.GetModelGr()->Spine.I_bones)
+        {
+            xModelInstance mi;
+            mi.Zero();
+            xBoneCalculateMatrices(Model.GetModelGr()->Spine, &mi);
+            for (int i = 0; i < BVHierarchy->I_items; ++i)
+                BVHierarchy->L_items[i].MX_RawToLocal_Set(xMatrix::Transpose( mi.MX_bones[BVHierarchy->L_items[i].ID_Bone] ));
+            mi.ClearSkeleton();
+        }
+        else
+            for (int i = 0; i < BVHierarchy->I_items; ++i)
+                BVHierarchy->L_items[i].MX_RawToLocal_Set( xMatrix::Identity() );
+
+        Math::Figures::xBoxA box = BVHierarchy->childBounds();
         Math::Figures::xSphere &sphere   = *(Math::Figures::xSphere*) BVHierarchy->Figure;
         Math::Figures::xSphere &sphere_T = *(Math::Figures::xSphere*) BVHierarchy->GetTransformed(xMatrix::Identity());
         sphere.S_radius = sphere_T.S_radius = (box.P_max - box.P_min).length() * 0.5f;
@@ -294,7 +301,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
                     : Model.GetModelGr()->BVHierarchy;
             if (root)
                 for (int i = 0; i < root->I_items; ++i)
-                    root->L_items[i].MX_LocalToFig_Set(xMatrix::Identity());
+                    root->L_items[i].MX_RawToLocal_Set(xMatrix::Identity());
         }
         else
         if (button.Action == IC_BE_ModeBVH)
@@ -309,7 +316,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
                 : Model.GetModelGr()->BVHierarchy;
             if (root)
                 for (int i = 0; i < root->I_items; ++i)
-                    root->L_items[i].MX_LocalToFig_Set(xMatrix::Identity());
+                    root->L_items[i].MX_RawToLocal_Set(xMatrix::Identity());
         }
         else // must be skeletized to perform skinning
         if (button.Action == IC_BE_ModeSkin && Model.GetModelGr()->Spine.L_bones)
@@ -721,7 +728,7 @@ void SceneSkeleton::MouseLUp   (int X, int Y)
         {
             xVector3 hitPos = Selection.Bone
                 ? Selection.Bone->P_end : xVector3::Create(0.0f, 0.0f, 0.0f);
-            hitPos = Get3dPos(X, Y, hitPos);
+            hitPos = Cameras.Current->FOV.Get3dPos(X, Height-Y, hitPos);
 
             if (!Model.GetModelGr()->Spine.I_bones)                 // if no spine
             {
@@ -840,6 +847,14 @@ void SceneSkeleton::MouseLUp   (int X, int Y)
                 EditMode = emEditVolume;
             }
             else
+            if (State.CurrentAction == IC_BE_Clone)
+            {
+                Selection.BVHNode = model.BVHierarchy->add(*bvh->Figure->Transform(xMatrix::Identity()));
+                xBYTE cid = 0;
+                Selection.BVHNodeID = GetBVH_ID(*model.BVHierarchy, Selection.BVHNode, cid);
+                EditMode = emEditVolume;
+            }
+            else
             if (State.CurrentAction == IC_BE_Delete)
             {
                 model.BVHierarchy->remove(bvh);
@@ -952,7 +967,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
     if (EditMode == emCreateBone && Selection.Bone && // edit-move bone (ending)
         InputState.MouseLIsDown && State.CurrentAction == IC_BE_Move)
     {
-        Selection.Bone->P_end = Get3dPos(X, Y, Selection.Bone->P_end);
+        Selection.Bone->P_end = Cameras.Current->FOV.Get3dPos(X, Height-Y, Selection.Bone->P_end);
         Selection.Bone->S_lengthSqr = (Selection.Bone->P_end-Selection.Bone->P_begin).lengthSqr();
         Selection.Bone->S_length    = sqrt(Selection.Bone->S_lengthSqr);
         xSkeleton &spine = Model.GetModelGr()->Spine;
@@ -1001,7 +1016,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
                 xVector3 P_end    = MX_bone.postTransformP(Selection.Bone->P_end);    // get ending skeletized position
                 xVector3 P_root   = CastPoint(P_begin, P_end);                        // get root on the current ending plane
 
-                xVector3 P_hit = Get3dPos(X, Y, P_end) - P_root; // get hit position relative to root, on the current ending plane
+                xVector3 P_hit = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_end) - P_root; // get hit position relative to root, on the current ending plane
                 P_end -= P_root;                                 // get ending relative to root
 
                 float    W_cosF = xVector3::DotProduct(P_end.normalize(), P_hit.normalize()); // get cos of angle between ending and hit position
@@ -1009,7 +1024,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
                 float    W_sinH   = sin(W_angleH);                                       // get sin of this angle
                 xVector3 N_axis   = xVector3::CrossProduct(P_end, P_hit);                // get axis of rotation ending->hit position (relative to parent)
                 N_axis = (MX_bone.invert() * N_axis).normalize();                        // transform axis to the current coordinates
-                Selection.Bone->QT_rotation = xQuaternion::product(                      // get rotation quaternion
+                Selection.Bone->QT_rotation = xQuaternion::Product(                      // get rotation quaternion
                     Selection.Bone->QT_rotation,
                     xQuaternion::Create(N_axis * W_sinH, cos(W_angleH)) );
             }
@@ -1040,7 +1055,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
                 }
 
                 vSystem.M_weight_Inv[0] = 0.f;
-                vSystem.P_current[Selection.Bone->ID] = Get3dPos(X, Y, vSystem.P_current[Selection.Bone->ID]);
+                vSystem.P_current[Selection.Bone->ID] = Cameras.Current->FOV.Get3dPos(X, Height-Y, vSystem.P_current[Selection.Bone->ID]);
                 vEngine.SatisfyConstraints();
 
                 spine.CalcQuats(vSystem.P_current, vSystem.QT_boneSkew,
@@ -1051,7 +1066,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
         else if (spine.L_bones) // anim-translate root bone (matrix)
         {
             Selection.Bone = spine.L_bones;
-            xVector3 P_pos = Get3dPos(X, Y, Selection.Bone->P_end);
+            xVector3 P_pos = Cameras.Current->FOV.Get3dPos(X, Height-Y, Selection.Bone->P_end);
             P_pos -= Selection.Bone->P_end;
             Selection.Bone->QT_rotation.init(P_pos, 1);
             Model.CalculateSkeleton();                                   // refresh model in GPU
@@ -1075,42 +1090,9 @@ xVector3 SceneSkeleton::CastPoint(xPoint3 P_pointToCast, xPoint3 P_onPlane)
 {
     // get plane of ray intersection
     xPlane PN_plane; PN_plane.init(
-                        (Cameras.Current->center - Cameras.Current->eye).normalize(),
+                        (Cameras.Current->P_center - Cameras.Current->P_eye).normalize(),
                         P_onPlane);
     return PN_plane.castPoint(P_pointToCast);
-}
-
-xVector3 SceneSkeleton::Get3dPos(int X, int Y, xPoint3 P_onPlane)
-{
-    float norm_x = 1.0f - (float)X/(Width/2.0f);
-    float norm_y = (float)Y/(Height/2.0f) - 1.0f;
-
-    // get model view matrix
-    xMatrix MX_ModelToView;
-    Cameras.Current->LookAtMatrix(MX_ModelToView);
-    MX_ModelToView.invert();
-
-    // get ray of the mouse
-    xVector3 N_ray;
-    xVector3 P_ray;
-    if (Cameras.Current == &Cameras.Perspective)
-    {
-        float near_height = 0.1f * tan(45.0f * PI / 360.0f);
-        P_ray = (xVector4::Create(0.0f,0.0f,0.0f,1.0f)*MX_ModelToView).vector3;
-        N_ray.init(near_height * AspectRatio * norm_x, near_height * norm_y, 0.1f);
-    }
-    else
-    {
-        double scale = fabs((Cameras.Current->eye - Cameras.Current->center).length());
-        P_ray = (xVector4::Create(-scale *AspectRatio * norm_x,-scale * norm_y,0.0f,1.0f)*MX_ModelToView).vector3;
-        N_ray.init(0.f, 0.f, 0.1f);
-    }
-    N_ray = MX_ModelToView.preTransformV(N_ray);
-
-    // get plane of ray intersection
-    xPlane PN_plane; PN_plane.init(
-        (Cameras.Current->eye-Cameras.Current->center).normalize(), P_onPlane);
-    return PN_plane.intersectRay(P_ray, N_ray);
 }
 
 /************************* CONSTRAINTS *********************************/
@@ -1368,22 +1350,7 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
         if (Cameras.Current == &Cameras.Perspective) Cameras.Current = &Cameras.Front;
     }
     if (im.GetInputStateAndClear(IC_CameraReset))
-    {
-        if (Cameras.Current == &Cameras.Front)
-            Cameras.Front.SetCamera(0.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        if (Cameras.Current == &Cameras.Right)
-            Cameras.Right.SetCamera(-5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        if (Cameras.Current == &Cameras.Back)
-            Cameras.Back.SetCamera(0.0f, +5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        if (Cameras.Current == &Cameras.Left)
-            Cameras.Left.SetCamera(+5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        if (Cameras.Current == &Cameras.Top)
-            Cameras.Top.SetCamera(0.0f, 0.0f,  5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
-        if (Cameras.Current == &Cameras.Bottom)
-            Cameras.Bottom.SetCamera(0.0f, 0.0f, -5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
-        if (Cameras.Current == &Cameras.Perspective)
-            Cameras.Perspective.SetCamera(-5.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-    }
+        InitCameras(true);
     if (im.GetInputStateAndClear(IC_CameraFront))
         Cameras.Current = &Cameras.Front;
     if (im.GetInputStateAndClear(IC_CameraBack))
@@ -1399,7 +1366,7 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
     if (im.GetInputStateAndClear(IC_CameraPerspective))
         Cameras.Current = &Cameras.Perspective;
 
-    float scale = (Cameras.Current->eye - Cameras.Current->center).length();
+    float scale = (Cameras.Current->P_eye - Cameras.Current->P_center).length();
     float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
     float deltaTmp = deltaTime * scale * run;
 
@@ -1419,14 +1386,14 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
     {
         float scl = im.mouseWheel/240.0f;
         if (scl < 0.0) scl = -1/scl;
-        Cameras.Current->eye = Cameras.Current->center + (Cameras.Current->eye - Cameras.Current->center)*scl;
+        Cameras.Current->P_eye = Cameras.Current->P_center + (Cameras.Current->P_eye - Cameras.Current->P_center)*scl;
         im.mouseWheel = 0;
     }
 
     if (Cameras.Current == &Cameras.Perspective)
     {
         deltaTmp = deltaTime*MULT_ROT*run;
-        xVector3 center = Cameras.Current->center;
+        xVector3 center = Cameras.Current->P_center;
 
         if (im.GetInputState(IC_TurnLeft))
             Cameras.Current->Rotate (deltaTmp, 0.0f, 0.0f);
@@ -1442,28 +1409,30 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
             Cameras.Current->Rotate (0.0f, 0.0f, deltaTmp);
 
         if (im.GetInputState(IC_OrbitLeft)) {
-            Cameras.Current->center = center;
+            Cameras.Current->P_center = center;
             Cameras.Current->Orbit (deltaTmp, 0.0f);
         }
         if (im.GetInputState(IC_OrbitRight)) {
-            Cameras.Current->center = center;
+            Cameras.Current->P_center = center;
             Cameras.Current->Orbit (-deltaTmp, 0.0f);
         }
         if (im.GetInputState(IC_OrbitUp)) {
-            Cameras.Current->center = center;
+            Cameras.Current->P_center = center;
             Cameras.Current->Orbit (0.0f, deltaTmp);
         }
         if (im.GetInputState(IC_OrbitDown)) {
-            Cameras.Current->center = center;
+            Cameras.Current->P_center = center;
             Cameras.Current->Orbit (0.0f, -deltaTmp);
         }
     }
+
+    Cameras.Current->Update(deltaTime);
 }
 
 /**************************** BVH **************************************/
 void SceneSkeleton::MouseLDown_BVH(int X, int Y)
 {
-    BVH.P_prevMouse = Get3dPos(X, Y, Selection.BVHNode->Figure->P_center);
+    BVH.P_prevMouse = Cameras.Current->FOV.Get3dPos(X, Height-Y, Selection.BVHNode->Figure->P_center);
     xFLOAT S_dist = (BVH.P_prevMouse - Selection.BVHNode->Figure->P_center).lengthSqr();
     Selection.FigureDim = 0;
 
@@ -1478,7 +1447,7 @@ void SceneSkeleton::MouseLDown_BVH(int X, int Y)
         const xCapsule &object = *(xCapsule*) Selection.BVHNode->Figure;
 
         xVector3 P_topCap = object.P_center + object.S_top * object.N_top;
-        xVector3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+        xVector3 P_mouse2 = Cameras.Current->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
         xFLOAT   S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
 
         Selection.FigureDim = 3;
@@ -1491,7 +1460,7 @@ void SceneSkeleton::MouseLDown_BVH(int X, int Y)
         else
         {
             P_topCap = object.P_center - object.S_top * object.N_top;
-            P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+            P_mouse2 = Cameras.Current->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
             S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
             if (S_dist2 < S_dist)
             {
@@ -1506,7 +1475,7 @@ void SceneSkeleton::MouseLDown_BVH(int X, int Y)
         const xBoxO &object = *(xBoxO*) Selection.BVHNode->Figure;
 
         xVector3 P_topCap = object.P_center + object.S_top * object.N_top;
-        xVector3 P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+        xVector3 P_mouse2 = Cameras.Current->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
         xFLOAT   S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
 
         if (S_dist2 < S_dist)
@@ -1517,7 +1486,7 @@ void SceneSkeleton::MouseLDown_BVH(int X, int Y)
         }
 
         P_topCap = object.P_center + object.S_side * object.N_side;
-        P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+        P_mouse2 = Cameras.Current->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
         S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
 
         if (S_dist2 < S_dist)
@@ -1528,7 +1497,7 @@ void SceneSkeleton::MouseLDown_BVH(int X, int Y)
         }
 
         P_topCap = object.P_center + object.S_front * object.N_front;
-        P_mouse2 = Get3dPos(g_InputMgr.mouseX, g_InputMgr.mouseY, P_topCap);
+        P_mouse2 = Cameras.Current->FOV.Get3dPos(g_InputMgr.mouseX, Height-g_InputMgr.mouseY, P_topCap);
         S_dist2  = (P_mouse2 - P_topCap).lengthSqr();
 
         if (S_dist2 < S_dist)
@@ -1544,7 +1513,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
 {
     if (Selection.FigureDim == 0)
     {
-        xPoint3 P_currMouse = Get3dPos(X, Y, Selection.BVHNode->Figure->P_center);
+        xPoint3 P_currMouse = Cameras.Current->FOV.Get3dPos(X, Height-Y, Selection.BVHNode->Figure->P_center);
         xVector3 NW_shift = P_currMouse - BVH.P_prevMouse;
         Selection.BVHNode->Figure->P_center += NW_shift;
         BVH.P_prevMouse = P_currMouse;
@@ -1553,7 +1522,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
     if (Selection.BVHNode->Figure->Type == xIFigure3d::Sphere)
     {
         xSphere &object = *(xSphere*) Selection.BVHNode->Figure;
-        xPoint3 P_mouse2 = Get3dPos(X, Y, Selection.BVHNode->Figure->P_center);
+        xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, Selection.BVHNode->Figure->P_center);
         object.S_radius = (P_mouse2 - Selection.BVHNode->Figure->P_center).length();
     }
     else
@@ -1563,7 +1532,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
         if (Selection.FigureDim == 1)
         {
             xPoint3 P_topCap = object.P_center + object.S_top * object.N_top;
-            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
             xVector3 NW_shift = P_mouse2 - object.P_center;
             object.S_top = NW_shift.length();
             if (g_InputMgr.GetInputState(IC_RunModifier))
@@ -1573,7 +1542,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
         if (Selection.FigureDim == 2)
         {
             xPoint3 P_topCap = object.P_center - object.S_top * object.N_top;
-            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
             xVector3 NW_shift = object.P_center - P_mouse2;
             object.S_top = NW_shift.length();
             if (g_InputMgr.GetInputState(IC_RunModifier))
@@ -1581,7 +1550,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
         }
         else
         {
-            xPoint3 P_mouse2 = Get3dPos(X, Y, Selection.BVHNode->Figure->P_center);
+            xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, Selection.BVHNode->Figure->P_center);
             object.S_radius = (P_mouse2 - Selection.BVHNode->Figure->P_center).length();
         }
     }
@@ -1595,30 +1564,31 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
         if (Selection.FigureDim == 1)
         {
             xPoint3 P_topCap = object.P_center + object.S_front * object.N_front;
-            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
             if (g_InputMgr.GetInputState(IC_RunModifier))
-                QT_rotation = xQuaternion::getRotation(object.N_front, P_mouse2-object.P_center);
+                QT_rotation = xQuaternion::GetRotation(object.N_front, P_mouse2-object.P_center);
             object.S_front = (P_mouse2 - object.P_center).length();
         }
         else
         if (Selection.FigureDim == 2)
         {
             xPoint3 P_topCap = object.P_center + object.S_side * object.N_side;
-            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
             if (g_InputMgr.GetInputState(IC_RunModifier))
-                QT_rotation = xQuaternion::getRotation(object.N_side, P_mouse2-object.P_center);
+                QT_rotation = xQuaternion::GetRotation(object.N_side, P_mouse2-object.P_center);
             object.S_side = (P_mouse2 - object.P_center).length();
         }
         else
         {
             xPoint3 P_topCap = object.P_center + object.S_top * object.N_top;
-            xPoint3 P_mouse2 = Get3dPos(X, Y, P_topCap);
+            xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
             if (g_InputMgr.GetInputState(IC_RunModifier))
-                QT_rotation = xQuaternion::getRotation(object.N_top, P_mouse2-object.P_center);
+                QT_rotation = xQuaternion::GetRotation(object.N_top, P_mouse2-object.P_center);
             object.S_top = (P_mouse2 - object.P_center).length();
         }
-        object.N_top   = xQuaternion::rotate(QT_rotation, object.N_top).normalize();
-        object.N_side  = xQuaternion::rotate(QT_rotation, object.N_side).normalize();
-        object.N_front = xQuaternion::rotate(QT_rotation, object.N_front).normalize();
+        object.N_top   = QT_rotation.rotate(object.N_top).normalize();
+        object.N_side  = QT_rotation.rotate(object.N_side).normalize();
+        object.N_front = QT_rotation.rotate(object.N_front).normalize();
     }
+    Selection.BVHNode->invalidateTransformation();
 }

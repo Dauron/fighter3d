@@ -493,7 +493,7 @@ void RendererGL :: RenderVertices( xModel &model, xModelInstance &instance,
 
 
 /********************************* model ************************************/
-void RenderModelLST(bool transparent, const xFieldOfView &FOV,
+void RenderModelLST(bool transparent, const Math::Cameras::FieldOfView &FOV,
                     xElement *elem, xModelInstance &modelInstance, bool UseList)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
@@ -629,7 +629,7 @@ void RenderModelLST(bool transparent, const xFieldOfView &FOV,
     GLShader::EnableSkeleton(xState_Off);
 }
 
-void RenderModelVBO(bool transparent, const xFieldOfView &FOV,
+void RenderModelVBO(bool transparent, const Math::Cameras::FieldOfView &FOV,
                     xElement *elem, xModelInstance &modelInstance)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
@@ -717,7 +717,7 @@ void RenderModelVBO(bool transparent, const xFieldOfView &FOV,
 }
 
 void RendererGL :: RenderModel(xModel &model, xModelInstance &instance,
-                              bool transparent, const xFieldOfView &FOV)
+                              bool transparent, const Math::Cameras::FieldOfView &FOV)
 {
     if ((transparent  && !model.FL_transparent) ||
         (!transparent && !model.FL_opaque)) return;

@@ -8,12 +8,19 @@
 /***************************** shadow volumes *********************************/
 void CheckShadowVolumeInFrustum(const xMatrix &transformation, const xMatrix &transformationInv,
                                 xElementInstance &instance, xShadowData &shadowData,
-                                const xLight &light, const xFieldOfView &FOV,
-                                bool &outModelInFrustum, bool &outExtrusionInFrustum, bool &outBackCapInFrustum)
+                                const xLight &light, const Math::Cameras::FieldOfView &FOV,
+                                bool &outModelInFrustum, bool &outExtrusionInFrustum,
+                                bool &outBackCapInFrustum)
 {
     outModelInFrustum = FOV.CheckSphere(transformation.preTransformP(instance.bsCenter), instance.bsRadius) &&
         FOV.CheckBox(instance.bbBox, transformation);
 
+    if (instance.bbBox.P_min == instance.bbBox.P_max)
+    {
+        outBackCapInFrustum   = true;
+        outExtrusionInFrustum = true;
+        return;
+    }
 
     xVector4 bounds[16];
     for (int i = 0; i < 8; ++i)
@@ -92,7 +99,8 @@ void RenderShadowVolumeZPass(xShadowData &shadowData, bool infiniteL)
         glCallList(shadowData.gpuShadowPointers.listIDPass);
     }
 }
-void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool modelInFrustum, bool extrusionInFrustum, bool backCapInFrustum)
+void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool modelInFrustum,
+                             bool extrusionInFrustum, bool backCapInFrustum)
 {
     /************************* RENDER FACES ****************************/
     if (modelInFrustum && backCapInFrustum && extrusionInFrustum)
@@ -264,7 +272,8 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
     }
 }
 
-void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLight &light, xFieldOfView &FOV)
+void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLight &light,
+                             const Math::Cameras::FieldOfView &FOV)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowVolumeElem(selem, modelInstance, light, FOV);
@@ -273,15 +282,16 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
     if (!elem->I_edges) return;
 
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
-    xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
-    xMatrix  mtxWorldToObject = (elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).invert();
-    if (instance.bsRadius != 0.f && !light.elementReceivesLight(mtxTrasformation.preTransformP(instance.bsCenter), instance.bsRadius)) return;
+    xMatrix mtxMeshToWorld = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
+    if (instance.bsRadius != 0.f && !light.elementReceivesLight(mtxMeshToWorld.preTransformP(instance.bsCenter), instance.bsRadius)) return;
 
     bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.MX_LocalToWorld, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;
+
+    xMatrix  mtxWorldToMesh = xMatrix::Invert(mtxMeshToWorld);
     xVector3 lightPos = (infiniteL)
-        ? mtxWorldToObject.preTransformV(light.position)
-        : mtxWorldToObject.preTransformP(light.position);
+        ? mtxWorldToMesh.preTransformV(light.position)
+        : mtxWorldToMesh.preTransformP(light.position);
 
     xShadowData &shadowData = instance.GetShadowData(light, zPass ? xShadowData::ZPASS_ONLY : xShadowData::ZFAIL_PASS);
     if (!shadowData.L_indices)
@@ -291,8 +301,18 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
             = (lightPos - instance.bsCenter).lengthSqr() > instance.bsRadius*instance.bsRadius;
 
         if (!shadowData.L_vertices)
-            shadowData.L_vertices = (infiniteL) ? new xVector4[instance.I_vertices + 1] : new xVector4[instance.I_vertices << 1];
-        memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xVector4));
+            shadowData.L_vertices = (infiniteL) ? new xVector4[elem->I_vertices + 1] : new xVector4[elem->I_vertices << 1];
+        if (instance.I_vertices)
+            memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xVector4));
+        else
+        {
+            size_t    stride = elem->GetVertexStride();
+            xBYTE    *srcV   = (xBYTE *) elem->L_vertices,
+                     *lastV  = (xBYTE *) elem->L_vertices + stride*elem->I_vertices;
+            xVector4 *itrV   = shadowData.L_vertices;
+            for (; srcV != lastV; ++itrV, srcV += stride)
+                itrV->init(*(xVector3 *)srcV, 1.f);
+        }
         ShadowVolume::ExtrudePoints(elem, infiniteL, lightPos, shadowData);
         ShadowVolume::GetBackFaces (elem, instance, infiniteL, shadowData, facingFlag);
         ShadowVolume::GetSilhouette(elem, infiniteL, useBackCapOptimization, facingFlag, shadowData);
@@ -329,7 +349,7 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
     glMultMatrixf(&elem->MX_MeshToLocal.x0);
 
     bool modelInFrustum, extrusionInFrustum, backCapInFrustum;
-    CheckShadowVolumeInFrustum(mtxTrasformation, mtxWorldToObject,
+    CheckShadowVolumeInFrustum(mtxMeshToWorld, mtxWorldToMesh,
         instance, shadowData, light, FOV,
         modelInFrustum, extrusionInFrustum, backCapInFrustum);
 
@@ -502,7 +522,8 @@ void RenderShadowVolumeZFailVBO(xShadowData &shadowData, bool infiniteL)
 }
 
 
-void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, xLight &light, xFieldOfView &FOV)
+void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, xLight &light,
+                                Math::Cameras::FieldOfView &FOV)
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderShadowVolumeElemVBO(selem, modelInstance, light, FOV);
@@ -511,8 +532,8 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
     if (!elem->I_edges) return;
 
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
-
-    if (instance.bsRadius != 0.f && !light.elementReceivesLight((elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).preTransformP(instance.bsCenter), instance.bsRadius)) return;
+    xMatrix mtxMeshToWorld = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
+    if (instance.bsRadius != 0.f && !light.elementReceivesLight(mtxMeshToWorld.preTransformP(instance.bsCenter), instance.bsRadius)) return;
 
     bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.MX_LocalToWorld, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;
@@ -521,12 +542,10 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
     xShadowData &shadowData = instance.GetShadowData(light, zPass ? xShadowData::ZPASS_ONLY : xShadowData::ZFAIL_PASS);
     if (!shadowData.L_indices)
     {
-        xMatrix  mtxWorldToObject = (elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld).invert();
-        xVector3 lightPos;
-        if (infiniteL)
-            lightPos = mtxWorldToObject.preTransformV(light.position);
-        else
-            lightPos = mtxWorldToObject.preTransformP(light.position);
+        xMatrix  mtxWorldToMesh = xMatrix::Invert(mtxMeshToWorld);
+        xVector3 lightPos = (infiniteL)
+            ? mtxWorldToMesh.preTransformV(light.position)
+            : lightPos = mtxWorldToMesh.preTransformP(light.position);
 
         bool *facingFlag = NULL;
         bool  useBackCapOptimization
@@ -534,7 +553,17 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
 
         if (!shadowData.L_vertices)
             shadowData.L_vertices = new xVector4[(infiniteL) ? instance.I_vertices + 1 : instance.I_vertices << 1];
-        memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xVector4));
+        if (instance.I_vertices)
+            memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xVector4));
+        else
+        {
+            size_t    stride = elem->GetVertexStride();
+            xBYTE    *srcV   = (xBYTE *) elem->L_vertices,
+                     *lastV  = (xBYTE *) elem->L_vertices + stride*elem->I_vertices;
+            xVector4 *itrV   = shadowData.L_vertices;
+            for (; srcV != lastV; ++itrV, srcV += stride)
+                itrV->init(*(xVector3 *)srcV, 1.f);
+        }
         ShadowVolume::ExtrudePoints(elem, infiniteL, lightPos, shadowData);
         ShadowVolume::GetBackFaces (elem, instance, infiniteL, shadowData, facingFlag);
         ShadowVolume::GetSilhouette(elem, infiniteL, useBackCapOptimization, facingFlag, shadowData);
@@ -582,7 +611,8 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
     glPopMatrix();
 }
 /*****************************     COMMON     *********************************/
-void RendererGL :: RenderShadowVolume(xModel &model, xModelInstance &instance, xLight &light, xFieldOfView &FOV)
+void RendererGL :: RenderShadowVolume(xModel &model, xModelInstance &instance, xLight &light,
+                                      const Math::Cameras::FieldOfView &FOV)
 {
     glPushMatrix();
     glMultMatrixf(&instance.MX_LocalToWorld.x0);

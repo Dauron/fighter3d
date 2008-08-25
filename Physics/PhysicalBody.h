@@ -8,10 +8,6 @@ namespace Physics {
 
     class PhysicalBody : public IPhysicalBody
     {
-    private:
-        xMatrix     MX_LocalToWorld;
-        bool        FL_modified;
-
     public:
         xVector3    NW_velocity;
         xVector3    NW_velocity_new;
@@ -20,19 +16,7 @@ namespace Physics {
         xQuaternion QT_velocity;
         xQuaternion QT_velocity_new;
 
-        xPoint3     P_center;
-        xPoint3     P_center_Trfm;
-        xFLOAT      S_radius;
-
         xFLOAT      M_mass;
-
-        PhysicalBody &Modify() { FL_modified = true; return *this; }
-        bool          IsModified() const { return FL_modified; }
-
-        virtual const xMatrix &MX_LocalToWorld_Get() const
-        { return MX_LocalToWorld; }
-        virtual       xMatrix &MX_LocalToWorld_Set()
-        { return Modify().MX_LocalToWorld; }
 
     public:
 
@@ -57,7 +41,7 @@ namespace Physics {
         { return GetVelocity(CP_point) * GetMass() * T_time_inv; }
 
         virtual void     ApplyFix(const CollisionPoint &CP_point)
-        { FL_modified = true; MX_LocalToWorld.postTranslateT(CP_point.NW_fix * CP_point.W_fix); }
+        { MX_LocalToWorld_Set().postTranslateT(CP_point.NW_fix * CP_point.W_fix); }
 
         virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time)
         { NW_velocity_new += NW_accel * T_time; }
@@ -74,38 +58,25 @@ namespace Physics {
         void Translate(xFLOAT x, xFLOAT y, xFLOAT z)
         {
             Stop();
-            MX_LocalToWorld *= xMatrixTranslateT(x,y,z);
+            MX_LocalToWorld_Set() *= xMatrixTranslateT(x,y,z);
             if (IsInitialized()) LocationChanged();
-            FL_modified = true;
         }
 
         void Rotate(xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
         {
             Stop();
-            MX_LocalToWorld *= xMatrixRotateRad(DegToRad(rotX), DegToRad(rotY), DegToRad(rotZ));
+            MX_LocalToWorld_Set() *= xMatrixRotateRad(DegToRad(rotX), DegToRad(rotY), DegToRad(rotZ));
             if (IsInitialized()) LocationChanged();
-            FL_modified = true;
         }
 
     public:
         virtual void ApplyDefaults()
         {
             IPhysicalBody::ApplyDefaults();
-
-            MX_LocalToWorld.identity();
-            FL_modified = true;
-            P_center.zero(); P_center_Trfm.zero();
             M_mass      = FL_stationary ? xFLOAT_HUGE_POSITIVE : 10.f;
-            S_radius    = 1.f;
             Stop();
         }
-        virtual void Initialize()
-        {
-            IPhysicalBody::Initialize();
-            FL_modified = true;
-        }
         virtual void FrameUpdate(xFLOAT T_time);
-        virtual void FrameEnd() { FL_modified = false; }
     };
 
 } // namespace Physics

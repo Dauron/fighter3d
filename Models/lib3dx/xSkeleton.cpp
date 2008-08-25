@@ -58,12 +58,12 @@ void xSkeleton :: CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_bone
         if (QT_boneSkew)
         {
             quat.init(-QT_boneSkew[ID_bone].vector3, QT_boneSkew[ID_bone].w);
-            P_endN = xQuaternion::rotate(quat, P_endN, P_end_parent);
+            P_endN = quat.rotate(P_endN, P_end_parent);
         }
-        quat = xQuaternion::getRotation(NW_up, P_endN-P_end_parent);
+        quat = xQuaternion::GetRotation(NW_up, P_endN-P_end_parent);
 
         if (QT_boneSkew)
-            bone.QT_rotation = xQuaternion::product(QT_boneSkew[ID_bone], quat);
+            bone.QT_rotation = xQuaternion::Product(QT_boneSkew[ID_bone], quat);
         else
             bone.QT_rotation = quat;
         quat.init(-bone.QT_rotation.vector3, bone.QT_rotation.w);
@@ -304,7 +304,7 @@ bool   _xBoneCalculateQuatForVerlet(const xBone *L_bones, xBYTE ID_last, xBYTE I
         if (_xBoneCalculateQuatForVerlet(L_bones, ID_last, *ID_iter, QT_parent, QT_current))
         {
             if (ID_bone)
-                QT_parent = xQuaternion::product(bone.QT_rotation, QT_parent);
+                QT_parent = xQuaternion::Product(bone.QT_rotation, QT_parent);
             return true;
         }
     return false;

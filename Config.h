@@ -10,11 +10,17 @@ struct Config
     static bool  DisplayShadowVolumes;
     static bool  EnableShaders;
     static int   PolygonMode;
+    static int   ShadowMapSize;
+    static int   WindowX;
+    static int   WindowY;
+    static int   FullScreenX;
+    static int   FullScreenY;
 
     static int   TestCase;
     static float Speed;
-    static int   ShadowMapSize;
     static int   LoggingLevel;
+
+    static void Load(char *fileName);
 };
 
 struct State

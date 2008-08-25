@@ -4,7 +4,7 @@
 /********************************* vertices && element selections ************************************/
 void RenderElementDepthLST(
                             xElement * elem, xModelInstance &modelInstance,
-                            bool transparent, const xFieldOfView &FOV )
+                            bool transparent, const Math::Cameras::FieldOfView &FOV )
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderElementDepthLST( selem, modelInstance, transparent, FOV );
@@ -59,7 +59,7 @@ void RenderElementDepthLST(
 }
 
 void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
-                            bool transparent, const xFieldOfView &FOV )
+                            bool transparent, const Math::Cameras::FieldOfView &FOV )
 {
     for (xElement *selem = elem->L_kids; selem; selem = selem->Next)
         RenderElementDepthVBO( selem, modelInstance, transparent, FOV );
@@ -124,7 +124,7 @@ void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
 }
 
 void RendererGL :: RenderDepth( xModel &model, xModelInstance &instance,
-                               bool transparent, const xFieldOfView &FOV )
+                               bool transparent, const Math::Cameras::FieldOfView &FOV )
 {
     if ((transparent  && !model.FL_transparent) ||
         (!transparent && !model.FL_opaque)) return;

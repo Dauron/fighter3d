@@ -1,98 +1,77 @@
 #include "CameraFree.h"
 
+using namespace Math::Cameras;
+
 void CameraFree::Move(xFLOAT frwd, xFLOAT side, xFLOAT vert)
 {
     // move forward/backwards
-    xVector3 vect = center - eye;
-    vect.normalize();
-    vect *= frwd;
-
-    eye += vect;
-    center += vect;
+    xVector3 NW_shift = xVector3::Normalize(P_center - P_eye) * frwd;
+    P_eye    += NW_shift;
+    P_center += NW_shift;
 
     // move left/right
-    vect = xVector3::CrossProduct (center - eye, up);
-    vect.normalize();
-    vect *= side;
-
-    eye += vect;
-    center += vect;
+    NW_shift = xVector3::Normalize(
+        xVector3::CrossProduct(P_center - P_eye, NW_up) ) * side;
+    P_eye    += NW_shift;
+    P_center += NW_shift;
 
     // move up/down
-    vect = up;
-    vect.normalize();
-    vect *= vert;
-
-    eye += vect;
-    center += vect;
+    NW_shift = NW_up.normalize() * vert;
+    P_eye    += NW_shift;
+    P_center += NW_shift;
 }
 
 void CameraFree::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
 {
-    xVector3 a = center - eye;
+    xVector3 NW_forward = P_center - P_eye;
 
     if (!IsZero(heading))
     {
-        heading = DegToRad (heading)/2.F;
-        xFLOAT s = sin(heading);
-        up.normalize();
-        xQuaternion q; q.init(up.x*s, up.y*s, up.z*s, cos(heading));
-        a = xQuaternion::rotate(q, a);
+        heading = DegToRad (heading) * 0.5f;
+        xQuaternion q; q.init( NW_up.normalize()*sin(heading), cos(heading));
+        NW_forward = q.rotate(NW_forward);
     }
 
     if (!IsZero(pitch))
     {
-        pitch = DegToRad (pitch)/2.f;
-        xFLOAT s = sin(pitch);
-
-        xVector3 cross = xVector3::CrossProduct(a, up);
-        cross.normalize();
-
-        xQuaternion q; q.init(cross.x*s, cross.y*s, cross.z*s, cos(pitch));
-        a = xQuaternion::rotate(q, a);
-        up = xQuaternion::rotate(q, up);
+        pitch = DegToRad (pitch) * 0.5f;
+        xVector3 N_side = xVector3::CrossProduct(NW_forward, NW_up).normalize();
+        xQuaternion q; q.init(N_side*sin(pitch), cos(pitch));
+        NW_forward = q.rotate(NW_forward);
+        NW_up      = q.rotate(NW_up);
     }
 
     if (!IsZero(roll))
     {
-        roll = DegToRad (roll)/2.f;
-        xFLOAT s = sin(roll);
-
-        xVector3 front = a;
-        front.normalize();
-
-        xQuaternion q; q.init(front.x*s, front.y*s, front.z*s, cos(roll));
-        up = xQuaternion::rotate(q, up);
+        roll = DegToRad (roll) * 0.5f;
+        xVector3 N_front = xVector3::Normalize(NW_forward);
+        xQuaternion q; q.init(N_front*sin(roll), cos(roll));
+        NW_up = q.rotate(NW_up);
     }
 
-    center = a + eye;
+    P_center = P_eye + NW_forward;
 }
 
 void CameraFree::Orbit(xFLOAT horz, xFLOAT vert)
 {
-    xVector3 a = eye - center;
+    xVector3 NW_backward = P_eye - P_center;
 
     if (!IsZero(horz))
     {
-        horz = DegToRad (horz)/2.f;
-        xFLOAT s = sin(horz);
-        up.normalize();
-        xQuaternion q; q.init(up.x*s, up.y*s, up.z*s, cos(horz));
-        a = xQuaternion::rotate(q, a);
+        horz = DegToRad (horz) * 0.5f;
+        NW_up.normalize();
+        xQuaternion q; q.init(NW_up*sin(horz), cos(horz));
+        NW_backward = q.rotate(NW_backward);
     }
 
     if (!IsZero(vert))
     {
-        vert = DegToRad (vert)/2.f;
-        xFLOAT s = sin(vert);
-
-        xVector3 cross = xVector3::CrossProduct(a, up);
-        cross.normalize();
-
-        xQuaternion q; q.init(cross.x*s, cross.y*s, cross.z*s, cos(vert));
-        a = xQuaternion::rotate(q, a);
-        up = xQuaternion::rotate(q, up);
+        vert = DegToRad (vert) * 0.5f;
+        xVector3 N_side = xVector3::CrossProduct(NW_backward, NW_up).normalize();
+        xQuaternion q; q.init(N_side * sin(vert), cos(vert));
+        NW_backward = q.rotate(NW_backward);
+        NW_up       = q.rotate(NW_up);
     }
 
-    eye = a + center;
+    P_eye = P_center + NW_backward;
 }

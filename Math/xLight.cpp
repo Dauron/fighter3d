@@ -59,7 +59,8 @@ bool xLight :: elementReceivesLight(const xVector3 &bsCenter, float bsRadius) co
     return dist < rdist*rdist;
 }
 
-bool xLight :: elementReceivesDiffuseLight(const xFieldOfView &FOV, xVector3 boundingPoints[8]) const
+bool xLight :: elementReceivesDiffuseLight(const Math::Cameras::FieldOfView &FOV,
+                                           xVector3 boundingPoints[8]) const
 {
     /*
     if (type == xLight_INFINITE)

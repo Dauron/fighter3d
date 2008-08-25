@@ -39,7 +39,9 @@ namespace Math { namespace Figures {
         {
             return GetTransformed(MX_RawToLocal_Get());
         }
-        void MX_LocalToFig_Set(const xMatrix &mx_RawToLocal)
+        bool FL_RawToLocal_Get()
+        { return FL_RawToLocal; }
+        void MX_RawToLocal_Set(const xMatrix &mx_RawToLocal)
         {
             if (mx_RawToLocal.isIdentity())
                 FL_RawToLocal = false;
@@ -160,7 +162,7 @@ namespace Math { namespace Figures {
             MX_RawToWorld.identity();
         }
 
-        void add (xIFigure3d &figure)
+        xBVHierarchy *add (xIFigure3d &figure)
         {
             xBVHierarchy *L_temp = (xBVHierarchy *) new xBYTE[(I_items+1) * sizeof(xBVHierarchy)];
             if (I_items)
@@ -171,6 +173,7 @@ namespace Math { namespace Figures {
             L_items = L_temp;
             L_items[I_items].init(figure);
             ++I_items;
+            return L_items + I_items-1;
         }
 
         void remove (xBYTE I_idx)
@@ -189,7 +192,7 @@ namespace Math { namespace Figures {
 
             xBVHierarchy *L_temp = (xBVHierarchy *) new xBYTE[(--I_items) * sizeof(xBVHierarchy)];
             if (I_idx > 0)       memcpy(L_temp, L_items, I_idx*sizeof(xBVHierarchy));
-            if (I_idx < I_items) memcpy(L_temp+I_idx, L_items+(I_idx+1), (I_items-I_idx-1)*sizeof(xBVHierarchy));
+            if (I_idx < I_items) memcpy(L_temp+I_idx, L_items+(I_idx+1), (I_items-I_idx)*sizeof(xBVHierarchy));
             delete[] (xBYTE*) L_items;
             L_items = L_temp;
         }
@@ -215,13 +218,17 @@ namespace Math { namespace Figures {
 
             if (I_items)
             {
-                xIFigure3d *figure = L_items[0].GetTransformed();
+                xIFigure3d *figure = L_items[0].FL_RawToLocal_Get()
+                    ? L_items[0].GetTransformed()
+                    : L_items[0].Figure;
                 figure->P_MinMax_Get(box.P_min, box.P_max);
 
                 xPoint3 P_min, P_max;
                 for (int i = 1; i < I_items; ++i)
                 {
-                    figure = L_items[i].GetTransformed();
+                    figure = L_items[i].FL_RawToLocal_Get()
+                        ? L_items[i].GetTransformed()
+                        : L_items[i].Figure;
                     figure->P_MinMax_Get(P_min, P_max);
 
                     if (P_min.x < box.P_min.x) { box.P_min.x = P_min.x; }

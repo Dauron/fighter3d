@@ -10,7 +10,7 @@ namespace Physics {
     class PhysicalWorld
     {
     public:
-        typedef std::vector<IPhysicalBody*> ObjectVector;
+        typedef std::vector<IPhysicalBody*> Vec_Object;
 
         virtual const xVector3 &Gravity_Get(const IPhysicalBody &object) const
         {
@@ -24,7 +24,7 @@ namespace Physics {
             return NW_gravity;
         }
 
-        void Interact(xFLOAT T_time, ObjectVector &L_objects);
+        void Interact(xFLOAT T_time, Vec_Object &L_objects);
     };
 
 } // namespace Physics

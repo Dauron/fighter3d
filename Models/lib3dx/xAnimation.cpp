@@ -121,7 +121,7 @@ xQuaternion *     xAnimation::GetTransformations()
                 //xVector4 b = xQuaternion::spline(*pCurr, *pNext, *pNNext);
                 //*pRes = xQuaternion::squad(*pCurr, *pNext, a, b, complement);
 
-                *pRes = xQuaternion::slerp(*pCurr, *pNext, complement);
+                *pRes = xQuaternion::SLerp(*pCurr, *pNext, complement);
                 /*
                 xFLOAT cosA = xVector4::DotProduct(*pCurr, *pNext);
                 if (cosA > 0.99f)
@@ -145,7 +145,7 @@ xQuaternion *     xAnimation::GetTransformations()
                     pRes->init(pCurr->vector3 * progress, complement + pCurr->w * progress);
                     continue;
                 }
-                *pRes = xQuaternion::interpolate(*pCurr, progress);
+                *pRes = xQuaternion::Interpolate(*pCurr, progress);
                 continue;
             }
             if (pNext->w != 1.f)
@@ -155,7 +155,7 @@ xQuaternion *     xAnimation::GetTransformations()
                     pRes->init(pNext->vector3 * complement, progress + pNext->w * complement);
                     continue;
                 }
-                *pRes = xQuaternion::interpolate(*pNext, complement);
+                *pRes = xQuaternion::Interpolate(*pNext, complement);
                 continue;
             }
             pRes->zeroQ();
@@ -178,7 +178,7 @@ xQuaternion *     xAnimation::GetTransformations()
                     pRes->init(pCurr->vector3 * progress, complement + pCurr->w * progress);
                     continue;
                 }
-                *pRes = xQuaternion::interpolate(*pCurr, progress);
+                *pRes = xQuaternion::Interpolate(*pCurr, progress);
                 continue;
             }
             pRes->zeroQ();
@@ -244,7 +244,7 @@ xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext
                     *pRes = *pCurr * progress;
                     continue;
                 }
-                *pRes = xQuaternion::interpolate(*pCurr, progress);
+                *pRes = xQuaternion::Interpolate(*pCurr, progress);
                 continue;
             }
             if (pNext->w != 1.f)
@@ -254,7 +254,7 @@ xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext
                     *pRes = *pNext * complement;
                     continue;
                 }
-                *pRes = xQuaternion::interpolate(*pNext, complement);
+                *pRes = xQuaternion::Interpolate(*pNext, complement);
                 continue;
             }
             pRes->zeroQ();
@@ -277,7 +277,7 @@ xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext
                     *pRes = *pCurr * progress;
                     continue;
                 }
-                *pRes = xQuaternion::interpolate(*pCurr, progress);
+                *pRes = xQuaternion::Interpolate(*pCurr, progress);
                 continue;
             }
             pRes->zeroQ();
@@ -313,7 +313,7 @@ void           xAnimation::Combine(xQuaternion *pCurr, xQuaternion *pNext, xWORD
             pRes->w = 1.f;
             continue;
         }
-        *pRes = xQuaternion::product(*pCurr, *pNext);
+        *pRes = xQuaternion::Product(*pCurr, *pNext);
     }
     return;
 }
@@ -347,7 +347,7 @@ void           xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD
             pRes->w = 1.f;
             continue;
         }
-        *pRes = xQuaternion::slerp(*pCurr, *pNext, complement);
+        *pRes = xQuaternion::SLerp(*pCurr, *pNext, complement);
     }
     return;
 }

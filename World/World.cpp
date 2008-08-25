@@ -50,7 +50,7 @@ void World:: Finalize()
         skyBox = NULL;
     }
 
-    ObjectVector::iterator i, begin = objects.begin(), end = objects.end();
+    Vec_Object::iterator i, begin = objects.begin(), end = objects.end();
     for ( i = begin ; i != end ; ++i )
     {
         (*i)->Finalize();
@@ -70,7 +70,9 @@ void World:: Load(const char *mapFileName)
         std::string dir = Filesystem::GetParentDir(mapFileName);
         char buffer[255];
         int  len;
-        RigidObj *model = NULL;
+        RigidObj      *model = NULL;
+        SkeletizedObj *camera_controled  = NULL;
+        SkeletizedObj *network_controled = NULL;
         std::string fastModelFile, modelFile;
 
         xLight light;
@@ -169,12 +171,16 @@ void World:: Load(const char *mapFileName)
             {
                 if (StartsWith(buffer, "import"))
                 {
-                    Load(Filesystem::GetFullPath(dir + "/" + (buffer+7)).c_str());
+                    char file[255];
+                    sscanf(buffer+6, "%s", file);
+                    Load(Filesystem::GetFullPath(dir + "/" + file).c_str());
                     continue;
                 }
                 if (StartsWith(buffer, "skybox"))
                 {
-                    std::string modelFile = Filesystem::GetFullPath(dir + "/" + (buffer+7));
+                    char file[255];
+                    sscanf(buffer+6, "%s", file);
+                    std::string modelFile = Filesystem::GetFullPath(dir + "/" + file);
                     skyBox = new RigidObj();
                     skyBox->Initialize(modelFile.c_str());
                     continue;
@@ -184,97 +190,101 @@ void World:: Load(const char *mapFileName)
             {
                 if (StartsWith(buffer, "fastm"))
                 {
-                    fastModelFile = Filesystem::GetFullPath(dir + "/" + (buffer+6));
+                    char file[255];
+                    sscanf(buffer+5, "%s", file);
+                    fastModelFile = Filesystem::GetFullPath(dir + "/" + file);
                     continue;
                 }
                 if (StartsWith(buffer, "model"))
                 {
-                    modelFile = Filesystem::GetFullPath(dir + "/" + (buffer+6));
+                    char file[255];
+                    sscanf(buffer+5, "%s", file);
+                    modelFile = Filesystem::GetFullPath(dir + "/" + file);
                     continue;
                 }
                 if (StartsWith(buffer, "customBVH"))
                 {
                     int customBVH;
-                    sscanf(buffer, "customBVH\t%f", &customBVH);
+                    sscanf(buffer+9, "%d", &customBVH);
                     model->FL_customBVH = customBVH;
                     continue;
                 }
                 if (StartsWith(buffer, "position"))
                 {
                     float x,y,z;
-                    sscanf(buffer, "position\t%f\t%f\t%f", &x,&y,&z);
+                    sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
                     model->Translate(x, y, z);
                     continue;
                 }
                 if (StartsWith(buffer, "rotation"))
                 {
                     float x,y,z;
-                    sscanf(buffer, "rotation\t%f\t%f\t%f", &x,&y,&z);
+                    sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
                     model->Rotate(x, y, z);
                     continue;
                 }
                 if (StartsWith(buffer, "velocity"))
                 {
                     float x,y,z;
-                    sscanf(buffer, "velocity\t%f\t%f\t%f", &x,&y,&z);
+                    sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
                     model->ApplyAcceleration(xVector3::Create(x,y,z), 1.f);
                     continue;
                 }
                 if (StartsWith(buffer, "physical"))
                 {
                     int b;
-                    sscanf(buffer, "physical\t%d", &b);
+                    sscanf(buffer+8, "%d", &b);
                     model->FL_physical = b;
                     continue;
                 }
                 if (StartsWith(buffer, "locked"))
                 {
                     int b;
-                    sscanf(buffer, "locked\t%d", &b);
+                    sscanf(buffer+6, "%d", &b);
                     model->FL_stationary = b;
                     continue;
                 }
                 if (StartsWith(buffer, "phantom"))
                 {
                     int b;
-                    sscanf(buffer, "phantom\t%d", &b);
+                    sscanf(buffer+7, "%d", &b);
                     model->FL_phantom = b;
                     continue;
                 }
                 if (StartsWith(buffer, "mass"))
                 {
                     float mass;
-                    sscanf(buffer, "mass\t%f", &mass);
+                    sscanf(buffer+4, "%f", &mass);
                     model->M_mass = mass;
                     continue;
                 }
                 if (StartsWith(buffer, "restitution"))
                 {
                     float restitution;
-                    sscanf(buffer, "restitution\t%f", &restitution);
+                    sscanf(buffer+11, "%f", &restitution);
                     model->W_restitution = restitution;
                     continue;
                 }
                 if (StartsWith(buffer, "restitution_self"))
                 {
                     float restitution;
-                    sscanf(buffer, "restitution_self\t%f", &restitution);
+                    sscanf(buffer+16, "%f", &restitution);
                     model->W_restitution_self = restitution;
                     continue;
                 }
                 if (StartsWith(buffer, "shadows"))
                 {
                     int b;
-                    sscanf(buffer, "shadows\t%d", &b);
+                    sscanf(buffer+7, "%d", &b);
                     model->FL_shadowcaster = b;
                     continue;
                 }
 
                 if (StartsWith(buffer, "animation"))
                 {
-                    int start, end = -1;
+                    int start = 0, end = -1;
                     char file[255];
-                    sscanf(buffer, "animation\t%s\t%d\t%d", file, &start, &end);
+                    sscanf(buffer+9, "%s\t%d\t%d", file, &start, &end);
                     std::string animFile = Filesystem::GetFullPath(dir + "/" + file);
                     if (end <= start)
                         ((SkeletizedObj*)model)->actions.AddAnimation(animFile.c_str(), start);
@@ -286,36 +296,33 @@ void World:: Load(const char *mapFileName)
                 if (StartsWith(buffer, "control"))
                 {
                     char name[255];
-                    sscanf(buffer, "control\t%s", name);
+                    sscanf(buffer+7, "%s", name);
 
                     if (StartsWith(name, "camera"))
-                    {
-                        g_CaptureInput.Finalize();
-                        bool captureOK = g_CaptureInput.Initialize(model->GetModelGr()->Spine);
-                        ((SkeletizedObj*)model)->ControlType = (captureOK)
-                            ? SkeletizedObj::Control_CaptureInput
-                            : SkeletizedObj::Control_ComBoardInput;
-                    }
+                        camera_controled = (SkeletizedObj*)model;
                     else
                     if (StartsWith(name, "network"))
-                    {
-                        g_NetworkInput.Finalize();
-                        bool networkOK = g_NetworkInput.Initialize(model->GetModelGr()->Spine);
-                        ((SkeletizedObj*)model)->ControlType = (networkOK)
-                            ? SkeletizedObj::Control_NetworkInput
-                            : SkeletizedObj::Control_AI;
-                    }
+                        network_controled = (SkeletizedObj*)model;
                     else
                     if (StartsWith(name, "comboard"))
                         ((SkeletizedObj*)model)->ControlType = SkeletizedObj::Control_ComBoardInput;
                     continue;
+                }
+                if (StartsWith(buffer, "enemy"))
+                {
+                    int b;
+                    sscanf(buffer+5, "%d", &b);
+                    SkeletizedObj &so    = *(SkeletizedObj*)model;
+                    so.Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
+                    so.Tracker.ID_object = b;
                 }
             }
             if (mode == LoadMode_Light)
             {
                 if (StartsWith(buffer, "type"))
                 {
-                    char *type = buffer+5;
+                    char type[255];
+                    sscanf(buffer+4, "%s", type);
                     if (StartsWith(type, "infinite"))
                         light.type = xLight_INFINITE;
                     else
@@ -329,7 +336,7 @@ void World:: Load(const char *mapFileName)
                 if (StartsWith(buffer, "state"))
                 {
                     int b;
-                    sscanf(buffer, "state\t%d", &b);
+                    sscanf(buffer+5, "%d", &b);
                     light.turned_on = b;
                     continue;
                 }
@@ -337,7 +344,7 @@ void World:: Load(const char *mapFileName)
                 {
 
                     float x,y,z;
-                    sscanf(buffer, "position\t%f\t%f\t%f", &x,&y,&z);
+                    sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
                     light.position.init(x, y, z);
                     continue;
                 }
@@ -345,7 +352,7 @@ void World:: Load(const char *mapFileName)
                 {
 
                     float x,y,z;
-                    sscanf(buffer, "direction\t%f\t%f\t%f", &x,&y,&z);
+                    sscanf(buffer+9, "%f\t%f\t%f", &x,&y,&z);
                     light.position.init(-x, -y, -z);
                     continue;
                 }
@@ -353,46 +360,46 @@ void World:: Load(const char *mapFileName)
                 {
 
                     float r,g,b;
-                    sscanf(buffer, "color\t%f\t%f\t%f", &r,&g,&b);
+                    sscanf(buffer+5, "%f\t%f\t%f", &r,&g,&b);
                     light.color.init(r, g, b, 1.f);
                     continue;
                 }
                 if (StartsWith(buffer, "softness"))
                 {
-                    sscanf(buffer, "softness\t%f", &light.softness);
+                    sscanf(buffer+8, "%f", &light.softness);
                     continue;
                 }
                 if (StartsWith(buffer, "spot_dir"))
                 {
 
                     float x,y,z;
-                    sscanf(buffer, "spot_dir\t%f\t%f\t%f", &x,&y,&z);
+                    sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
                     light.spotDirection.init(x, y, z);
                     continue;
                 }
                 if (StartsWith(buffer, "spot_cut"))
                 {
-                    sscanf(buffer, "spot_cut\t%f", &light.spotCutOff);
+                    sscanf(buffer+8, "%f", &light.spotCutOff);
                     continue;
                 }
                 if (StartsWith(buffer, "spot_att"))
                 {
-                    sscanf(buffer, "spot_att\t%f", &light.spotAttenuation);
+                    sscanf(buffer+8, "%f", &light.spotAttenuation);
                     continue;
                 }
                 if (StartsWith(buffer, "att_const"))
                 {
-                    sscanf(buffer, "att_const\t%f", &light.attenuationConst);
+                    sscanf(buffer+9, "%f", &light.attenuationConst);
                     continue;
                 }
                 if (StartsWith(buffer, "att_linear"))
                 {
-                    sscanf(buffer, "att_linear\t%f", &light.attenuationLinear);
+                    sscanf(buffer+10, "%f", &light.attenuationLinear);
                     continue;
                 }
                 if (StartsWith(buffer, "att_square"))
                 {
-                    sscanf(buffer, "att_square\t%f", &light.attenuationSquare);
+                    sscanf(buffer+10, "%f", &light.attenuationSquare);
                     continue;
                 }
             }
@@ -415,6 +422,23 @@ void World:: Load(const char *mapFileName)
         }
         if (light.modified)
             lights.push_back(light);
+
+        if (camera_controled)
+        {
+            g_CaptureInput.Finalize();
+            bool captureOK = g_CaptureInput.Initialize(camera_controled->GetModelGr()->Spine);
+            camera_controled->ControlType = (captureOK)
+                ? SkeletizedObj::Control_CaptureInput
+                : SkeletizedObj::Control_ComBoardInput;
+        }
+        if (network_controled)
+        {
+            g_NetworkInput.Finalize();
+            bool networkOK = g_NetworkInput.Initialize(model->GetModelGr()->Spine);
+            network_controled->ControlType = (networkOK)
+                ? SkeletizedObj::Control_NetworkInput
+                : SkeletizedObj::Control_AI;
+        }
 
         in.close();
     }

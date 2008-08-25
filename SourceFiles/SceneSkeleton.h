@@ -30,14 +30,21 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     virtual bool FrameUpdate(float deltaTime);
     virtual bool FrameRender();
 
+    virtual void Resize(int left, int top, unsigned int width, unsigned int height)
+    {
+        Scene::Resize(left, top, width, height);
+        InitCameras(false);
+    }
+
   private:
-    void         InitInputMgr();
+    void InitInputMgr();
+    void InitCameras(bool FL_reposition = false);
 
     struct _Cameras
     {
-        CameraHuman Front, Back, Left, Right, Perspective;
-        CameraFree  Top, Bottom;
-        Camera *Current;
+        Math::Cameras::CameraHuman Front, Back, Left, Right, Perspective;
+        Math::Cameras::CameraFree  Top, Bottom;
+        Math::Cameras::Camera *Current;
     } Cameras;
 
     enum
@@ -167,7 +174,6 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     void        MouseLDown_BVH(int X, int Y);
     void        MouseLMove_BVH(int X, int Y);
     /* 3D */
-    xVector3    Get3dPos  (int X, int Y, xVector3 planeP);
     xVector3    CastPoint (xVector3 rayPos, xVector3 planeP);
     /* TEXT INPUT */
     void        GetCommand();
@@ -178,7 +184,7 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     void        FillDirectoryBtns(bool files = false, const char *mask = NULL);
 
     /* SELECT */
-    virtual void         RenderSelect   (const xFieldOfView *FOV);
+    virtual void         RenderSelect   (const Math::Cameras::FieldOfView &FOV);
     virtual unsigned int CountSelectable();
     std::vector<xDWORD> *SelectCommon  (int X, int Y, int W = 1, int H = 1);
     xBone               *SelectBone    (int X, int Y);

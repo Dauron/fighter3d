@@ -29,4 +29,14 @@ inline bool StartsWith(const char *buff, const char *string)
     return !*string;
 }
 
+inline char *MakeLowerCase(char *buff)
+{
+    if (!buff) return buff;
+
+    char *iter = buff;
+    for(; *iter; ++iter)
+        *iter = tolower(*iter);
+    return buff;
+}
+
 #endif

@@ -21,6 +21,8 @@
  FL_    flag
  C_     constraint
  CL_	color
+ SN_	string name
+ SC_    string data
  
  _Sqr   squared
  _Inv   inversed

@@ -13,12 +13,6 @@
 class RigidObj : public Physics::PhysicalBody
 {
 public:
-    enum ModelType
-    {
-        Model_Rigid,
-        Model_Verlet
-    } Type;
-
     bool FL_shadowcaster;
     bool FL_customBVH;
 
@@ -88,32 +82,32 @@ public:
                                           Config::ShadowMapSize, blocker);
     }
     xShadowMap GetShadowMap () { return smap; }
-    void RenderShadowMap (xShadowMap smap, const xFieldOfView &FOV)
+    void RenderShadowMap (xShadowMap smap, const Math::Cameras::FieldOfView &FOV)
     {
         UpdatePointers();
         renderer.RenderShadowMap(*xModelGr, modelInstanceGr, smap, FOV);
     }
-    void RenderShadowVolume(xLight &light, xFieldOfView &FOV)
+    void RenderShadowVolume(xLight &light, Math::Cameras::FieldOfView &FOV)
     {
         //UpdatePointers();
         renderer.RenderShadowVolume(*xModelGr, modelInstanceGr, light, FOV);
     }
-    void RenderDepth(xFieldOfView &FOV, bool transparent)
+    void RenderDepth(Math::Cameras::FieldOfView &FOV, bool transparent)
     {
         UpdatePointers();
         renderer.RenderDepth(*xModelGr, modelInstanceGr, transparent, FOV);
     }
-    void RenderAmbient(const xLightVector &lights, xFieldOfView &FOV, bool transparent)
+    void RenderAmbient(const Vec_xLight &lights, Math::Cameras::FieldOfView &FOV, bool transparent)
     {
         //UpdatePointers();
         renderer.RenderAmbient(*xModelGr, modelInstanceGr, lights, transparent, FOV);
     }
-    void RenderDiffuse(xLight &light, xFieldOfView &FOV, bool transparent)
+    void RenderDiffuse(xLight &light, Math::Cameras::FieldOfView &FOV, bool transparent)
     {
         //UpdatePointers();
         renderer.RenderDiffuse(*xModelGr, modelInstanceGr, light, transparent, FOV);
     }
-    void Render(bool transparent, const xFieldOfView &FOV)
+    void Render(bool transparent, const Math::Cameras::FieldOfView &FOV)
     {
         UpdatePointers();
         renderer.RenderModel(*xModelGr, modelInstanceGr, transparent, FOV);

@@ -16,12 +16,12 @@ Jason Shankel
 #include "xMath.h"
 #include <cmath>
 
-xQuaternion xQuaternion::getRotation(const xPoint3 &srcV, const xPoint3 &dstV)
+xQuaternion xQuaternion::GetRotation(const xPoint3 &srcV, const xPoint3 &dstV)
 {
     xFLOAT cosang = xPoint3::DotProduct(xPoint3::Normalize(srcV), xPoint3::Normalize(dstV));
-    if (cosang < -1.f + EPSILON2)
+    if (cosang < -1.f + EPSILON3)
         return xQuaternion::Create(1.f,0.f,0.f,0.f);
-    if (cosang > 1.f - EPSILON2)
+    if (cosang > 1.f - EPSILON3)
         return xQuaternion::Create(0.f,0.f,0.f,1.f);
 
     xFLOAT hangle = acos(cosang) * 0.5f;
@@ -31,25 +31,16 @@ xQuaternion xQuaternion::getRotation(const xPoint3 &srcV, const xPoint3 &dstV)
     return quat;
 }
 
-xPoint3 xQuaternion::rotate(const xQuaternion &q, const xPoint3 &p)
+xPoint3 xQuaternion::rotate(const xPoint3 &p) const
 {
     //return (xVector3)QuaternionProduct(QuaternionProduct(q,(xVector4)p),(QuaternionComplement(q)));
-    xQuaternion q_minus; q_minus.init(-q.x,-q.y,-q.z,q.w);
-
     xQuaternion ret;
-    ret.w = - q.x*p.x - q.y*p.y - q.z*p.z;
-    ret.x = q.y*p.z - q.z*p.y + q.w*p.x;
-    ret.y = q.z*p.x - q.x*p.z + q.w*p.y;
-    ret.z = q.x*p.y - q.y*p.x + q.w*p.z;
+    ret.x =   y*p.z - z*p.y + w*p.x;
+    ret.y =   z*p.x - x*p.z + w*p.y;
+    ret.z =   x*p.y - y*p.x + w*p.z;
+    ret.w = - x*p.x - y*p.y - z*p.z;
 
-    return product(ret, q_minus).vector3;
-}
-
-xPoint3 xQuaternion::rotate(const xQuaternion &q, const xPoint3 &p, const xPoint3 &center)
-{
-    xPoint3 ret = p - center;
-    ret = rotate(q, ret);
-    return ret + center;
+    return Product(ret, xQuaternion::Create(-x,-y,-z,w)).vector3;
 }
 
 xVector3 xQuaternion::angularVelocity() const
@@ -64,7 +55,7 @@ xVector3 xQuaternion::angularVelocity() const
     return res;
 }
 
-xQuaternion xQuaternion::angularVelocity(const xVector3 &omega)
+xQuaternion xQuaternion::AngularVelocity(const xVector3 &omega)
 {
     xFLOAT alpha = omega.length();
     if (alpha < EPSILON) return xQuaternion::Create(0.f,0.f,0.f,1.f);
@@ -72,7 +63,7 @@ xQuaternion xQuaternion::angularVelocity(const xVector3 &omega)
 }
 
 // Quaternion product of two xVector4's
-xQuaternion xQuaternion::product(const xQuaternion &a, const xQuaternion &b)
+xQuaternion xQuaternion::Product(const xQuaternion &a, const xQuaternion &b)
 {
   xQuaternion ret;
   ret.w = a.w*b.w - a.x*b.x - a.y*b.y - a.z*b.z;
@@ -82,33 +73,31 @@ xQuaternion xQuaternion::product(const xQuaternion &a, const xQuaternion &b)
   return ret;
 }
 
-xQuaternion xQuaternion::interpolate(const xQuaternion &q, xFLOAT weight)
+xQuaternion &xQuaternion::interpolate(xFLOAT weight)
 {
-    xQuaternion ret = q;
-    if (q.w != 1.f)
+    if (w < 1.f)
     {
-        float angleH = (q.w > 0) ? acos(q.w) : PI-acos(q.w);
+        float angleH = (w > 0) ? acos(w) : PI-acos(w);
         angleH *= weight;
-        ret.vector3.normalize() *= sin(angleH);
-        ret.w = cos(angleH);
+        vector3.normalize() *= sin(angleH);
+        w = cos(angleH);
     }
-    return ret;
+    return *this;
 }
 
-xQuaternion xQuaternion::interpolateFull(const xQuaternion &q, xFLOAT weight)
+xQuaternion &xQuaternion::interpolateFull(xFLOAT weight)
 {
-    xQuaternion ret = q;
-    if (q.w != 1.f)
+    if (w < 1.f)
     {
-        float angleH = acos(q.w);
+        float angleH = acos(w);
         angleH *= weight;
-        ret.vector3.normalize() *= sin(angleH);
-        ret.w = cos(angleH);
+        vector3.normalize() *= sin(angleH);
+        w = cos(angleH);
     }
-    return ret;
+    return *this;
 }
 
-xQuaternion xQuaternion::exp(const xQuaternion &q)
+xQuaternion xQuaternion::Exp(const xQuaternion &q)
 {
     float a = static_cast<float>(sqrt(q.x*q.x + q.y*q.y + q.z*q.z));
     float sina = static_cast<float>(sin(a));
@@ -128,7 +117,7 @@ xQuaternion xQuaternion::exp(const xQuaternion &q)
     return ret;
 }
 
-xQuaternion xQuaternion::log(const xQuaternion &q)
+xQuaternion xQuaternion::Log(const xQuaternion &q)
 {
     float a    = static_cast<float>(acos(q.w));
     float sina = static_cast<float>(sin(a));
@@ -150,7 +139,7 @@ xQuaternion xQuaternion::log(const xQuaternion &q)
 /*
 Linear interpolation between two xVector4s
 */
-xQuaternion xQuaternion::lerp(const xQuaternion &q1,const xQuaternion &q2,float t)
+xQuaternion xQuaternion::Lerp(const xQuaternion &q1,const xQuaternion &q2,float t)
 {
     return xQuaternionCast ((q1 + t*(q2-q1)).normalize());
 }
@@ -158,7 +147,7 @@ xQuaternion xQuaternion::lerp(const xQuaternion &q1,const xQuaternion &q2,float 
 /*
 Spherical linear interpolation between two xVector4s
 */
-xQuaternion xQuaternion::slerp(const xQuaternion &q1,const xQuaternion &q2,float t)
+xQuaternion xQuaternion::SLerp(const xQuaternion &q1,const xQuaternion &q2,float t)
 {
     xQuaternion q3;
     float dot = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w*q2.w;
@@ -188,13 +177,13 @@ xQuaternion xQuaternion::slerp(const xQuaternion &q1,const xQuaternion &q2,float
     /*
     if the angle is small, use linear interpolation
     */
-    return lerp(q1,q3,t);
+    return Lerp(q1,q3,t);
 }
 
 /*
 This version of slerp, used by squad, does not check for theta > 90.
 */
-xQuaternion xQuaternion::slerpNoInvert(const xQuaternion &q1,const xQuaternion &q2,float t)
+xQuaternion xQuaternion::SLerpNoInvert(const xQuaternion &q1,const xQuaternion &q2,float t)
 {
     float dot = q1.x*q2.x + q1.y*q2.y + q1.z*q2.z + q1.w*q2.w;
 
@@ -210,24 +199,24 @@ xQuaternion xQuaternion::slerpNoInvert(const xQuaternion &q1,const xQuaternion &
     /*
     if the angle is small, use linear interpolation
     */
-    return lerp(q1,q2,t);
+    return Lerp(q1,q2,t);
 }
 
 /*
 Spherical cubic interpolation
 */
-xQuaternion xQuaternion::squad(const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &a,const xQuaternion &b,float t)
+xQuaternion xQuaternion::SQuad(const xQuaternion &q1,const xQuaternion &q2,const xQuaternion &a,const xQuaternion &b,float t)
 {
     xQuaternion c,d;
-    c = slerpNoInvert(q1,q2,t);
-    d = slerpNoInvert(a,b,t);
-    return slerpNoInvert(c,d,2*t*(1-t));
+    c = SLerpNoInvert(q1,q2,t);
+    d = SLerpNoInvert(a,b,t);
+    return SLerpNoInvert(c,d,2*t*(1-t));
 }
 
 /*
 Given 3 xVector4s, qn-1,qn and qn+1, calculate a control point to be used in spline interpolation
 */
-xQuaternion xQuaternion::spline(const xQuaternion &qnm1,const xQuaternion &qn,const xQuaternion &qnp1)
+xQuaternion xQuaternion::Spline(const xQuaternion &qnm1,const xQuaternion &qn,const xQuaternion &qnp1)
 {
     xQuaternion qni;
 
@@ -236,10 +225,10 @@ xQuaternion xQuaternion::spline(const xQuaternion &qnm1,const xQuaternion &qn,co
     qni.z = -qn.z;
     qni.w = qn.w;
 
-    return xQuaternionCast ( product( qn,
-                                       exp(
+    return xQuaternionCast ( Product( qn,
+                                       Exp(
                                             xQuaternionCast (
-                                                             ( log(product(qni,qnm1)) + log(product(qni,qnp1)) )
+                                                             ( Log(Product(qni,qnm1)) + Log(Product(qni,qnp1)) )
                                                              / -4
                                                             )
                                           )

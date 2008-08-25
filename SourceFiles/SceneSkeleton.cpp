@@ -57,7 +57,8 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
 
     Buttons[emEditBVH].push_back(GLButton("Create", 120, 2, 65, 15, IC_BE_Create));
     Buttons[emEditBVH].push_back(GLButton("Edit",   190, 2, 45, 15, IC_BE_Edit, true, true));
-    Buttons[emEditBVH].push_back(GLButton("Delete", 240, 2, 65, 15, IC_BE_Delete, true));
+    Buttons[emEditBVH].push_back(GLButton("Clone",  240, 2, 55, 15, IC_BE_Clone, true));
+    Buttons[emEditBVH].push_back(GLButton("Delete", 300, 2, 65, 15, IC_BE_Delete, true));
 
     Buttons[emCreateBVH].push_back(GLButton("Sphere",  120, 2, 65, 15, IC_BE_CreateSphere));
     Buttons[emCreateBVH].push_back(GLButton("Capsule", 190, 2, 75, 15, IC_BE_CreateCapsule));
@@ -117,20 +118,58 @@ bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned i
         KeyName_Modify = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_BE_Modifier)).c_str());
         KeyName_Accept = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_Accept)).c_str());
     }
-    if (!Cameras.Current)
-    {
-        Cameras.Front.SetCamera(0.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        Cameras.Back.SetCamera(0.0f, +5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        Cameras.Right.SetCamera(-5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        Cameras.Left.SetCamera(+5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        Cameras.Top.SetCamera(0.0f, 0.0f,  5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
-        Cameras.Bottom.SetCamera(0.0f, 0.0f, -5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
-        Cameras.Perspective.SetCamera(-5.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
-        Cameras.Current = &Cameras.Front;
-    }
+    InitCameras(!Cameras.Current);
+
     return true;
 }
+void SceneSkeleton::InitCameras(bool FL_reposition)
+{
+    if (!Cameras.Current)
+    {
+        Cameras.Current = &Cameras.Front;
+        Cameras.Front.Init(0.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Back.Init(0.0f, +5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Right.Init(-5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Left.Init(+5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        Cameras.Top.Init(0.0f, 0.0f,  5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
+        Cameras.Bottom.Init(0.0f, 0.0f, -5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
+        Cameras.Perspective.Init(-5.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+    }
+    else
+    if (FL_reposition)
+    {
+        if (Cameras.Current == &Cameras.Front)
+            Cameras.Front.Init(0.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        if (Cameras.Current == &Cameras.Right)
+            Cameras.Right.Init(-5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        if (Cameras.Current == &Cameras.Back)
+            Cameras.Back.Init(0.0f, +5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        if (Cameras.Current == &Cameras.Left)
+            Cameras.Left.Init(+5.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+        if (Cameras.Current == &Cameras.Top)
+            Cameras.Top.Init(0.0f, 0.0f,  5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
+        if (Cameras.Current == &Cameras.Bottom)
+            Cameras.Bottom.Init(0.0f, 0.0f, -5.0f, 0.0f, 0.0f, 1.7f, 0.0f, -1.0f, 0.0f);
+        if (Cameras.Current == &Cameras.Perspective)
+            Cameras.Perspective.Init(-5.0f, -5.0f, 1.7f, 0.0f, 0.0f, 1.7f, 0.0f, 0.0f, 1.0f);
+    }
 
+    Cameras.Front.FOV.InitOrthogonal();
+    Cameras.Back.FOV.InitOrthogonal();
+    Cameras.Right.FOV.InitOrthogonal();
+    Cameras.Left.FOV.InitOrthogonal();
+    Cameras.Top.FOV.InitOrthogonal();
+    Cameras.Bottom.FOV.InitOrthogonal();
+    Cameras.Perspective.FOV.InitPerspective();
+
+    Cameras.Front.FOV.InitViewport(Left,Top,Width,Height);
+    Cameras.Back.FOV.InitViewport(Left,Top,Width,Height);
+    Cameras.Right.FOV.InitViewport(Left,Top,Width,Height);
+    Cameras.Left.FOV.InitViewport(Left,Top,Width,Height);
+    Cameras.Top.FOV.InitViewport(Left,Top,Width,Height);
+    Cameras.Bottom.FOV.InitViewport(Left,Top,Width,Height);
+    Cameras.Perspective.FOV.InitViewport(Left,Top,Width,Height);
+}
 void SceneSkeleton::InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
@@ -248,17 +287,10 @@ bool SceneSkeleton::FrameRender()
     glEnable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
 
-    // Set projection
-    glViewport(Left, Top, Width, Height);
+    glViewport(Cameras.Current->FOV.ViewportLeft, Cameras.Current->FOV.ViewportTop,
+               Cameras.Current->FOV.ViewportWidth, Cameras.Current->FOV.ViewportHeight);
     glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    if (Cameras.Current == &Cameras.Perspective)
-        xglPerspective(45, AspectRatio, 0.1, 1000);
-    else
-    {
-        double scale = fabs((Cameras.Current->eye - Cameras.Current->center).length());
-        glOrtho( -scale*AspectRatio, scale*AspectRatio, -scale, scale, 0.1, 1000 );
-    }
+    glLoadMatrixf(&Cameras.Current->FOV.MX_Projection_Get().x0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -280,17 +312,14 @@ bool SceneSkeleton::FrameRender()
     GLShader::SetLightType(xLight_INFINITE);
     GLShader::EnableTexturing(xState_Enable);
 
-    xFieldOfView FOV; FOV.Empty = true;
-    Cameras.Current->LookAtMatrix(FOV.ViewTransform);
-    glLoadMatrixf(&FOV.ViewTransform.x0); //Camera_Aim_GL(*Cameras.Current);
-    //FOV.update();
+    glMultMatrixf(&Cameras.Current->MX_WorldToView_Get().x0);
 
     xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
     xModelInstance &modelInstance = (State.DisplayPhysical) ? Model.modelInstancePh : Model.modelInstanceGr;
     Renderer       &render        = Model.renderer;
 
-    render.RenderModel(model, modelInstance, false, FOV);
-    render.RenderModel(model, modelInstance, true, FOV);
+    render.RenderModel(model, modelInstance, false, Cameras.Current->FOV);
+    render.RenderModel(model, modelInstance, true, Cameras.Current->FOV);
     GLShader::Suspend();
 
     GLShader::EnableTexturing(xState_Disable);
@@ -327,13 +356,13 @@ bool SceneSkeleton::FrameRender()
         }
         glEnd();
     }
-/*
+
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    if ((EditMode == emEditBVH || EditMode == emEditVolume || EditMode == emEditAnimation) && model.BVHierarchy)
+    if ((EditMode == emEditBVH || EditMode == emEditVolume) && model.BVHierarchy)
         render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), 0, Selection.BVHNodeID);
-*/
+
     GLShader::Suspend();
 
     glFlush();
@@ -607,7 +636,7 @@ xBVHierarchy *SceneSkeleton::GetBVH_byID (xBVHierarchy &bvhNode, xBYTE ID_select
     return NULL;
 }
 
-void SceneSkeleton::RenderSelect(const xFieldOfView *FOV)
+void SceneSkeleton::RenderSelect(const Math::Cameras::FieldOfView &FOV)
 {
     xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
     xModelInstance &modelInstance = (State.DisplayPhysical) ? Model.modelInstancePh : Model.modelInstanceGr;
@@ -657,20 +686,7 @@ unsigned int SceneSkeleton::CountSelectable()
 }
 std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)
 {
-    glViewport(Left, Top, Width, Height);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    if (Cameras.Current == &Cameras.Perspective)
-        xglPerspective(45, AspectRatio, 0.1, 1000);
-    else
-    {
-        double scale = fabs((Cameras.Current->eye - Cameras.Current->center).length());
-        glOrtho( -scale*AspectRatio, scale*AspectRatio, -scale, scale, 0.1, 1000 );
-    }
-    glMatrixMode(GL_MODELVIEW);
-    Camera_Aim_GL(*Cameras.Current);
-
-    return ISelectionProvider::Select(NULL, X, Y, W, H);
+    return ISelectionProvider::Select(*Cameras.Current, X, Height-Y, W, H);
 }
 
 xBone *SceneSkeleton::SelectBone(int X, int Y)

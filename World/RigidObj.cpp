@@ -2,6 +2,7 @@
 #include "../Models/lib3dx/xUtils.h"
 #include "../AppFramework/System.h"
 #include "../Math/Figures/xCapsule.h"
+#include "ObjectTypes.h"
 
 void RigidObj :: ApplyDefaults()
 {
@@ -23,14 +24,13 @@ void RigidObj :: Initialize ()
     if (S_radius == 0.f)
     {
         if (BVHierarchy.Figure->Type != xIFigure3d::Capsule)
-            S_radius = 2.f * sqrt(BVHierarchy.Figure->S_Radius_Sqr_Get());
+            S_radius = sqrt(BVHierarchy.Figure->S_Radius_Sqr_Get());
         else
             S_radius = 0.75 * ((Math::Figures::xCapsule*) BVHierarchy.Figure)->S_radius
                      + 0.25 * ((Math::Figures::xCapsule*) BVHierarchy.Figure)->S_top;
     }
 
-    Type = Model_Rigid;
-    UpdateMatrices();
+    Type = FL_stationary ? AI::ObjectType::Structure : AI::ObjectType::Physical;
 }
 
 void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
@@ -39,6 +39,7 @@ void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
     modelInstancePh.Zero();
     modelInstanceGr.MX_LocalToWorld = MX_LocalToWorld_Get();
     modelInstancePh.MX_LocalToWorld = MX_LocalToWorld_Get();
+    UpdateMatrices();
 
     hModelGraphics = g_ModelMgr.GetModel(gr_filename);
     Model3dx *mdl  = g_ModelMgr.GetModel(hModelGraphics);
@@ -119,19 +120,27 @@ void RigidObj :: UpdateCustomBVH()
 
     BVHierarchy.invalidateTransformation();
 
-    if (modelInstanceGr.MX_bones)
-        for (int i = 0; i < BVHierarchy.I_items; ++i)
-            BVHierarchy.L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( modelInstanceGr.MX_bones[BVHierarchy.L_items[i].ID_Bone] ));
-    else
-        for (int i = 0; i < BVHierarchy.I_items; ++i)
-            BVHierarchy.L_items[i].MX_LocalToFig_Set(xMatrix::Transpose( xMatrix::Identity() ));
-
-    Math::Figures::xBoxA box = BVHierarchy.childBounds(MX_LocalToWorld_Get());
     Math::Figures::xSphere &sphere   = *(Math::Figures::xSphere*) BVHierarchy.Figure;
     Math::Figures::xSphere &sphere_T = *(Math::Figures::xSphere*) BVHierarchy.GetTransformed(MX_LocalToWorld_Get());
-    sphere.S_radius = sphere_T.S_radius = (box.P_max - box.P_min).length() * 0.5f;
-    sphere_T.P_center = (box.P_max + box.P_min) * 0.5f;
-    sphere.P_center = MX_WorldToLocal.preTransformP(sphere_T.P_center);
+
+    if (modelInstanceGr.MX_bones)
+    {
+        for (int i = 0; i < BVHierarchy.I_items; ++i)
+            BVHierarchy.L_items[i].MX_RawToLocal_Set(xMatrix::Transpose( modelInstanceGr.MX_bones[BVHierarchy.L_items[i].ID_Bone] ));
+        Math::Figures::xBoxA box = BVHierarchy.childBounds(MX_LocalToWorld_Get());
+        sphere.S_radius = sphere_T.S_radius = (box.P_max - box.P_min).length() * 0.5f;
+        sphere_T.P_center = (box.P_max + box.P_min) * 0.5f;
+        sphere.P_center = MX_WorldToLocal.preTransformP(sphere_T.P_center);
+    }
+    else
+    {
+        for (int i = 0; i < BVHierarchy.I_items; ++i)
+            BVHierarchy.L_items[i].MX_RawToLocal_Set( xMatrix::Identity() );
+        Math::Figures::xBoxA box = BVHierarchy.childBounds();
+        sphere.S_radius = sphere_T.S_radius = (box.P_max - box.P_min).length() * 0.5f;
+        sphere.P_center = (box.P_max + box.P_min) * 0.5f;
+        sphere_T.P_center = MX_LocalToWorld_Get().preTransformP(sphere.P_center);
+    }
 
     P_center = sphere.P_center;
 }

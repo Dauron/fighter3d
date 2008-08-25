@@ -1,38 +1,36 @@
 #include "CameraHuman.h"
 
+using namespace Math::Cameras;
+
 void CameraHuman::SetCamera(xFLOAT eyex, xFLOAT eyey, xFLOAT eyez,
                             xFLOAT centerx, xFLOAT centery, xFLOAT centerz,
                             xFLOAT upx, xFLOAT upy, xFLOAT upz)
 {
     Camera::SetCamera(eyex, eyey, eyez, centerx, centery, centerz, upx, upy, upz);
-    front.init(centerx-eyex, centery-eyey, 0);
+    N_front.init(centerx-eyex, centery-eyey, 0).normalize();
     stepv = step = 0.f;
 }
 
 void CameraHuman::Move(xFLOAT frwd, xFLOAT side, xFLOAT vert)
 {
     // move forward/backwards
-    xVector3 vect = front.normalize();
-    vect *= frwd;
-
-    eye += vect;
-    center += vect;
+    xVector3 NW_shift = N_front * frwd;
+    P_eye    += NW_shift;
+    P_center += NW_shift;
 
     // move left/right
-    vect.init(front.y, -front.x, front.z);
-    vect *= side;
-
-    eye += vect;
-    center += vect;
+    NW_shift.init(N_front.y, -N_front.x, N_front.z) *= side;
+    P_eye    += NW_shift;
+    P_center += NW_shift;
 
     // move up/down
-    eye.z += vert;
-    center.z += vert;
+    P_eye.z    += vert;
+    P_center.z += vert;
 }
 
 void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
 {
-    xVector3 a = center - eye;
+    xVector3 NW_forward = P_center - P_eye;
 
     if (!IsZero(heading))
     {
@@ -43,9 +41,10 @@ void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         up = QuaternionRotate(q, up);
         front = QuaternionRotate(q, front);
         */
-        RotatePoint(a.x, a.y, DegToRad (heading));
-        RotatePoint(up.x, up.y, DegToRad (heading));
-        RotatePoint(front.x, front.y, DegToRad (heading));
+        heading = DegToRad (heading);
+        RotatePoint(NW_forward.x, NW_forward.y, heading);
+        RotatePoint(NW_up.x,      NW_up.y,      heading);
+        RotatePoint(N_front.x,    N_front.y,    heading);
     }
 
     if (!IsZero(pitch))
@@ -66,36 +65,34 @@ void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         }
         */
         // 'human' head pitch
-        pitch = DegToRad (pitch)/2.f;
+        pitch = DegToRad (pitch) * 0.5f;
         xFLOAT s = sin(pitch);
-        front.normalize();
-        xQuaternion q; q.init(front.y*s, -front.x*s, 0.f, cos(pitch));
-        a = xQuaternion::rotate(q, a);
-        up = xQuaternion::rotate(q, up);
+        xQuaternion q; q.init(N_front.y*s, -N_front.x*s, 0.f, cos(pitch));
+        NW_forward = q.rotate(NW_forward);
+        NW_up      = q.rotate(NW_up);
     }
 
     if (!IsZero(roll))
     {
         // 'human' head roll
-        roll = DegToRad (roll)/2.f;
+        roll = DegToRad (roll) * 0.5f;
         xFLOAT s = sin(roll);
-        front.normalize();
-        xQuaternion q; q.init(front.x*s, front.y*s, front.z*s, cos(roll));
-        up = xQuaternion::rotate(q, up);
+        xQuaternion q; q.init(N_front.x*s, N_front.y*s, N_front.z*s, cos(roll));
+        NW_up = q.rotate(NW_up);
     }
 
-    center = a + eye;
+    P_center = P_eye + NW_forward;
 }
 
 void CameraHuman::Orbit(xFLOAT horz, xFLOAT vert)
 {
-    xVector3 a = eye - center;
-
+    xVector3 NW_backward = P_eye - P_center;
 
     if (!IsZero(horz))
     {
-        RotatePoint(a.x, a.y, DegToRad (horz));
-        RotatePoint(front.x, front.y, DegToRad (horz));
+        horz = DegToRad (horz);
+        RotatePoint(NW_backward.x, NW_backward.y, horz);
+        RotatePoint(N_front.x,     N_front.y,     horz);
     }
 
     if (!IsZero(vert))
@@ -116,22 +113,22 @@ void CameraHuman::Orbit(xFLOAT horz, xFLOAT vert)
             a = QuaternionRotate(q, a);
         }*/
 
-        xFLOAT radius = sqrt ( a.x * a.x + a.y * a.y );
+        xFLOAT radius = sqrt ( NW_backward.x * NW_backward.x + NW_backward.y * NW_backward.y );
         xFLOAT radius2 = radius;
-        xFLOAT z = a.z;
+        xFLOAT z = NW_backward.z;
         RotatePoint(radius2, z, DegToRad(vert));
         if (radius2 > 0.f)
         {
             radius2 /= radius;
-            a.x *= radius2;
-            a.y *= radius2;
-            a.z = z;
+            NW_backward.x *= radius2;
+            NW_backward.y *= radius2;
+            NW_backward.z = z;
         }
     }
 
-    up = OrthoPointUp(a, up);
+    NW_up = OrthoPointUp(NW_backward, NW_up);
 
-    eye = a + center;
+    P_eye = P_center + NW_backward;
 }
 
 // Finds the vector orhogonal to given vector, that points "up" the most
@@ -165,11 +162,11 @@ void CameraHuman::RotatePoint(xFLOAT &pX, xFLOAT &pY, xFLOAT angle)
 
 void CameraHuman::RotatePointPitch(const xVector3 front, xFLOAT &pX, xFLOAT &pY, xFLOAT &pZ, xFLOAT angle)
 {
-    xFLOAT angleXY = atan2(front.x,front.y);
+    xFLOAT angleXY = atan2(N_front.x,N_front.y);
     if (IsZero(angleXY))
         angleXY = -atan2(pY,pX);
     xFLOAT radiusXY = sqrt ( pX * pX + pY * pY );
-    radiusXY *= (xFLOAT)(-Sign(pZ)*Sign(front.z));
+    radiusXY *= (xFLOAT)(-Sign(pZ)*Sign(N_front.z));
 
     RotatePoint (radiusXY, pZ, angle);
 
