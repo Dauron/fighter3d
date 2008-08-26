@@ -27,9 +27,13 @@ void xElementInstance :: Zero()
     memset (&gpuMain, 0, sizeof(xGPUPointers));
     gpuShadows.clear();
 
-    memset (&bbBox, 0, sizeof(xBoxA));
-    bsCenter.zero();
-    bsRadius = 0;
+    bBox.P_center.zero();
+    bBox.S_top = bBox.S_side = bBox.S_front = 0.f;
+    bSphere.P_center.zero();
+    bSphere.S_radius = 0.f;
+
+    bBox_T    = NULL;
+    bSphere_T = NULL;
 
     I_vertices = 0;
     L_vertices = NULL;
@@ -45,6 +49,9 @@ void xElementInstance :: Clear()
 
     if (L_vertices) { delete[] L_vertices; L_vertices = NULL; }
     if (L_normals)  { delete[] L_normals;  L_normals  = NULL; }
+
+    if (bBox_T)    { delete bBox_T;    bBox_T = NULL; }
+    if (bSphere_T) { delete bSphere_T; bSphere_T = NULL; }
 }
 
 void xElementInstance :: InvalidateVertexData()

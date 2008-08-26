@@ -543,10 +543,5 @@ void SkeletizedObj :: FrameUpdate(float T_time)
         for (int i = 0; i < I_bones; ++i)
             NW_VerletVelocity_total[i].zero();
 
-    if (FL_customBVH)
-        UpdateCustomBVH();
-    else
-        UpdateGeneratedBVH();
-
     Performance.CollisionDataFillMS += GetTick() - delta;
 }

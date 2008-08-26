@@ -137,10 +137,10 @@ void SceneGame :: InitInputMgr()
 #endif
     im.SetInputCode(VK_LBUTTON, IC_LClick);
 
-    //im.SetInputCode(VK_HOME,   IC_TurnUp);
-    //im.SetInputCode(VK_END,    IC_TurnDown);
-    //im.SetInputCode(VK_DELETE, IC_TurnLeft);
-    //im.SetInputCode(VK_NEXT,   IC_TurnRight);
+    im.SetInputCode(VK_NUMPAD8, IC_TurnUp);
+    im.SetInputCode(VK_NUMPAD5, IC_TurnDown);
+    im.SetInputCode(VK_NUMPAD4, IC_TurnLeft);
+    im.SetInputCode(VK_NUMPAD6, IC_TurnRight);
     im.SetInputCode('Y', IC_RollLeft);
     im.SetInputCode('I', IC_RollRight);
 
@@ -151,10 +151,10 @@ void SceneGame :: InitInputMgr()
 
     im.SetInputCode(VK_HOME,   IC_MoveForward);
     im.SetInputCode(VK_END,    IC_MoveBack);
-    im.SetInputCode(VK_NEXT,   IC_MoveLeft);
-    im.SetInputCode(VK_PRIOR,  IC_MoveRight);
+    im.SetInputCode(VK_DELETE, IC_MoveLeft);
+    im.SetInputCode(VK_NEXT,   IC_MoveRight);
     im.SetInputCode(VK_INSERT, IC_MoveUp);
-    im.SetInputCode(VK_DELETE, IC_MoveDown);
+    im.SetInputCode(VK_PRIOR,  IC_MoveDown);
     im.SetInputCode(VK_LSHIFT, IC_RunModifier);
 
     im.SetInputCode('S', IC_CB_LeftPunch);
@@ -443,8 +443,8 @@ bool SceneGame :: FrameRender()
         dayLight.color.init(0.9f, 0.9f, 1.f, 1.f);
         dayLight.softness = 0.4f;
         //dayLight.position.init(-20.f, 20.f, 100.f);
-        dayLight.position.init(0.f, 0.f, 10.f);
-        dayLight.type = xLight_POINT;
+        dayLight.position.init(10.f, 10.f, 10.f);
+        dayLight.type = xLight_INFINITE;
         dayLight.attenuationConst  = 0.9f;
         dayLight.attenuationLinear = 0.005f;
         dayLight.attenuationSquare = 0.0005f;
@@ -659,6 +659,7 @@ bool SceneGame :: FrameRender()
 
                 //if (GLExtensions::Exists_ARB_Multisample)
                 //    glEnable(GL_MULTISAMPLE_ARB);
+                glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
                 glEnable   (GL_DEPTH_TEST);
                 glDepthMask(1);
                 glDepthFunc(GL_LESS);
@@ -721,7 +722,7 @@ bool SceneGame :: FrameRender()
                 glEnable(GL_LIGHT0);
                 for ( i = begin ; i != end ; ++i ) ((RigidObj*)*i)->RenderDiffuse(*dayLightVec.begin(), (**CAM_curr).FOV, false);
 
-                dayLight.modified = false;
+                dayLightVec.begin()->modified = false;
 
                 ////// RENDER TRANSPARENT PASS
                 glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
@@ -739,6 +740,7 @@ bool SceneGame :: FrameRender()
         else
         {
             ////// RENDER OPAQUE PASS
+            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
             glEnable   (GL_DEPTH_TEST);
             glDepthMask(1);
             glDepthFunc(GL_LESS);

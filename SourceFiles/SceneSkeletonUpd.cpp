@@ -36,7 +36,7 @@ void SceneSkeleton::UpdateBBox()
     xBoneCalculateMatrices(model->Spine, &modelInstance);
 
     xModel_SkinElementInstance(model, modelInstance);
-    modelInstance.P_center = xModel_GetBounds(modelInstance);
+    /*modelInstance.P_center = */xModel_GetBounds(*model, modelInstance);
 
     xBoxA box;
     box.P_min.init(xFLOAT_HUGE_POSITIVE,xFLOAT_HUGE_POSITIVE,xFLOAT_HUGE_POSITIVE);
@@ -45,13 +45,20 @@ void SceneSkeleton::UpdateBBox()
     for (int i = 0; i < modelInstance.I_elements; ++i)
     {
         xElementInstance &ei = modelInstance.L_elements[i];
-        if (ei.bbBox.P_min == ei.bbBox.P_max) continue;
-        if (ei.bbBox.P_min.x < box.P_min.x) box.P_min.x = ei.bbBox.P_min.x;
-        if (ei.bbBox.P_min.y < box.P_min.y) box.P_min.y = ei.bbBox.P_min.y;
-        if (ei.bbBox.P_min.z < box.P_min.z) box.P_min.z = ei.bbBox.P_min.z;
-        if (ei.bbBox.P_max.x > box.P_max.x) box.P_max.x = ei.bbBox.P_max.x;
-        if (ei.bbBox.P_max.y > box.P_max.y) box.P_max.y = ei.bbBox.P_max.y;
-        if (ei.bbBox.P_max.z > box.P_max.z) box.P_max.z = ei.bbBox.P_max.z;
+        ei.Transform(model->L_kids->ById(i)->MX_MeshToLocal);
+
+        xPoint3 P_min, P_max;
+        ei.bBox_T->ComputeSpan(xVector3::Create(1,0,0), P_min.x, P_max.x);
+        ei.bBox_T->ComputeSpan(xVector3::Create(0,1,0), P_min.y, P_max.y);
+        ei.bBox_T->ComputeSpan(xVector3::Create(0,0,1), P_min.z, P_max.z);
+
+        if (P_min == P_max) continue;
+        if (P_min.x < box.P_min.x) box.P_min.x = P_min.x;
+        if (P_min.y < box.P_min.y) box.P_min.y = P_min.y;
+        if (P_min.z < box.P_min.z) box.P_min.z = P_min.z;
+        if (P_max.x > box.P_max.x) box.P_max.x = P_max.x;
+        if (P_max.y > box.P_max.y) box.P_max.y = P_max.y;
+        if (P_max.z > box.P_max.z) box.P_max.z = P_max.z;
     }
     modelInstance.Clear();
     Animation.Skeleton.Bounds = box;
@@ -1384,7 +1391,7 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
         Cameras.Current->Move (0.0f, 0.0f, -deltaTmp);
     if (im.mouseWheel != 0)
     {
-        float scl = im.mouseWheel/240.0f;
+        float scl = im.mouseWheel/180.0f;
         if (scl < 0.0) scl = -1/scl;
         Cameras.Current->P_eye = Cameras.Current->P_center + (Cameras.Current->P_eye - Cameras.Current->P_center)*scl;
         im.mouseWheel = 0;

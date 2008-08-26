@@ -12,8 +12,7 @@ namespace ShadowVolume
                       const xShadowData &shadowData, bool *&backFaces);
   void GetSilhouette (const xElement *elem, bool infiniteL, bool optimizeBackCap,
                       const bool *facingFlag, xShadowData &shadowData);
-  bool ViewportMaybeShadowed (const xElement *elem, xElementInstance &instance,
-                              const xMatrix &location,
+  bool ViewportMaybeShadowed (xElementInstance &instance,
                               const Math::Cameras::FieldOfView &FOV, const xLight& light);
 }
 

@@ -129,7 +129,7 @@ void FieldOfView :: ResizeViewport ( xDWORD windowWidth, xDWORD windowHeight )
 
 void FieldOfView :: Update()
 {
-    const xMatrix &MX_ViewToWorld = camera->MX_WorldToView_Get();
+    const xMatrix &MX_ViewToWorld = camera->MX_ViewToWorld_Get();
 
     if (Projection == PROJECT_PERSPECTIVE)
     {
@@ -139,32 +139,38 @@ void FieldOfView :: Update()
         Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, FrontClip);
         Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, FrontClip);
         Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, FrontClip);
-        Corners3D[4].zero();
+        xPoint3 eye; eye.zero();
 
         Corners3D[0] = MX_ViewToWorld.preTransformP(Corners3D[0]);
         Corners3D[1] = MX_ViewToWorld.preTransformP(Corners3D[1]);
         Corners3D[2] = MX_ViewToWorld.preTransformP(Corners3D[2]);
         Corners3D[3] = MX_ViewToWorld.preTransformP(Corners3D[3]);
-        Corners3D[4] = MX_ViewToWorld.preTransformP(Corners3D[4]);
+        eye = MX_ViewToWorld.preTransformP(eye);
 
-        Planes[0].init(Corners3D[1], Corners3D[0], Corners3D[3]);
-        Planes[1].init(Corners3D[4], Corners3D[0], Corners3D[3]);
-        Planes[2].init(Corners3D[4], Corners3D[3], Corners3D[2]);
-        Planes[3].init(Corners3D[4], Corners3D[2], Corners3D[1]);
-        Planes[4].init(Corners3D[4], Corners3D[1], Corners3D[0]);
+        Planes[0].init(Corners3D[1], Corners3D[3], Corners3D[0]);
+        Planes[1].init(eye, Corners3D[3], Corners3D[0]);
+        Planes[2].init(eye, Corners3D[2], Corners3D[3]);
+        Planes[3].init(eye, Corners3D[1], Corners3D[2]);
+        Planes[4].init(eye, Corners3D[0], Corners3D[1]);
     }
     else
     {
         xVector3 p0;
-        p0.init(-OrthoScale * Aspect, -OrthoScale, 0.f);
-        p0 = MX_ViewToWorld.preTransformP(p0);
-        Planes[0].init(MX_ViewToWorld.preTransformV(xVector3::Create(0.f,0.f,-1.f)), p0);
-        Planes[1].init(MX_ViewToWorld.preTransformV(xVector3::Create(-1.f,0.f,0.f)), p0);
-        Planes[2].init(MX_ViewToWorld.preTransformV(xVector3::Create(0.f,-1.f,0.f)), p0);
-        p0.init(OrthoScale * Aspect, OrthoScale, 0.f);
-        p0 = MX_ViewToWorld.preTransformP(p0);
-        Planes[3].init(MX_ViewToWorld.preTransformV(xVector3::Create(-1.f,0.f,0.f)), p0);
-        Planes[4].init(MX_ViewToWorld.preTransformV(xVector3::Create(0.f,-1.f,0.f)), p0);
+        Corners3D[0].init(-OrthoScale * Aspect, -OrthoScale, FrontClip);
+        Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, FrontClip);
+        Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, FrontClip);
+        Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, FrontClip);
+
+        Corners3D[0] = MX_ViewToWorld.preTransformP(Corners3D[0]);
+        Corners3D[1] = MX_ViewToWorld.preTransformP(Corners3D[1]);
+        Corners3D[2] = MX_ViewToWorld.preTransformP(Corners3D[2]);
+        Corners3D[3] = MX_ViewToWorld.preTransformP(Corners3D[3]);
+
+        Planes[0].init(MX_ViewToWorld.preTransformV(xVector3::Create(0.f,0.f,1.f)), Corners3D[0]);
+        Planes[1].init(MX_ViewToWorld.preTransformV(xVector3::Create(-1.f,0.f,0.f)), Corners3D[0]);
+        Planes[2].init(MX_ViewToWorld.preTransformV(xVector3::Create(0.f,-1.f,0.f)), Corners3D[0]);
+        Planes[3].init(MX_ViewToWorld.preTransformV(xVector3::Create(1.f,0.f,0.f)), Corners3D[2]);
+        Planes[4].init(MX_ViewToWorld.preTransformV(xVector3::Create(0.f,1.f,0.f)), Corners3D[2]);
     }
 }
 
@@ -202,6 +208,12 @@ bool FieldOfView :: CheckSphere(const xPoint3 &P_center, xFLOAT S_radius) const
 {
     if (Empty || S_radius == 0.f) return true;
 
+    for (int ip = 0; ip < 5; ++ip)
+        if (Planes[ip].distanceToPoint(P_center) > S_radius)
+            return false;
+
+    return true;
+/*
     const xMatrix &MX_WorldToView = camera->MX_WorldToView_Get();
 
     float dist;
@@ -218,38 +230,81 @@ bool FieldOfView :: CheckSphere(const xPoint3 &P_center, xFLOAT S_radius) const
     if ( viewPos.z - S_radius > BackClip )
         return false;
 
-    viewPos.x = -(MX_WorldToView.x0 * P_center.x
-                + MX_WorldToView.x1 * P_center.y
-                + MX_WorldToView.x2 * P_center.z
-                + MX_WorldToView.x3);
-    // Test the left plane
-    dist = viewPos.x * LeftPlane.x + viewPos.z * LeftPlane.z;
-    if ( dist > S_radius )
-        return false;
-    // Test the right plane
-    dist = viewPos.x * RightPlane.x + viewPos.z * RightPlane.z;
-    if ( dist > S_radius )
-        return false;
+    if (Projection == PROJECT_PERSPECTIVE)
+    {
+        viewPos.x = -(MX_WorldToView.x0 * P_center.x
+                    + MX_WorldToView.x1 * P_center.y
+                    + MX_WorldToView.x2 * P_center.z
+                    + MX_WorldToView.x3);
+        // Test the left plane
+        dist = viewPos.x * LeftPlane.x + viewPos.z * LeftPlane.z;
+        if ( dist > S_radius )
+            return false;
+        // Test the right plane
+        dist = viewPos.x * RightPlane.x + viewPos.z * RightPlane.z;
+        if ( dist > S_radius )
+            return false;
 
-    viewPos.y = -(MX_WorldToView.y0 * P_center.x
-                + MX_WorldToView.y1 * P_center.y
-                + MX_WorldToView.y2 * P_center.z
-                + MX_WorldToView.y3);
-    // Test the top plane
-    dist = viewPos.y * TopPlane.y + viewPos.z * TopPlane.z;
-    if ( dist > S_radius )
-        return false;
-    // Test the right plane
-    dist = viewPos.y * BottomPlane.y + viewPos.z * BottomPlane.z;
-    if ( dist > S_radius )
-        return false;
+        viewPos.y = -(MX_WorldToView.y0 * P_center.x
+                    + MX_WorldToView.y1 * P_center.y
+                    + MX_WorldToView.y2 * P_center.z
+                    + MX_WorldToView.y3);
+        // Test the top plane
+        dist = viewPos.y * TopPlane.y + viewPos.z * TopPlane.z;
+        if ( dist > S_radius )
+            return false;
+        // Test the right plane
+        dist = viewPos.y * BottomPlane.y + viewPos.z * BottomPlane.z;
+        if ( dist > S_radius )
+            return false;
+    }
+    else
+    {
+        viewPos.x = -(MX_WorldToView.x0 * P_center.x
+                    + MX_WorldToView.x1 * P_center.y
+                    + MX_WorldToView.x2 * P_center.z
+                    + MX_WorldToView.x3);
+        // Test the left plane
+        dist = viewPos.x * LeftPlane.x + LeftPlane.w;
+        if ( dist > S_radius )
+            return false;
+        // Test the right plane
+        dist = viewPos.x * RightPlane.x + RightPlane.w;
+        if ( dist > S_radius )
+            return false;
 
+        viewPos.y = -(MX_WorldToView.y0 * P_center.x
+                    + MX_WorldToView.y1 * P_center.y
+                    + MX_WorldToView.y2 * P_center.z
+                    + MX_WorldToView.y3);
+        // Test the top plane
+        dist = viewPos.y * TopPlane.y + TopPlane.w;
+        if ( dist > S_radius )
+            return false;
+        // Test the right plane
+        dist = viewPos.y * BottomPlane.y + BottomPlane.w;
+        if ( dist > S_radius )
+            return false;
+    }
     // Inside the field of view
     return true;
+*/
 }
 
 bool FieldOfView :: CheckBox(const xPoint3 P_corners[8]) const
 {
+    if (Empty) return true;
+
+    for (int ip = 0; ip < 5; ++ip)
+    {
+        bool culled = true;
+        for (int iv = 0; iv < 8 && culled; ++iv)
+            culled = Planes[ip].distanceToPoint(P_corners[iv]) > 0;
+        if (culled) return false;
+    }
+
+    return true;
+/*
     const xMatrix &MX_WorldToView = camera->MX_WorldToView_Get();
 
     xPoint3 viewPos[8];
@@ -276,44 +331,85 @@ bool FieldOfView :: CheckBox(const xPoint3 P_corners[8]) const
         culled = iterD->z > BackClip;
     if (culled) return false;
 
-    iterS = P_corners;
-    iterD = viewPos;
-    for (v = 8; v; --v, ++iterS, ++iterD)
-        iterD->x = -(MX_WorldToView.x0 * iterS->x
-                   + MX_WorldToView.x1 * iterS->y
-                   + MX_WorldToView.x2 * iterS->z
-                   + MX_WorldToView.x3);
-    // Test the left plane
-    iterD = viewPos; culled = true;
-    for (v = 8; v && culled; --v, ++iterD)
-        culled = iterD->x * LeftPlane.x + iterD->z * LeftPlane.z > 0;
-    if (culled) return false;
-    // Test the right plane
-    iterD = viewPos; culled = true;
-    for (v = 8; v && culled; --v, ++iterD)
-        culled = iterD->x * RightPlane.x + iterD->z * RightPlane.z > 0;
-    if (culled) return false;
+    if (Projection == PROJECT_PERSPECTIVE)
+    {
+        iterS = P_corners;
+        iterD = viewPos;
+        for (v = 8; v; --v, ++iterS, ++iterD)
+            iterD->x = -(MX_WorldToView.x0 * iterS->x
+                       + MX_WorldToView.x1 * iterS->y
+                       + MX_WorldToView.x2 * iterS->z
+                       + MX_WorldToView.x3);
+        // Test the left plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->x * LeftPlane.x + iterD->z * LeftPlane.z > 0;
+        if (culled) return false;
+        // Test the right plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->x * RightPlane.x + iterD->z * RightPlane.z > 0;
+        if (culled) return false;
 
-    iterS = P_corners;
-    iterD = viewPos;
-    for (v = 8; v; --v, ++iterS, ++iterD)
-        iterD->x = -(MX_WorldToView.y0 * iterS->x
-                   + MX_WorldToView.y1 * iterS->y
-                   + MX_WorldToView.y2 * iterS->z
-                   + MX_WorldToView.y3);
-    // Test the top plane
-    iterD = viewPos; culled = true;
-    for (v = 8; v && culled; --v, ++iterD)
-        culled = iterD->y * TopPlane.x + iterD->z * TopPlane.z > 0;
-    if (culled) return false;
-    // Test the bottom plane
-    iterD = viewPos; culled = true;
-    for (v = 8; v && culled; --v, ++iterD)
-        culled = iterD->y * BottomPlane.x + iterD->z * BottomPlane.z > 0;
-    if (culled) return false;
+        iterS = P_corners;
+        iterD = viewPos;
+        for (v = 8; v; --v, ++iterS, ++iterD)
+            iterD->x = -(MX_WorldToView.y0 * iterS->x
+                       + MX_WorldToView.y1 * iterS->y
+                       + MX_WorldToView.y2 * iterS->z
+                       + MX_WorldToView.y3);
+        // Test the top plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->y * TopPlane.x + iterD->z * TopPlane.z > 0;
+        if (culled) return false;
+        // Test the bottom plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->y * BottomPlane.x + iterD->z * BottomPlane.z > 0;
+        if (culled) return false;
+    }
+    else
+    {
+        iterS = P_corners;
+        iterD = viewPos;
+        for (v = 8; v; --v, ++iterS, ++iterD)
+            iterD->x = -(MX_WorldToView.x0 * iterS->x
+                       + MX_WorldToView.x1 * iterS->y
+                       + MX_WorldToView.x2 * iterS->z
+                       + MX_WorldToView.x3);
+        // Test the left plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->x * LeftPlane.x + LeftPlane.w > 0;
+        if (culled) return false;
+        // Test the right plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->x * RightPlane.x + RightPlane.w > 0;
+        if (culled) return false;
 
+        iterS = P_corners;
+        iterD = viewPos;
+        for (v = 8; v; --v, ++iterS, ++iterD)
+            iterD->x = -(MX_WorldToView.y0 * iterS->x
+                       + MX_WorldToView.y1 * iterS->y
+                       + MX_WorldToView.y2 * iterS->z
+                       + MX_WorldToView.y3);
+        // Test the top plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->y * TopPlane.x + TopPlane.w > 0;
+        if (culled) return false;
+        // Test the bottom plane
+        iterD = viewPos; culled = true;
+        for (v = 8; v && culled; --v, ++iterD)
+            culled = iterD->y * BottomPlane.x + BottomPlane.w > 0;
+        if (culled) return false;
+    }
     // None of the planes could cull this box
     return true;
+*/
 }
 
 bool FieldOfView :: CheckPoints(const xPoint4 *P_points, xWORD I_count) const
@@ -321,15 +417,13 @@ bool FieldOfView :: CheckPoints(const xPoint4 *P_points, xWORD I_count) const
     if (Empty) return true;
     if (!I_count) return false;
 
-    const xMatrix &MX_WorldToView = camera->MX_WorldToView_Get();
-
     for (int i = 0; i < 5; ++i)
     {
         const xPlane  &plane  = Planes[i];
         const xPoint4 *P_curr = P_points;
         bool  culled = true;
         for (int j = I_count; j && culled; --j, ++P_curr)
-            culled = plane.distanceToPoint(*P_curr) < 0.f;
+            culled = plane.distanceToPoint(*P_curr) > 0.f;
         if (culled) return false;
     }
     // None of the planes could cull this box
@@ -341,15 +435,13 @@ bool FieldOfView :: CheckPoints(const xPoint3 *P_points, xWORD I_count) const
     if (Empty) return true;
     if (!I_count) return false;
 
-    const xMatrix &MX_WorldToView = camera->MX_WorldToView_Get();
-
     for (int i = 0; i < 5; ++i)
     {
         const xPlane  &plane  = Planes[i];
         const xPoint3 *P_curr = P_points;
         bool  culled = true;
         for (int j = I_count; j && culled; --j, ++P_curr)
-            culled = plane.distanceToPoint(*P_curr) < 0.f;
+            culled = plane.distanceToPoint(*P_curr) > 0.f;
         if (culled) return false;
     }
     // None of the planes could cull this box

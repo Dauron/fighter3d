@@ -5,9 +5,8 @@
 #include "xVertex.h"
 #include "xElementData.h"
 #include "../../Math/xLight.h"
-#include "../../Math/Figures/xBoxA.h"
-
-using namespace Math::Figures;
+#include "../../Math/Figures/xSphere.h"
+#include "../../Math/Figures/xBoxO.h"
 
 union xGPUPointers
 {
@@ -103,13 +102,20 @@ struct xElementInstance
     xGPUPointers      gpuMain;
     xShadowDataVector gpuShadows;
 
-    xBoxA    bbBox;
-    xVector3 bsCenter;
-    xFLOAT   bsRadius;
+    Math::Figures::xBoxO    bBox;
+    Math::Figures::xSphere  bSphere;
+    Math::Figures::xBoxO   *bBox_T;
+    Math::Figures::xSphere *bSphere_T;
 
     xWORD     I_vertices;
     xVector4 *L_vertices; // skinned
     xVector3 *L_normals;  // skinned
+
+    void         Transform (const xMatrix &MX_MeshToWorld)
+    {
+        if (!bSphere_T) bSphere_T = (xSphere*)bSphere.Transform(MX_MeshToWorld);
+        if (!bBox_T)    bBox_T    = (xBoxO*)  bBox.Transform(MX_MeshToWorld);
+    }
 
     xShadowData &GetShadowData(xLight &light, xShadowData::xShadowDataLevel zLevel);
     void         Zero();

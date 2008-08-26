@@ -18,7 +18,7 @@ namespace Math { namespace Figures {
             return P_point >= P_min && P_point <= P_max;
         }
 
-        const xVector3 *fillCorners()
+        const xPoint3 *fillCorners()
         {
             P_corners[0] = P_min;
             P_corners[1] = P_max;
@@ -58,7 +58,7 @@ namespace Math { namespace Figures {
                 // not culled by the plane... early out when at least one point
                 // is in the positive half space.
                 for (v = 0; (v < 8) && FL_culled; ++v)
-                    FL_culled = PN_planes[p].distanceToPoint(P_corners[v]) < 0;
+                    FL_culled = PN_planes[p].distanceToPoint(P_corners[v]) > 0;
                 if (FL_culled) return true;
             }
             // None of the planes could cull this box

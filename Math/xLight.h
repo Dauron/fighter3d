@@ -51,6 +51,10 @@ struct xLight
     }
 
     bool elementReceivesLight(const xVector3 &bsCenter, float bsRadius) const;
+    bool elementReceivesLight(const Math::Figures::xSphere &sphere) const
+    {
+        return elementReceivesLight(sphere.P_center, sphere.S_radius);
+    }
     bool elementReceivesDiffuseLight(const Math::Cameras::FieldOfView &FOV,
                                      xVector3 boundingPoints[8]) const;
 

@@ -91,9 +91,9 @@ xBoxA    _xBoundingBox(const xVector4 *vertexP, xWORD vertexC)
         return res;
     }
 
-    res.P_min = vertexP->vector3;
-    res.P_max = vertexP->vector3;
+    res.P_max = res.P_min = vertexP->vector3;
     --vertexC;
+    ++vertexP;
 
     for (; vertexC; --vertexC, ++vertexP)
     {
@@ -111,40 +111,109 @@ xBoxA    _xBoundingBox(const xVector4 *vertexP, xWORD vertexC)
     return res;
 }
 
-void     _xElementInstance_GetBounds(xElementInstance &instance)
+xBoxA    _xBoundingBox(const xElement &elem)
 {
-    if (!instance.I_vertices)
+    xBoxA res;
+    if (!elem.I_vertices)
     {
-        instance.bbBox.P_min.zero();
-        instance.bbBox.P_max.zero();
-        instance.bsCenter.zero();
-        instance.bsRadius = 0.f;
+        res.P_min.zero();
+        res.P_max.zero();
+        return res;
+    }
+
+    res.P_max = res.P_min = *(xPoint3*)elem.L_vertices;
+
+    size_t stride = elem.GetVertexStride();
+    xBYTE *V_curr = (xBYTE*) elem.L_vertices,
+          *V_last = ((xBYTE*) elem.L_vertices) + elem.I_vertices * stride;
+    V_curr += stride;
+
+    for (; V_curr != V_last; V_curr += stride)
+    {
+        xPoint3 *vertexP = (xPoint3*) V_curr;
+        if (vertexP->x > res.P_max.x) res.P_max.x = vertexP->x;
+        else
+        if (vertexP->x < res.P_min.x) res.P_min.x = vertexP->x;
+        if (vertexP->y > res.P_max.y) res.P_max.y = vertexP->y;
+        else
+        if (vertexP->y < res.P_min.y) res.P_min.y = vertexP->y;
+        if (vertexP->z > res.P_max.z) res.P_max.z = vertexP->z;
+        else
+        if (vertexP->z < res.P_min.z) res.P_min.z = vertexP->z;
+    }
+
+    return res;
+}
+
+void     _xElementInstance_GetBounds(const xElement &elem, xModelInstance &modelInstance)
+{
+    for (xElement *selem = elem.L_kids; selem; selem = selem->Next)
+        _xElementInstance_GetBounds(*selem, modelInstance);
+
+    xElementInstance &instance = modelInstance.L_elements[elem.ID];
+
+    if (instance.bSphere_T) { delete instance.bSphere_T; instance.bSphere_T = NULL; }
+    if (instance.bBox_T)    { delete instance.bBox_T; instance.bBox_T = NULL; }
+
+    if (!elem.I_vertices)
+    {
+        instance.bBox.P_center.zero();
+        instance.bBox.S_front = 0.f;
+        instance.bBox.S_side = 0.f;
+        instance.bBox.S_top = 0.f;
+        instance.bSphere.P_center.zero();
+        instance.bSphere.S_radius = 0.f;
         return;
     }
 
-    instance.bbBox    = _xBoundingBox(instance.L_vertices, instance.I_vertices);
-    instance.bsCenter = (instance.bbBox.P_min + instance.bbBox.P_max) * 0.5f;
+    xBoxA boxA;
+    if (instance.L_vertices)
+        boxA = _xBoundingBox(instance.L_vertices, instance.I_vertices);
+    else
+        boxA = _xBoundingBox(elem);
+    instance.bBox.Init(boxA);
+    instance.bSphere.P_center = instance.bBox.P_center;
 
-    xVector4 *iter = instance.L_vertices;
     xFLOAT r = 0.f;
-    for (xWORD i = instance.I_vertices; i; --i, ++iter)
-        r = max (r, (iter->vector3 - instance.bsCenter).lengthSqr());
-    instance.bsRadius = sqrtf(r);
+    if (instance.L_vertices)
+    {
+        xVector4 *V_curr = instance.L_vertices,
+                 *V_last = instance.L_vertices + instance.I_vertices;
+
+        for (; V_curr != V_last; ++V_curr)
+            r = max (r, (V_curr->vector3 - instance.bSphere.P_center).lengthSqr());
+    }
+    else
+    {
+        size_t stride = elem.GetVertexStride();
+        xBYTE *V_curr = (xBYTE*) elem.L_vertices,
+              *V_last = ((xBYTE*) elem.L_vertices) + elem.I_vertices * stride;
+
+        for (; V_curr != V_last; V_curr += stride)
+        {
+            xPoint3 &vertexP = *(xPoint3*) V_curr;
+            r = max (r, (vertexP - instance.bSphere.P_center).lengthSqr());
+        }
+    }
+    instance.bSphere.S_radius = sqrtf(r);
 }
 
-xVector3 xModel_GetBounds(xModelInstance &instance)
+xVector3 xModel_GetBounds(const xModel &model, xModelInstance &instance)
 {
     xVector3 res; res.zero();
     xDWORD   vcnt = 0;
 
+    for (xElement *elem = model.L_kids; elem; elem = elem->Next)
+        _xElementInstance_GetBounds(*elem, instance);
+    /*
     xElementInstance *iter = instance.L_elements;
     for (xBYTE i = instance.I_elements; i; --i, ++iter)
     {
         _xElementInstance_GetBounds(*iter);
         vcnt += iter->I_vertices;
-        res  += iter->bsCenter*iter->I_vertices;
+        res  += iter->bSphere.P_center * iter->I_vertices;
     }
-
+    */
     if (vcnt) res /= (float)vcnt;
     return res;
 }

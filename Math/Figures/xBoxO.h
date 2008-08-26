@@ -2,6 +2,7 @@
 #define __incl_Math_xBoxO_h
 
 #include "xIFigure3d.h"
+#include "xBoxA.h"
 
 namespace Math { namespace Figures {
     using namespace ::Math::Figures;
@@ -22,10 +23,60 @@ namespace Math { namespace Figures {
                 xFLOAT   S_front;
                 xFLOAT   S_side;
             };
-            xFLOAT S_extend[3];
+            xFLOAT   S_extend[3];
         };
 
         xBoxO() { Type = xIFigure3d::BoxOriented; }
+
+        xBoxO &Init(xBoxA boxA)
+        {
+            P_center = (boxA.P_max + boxA.P_min) * 0.5f;
+            N_top.init(0,0,1);
+            N_side.init(1,0,0);
+            N_front.init(0,1,0);
+            S_top   = (boxA.P_max.z - boxA.P_min.z) * 0.5f;
+            S_side  = (boxA.P_max.x - boxA.P_min.x) * 0.5f;
+            S_front = (boxA.P_max.y - boxA.P_min.y) * 0.5f;
+            return *this;
+        }
+
+        xPoint3 P_corners[8];
+
+        const xPoint3 *FillCorners()
+        {
+            xVector3 NW_span_T = S_top   * N_top;
+            xVector3 NW_span_F = S_front * N_front;
+            xVector3 NW_span_S = S_side  * N_side;
+            P_corners[0] = P_center + NW_span_T + NW_span_F + NW_span_S;
+            P_corners[1] = P_center + NW_span_T + NW_span_F - NW_span_S;
+            P_corners[2] = P_center + NW_span_T - NW_span_F + NW_span_S;
+            P_corners[3] = P_center + NW_span_T - NW_span_F - NW_span_S;
+            P_corners[4] = P_center - NW_span_T + NW_span_F + NW_span_S;
+            P_corners[5] = P_center - NW_span_T + NW_span_F - NW_span_S;
+            P_corners[6] = P_center - NW_span_T - NW_span_F + NW_span_S;
+            P_corners[7] = P_center - NW_span_T - NW_span_F - NW_span_S;
+            return P_corners;
+        }
+
+        bool CulledBy(const xPlane *PN_planes, int I_count)
+        {
+            FillCorners();
+            // See if there is one plane for which all of the
+            // vertices are in the negative half space.
+            for (int p = 0; p < I_count; ++p) {
+
+                bool FL_culled = true;
+                int v;
+                // Assume this plane culls all points.  See if there is a point
+                // not culled by the plane... early out when at least one point
+                // is in the positive half space.
+                for (v = 0; (v < 8) && FL_culled; ++v)
+                    FL_culled = PN_planes[p].distanceToPoint(P_corners[v]) > 0.1f;
+                if (FL_culled) return true;
+            }
+            // None of the planes could cull this box
+            return false;
+        }
 
         void ComputeSpan(const xVector3 &N_axis, xFLOAT &P_min, xFLOAT &P_max, int axis = -1) const
         {
@@ -36,8 +87,8 @@ namespace Math { namespace Figures {
                 S_radius = S_extend[axis];
             else
                 S_radius = fabs(xVector3::DotProduct(N_axis, N_front)) * S_front
-                                + fabs(xVector3::DotProduct(N_axis, N_side))  * S_side
-                                + fabs(xVector3::DotProduct(N_axis, N_top))   * S_top;
+                         + fabs(xVector3::DotProduct(N_axis, N_side))  * S_side
+                         + fabs(xVector3::DotProduct(N_axis, N_top))   * S_top;
             P_min = P_middle-S_radius;
             P_max = P_middle+S_radius;
         }

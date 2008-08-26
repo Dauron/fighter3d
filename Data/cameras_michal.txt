@@ -1,0 +1,36 @@
+[camera free]
+name	Side
+eye     0 5 2.2
+center  0 0 2.2
+up		0 0 1
+speed   1
+(viewport)
+left	35
+top		0
+width	66
+height	70
+(fov)
+angle   45
+
+[camera free]
+name	Front
+eye     -2 1 2.2
+center   0 1 2.2
+up		0 0 1
+(viewport)
+left	0
+top		0
+width	35
+height	100
+
+[camera free]
+name	Top
+eye     0 1 3.5
+center  0 1 2.2
+up		0 1 0
+speed   100
+(viewport)
+left	35
+top		70
+width	66
+height	31

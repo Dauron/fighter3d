@@ -13,10 +13,9 @@ void RenderElementAmbientLST(bool transparent, const Math::Cameras::FieldOfView 
         || (!transparent && !elem->FL_opaque)) return;
 
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
-    xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
-    xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
-    if (!FOV.CheckSphere(center, instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox, mtxTrasformation) )
+    xMatrix MX_MeshToWorld = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
+    instance.Transform(MX_MeshToWorld);
+    if ( !FOV.CheckSphere(*instance.bSphere_T) || !FOV.CheckBox( *instance.bBox_T ) )
     {
         ++Performance.CulledElements;
         return;
@@ -26,7 +25,7 @@ void RenderElementAmbientLST(bool transparent, const Math::Cameras::FieldOfView 
     xColor ambient; ambient.init(0.f,0.f,0.f,1.f);
     Vec_xLight::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
-        if (instance.bsRadius == 0.f || iterL->elementReceivesLight(center, instance.bsRadius))
+        if (iterL->elementReceivesLight(*instance.bSphere_T))
         {
             ambient.vector3 += iterL->ambient.vector3;
             ++lightsC;
@@ -160,10 +159,9 @@ void RenderElementAmbientVBO(bool transparent, const Math::Cameras::FieldOfView 
         || (!transparent && !elem->FL_opaque)) return;
 
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
-    xMatrix mtxTrasformation = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
-    xVector3 center = mtxTrasformation.preTransformP(instance.bsCenter);
-    if (!FOV.CheckSphere(center, instance.bsRadius) ||
-        !FOV.CheckBox(instance.bbBox, mtxTrasformation) )
+    xMatrix MX_MeshToWorld = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
+    instance.Transform(MX_MeshToWorld);
+    if ( !FOV.CheckSphere(*instance.bSphere_T) || !FOV.CheckBox( *instance.bBox_T ) )
     {
         ++Performance.CulledElements;
         return;
@@ -174,7 +172,7 @@ void RenderElementAmbientVBO(bool transparent, const Math::Cameras::FieldOfView 
     Vec_xLight::const_iterator iterL = lights.begin(), endL = lights.end();
     for (; iterL != endL; ++iterL)
     {
-        if (instance.bsRadius == 0.f || iterL->elementReceivesLight(center, instance.bsRadius))
+        if (iterL->elementReceivesLight(*instance.bSphere_T))
         {
             ambient.vector3 += iterL->ambient.vector3;
             ++lightsC;

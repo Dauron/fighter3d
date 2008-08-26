@@ -127,22 +127,23 @@ void RigidObj :: UpdateCustomBVH()
     {
         for (int i = 0; i < BVHierarchy.I_items; ++i)
             BVHierarchy.L_items[i].MX_RawToLocal_Set(xMatrix::Transpose( modelInstanceGr.MX_bones[BVHierarchy.L_items[i].ID_Bone] ));
-        Math::Figures::xBoxA box = BVHierarchy.childBounds(MX_LocalToWorld_Get());
-        sphere.S_radius = sphere_T.S_radius = (box.P_max - box.P_min).length() * 0.5f;
-        sphere_T.P_center = (box.P_max + box.P_min) * 0.5f;
+        Math::Figures::xBoxA boxA = BVHierarchy.childBounds(MX_LocalToWorld_Get());
+        sphere.S_radius = sphere_T.S_radius = (boxA.P_max - boxA.P_min).length() * 0.5f;
+        sphere_T.P_center = (boxA.P_max + boxA.P_min) * 0.5f;
         sphere.P_center = MX_WorldToLocal.preTransformP(sphere_T.P_center);
     }
     else
     {
         for (int i = 0; i < BVHierarchy.I_items; ++i)
             BVHierarchy.L_items[i].MX_RawToLocal_Set( xMatrix::Identity() );
-        Math::Figures::xBoxA box = BVHierarchy.childBounds();
-        sphere.S_radius = sphere_T.S_radius = (box.P_max - box.P_min).length() * 0.5f;
-        sphere.P_center = (box.P_max + box.P_min) * 0.5f;
+        Math::Figures::xBoxA boxA = BVHierarchy.childBounds();
+        sphere.S_radius = sphere_T.S_radius = (boxA.P_max - boxA.P_min).length() * 0.5f;
+        sphere.P_center = (boxA.P_max + boxA.P_min) * 0.5f;
         sphere_T.P_center = MX_LocalToWorld_Get().preTransformP(sphere.P_center);
     }
 
     P_center = sphere.P_center;
+    S_radius = sphere.S_radius;
 }
 
 void RigidObj :: UpdateGeneratedBVH()
@@ -162,6 +163,7 @@ void RigidObj :: UpdateGeneratedBVH()
 
     GetModelPh()->ReFillBVH(BVHierarchy, MeshData, MX_LocalToWorld_Get());
 
+    S_radius      = ((xSphere*)BVHierarchy.GetTransformed())->S_radius;
     P_center_Trfm = BVHierarchy.GetTransformed()->P_center;
     P_center      = MX_WorldToLocal.preTransformP(P_center_Trfm);
 }
@@ -211,16 +213,22 @@ void RigidObj :: VerticesChanged(bool free)
     modelInstancePh.FL_modified = modelInstanceGr.FL_modified;
     modelInstancePh.I_bones     = modelInstanceGr.I_bones;
 
-    if (false && free)
-    {
+    // bounds used for rendering
+    if (xModelGr->Spine.I_bones)
         xModel_SkinElementInstance(xModelGr, modelInstanceGr);
-        modelInstancePh.P_center = modelInstanceGr.P_center = xModel_GetBounds(modelInstanceGr);
-        if (hModelGraphics != hModelPhysical)
-        {
-            xModel_SkinElementInstance(xModelPh, modelInstancePh);
-            modelInstancePh.P_center = xModel_GetBounds(modelInstancePh);
-        }
+    /*modelInstancePh.P_center = modelInstanceGr.P_center = */xModel_GetBounds(*xModelGr, modelInstanceGr);
+    /*
+    if (hModelGraphics != hModelPhysical)
+    {
+        xModel_SkinElementInstance(xModelPh, modelInstancePh);
+        modelInstancePh.P_center = xModel_GetBounds(xModelPh, modelInstancePh);
     }
+    */
+
+    if (FL_customBVH)
+        UpdateCustomBVH();
+    else
+        UpdateGeneratedBVH();
 }
 
 void RigidObj :: CalculateSkeleton()

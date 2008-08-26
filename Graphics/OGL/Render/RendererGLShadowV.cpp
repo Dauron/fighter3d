@@ -6,43 +6,50 @@
 #include "../Extensions/EXT_stencil_two_side.h"
 
 /***************************** shadow volumes *********************************/
-void CheckShadowVolumeInFrustum(const xMatrix &transformation, const xMatrix &transformationInv,
-                                xElementInstance &instance, xShadowData &shadowData,
+void CheckShadowVolumeInFrustum(xElementInstance &instance, xShadowData &shadowData,
                                 const xLight &light, const Math::Cameras::FieldOfView &FOV,
                                 bool &outModelInFrustum, bool &outExtrusionInFrustum,
                                 bool &outBackCapInFrustum)
 {
-    outModelInFrustum = FOV.CheckSphere(transformation.preTransformP(instance.bsCenter), instance.bsRadius) &&
-        FOV.CheckBox(instance.bbBox, transformation);
-
+    outExtrusionInFrustum = outModelInFrustum = FOV.CheckSphere( *instance.bSphere_T ) && FOV.CheckBox( *instance.bBox_T );
+/*
     if (instance.bbBox.P_min == instance.bbBox.P_max)
     {
         outBackCapInFrustum   = true;
         outExtrusionInFrustum = true;
         return;
     }
-
-    xVector4 bounds[16];
-    for (int i = 0; i < 8; ++i)
-        bounds[i].init(instance.bbBox.P_corners[i], 1.f);
-
+*/
     if (light.type != xLight_INFINITE)
     {
+        //instance.bBox_T->FillCorners();
+        xVector4 bounds[16];
+
         for (int i = 0; i < 8; ++i)
-            bounds[i+8].init ( instance.bbBox.P_corners[i] - light.position, 0.f );
+            bounds[i+8].init ( instance.bBox_T->P_corners[i] - light.position, 0.f );
 
-        if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
-            outBackCapInFrustum = outModelInFrustum || outBackCapInFrustum || FOV.CheckPoints(bounds + 8, 8);
-        else
-            outBackCapInFrustum = false;
+        if (!outExtrusionInFrustum)
+        {
+            for (int i = 0; i < 8; ++i)
+                bounds[i].init ( instance.bBox_T->P_corners[i], 1.f );
+            outExtrusionInFrustum = FOV.CheckPoints(bounds, 16);
+        }
 
-        outExtrusionInFrustum = FOV.CheckPoints(bounds, 16);
+        outBackCapInFrustum = ( shadowData.zDataLevel == xShadowData::ZFAIL_PASS ) &&
+                              ( outModelInFrustum /* || outExtrusionInFrustum*/ || FOV.CheckPoints(bounds + 8, 8) );
     }
     else
     {
-        bounds[8].init(-light.position, 0.f);
-        outExtrusionInFrustum = outModelInFrustum || FOV.CheckPoints(bounds, 9);
         outBackCapInFrustum = false;
+        if (!outExtrusionInFrustum)
+        {
+            //instance.bBox_T->FillCorners();
+            xVector4 bounds[9];
+            for (int i = 0; i < 8; ++i)
+                bounds[i].init(instance.bBox_T->P_corners[i], 1.f);
+            bounds[8].init(-light.position, 0.f);
+            outExtrusionInFrustum = FOV.CheckPoints(bounds, 9);
+        }
     }
 }
 
@@ -282,23 +289,24 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
     if (!elem->I_edges) return;
 
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
-    xMatrix mtxMeshToWorld = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
-    if (instance.bsRadius != 0.f && !light.elementReceivesLight(mtxMeshToWorld.preTransformP(instance.bsCenter), instance.bsRadius)) return;
+    xMatrix MX_MeshToWorld = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
+    instance.Transform(MX_MeshToWorld);
+    if ( !light.elementReceivesLight(*instance.bSphere_T) ) return;
 
-    bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.MX_LocalToWorld, FOV, light);
+    bool zPass = !ShadowVolume::ViewportMaybeShadowed(instance, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;
-
-    xMatrix  mtxWorldToMesh = xMatrix::Invert(mtxMeshToWorld);
-    xVector3 lightPos = (infiniteL)
-        ? mtxWorldToMesh.preTransformV(light.position)
-        : mtxWorldToMesh.preTransformP(light.position);
 
     xShadowData &shadowData = instance.GetShadowData(light, zPass ? xShadowData::ZPASS_ONLY : xShadowData::ZFAIL_PASS);
     if (!shadowData.L_indices)
     {
+        xMatrix MX_WorldToMesh = xMatrix::Invert(MX_MeshToWorld);
+        xVector3 lightPos = (infiniteL)
+            ? MX_WorldToMesh.preTransformV(light.position)
+            : MX_WorldToMesh.preTransformP(light.position);
+
         bool *facingFlag = NULL;
         bool  useBackCapOptimization
-            = (lightPos - instance.bsCenter).lengthSqr() > instance.bsRadius*instance.bsRadius;
+            = (lightPos - instance.bSphere.P_center).lengthSqr() > instance.bSphere.S_radius*instance.bSphere.S_radius;
 
         if (!shadowData.L_vertices)
             shadowData.L_vertices = (infiniteL) ? new xVector4[elem->I_vertices + 1] : new xVector4[elem->I_vertices << 1];
@@ -349,9 +357,8 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
     glMultMatrixf(&elem->MX_MeshToLocal.x0);
 
     bool modelInFrustum, extrusionInFrustum, backCapInFrustum;
-    CheckShadowVolumeInFrustum(mtxMeshToWorld, mtxWorldToMesh,
-        instance, shadowData, light, FOV,
-        modelInFrustum, extrusionInFrustum, backCapInFrustum);
+    CheckShadowVolumeInFrustum( instance, shadowData, light, FOV,
+                                modelInFrustum, extrusionInFrustum, backCapInFrustum);
 
     ++Performance.Shadows.shadows;
     if (zPass)
@@ -532,27 +539,28 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
     if (!elem->I_edges) return;
 
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
-    xMatrix mtxMeshToWorld = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
-    if (instance.bsRadius != 0.f && !light.elementReceivesLight(mtxMeshToWorld.preTransformP(instance.bsCenter), instance.bsRadius)) return;
+    xMatrix MX_MeshToWorld = elem->MX_MeshToLocal * modelInstance.MX_LocalToWorld;
+    instance.Transform(MX_MeshToWorld);
+    if ( !light.elementReceivesLight(*instance.bSphere_T) ) return;
 
-    bool zPass = !ShadowVolume::ViewportMaybeShadowed(elem, instance, modelInstance.MX_LocalToWorld, FOV, light);
+    bool zPass = !ShadowVolume::ViewportMaybeShadowed(instance, FOV, light);
     bool infiniteL = light.type == xLight_INFINITE;
 
     bool changed = false;
     xShadowData &shadowData = instance.GetShadowData(light, zPass ? xShadowData::ZPASS_ONLY : xShadowData::ZFAIL_PASS);
     if (!shadowData.L_indices)
     {
-        xMatrix  mtxWorldToMesh = xMatrix::Invert(mtxMeshToWorld);
+        xMatrix  MX_WorldToMesh = xMatrix::Invert(MX_MeshToWorld);
         xVector3 lightPos = (infiniteL)
-            ? mtxWorldToMesh.preTransformV(light.position)
-            : lightPos = mtxWorldToMesh.preTransformP(light.position);
+            ? MX_WorldToMesh.preTransformV(light.position)
+            : MX_WorldToMesh.preTransformP(light.position);
 
         bool *facingFlag = NULL;
         bool  useBackCapOptimization
-            = (lightPos - instance.bsCenter).lengthSqr() > instance.bsRadius*instance.bsRadius;
+            = (lightPos - instance.bSphere.P_center).lengthSqr() > instance.bSphere.S_radius*instance.bSphere.S_radius;
 
         if (!shadowData.L_vertices)
-            shadowData.L_vertices = new xVector4[(infiniteL) ? instance.I_vertices + 1 : instance.I_vertices << 1];
+            shadowData.L_vertices = new xVector4[(infiniteL) ? elem->I_vertices + 1 : elem->I_vertices << 1];
         if (instance.I_vertices)
             memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xVector4));
         else
@@ -577,7 +585,7 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
         glGenBuffersARB(1, &p); shadowData.gpuShadowPointers.vertexB = p;
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, shadowData.gpuShadowPointers.vertexB );
         glBufferDataARB( GL_ARRAY_BUFFER_ARB,
-            sizeof(xVector4)*((infiniteL) ? instance.I_vertices + 1 : instance.I_vertices << 1),
+            sizeof(xVector4)*((infiniteL) ? elem->I_vertices + 1 : elem->I_vertices << 1),
             shadowData.L_vertices, GL_DYNAMIC_DRAW_ARB);
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
 
@@ -590,9 +598,9 @@ void RenderShadowVolumeElemVBO (xElement *elem, xModelInstance &modelInstance, x
     if (changed)
     {
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, shadowData.gpuShadowPointers.vertexB );
-        glBufferSubDataARB( GL_ARRAY_BUFFER_ARB, sizeof(xVector4)*instance.I_vertices,
-            sizeof(xVector4)*((infiniteL) ? 1 : instance.I_vertices),
-            shadowData.L_vertices+instance.I_vertices);
+        glBufferSubDataARB( GL_ARRAY_BUFFER_ARB, sizeof(xVector4)*elem->I_vertices,
+            sizeof(xVector4)*((infiniteL) ? 1 : elem->I_vertices),
+            shadowData.L_vertices+elem->I_vertices);
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
 
         glBindBufferARB( GL_ELEMENT_ARRAY_BUFFER_ARB, shadowData.gpuShadowPointers.indexB );

@@ -59,6 +59,9 @@ public:
     }
     void UpdateCustomBVH();
     void UpdateGeneratedBVH();
+    virtual void FrameRender() {
+        UpdatePointers();
+    }
     virtual void FrameEnd   () {
         if (IsModified()) UpdateMatrices();
         PhysicalBody::FrameEnd();
@@ -94,7 +97,7 @@ public:
     }
     void RenderDepth(Math::Cameras::FieldOfView &FOV, bool transparent)
     {
-        UpdatePointers();
+        //UpdatePointers();
         renderer.RenderDepth(*xModelGr, modelInstanceGr, transparent, FOV);
     }
     void RenderAmbient(const Vec_xLight &lights, Math::Cameras::FieldOfView &FOV, bool transparent)
@@ -109,7 +112,7 @@ public:
     }
     void Render(bool transparent, const Math::Cameras::FieldOfView &FOV)
     {
-        UpdatePointers();
+        //UpdatePointers();
         renderer.RenderModel(*xModelGr, modelInstanceGr, transparent, FOV);
     }
     void InvalidateShadowRenderData()

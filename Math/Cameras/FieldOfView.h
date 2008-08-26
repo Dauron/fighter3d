@@ -3,6 +3,7 @@
 
 #include "../xMath.h"
 #include "../Figures/xBoxA.h"
+#include "../Figures/xBoxO.h"
 #include "../Figures/xSphere.h"
 
 namespace Math { namespace Cameras {
@@ -46,7 +47,7 @@ namespace Math { namespace Cameras {
         xPlane  TopPlane;
         xPlane  BottomPlane;
 
-        xPoint3 Corners3D[5];
+        xPoint3 Corners3D[4];
         xPlane  Planes[5];
 
         FieldOfView() : Empty(true) { Projection = PROJECT_UNDEFINED; Aspect = 1.333f; }
@@ -86,6 +87,11 @@ namespace Math { namespace Cameras {
         {
             if (Empty || box.P_min == box.P_max) return true;
             return CheckBox(box.fillCornersTransformed(MX_LocaltoWorld));
+        }
+        bool CheckBox(Math::Figures::xBoxO &box) const
+        {
+            if (Empty || box.S_top == 0.f) return true;
+            return CheckBox(box.FillCorners());
         }
 
         bool CheckPoints(const xPoint4 *P_points, xWORD I_count) const;

@@ -20,7 +20,18 @@ model	dojo/floor0_F.3dx
 position    0 0 -0.21
 phantom     0
 
+#
+# North
+#
 [model]
+model	dojo/wall_inner_short.3ds
+position	-19.592	0.055	7.039
+rotation	0	0	-90
+physical	0
+phantom	0
+shadows 1
+
+[skip model]
 fastm	crate_fst.3dx
 model	crate.3dx
 skip rotation    0 10 0
@@ -31,7 +42,7 @@ locked      0
 phantom     0
 mass        20
 
-[model]
+[skip model]
 fastm	crate_fst.3dx
 model	crate.3dx
 skip rotation    0 10 0
@@ -47,7 +58,7 @@ mass        20
 [skeletized]
 fastm	    human2_fst.3dx
 model	    human2.3dx
-#rotation    0 0 180
+rotation    0 0 180
 position    -0.7 -3.3 -0.4
 customBVH	0
 physical    1
@@ -59,7 +70,7 @@ restitution 0.9
 control     comboard
 #enemy       1
 
-[skip skeletized]
+[skeletized]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 #rotation    0 45 0
