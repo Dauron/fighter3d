@@ -24,7 +24,7 @@ void SkeletizedObj :: Initialize ()
     T_verlet_Max = 0.f; // 0.002f;
     postHit = 0.f;
 
-    I_bones =  GetModelPh()->Spine.I_bones;
+    I_bones =  ModelGr->xModel->Spine.I_bones;
     if (NW_VerletVelocity)
     {
         delete[] NW_VerletVelocity;
@@ -43,7 +43,6 @@ void SkeletizedObj :: Initialize ()
 
 void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filename)
 {
-    forceNotStatic = true;
     RigidObj::Initialize(gr_filename, ph_filename);
     CreateVerletSystem();
     QT_verlet = new xQuaternion[verletSystem.I_particles];
@@ -78,22 +77,22 @@ void SkeletizedObj :: Finalize ()
 
 void SkeletizedObj :: CreateVerletSystem()
 {
-    xModel &modelInst = *GetModelGr();
+    xModel &model = *ModelGr->xModel;
     verletSystem.Free();
-    verletSystem.Init(modelInst.Spine.I_bones);
+    verletSystem.Init(model.Spine.I_bones);
     verletSystem.C_collisions = &collisionConstraints;
-    xBone    *bone    = modelInst.Spine.L_bones;
+    xBone    *bone    = model.Spine.L_bones;
     xPoint3  *P_cur   = verletSystem.P_current,
              *P_old   = verletSystem.P_previous;
     xVector3 *A_iter  = verletSystem.A_forces;
     xQuaternion *QT_skew = verletSystem.QT_boneSkew;
     xFLOAT      *M_iter  = verletSystem.M_weight_Inv;
     bool        *FL_lock = verletSystem.FL_attached;
-    xMatrix     *MX_bone = modelInstanceGr.MX_bones;
-    xQuaternion *QT_bone = modelInstanceGr.QT_bones;
+    xMatrix     *MX_bone = ModelGr->instance.MX_bones;
+    xQuaternion *QT_bone = ModelGr->instance.QT_bones;
 
     if (MX_bone)
-        for (int i = modelInst.Spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++A_iter, ++M_iter, ++FL_lock,
+        for (int i = model.Spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++A_iter, ++M_iter, ++FL_lock,
             ++MX_bone, QT_bone+=2)
         {
             *P_old   = *P_cur = MX_LocalToWorld_Get().preTransformP( MX_bone->postTransformP(bone->P_end) );
@@ -103,7 +102,7 @@ void SkeletizedObj :: CreateVerletSystem()
             A_iter->zero();
         }
     else
-        for (int i = modelInst.Spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++A_iter, ++M_iter, ++FL_lock)
+        for (int i = model.Spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++A_iter, ++M_iter, ++FL_lock)
         {
             *P_old   = *P_cur = MX_LocalToWorld_Get().preTransformP( bone->P_end );
             QT_skew->zeroQ();
@@ -120,13 +119,13 @@ void SkeletizedObj :: DestroyVerletSystem()
 
 void SkeletizedObj :: UpdateVerletSystem()
 {
-    xModel      &modelInst = *GetModelGr();
-    xBone       *bone    = modelInst.Spine.L_bones;
+    xModel      &model   = *ModelGr->xModel;
+    xBone       *bone    = model.Spine.L_bones;
     xPoint3     *P_old   = verletSystem.P_current;
     xQuaternion *QT_skew = verletSystem.QT_boneSkew;
-    xMatrix     *MX_bone = modelInstanceGr.MX_bones;
-    xQuaternion *QT_bone = modelInstanceGr.QT_bones;
-    for (int i = modelInst.Spine.I_bones; i; --i, ++bone, ++P_old, ++QT_skew, ++MX_bone, QT_bone+=2)
+    xMatrix     *MX_bone = ModelGr->instance.MX_bones;
+    xQuaternion *QT_bone = ModelGr->instance.QT_bones;
+    for (int i = model.Spine.I_bones; i; --i, ++bone, ++P_old, ++QT_skew, ++MX_bone, QT_bone+=2)
     {
         *P_old   = MX_LocalToWorld_Get().preTransformP( MX_bone->postTransformP(bone->P_end) );
         *QT_skew = bone->getSkew(*QT_bone);
@@ -373,7 +372,7 @@ void SkeletizedObj :: FrameUpdate(float T_time)
     MX_LocalToWorld_Set().postTranslateT(NW_translation);
     UpdateMatrices();
 
-    xSkeleton &spine = GetModelPh()->Spine;
+    xSkeleton &spine = ModelGr->xModel->Spine;
     verletSystem.C_constraints = spine.C_constraints;
     verletSystem.I_constraints = spine.I_constraints;
     verletSystem.C_lengthConst = spine.C_boneLength;
@@ -496,7 +495,7 @@ void SkeletizedObj :: FrameUpdate(float T_time)
     if (bones2)
         if (bones)
         {
-            xAnimation::Combine(bones2, bones, modelInstanceGr.I_bones , bones);
+            xAnimation::Combine(bones2, bones, ModelGr->instance.I_bones , bones);
             delete[] bones2;
         }
         else
@@ -504,23 +503,23 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     if (false && !bones)
     {
-        bones = new xQuaternion[modelInstanceGr.I_bones];
-        for (int i = 0; i < modelInstanceGr.I_bones; ++i)
+        bones = new xQuaternion[ModelGr->instance.I_bones];
+        for (int i = 0; i < ModelGr->instance.I_bones; ++i)
             bones[i].zeroQ();
     }
 
     if (bones && W_verlet > 0.f)
-        xAnimation::Average(QT_verlet, bones, modelInstanceGr.I_bones, 1.f-W_verlet, bones);
+        xAnimation::Average(QT_verlet, bones, ModelGr->instance.I_bones, 1.f-W_verlet, bones);
 
     if (bones)
     {
-        GetModelGr()->Spine.QuatsFromArray(bones);
+        ModelGr->xModel->Spine.QuatsFromArray(bones);
         delete[] bones;
         CalculateSkeleton();
     }
     else
     {
-        GetModelGr()->Spine.QuatsFromArray(QT_verlet);
+        ModelGr->xModel->Spine.QuatsFromArray(QT_verlet);
         CalculateSkeleton();
     }
     //else

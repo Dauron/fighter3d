@@ -19,13 +19,10 @@ class SceneSkeleton : public Scene, public ISelectionProvider
 {
   public:
     SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName);
-    ~SceneSkeleton() { Model.Finalize(); }
+    ~SceneSkeleton();
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
-    virtual bool Invalidate() {
-        Model.Invalidate();
-        return Scene::Invalidate();
-    }
+    virtual bool Invalidate();
     virtual void Terminate();
     virtual bool FrameUpdate(float deltaTime);
     virtual bool FrameRender();

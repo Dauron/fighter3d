@@ -11,11 +11,11 @@ void FieldOfView :: InitPerspective( xFLOAT angleDeg, xFLOAT frontClip, xFLOAT b
     BackClip   = backClip;
     Projection = PROJECT_PERSPECTIVE;
 
-    xFLOAT Width, Height;
-    Height = frontClip * tan( DegToRad(angleDeg) * 0.5f );
-    Width  = Height * Aspect;
-    xFLOAT W_2_rt_minus_lt_Inv = 1.f / Width;
-    xFLOAT W_2_tp_minus_bt_Inv = 1.f / Height;
+    xFLOAT HalfWidth, HalfHeight;
+    HalfHeight = frontClip * tan( DegToRad(angleDeg) * 0.5f );
+    HalfWidth  = HalfHeight * Aspect;
+    xFLOAT W_2_rt_minus_lt_Inv = 1.f / HalfWidth;
+    xFLOAT W_2_tp_minus_bt_Inv = 1.f / HalfHeight;
     if (backClip == xFLOAT_HUGE_POSITIVE)
     {
         MX_Projection.row0.init(frontClip*W_2_rt_minus_lt_Inv, 0.f, 0.f, 0.f);
@@ -35,9 +35,7 @@ void FieldOfView :: InitPerspective( xFLOAT angleDeg, xFLOAT frontClip, xFLOAT b
     xVector3 p0, p1, p2;
 
     p0.init(0.f,0.f,0.f);
-    p1.z = BackClip;
-    p1.y = -p1.z * (xFLOAT)tan( PerspAngle * 0.5f );
-    p1.x = p1.y * Aspect;
+    p1.init(-HalfWidth, -HalfHeight, FrontClip);
     p2.init(p1.x, -p1.y, p1.z);
     LeftPlane.init(p0, p1, p2);
 
@@ -133,12 +131,18 @@ void FieldOfView :: Update()
 
     if (Projection == PROJECT_PERSPECTIVE)
     {
-        Corners3D[0].z = FrontClip;
-        Corners3D[0].y = -Corners3D[0].z * (xFLOAT)tan( PerspAngle * 0.5f );
+        //xMatrix MX_Projection_Inv;
+        //xMatrix::Invert(MX_Projection, MX_Projection_Inv);
+        //Corners3D[0] = MX_Projection_Inv.preTransformP(xPoint3::Create(1.f,1.f,0.f));
+        //Corners3D[1] = MX_Projection_Inv.preTransformP(xPoint3::Create(-1.f,1.f,0.f));
+        //Corners3D[2] = MX_Projection_Inv.preTransformP(xPoint3::Create(-1.f,-1.f,0.f));
+        //Corners3D[3] = MX_Projection_Inv.preTransformP(xPoint3::Create(1.f,-1.f,0.f));
+        Corners3D[0].z = -FrontClip*2.f;
+        Corners3D[0].y = -Corners3D[0].z * (xFLOAT)tan( DegToRad(PerspAngle) * 0.5f );
         Corners3D[0].x = Corners3D[0].y * Aspect;
-        Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, FrontClip);
-        Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, FrontClip);
-        Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, FrontClip);
+        Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, -FrontClip*2.f);
+        Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, -FrontClip*2.f);
+        Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, -FrontClip*2.f);
         xPoint3 eye; eye.zero();
 
         Corners3D[0] = MX_ViewToWorld.preTransformP(Corners3D[0]);
@@ -147,7 +151,7 @@ void FieldOfView :: Update()
         Corners3D[3] = MX_ViewToWorld.preTransformP(Corners3D[3]);
         eye = MX_ViewToWorld.preTransformP(eye);
 
-        Planes[0].init(Corners3D[1], Corners3D[3], Corners3D[0]);
+        Planes[0].init(Corners3D[1], Corners3D[3], Corners3D[1]);
         Planes[1].init(eye, Corners3D[3], Corners3D[0]);
         Planes[2].init(eye, Corners3D[2], Corners3D[3]);
         Planes[3].init(eye, Corners3D[1], Corners3D[2]);
@@ -156,10 +160,10 @@ void FieldOfView :: Update()
     else
     {
         xVector3 p0;
-        Corners3D[0].init(-OrthoScale * Aspect, -OrthoScale, FrontClip);
-        Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, FrontClip);
-        Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, FrontClip);
-        Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, FrontClip);
+        Corners3D[0].init(-OrthoScale * Aspect, -OrthoScale, -FrontClip);
+        Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, -FrontClip);
+        Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, -FrontClip);
+        Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, -FrontClip);
 
         Corners3D[0] = MX_ViewToWorld.preTransformP(Corners3D[0]);
         Corners3D[1] = MX_ViewToWorld.preTransformP(Corners3D[1]);

@@ -1,5 +1,6 @@
 #include <fstream>
 #include "World.h"
+#include "SkeletizedObj.h"
 #include "../Utils/Filesystem.h"
 #include "../MotionCapture/CaptureInput.h"
 #include "../Multiplayer/NetworkInput.h"
@@ -26,11 +27,18 @@ void World:: FrameUpdate(float T_delta)
         else
             FrameStart();
 
+        if (skyBox) skyBox->FrameUpdate(T_step);
         Interact(T_step, objects);
 
         if (T_delta > EPSILON)
             FrameEnd();
     }
+
+
+    Vec_xLight::iterator LT_curr = lights.begin(),
+                         LT_last = lights.end();
+    for (; LT_curr != LT_last ; ++LT_curr)
+        LT_curr->update();
 }
 
 void World:: Initialize()
@@ -53,7 +61,7 @@ void World:: Finalize()
     Vec_Object::iterator i, begin = objects.begin(), end = objects.end();
     for ( i = begin ; i != end ; ++i )
     {
-        (*i)->Finalize();
+        (**i).Finalize();
         delete *i;
     }
     objects.clear();
@@ -183,6 +191,11 @@ void World:: Load(const char *mapFileName)
                     std::string modelFile = Filesystem::GetFullPath(dir + "/" + file);
                     skyBox = new RigidObj();
                     skyBox->Initialize(modelFile.c_str());
+                    continue;
+                }
+                if (StartsWith(buffer, "skycolor"))
+                {
+                    sscanf(buffer+8, "%f\t%f\t%f", &skyColor.r, &skyColor.g, &skyColor.b);
                     continue;
                 }
             }
@@ -426,7 +439,7 @@ void World:: Load(const char *mapFileName)
         if (camera_controled)
         {
             g_CaptureInput.Finalize();
-            bool captureOK = g_CaptureInput.Initialize(camera_controled->GetModelGr()->Spine);
+            bool captureOK = g_CaptureInput.Initialize(camera_controled->ModelGr_Get().xModel->Spine);
             camera_controled->ControlType = (captureOK)
                 ? SkeletizedObj::Control_CaptureInput
                 : SkeletizedObj::Control_ComBoardInput;
@@ -434,7 +447,7 @@ void World:: Load(const char *mapFileName)
         if (network_controled)
         {
             g_NetworkInput.Finalize();
-            bool networkOK = g_NetworkInput.Initialize(model->GetModelGr()->Spine);
+            bool networkOK = g_NetworkInput.Initialize(model->ModelGr_Get().xModel->Spine);
             network_controled->ControlType = (networkOK)
                 ? SkeletizedObj::Control_NetworkInput
                 : SkeletizedObj::Control_AI;

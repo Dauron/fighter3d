@@ -1,4 +1,4 @@
-[camera free]
+[camera human]
 name	Side
 eye     0 5 2.2
 center  0 0 2.2

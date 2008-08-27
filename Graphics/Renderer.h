@@ -28,6 +28,9 @@ public:
     virtual void RenderAmbient  ( xModel &model, xModelInstance &instance,
                                   const Vec_xLight &lights, bool transparent,
                                   const Math::Cameras::FieldOfView &FOV ) = 0;
+    virtual void RenderAmbient  ( xModel &model, xModelInstance &instance,
+                                  const xLight &light, bool transparent,
+                                  const Math::Cameras::FieldOfView &FOV ) = 0;
     virtual void RenderDiffuse  ( xModel &model, xModelInstance &instance,
                                   const xLight &light, bool transparent,
                                   const Math::Cameras::FieldOfView &FOV ) = 0;

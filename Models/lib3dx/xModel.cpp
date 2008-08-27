@@ -456,6 +456,18 @@ void xModelInstance :: ClearSkeleton()
     if (FL_modified) delete[] FL_modified; FL_modified = NULL;
 }
 
+void xModelInstance :: FreeVertices()
+{
+    ClearSkeleton();
+
+    if (L_elements)
+    {
+        xElementInstance *iter = L_elements;
+        for (; I_elements; --I_elements, ++iter)
+            iter->Free();
+    }
+}
+
 void xModelInstance :: Clear()
 {
     ClearSkeleton();

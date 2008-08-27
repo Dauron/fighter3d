@@ -1,4 +1,4 @@
-[camera free]
+[camera human]
 name	Perspective
 eye     0 8 2.2
 center  0 3 2.2

@@ -6,9 +6,35 @@
 
 #include "../Models/ModelMgr.h"
 #include "../Physics/Verlet/VerletSolver.h"
-#include "../Graphics/OGL/Render/RendererGL.h"
+#include "../Graphics/Renderer.h"
 
 #include <algorithm>
+
+struct ModelInstance
+{
+    HModel         hModel;
+    xModel        *xModel;
+    xModelInstance instance;
+
+    ModelInstance(HModel hModel)
+    {
+        this->hModel = hModel;
+        xModel = g_ModelMgr.GetModel(hModel)->model;
+        instance.Zero();
+        instance.I_elements = xModel->I_elements;
+        instance.L_elements = new xElementInstance[xModel->I_elements];
+        instance.ZeroElements();
+    }
+
+    ~ModelInstance()
+    { g_ModelMgr.DeleteModel(hModel); instance.Clear(); }
+
+    void Update()
+    { xModel = g_ModelMgr.GetModel(hModel)->model; }
+
+    int GetReferences()
+    { return g_ModelMgr.GetModel(hModel)->m_References; }
+};
 
 class RigidObj : public Physics::PhysicalBody
 {
@@ -16,35 +42,21 @@ public:
     bool FL_shadowcaster;
     bool FL_customBVH;
 
+    bool FL_renderNeedsUpdate;
+    bool FL_renderNeedsUpdateBones;
+
     VConstraintCollisionVector  collisionConstraints;
     Math::Figures::xMeshData   *MeshData;
 
     xMatrix        MX_WorldToLocal;
-    xMatrix        MX_LocalToWorld_prev;
-
-    RendererGL     renderer;
-    xModelInstance modelInstanceGr;
-    xModelInstance modelInstancePh;
 
 protected:
-    bool           forceNotStatic;
     xShadowMap     smap;
-
-    /******** CONSTRUCTORS : BEGIN ********/
-public:
-    RigidObj () : FL_shadowcaster(false), forceNotStatic(false) {}
-    /********* CONSTRUCTORS : END *********/
 
     /******** LIFETIME : BEGIN ********/
 public:
     virtual void ApplyDefaults();
     virtual void Initialize ();
-    virtual void Invalidate () {
-        UpdatePointers();
-        renderer.InvalidateGraphics(*xModelGr, modelInstanceGr);
-        renderer.InvalidateGraphics(*xModelPh,modelInstancePh);
-        smap.texId = 0;
-    }
     virtual void Finalize   ();
 
     virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL);
@@ -53,14 +65,14 @@ public:
     /******** PHYSICS : BEGIN ********/
 public:
     void UpdateMatrices()
-    {
-        MX_LocalToWorld_prev = MX_LocalToWorld_Get();
-        xMatrix::Invert(MX_LocalToWorld_Get(), MX_WorldToLocal);
-    }
+    { xMatrix::Invert(MX_LocalToWorld_Get(), MX_WorldToLocal); }
     void UpdateCustomBVH();
     void UpdateGeneratedBVH();
+
     virtual void FrameRender() {
-        UpdatePointers();
+        PhysicalBody::FrameRender();
+        if (ModelGr) ModelGr->instance.MX_LocalToWorld = MX_LocalToWorld_Get();
+        if (ModelPh) ModelPh->instance.MX_LocalToWorld = MX_LocalToWorld_Get();
     }
     virtual void FrameEnd   () {
         if (IsModified()) UpdateMatrices();
@@ -76,6 +88,7 @@ protected:
 
     /******** RENDERING : BEGIN ********/
 public:
+    /*
     void CreateShadowMap(xLight *light)
     {
         xMatrix blocker;
@@ -84,46 +97,16 @@ public:
         renderer.CreateShadowMapTexture( *xModelPh, modelInstancePh, smap.texId,
                                           Config::ShadowMapSize, blocker);
     }
-    xShadowMap GetShadowMap () { return smap; }
-    void RenderShadowMap (xShadowMap smap, const Math::Cameras::FieldOfView &FOV)
+    */
+    xShadowMap &GetShadowMap () { return smap; }
+    void InvalidateShadowData()
     {
-        UpdatePointers();
-        renderer.RenderShadowMap(*xModelGr, modelInstanceGr, smap, FOV);
-    }
-    void RenderShadowVolume(xLight &light, Math::Cameras::FieldOfView &FOV)
-    {
-        //UpdatePointers();
-        renderer.RenderShadowVolume(*xModelGr, modelInstanceGr, light, FOV);
-    }
-    void RenderDepth(Math::Cameras::FieldOfView &FOV, bool transparent)
-    {
-        //UpdatePointers();
-        renderer.RenderDepth(*xModelGr, modelInstanceGr, transparent, FOV);
-    }
-    void RenderAmbient(const Vec_xLight &lights, Math::Cameras::FieldOfView &FOV, bool transparent)
-    {
-        //UpdatePointers();
-        renderer.RenderAmbient(*xModelGr, modelInstanceGr, lights, transparent, FOV);
-    }
-    void RenderDiffuse(xLight &light, Math::Cameras::FieldOfView &FOV, bool transparent)
-    {
-        //UpdatePointers();
-        renderer.RenderDiffuse(*xModelGr, modelInstanceGr, light, transparent, FOV);
-    }
-    void Render(bool transparent, const Math::Cameras::FieldOfView &FOV)
-    {
-        //UpdatePointers();
-        renderer.RenderModel(*xModelGr, modelInstanceGr, transparent, FOV);
-    }
-    void InvalidateShadowRenderData()
-    {
-        InvalidateShadowRenderData(modelInstanceGr);
-        if (hModelGraphics != hModelPhysical)
-            InvalidateShadowRenderData(modelInstancePh);
+        if (ModelGr) InvalidateShadowData(ModelGr->instance);
+        if (ModelPh) InvalidateShadowData(ModelPh->instance);
     }
 private:
     void GetShadowProjectionMatrix (xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width);
-    void InvalidateShadowRenderData(xModelInstance &instance)
+    void InvalidateShadowData(xModelInstance &instance)
     {
         if (instance.L_elements)
         {
@@ -135,35 +118,23 @@ private:
     /********* RENDERING : END *********/
 
 public:
-    xModel *GetModelPh() { UpdatePointers(); return xModelPh; }
-    xModel *GetModelGr() { UpdatePointers(); return xModelGr; }
+    ModelInstance *ModelGr, *ModelPh;
 
-    void CopySpineToPhysical()
-    {
-        CopySpine(xModelGr->Spine, xModelPh->Spine);
-    }
-    void CopySpineToGraphics()
-    {
-        CopySpine(xModelPh->Spine, xModelGr->Spine);
-    }
-
-    virtual void VerticesChanged(bool free);
-    virtual void CalculateSkeleton();
-
-private:
-    HModel     hModelGraphics;
-    HModel     hModelPhysical;
-    xModel   * xModelGr;
-    xModel   * xModelPh;
+    ModelInstance &ModelGr_Get() { return *ModelGr; }
+    ModelInstance &ModelPh_Get() { return ModelPh ? *ModelPh : *ModelGr; }
 
     void UpdatePointers()
     {
-        xModelGr = g_ModelMgr.GetModel(hModelGraphics)->model;
-        xModelPh = g_ModelMgr.GetModel(hModelPhysical)->model;
-        modelInstancePh.MX_LocalToWorld = modelInstanceGr.MX_LocalToWorld = MX_LocalToWorld_Get();
+        if (ModelGr) ModelGr->Update();
+        if (ModelPh) ModelPh->Update();
     }
+    void SwapModels()
+    { if (ModelPh) { ModelInstance *swp = ModelPh; ModelPh = ModelGr; ModelGr = swp; } }
 
-    void CopySpine(const xSkeleton &src, xSkeleton &dst)
+    virtual void VerticesChanged(bool init, bool free);
+    virtual void CalculateSkeleton();
+
+    static void CopySpine(const xSkeleton &src, xSkeleton &dst)
     {
         if (src.L_bones != dst.L_bones)
         {
@@ -171,8 +142,6 @@ private:
             dst = src.Clone();
         }
     }
-
-    void FreeInstanceData();
 };
 
 #endif

@@ -3,6 +3,7 @@
 #include "../AppFramework/Input/InputMgr.h"
 #include "../Utils/Filesystem.h"
 #include "../Graphics/OGL/GLShader.h"
+#include "../Graphics/OGL/WorldRenderGL.h"
 
 SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName)
 {
@@ -89,21 +90,25 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
 
     Model.Initialize(gr_modelName, ph_modelName);
 
-    xModel *modelGr = Model.GetModelGr();
-    xModel *modelPh = Model.GetModelPh();
-    if (!modelPh->Spine.I_bones && modelGr->Spine.I_bones)
+    xModel *modelGr = Model.ModelGr_Get().xModel;
+    if (Model.ModelPh)
     {
-        modelPh->SkeletonAdd(); //   add skeleton to model
-        Model.CopySpineToPhysical();
+        xModel *modelPh = Model.ModelPh_Get().xModel;
+
+        if (modelPh->Spine.I_bones && !modelGr->Spine.I_bones)
+        {
+            modelGr->SkeletonAdd(); //   add skeleton to model
+            RigidObj::CopySpine(modelPh->Spine, modelGr->Spine);
+        }
+        else
+        if (!modelGr->Spine.I_bones && modelPh->Spine.I_bones)
+        {
+            modelPh->SkeletonAdd(); //   add skeleton to model
+            RigidObj::CopySpine(modelGr->Spine, modelPh->Spine);
+        }
+        else
+            RigidObj::CopySpine(modelPh->Spine, modelGr->Spine);
     }
-    else
-    if (!modelGr->Spine.I_bones && modelPh->Spine.I_bones)
-    {
-        modelGr->SkeletonAdd(); //   add skeleton to model
-        Model.CopySpineToGraphics();
-    }
-    else
-        Model.CopySpineToGraphics();
     modelGr->Spine.ResetQ();
     Model.CalculateSkeleton();
 
@@ -175,59 +180,72 @@ void SceneSkeleton::InitInputMgr()
     InputMgr &im = g_InputMgr;
     im.SetScene(sceneName);
 
-    im.SetInputCode(VK_RETURN, IC_Accept);
-    im.SetInputCode(VK_ESCAPE, IC_Reject);
-    im.SetInputCode(VK_BACK,   IC_Con_BackSpace);
-    im.SetInputCode(VK_F11,    IC_FullScreen);
+    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
+    im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
+    im.SetInputCodeIfKeyIsFree(VK_BACK,   IC_Con_BackSpace);
+    im.SetInputCodeIfKeyIsFree(VK_F11,    IC_FullScreen);
 #ifdef WIN32
-    im.SetInputCode(VK_OEM_3,  IC_Console);
+    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
 #else
-    im.SetInputCode('`',       IC_Console);
+    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
 #endif
 
-    im.SetInputCode('C',       IC_CameraChange);
-    im.SetInputCode(VK_TAB,    IC_CameraReset);
-    im.SetInputCode('1',       IC_CameraFront);
-    im.SetInputCode('2',       IC_CameraBack);
-    im.SetInputCode('3',       IC_CameraLeft);
-    im.SetInputCode('4',       IC_CameraRight);
-    im.SetInputCode('5',       IC_CameraTop);
-    im.SetInputCode('6',       IC_CameraBottom);
-    im.SetInputCode('7',       IC_CameraPerspective);
+    im.SetInputCodeIfKeyIsFree('C',       IC_CameraChange);
+    im.SetInputCodeIfKeyIsFree(VK_TAB,    IC_CameraReset);
+    im.SetInputCodeIfKeyIsFree('1',       IC_CameraFront);
+    im.SetInputCodeIfKeyIsFree('2',       IC_CameraBack);
+    im.SetInputCodeIfKeyIsFree('3',       IC_CameraLeft);
+    im.SetInputCodeIfKeyIsFree('4',       IC_CameraRight);
+    im.SetInputCodeIfKeyIsFree('5',       IC_CameraTop);
+    im.SetInputCodeIfKeyIsFree('6',       IC_CameraBottom);
+    im.SetInputCodeIfKeyIsFree('7',       IC_CameraPerspective);
 
-    im.SetInputCode('V',       IC_PolyModeChange);
-    im.SetInputCode('B',       IC_ShowBonesAlways);
-    im.SetInputCode('F',       IC_ViewPhysicalModel);
+    im.SetInputCodeIfKeyIsFree('V',       IC_PolyModeChange);
+    im.SetInputCodeIfKeyIsFree('B',       IC_ShowBonesAlways);
+    im.SetInputCodeIfKeyIsFree('F',       IC_ViewPhysicalModel);
 
-    im.SetInputCode(VK_LBUTTON, IC_LClick);
-    im.SetInputCode(VK_RBUTTON, IC_RClick);
-    im.SetInputCode(VK_SHIFT,   IC_RunModifier);
-    im.SetInputCode(VK_CONTROL, IC_BE_Modifier);
-    im.SetInputCode(VK_DELETE,  IC_BE_Delete);
-    im.SetInputCode('N', IC_BE_Select);
-    im.SetInputCode('M', IC_BE_Move);
-    im.SetInputCode('P', IC_BE_Play);
+    im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
+    im.SetInputCodeIfKeyIsFree(VK_RBUTTON, IC_RClick);
+    im.SetInputCodeIfKeyIsFree(VK_SHIFT,   IC_RunModifier);
+    im.SetInputCodeIfKeyIsFree(VK_CONTROL, IC_BE_Modifier);
+    im.SetInputCodeIfKeyIsFree(VK_DELETE,  IC_BE_Delete);
+    im.SetInputCodeIfKeyIsFree('N', IC_BE_Select);
+    im.SetInputCodeIfKeyIsFree('M', IC_BE_Move);
+    im.SetInputCodeIfKeyIsFree('P', IC_BE_Play);
 
-    im.SetInputCode(VK_PRIOR,  IC_MoveForward);
-    im.SetInputCode(VK_NEXT,   IC_MoveBack);
-    im.SetInputCode(VK_LEFT,   IC_MoveLeft);
-    im.SetInputCode(VK_RIGHT,  IC_MoveRight);
-    im.SetInputCode(VK_UP,     IC_MoveUp);
-    im.SetInputCode(VK_DOWN,   IC_MoveDown);
+    im.SetInputCodeIfKeyIsFree(VK_PRIOR,  IC_MoveForward);
+    im.SetInputCodeIfKeyIsFree(VK_NEXT,   IC_MoveBack);
+    im.SetInputCodeIfKeyIsFree(VK_LEFT,   IC_MoveLeft);
+    im.SetInputCodeIfKeyIsFree(VK_RIGHT,  IC_MoveRight);
+    im.SetInputCodeIfKeyIsFree(VK_UP,     IC_MoveUp);
+    im.SetInputCodeIfKeyIsFree(VK_DOWN,   IC_MoveDown);
 
-    im.SetInputCode('W', IC_TurnUp);
-    im.SetInputCode('S', IC_TurnDown);
-    im.SetInputCode('D', IC_TurnLeft);
-    im.SetInputCode('A', IC_TurnRight);
-    im.SetInputCode('Q', IC_RollLeft);
-    im.SetInputCode('E', IC_RollRight);
+    im.SetInputCodeIfKeyIsFree('W', IC_TurnUp);
+    im.SetInputCodeIfKeyIsFree('S', IC_TurnDown);
+    im.SetInputCodeIfKeyIsFree('D', IC_TurnLeft);
+    im.SetInputCodeIfKeyIsFree('A', IC_TurnRight);
+    im.SetInputCodeIfKeyIsFree('Q', IC_RollLeft);
+    im.SetInputCodeIfKeyIsFree('E', IC_RollRight);
 
-    im.SetInputCode('U', IC_OrbitUp);
-    im.SetInputCode('J', IC_OrbitDown);
-    im.SetInputCode('H', IC_OrbitLeft);
-    im.SetInputCode('K', IC_OrbitRight);
+    im.SetInputCodeIfKeyIsFree('U', IC_OrbitUp);
+    im.SetInputCodeIfKeyIsFree('J', IC_OrbitDown);
+    im.SetInputCodeIfKeyIsFree('H', IC_OrbitLeft);
+    im.SetInputCodeIfKeyIsFree('K', IC_OrbitRight);
 }
 
+bool SceneSkeleton::Invalidate()
+{
+    WorldRenderGL renderer;
+    renderer.Invalidate(Model);
+    return Scene::Invalidate();
+}
+
+SceneSkeleton::~SceneSkeleton()
+{
+    WorldRenderGL renderer;
+    renderer.Free(Model);
+    Model.Finalize();
+}
 void SceneSkeleton::Terminate()
 {
     Cameras.Current = NULL;
@@ -314,9 +332,14 @@ bool SceneSkeleton::FrameRender()
 
     glMultMatrixf(&Cameras.Current->MX_WorldToView_Get().x0);
 
-    xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
-    xModelInstance &modelInstance = (State.DisplayPhysical) ? Model.modelInstancePh : Model.modelInstanceGr;
-    Renderer       &render        = Model.renderer;
+    WorldRenderGL wRender;
+    RendererGL   &render = wRender.renderModel;
+
+    if (Model.FL_renderNeedsUpdate) wRender.Free(Model);
+    Model.FrameRender();
+
+    xModel         &model         = *Model.ModelGr->xModel;
+    xModelInstance &modelInstance = Model.ModelGr->instance;
 
     render.RenderModel(model, modelInstance, false, Cameras.Current->FOV);
     render.RenderModel(model, modelInstance, true, Cameras.Current->FOV);
@@ -638,9 +661,9 @@ xBVHierarchy *SceneSkeleton::GetBVH_byID (xBVHierarchy &bvhNode, xBYTE ID_select
 
 void SceneSkeleton::RenderSelect(const Math::Cameras::FieldOfView &FOV)
 {
-    xModel         &model         = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
-    xModelInstance &modelInstance = (State.DisplayPhysical) ? Model.modelInstancePh : Model.modelInstanceGr;
-    Renderer       &render        = Model.renderer;
+    xModel         &model         = *Model.ModelGr->xModel;
+    xModelInstance &modelInstance = Model.ModelGr->instance;
+    RendererGL      render;
 
     if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
         EditMode == emSelectBone || EditMode == emAnimateBones ||
@@ -661,7 +684,7 @@ void SceneSkeleton::RenderSelect(const Math::Cameras::FieldOfView &FOV)
 }
 unsigned int SceneSkeleton::CountSelectable()
 {
-    xModel &model = (State.DisplayPhysical) ? *Model.GetModelPh() : *Model.GetModelGr();
+    xModel &model = *Model.ModelGr->xModel;
 
     if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
         EditMode == emSelectBone || EditMode == emAnimateBones ||
@@ -698,7 +721,7 @@ xBone *SceneSkeleton::SelectBone(int X, int Y)
         if (sel->size()) {
             GLuint id = sel->back();
             delete sel;
-            return Model.GetModelGr()->Spine.L_bones + id;
+            return Model.ModelGr_Get().xModel->Spine.L_bones + id;
         }
         delete sel;
     }
@@ -714,10 +737,10 @@ xBVHierarchy *SceneSkeleton::SelectBVH(int X, int Y)
         if (sel->size()) {
             GLuint id = sel->back();
             delete sel;
-            if (Model.GetModelGr()->BVHierarchy)
+            if (Model.ModelGr_Get().xModel->BVHierarchy)
             {
                 xBYTE cid = 0;
-                return GetBVH_byID(*Model.GetModelGr()->BVHierarchy, id, cid);
+                return GetBVH_byID(*Model.ModelGr_Get().xModel->BVHierarchy, id, cid);
             }
             return NULL;
         }

@@ -129,7 +129,7 @@ void RendererGL::SetMaterial(xColor color, xMaterial *mat, bool toggleShader)
     if (toggleShader)
         GLShader::Start();
 }
-
+/*
 void SetLight(const xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular)
 {
     float light_off[4] = { 0.f, 0.f, 0.f, 0.f };
@@ -142,6 +142,7 @@ void SetLight(const xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specul
 
     GLShader::SetLightType(light.type, t_Ambient, t_Diffuse, t_Specular);
 }
+*/
 /********************************* faces **************************************/
 void RenderElementFacesVBO(
                             xWORD                 selElementId,

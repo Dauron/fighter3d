@@ -1,8 +1,8 @@
 #ifndef __incl_World_h
 #define __incl_World_h
 
-#include "SkeletizedObj.h"
 #include "../Physics/PhysicalWorld.h"
+#include "RigidObj.h"
 
 class World : public Physics::PhysicalWorld
 {
@@ -11,58 +11,52 @@ public:
     Vec_xLight lights;
 
     RigidObj *skyBox;
+    xColor    skyColor;
 
 public:
 
-    World( void ) : skyBox(NULL) {}
+    World( void ) : skyBox(NULL) { skyColor.init(0.f,0.f,0.f,0.f); }
 
     void Initialize ();
     void Finalize   ();
 
-    void Invalidate()
-    {
-        Vec_xLight::iterator light, begin = lights.begin(), end = lights.end();
-        for (light=begin; light!=end; ++light)
-            light->modified = true;
-
-        Vec_Object::iterator model, beginM = objects.begin(), endM = objects.end();
-        for (model=beginM; model!=endM; ++model)
-            (*model)->Invalidate();
-    }
-
     void InitialUpdate()
     {
+        if (skyBox) skyBox->FrameUpdate(0.f);
         Vec_Object::iterator model, beginM = objects.begin(), endM = objects.end();
         for (model=beginM; model!=endM; ++model)
-            (*model)->FrameUpdate(0.f);
+            (**model).FrameUpdate(0.f);
+
+        Vec_xLight::iterator LT_curr = lights.begin(),
+                             LT_last = lights.end();
+        for (; LT_curr != LT_last ; ++LT_curr)
+            LT_curr->update();
     }
 
     void FrameStart()
     {
+        if (skyBox) skyBox->FrameStart();
         Vec_Object::iterator model, beginM = objects.begin(), endM = objects.end();
         for (model=beginM; model!=endM; ++model)
-            (*model)->FrameStart();
+            (**model).FrameStart();
     }
     void FrameUpdate (float T_delta);
     void FrameRender()
     {
+        if (skyBox) skyBox->FrameRender();
         Vec_Object::iterator model, beginM = objects.begin(), endM = objects.end();
         for (model=beginM; model!=endM; ++model)
-            (*model)->FrameRender();
+            (**model).FrameRender();
     }
     void FrameEnd()
     {
+        if (skyBox) skyBox->FrameEnd();
         Vec_Object::iterator model, beginM = objects.begin(), endM = objects.end();
         for (model=beginM; model!=endM; ++model)
-            (*model)->FrameEnd();
+            (**model).FrameEnd();
     }
 
     void Load       (const char *mapFileName);
-
-    ~World( void )
-    {
-        Finalize();
-    }
 };
 
 #endif

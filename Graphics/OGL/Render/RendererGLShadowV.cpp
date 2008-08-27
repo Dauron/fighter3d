@@ -309,17 +309,17 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
             = (lightPos - instance.bSphere.P_center).lengthSqr() > instance.bSphere.S_radius*instance.bSphere.S_radius;
 
         if (!shadowData.L_vertices)
-            shadowData.L_vertices = (infiniteL) ? new xVector4[elem->I_vertices + 1] : new xVector4[elem->I_vertices << 1];
+            shadowData.L_vertices = (infiniteL) ? new xPoint4[elem->I_vertices + 1] : new xPoint4[elem->I_vertices << 1];
         if (instance.I_vertices)
-            memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xVector4));
+            memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xPoint4));
         else
         {
             size_t    stride = elem->GetVertexStride();
             xBYTE    *srcV   = (xBYTE *) elem->L_vertices,
                      *lastV  = (xBYTE *) elem->L_vertices + stride*elem->I_vertices;
-            xVector4 *itrV   = shadowData.L_vertices;
+            xPoint4  *itrV   = shadowData.L_vertices;
             for (; srcV != lastV; ++itrV, srcV += stride)
-                itrV->init(*(xVector3 *)srcV, 1.f);
+                itrV->init(*(xPoint3 *)srcV, 1.f);
         }
         ShadowVolume::ExtrudePoints(elem, infiniteL, lightPos, shadowData);
         ShadowVolume::GetBackFaces (elem, instance, infiniteL, shadowData, facingFlag);

@@ -71,21 +71,21 @@ void SceneConsole::InitInputMgr()
     InputMgr &im = g_InputMgr;
     im.SetScene(sceneName);
 
-    im.SetInputCode(VK_RETURN, IC_Accept);
-    im.SetInputCode(VK_ESCAPE, IC_Reject);
-    im.SetInputCode(VK_F11,    IC_FullScreen);
-    im.SetInputCode(VK_BACK,   IC_Con_BackSpace);
+    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
+    im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
+    im.SetInputCodeIfKeyIsFree(VK_F11,    IC_FullScreen);
+    im.SetInputCodeIfKeyIsFree(VK_BACK,   IC_Con_BackSpace);
 #ifdef WIN32
-    im.SetInputCode(VK_OEM_3,  IC_Console);
+    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
 #else
-    im.SetInputCode('`',       IC_Console);
+    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
 #endif
-    im.SetInputCode(VK_UP,    IC_Con_LineUp);
-    im.SetInputCode(VK_DOWN,  IC_Con_LineDown);
-    im.SetInputCode(VK_PRIOR, IC_Con_PageUp);
-    im.SetInputCode(VK_NEXT,  IC_Con_PageDown);
-    im.SetInputCode(VK_HOME,  IC_Con_FirstPage);
-    im.SetInputCode(VK_END,   IC_Con_LastPage);
+    im.SetInputCodeIfKeyIsFree(VK_UP,    IC_Con_LineUp);
+    im.SetInputCodeIfKeyIsFree(VK_DOWN,  IC_Con_LineDown);
+    im.SetInputCodeIfKeyIsFree(VK_PRIOR, IC_Con_PageUp);
+    im.SetInputCodeIfKeyIsFree(VK_NEXT,  IC_Con_PageDown);
+    im.SetInputCodeIfKeyIsFree(VK_HOME,  IC_Con_FirstPage);
+    im.SetInputCodeIfKeyIsFree(VK_END,   IC_Con_LastPage);
 }
 
 void SceneConsole::Terminate()

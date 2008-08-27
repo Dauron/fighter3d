@@ -102,10 +102,10 @@ public:
 
     virtual Math::Tracking::TrackedObject &GetSubObject(xBYTE ID_sub)
     {
-        xBone  &bone = GetModelGr()->Spine.L_bones[ID_sub];
+        xBone  &bone = ModelGr->xModel->Spine.L_bones[ID_sub];
         xMatrix MX_SubObjectToWorld;
-        if (modelInstanceGr.MX_bones)
-            MX_SubObjectToWorld = xMatrix::Transpose(modelInstanceGr.MX_bones[ID_sub]);
+        if (ModelGr->instance.MX_bones)
+            MX_SubObjectToWorld = xMatrix::Transpose(ModelGr->instance.MX_bones[ID_sub]);
         else
             MX_SubObjectToWorld.identity();
 

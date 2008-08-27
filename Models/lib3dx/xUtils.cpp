@@ -75,9 +75,9 @@ void _xModel_SkinElementInstance(const xElement *elem, xElementInstance *instanc
 
     _xElement_SkinElementInstance(elem, bones, boneMods, instanceP[elem->ID]);
 }
-void xModel_SkinElementInstance(const xModel *model, xModelInstance &instance)
+void xModel_SkinElementInstance(const xModel &model, xModelInstance &instance)
 {
-    for (xElement *celem = model->L_kids; celem; celem = celem->Next)
+    for (xElement *celem = model.L_kids; celem; celem = celem->Next)
         _xModel_SkinElementInstance(celem, instance.L_elements, instance.MX_bones, instance.FL_modified);
 }
 

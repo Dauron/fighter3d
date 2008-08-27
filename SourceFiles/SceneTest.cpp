@@ -271,50 +271,50 @@ void SceneTest::InitInputMgr()
     InputMgr &im = g_InputMgr;
     im.SetScene(sceneName);
 
-    im.SetInputCode(VK_RETURN, IC_Accept);
-    im.SetInputCode(VK_ESCAPE, IC_Reject);
+    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
+    im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
 #ifdef WIN32
-    im.SetInputCode(VK_OEM_3,  IC_Console);
+    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
 #else
-    im.SetInputCode('`',       IC_Console);
+    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
 #endif
-    im.SetInputCode(VK_LBUTTON, IC_LClick);
+    im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
 
-    im.SetInputCode(VK_UP, IC_TurnUp);
-    im.SetInputCode(VK_DOWN, IC_TurnDown);
-    im.SetInputCode(VK_LEFT, IC_TurnLeft);
-    im.SetInputCode(VK_RIGHT, IC_TurnRight);
-    im.SetInputCode('Q', IC_RollLeft);
-    im.SetInputCode('E', IC_RollRight);
+    im.SetInputCodeIfKeyIsFree(VK_UP, IC_TurnUp);
+    im.SetInputCodeIfKeyIsFree(VK_DOWN, IC_TurnDown);
+    im.SetInputCodeIfKeyIsFree(VK_LEFT, IC_TurnLeft);
+    im.SetInputCodeIfKeyIsFree(VK_RIGHT, IC_TurnRight);
+    im.SetInputCodeIfKeyIsFree('Q', IC_RollLeft);
+    im.SetInputCodeIfKeyIsFree('E', IC_RollRight);
 
-    im.SetInputCode('U', IC_OrbitUp);
-    im.SetInputCode('J', IC_OrbitDown);
-    im.SetInputCode('H', IC_OrbitLeft);
-    im.SetInputCode('K', IC_OrbitRight);
+    im.SetInputCodeIfKeyIsFree('U', IC_OrbitUp);
+    im.SetInputCodeIfKeyIsFree('J', IC_OrbitDown);
+    im.SetInputCodeIfKeyIsFree('H', IC_OrbitLeft);
+    im.SetInputCodeIfKeyIsFree('K', IC_OrbitRight);
 
-    im.SetInputCode('W', IC_MoveForward);
-    im.SetInputCode('S', IC_MoveBack);
-    im.SetInputCode('A', IC_MoveLeft);
-    im.SetInputCode('D', IC_MoveRight);
-    im.SetInputCode('R', IC_MoveUp);
-    im.SetInputCode('F', IC_MoveDown);
-    im.SetInputCode(VK_LSHIFT, IC_RunModifier);
+    im.SetInputCodeIfKeyIsFree('W', IC_MoveForward);
+    im.SetInputCodeIfKeyIsFree('S', IC_MoveBack);
+    im.SetInputCodeIfKeyIsFree('A', IC_MoveLeft);
+    im.SetInputCodeIfKeyIsFree('D', IC_MoveRight);
+    im.SetInputCodeIfKeyIsFree('R', IC_MoveUp);
+    im.SetInputCodeIfKeyIsFree('F', IC_MoveDown);
+    im.SetInputCodeIfKeyIsFree(VK_LSHIFT, IC_RunModifier);
 
-    im.SetInputCode(VK_SPACE,  IC_TS_Pause);
-    im.SetInputCode(VK_TAB,    IC_CameraReset);
-    im.SetInputCode(VK_RETURN, IC_TS_Stop);
-    im.SetInputCode('0', IC_TS_Test0);
-    im.SetInputCode('1', IC_TS_Test1);
-    im.SetInputCode('2', IC_TS_Test2);
-    im.SetInputCode('3', IC_TS_Test3);
-    im.SetInputCode('4', IC_TS_Test4);
-    im.SetInputCode('5', IC_TS_Test5);
-    im.SetInputCode('6', IC_TS_Test6);
-    im.SetInputCode('7', IC_TS_Test7);
-    im.SetInputCode('8', IC_TS_Test8);
-    im.SetInputCode('9', IC_TS_Test9);
+    im.SetInputCodeIfKeyIsFree(VK_SPACE,  IC_TS_Pause);
+    im.SetInputCodeIfKeyIsFree(VK_TAB,    IC_CameraReset);
+    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_TS_Stop);
+    im.SetInputCodeIfKeyIsFree('0', IC_TS_Test0);
+    im.SetInputCodeIfKeyIsFree('1', IC_TS_Test1);
+    im.SetInputCodeIfKeyIsFree('2', IC_TS_Test2);
+    im.SetInputCodeIfKeyIsFree('3', IC_TS_Test3);
+    im.SetInputCodeIfKeyIsFree('4', IC_TS_Test4);
+    im.SetInputCodeIfKeyIsFree('5', IC_TS_Test5);
+    im.SetInputCodeIfKeyIsFree('6', IC_TS_Test6);
+    im.SetInputCodeIfKeyIsFree('7', IC_TS_Test7);
+    im.SetInputCodeIfKeyIsFree('8', IC_TS_Test8);
+    im.SetInputCodeIfKeyIsFree('9', IC_TS_Test9);
 
-    im.SetInputCode(VK_F11, IC_FullScreen);
+    im.SetInputCodeIfKeyIsFree(VK_F11, IC_FullScreen);
 }
 
 void SceneTest::Terminate()

@@ -67,7 +67,7 @@ public:
         std::map<int, int>::iterator iter = _InputMap->find(keyCode);
         if (iter != _InputMap->end())
             return iter->second;
-        return keyCode;
+        return IC_Undefined;
     }
     int GetKeyCode(int inputCode)
     {
@@ -81,6 +81,11 @@ public:
     }
     void SetInputCode(int keyCode, int inputCode)
     {
+        if (_InputMap) (*_InputMap)[keyCode] = inputCode;
+    }
+    void SetInputCodeIfKeyIsFree(int keyCode, int inputCode)
+    {
+        if (GetInputCode(keyCode) != IC_Undefined)  return;
         if (_InputMap) (*_InputMap)[keyCode] = inputCode;
     }
     void ClearMap()

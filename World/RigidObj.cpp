@@ -8,6 +8,7 @@ void RigidObj :: ApplyDefaults()
 {
     PhysicalBody::ApplyDefaults();
 
+    FL_shadowcaster = false;
     FL_stationary   = true;
     FL_physical     = false;
     FL_customBVH    = true;
@@ -35,76 +36,59 @@ void RigidObj :: Initialize ()
 
 void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
 {
-    modelInstanceGr.Zero();
-    modelInstancePh.Zero();
-    modelInstanceGr.MX_LocalToWorld = MX_LocalToWorld_Get();
-    modelInstancePh.MX_LocalToWorld = MX_LocalToWorld_Get();
     UpdateMatrices();
 
-    hModelGraphics = g_ModelMgr.GetModel(gr_filename);
-    Model3dx *mdl  = g_ModelMgr.GetModel(hModelGraphics);
-    xModelGr = mdl->model;
+    HModel hModelGr = g_ModelMgr.GetModel(gr_filename);
+    ModelGr = new ModelInstance(hModelGr);
+    ModelPh = NULL;
     if (ph_filename)
     {
-        hModelPhysical = g_ModelMgr.GetModel(ph_filename);
-        xModelPh = g_ModelMgr.GetModel(hModelPhysical)->model;
+        HModel hModelPh = g_ModelMgr.GetModel(ph_filename);
+        if (hModelPh != hModelGr)
+            ModelPh = new ModelInstance(hModelPh);
+        else
+            g_ModelMgr.DeleteModel(hModelPh);
     }
-    else
-    {
-        hModelPhysical = hModelGraphics;
-        xModelPh = xModelGr;
-        mdl->IncReferences();
-    }
+    FL_renderNeedsUpdate      = false;
+    FL_renderNeedsUpdateBones = false;
 
     if (!IsDefaultsApplied()) ApplyDefaults();
 
     MeshData = NULL;
     if (FL_customBVH)
     {
-        if (xModelGr->BVHierarchy)
-            xModelGr->BVHierarchy->Clone(BVHierarchy);
+        if (ModelGr->xModel->BVHierarchy)
+            ModelGr->xModel->BVHierarchy->Clone(BVHierarchy);
         else
-        if (xModelPh->BVHierarchy)
-            xModelPh->BVHierarchy->Clone(BVHierarchy);
+        if (ModelPh && ModelPh->xModel->BVHierarchy)
+            ModelPh->xModel->BVHierarchy->Clone(BVHierarchy);
         else
             FL_customBVH = false;
     }
     if (!FL_customBVH)
     {
-        xModelPh->CreateBVH(BVHierarchy, MeshData);
+        ModelPh_Get().xModel->CreateBVH(BVHierarchy, MeshData);
         P_center = BVHierarchy.Figure->P_center;
     }
-    else
-        UpdateCustomBVH();
+
+    VerticesChanged(true, false);
 
     smap.texId = 0;
-    //renderer.UseVBO = forceNotStatic;
-
-    //this->FL_phantom    = phantom;
-    //this->FL_physical   = physicalNotLocked;
-    //this->FL_stationary = !physicalNotLocked;
 
     Initialize();
-
-    VerticesChanged(true);
 }
 
 void RigidObj :: Finalize ()
 {
-    if (smap.texId)
+    if (ModelGr) { delete ModelGr; ModelGr = NULL; }
+    if (ModelPh)
     {
-        GLuint tid = smap.texId;
-        glDeleteTextures(1, &tid);
-        smap.texId = 0;
+        ModelPh->instance.MX_bones = NULL;
+        ModelPh->instance.QT_bones = NULL;
+        ModelPh->instance.FL_modified = NULL;
+        delete ModelPh;
+        ModelPh = NULL;
     }
-    UpdatePointers();
-    Model3dx *mdlGr = g_ModelMgr.GetModel(hModelGraphics);
-    Model3dx *mdlPh = g_ModelMgr.GetModel(hModelPhysical);
-    renderer.FreeGraphics(*xModelGr, modelInstanceGr, mdlGr->m_References == 1);
-    renderer.FreeGraphics(*xModelPh, modelInstancePh, mdlPh->m_References == 1);
-    FreeInstanceData();
-    g_ModelMgr.DeleteModel(hModelGraphics);
-    g_ModelMgr.DeleteModel(hModelPhysical);
 
     PhysicalBody::Finalize();
 
@@ -123,10 +107,10 @@ void RigidObj :: UpdateCustomBVH()
     Math::Figures::xSphere &sphere   = *(Math::Figures::xSphere*) BVHierarchy.Figure;
     Math::Figures::xSphere &sphere_T = *(Math::Figures::xSphere*) BVHierarchy.GetTransformed(MX_LocalToWorld_Get());
 
-    if (modelInstanceGr.MX_bones)
+    if (ModelGr->instance.MX_bones)
     {
         for (int i = 0; i < BVHierarchy.I_items; ++i)
-            BVHierarchy.L_items[i].MX_RawToLocal_Set(xMatrix::Transpose( modelInstanceGr.MX_bones[BVHierarchy.L_items[i].ID_Bone] ));
+            BVHierarchy.L_items[i].MX_RawToLocal_Set(xMatrix::Transpose( ModelGr->instance.MX_bones[BVHierarchy.L_items[i].ID_Bone] ));
         Math::Figures::xBoxA boxA = BVHierarchy.childBounds(MX_LocalToWorld_Get());
         sphere.S_radius = sphere_T.S_radius = (boxA.P_max - boxA.P_min).length() * 0.5f;
         sphere_T.P_center = (boxA.P_max + boxA.P_min) * 0.5f;
@@ -152,78 +136,53 @@ void RigidObj :: UpdateGeneratedBVH()
 
     BVHierarchy.invalidateTransformation();
 
-    for (int i = 0; i < modelInstancePh.I_elements; ++i)
+    xModelInstance &minstance = ModelPh_Get().instance;
+
+    for (int i = minstance.I_elements-1; i >= 0 ; --i)
     {
-        MeshData[i].MX_Bones = modelInstancePh.MX_bones;
-        MeshData[i].I_Bones  = modelInstancePh.I_bones;
+        MeshData[i].MX_Bones = minstance.MX_bones;
+        MeshData[i].I_Bones  = minstance.I_bones;
+        MeshData[i].Transform(MX_LocalToWorld_Get());
     }
 
-    for (int i = 0; i < modelInstancePh.I_elements; ++i)
-        MeshData[i].Transform(MX_LocalToWorld_Get());
-
-    GetModelPh()->ReFillBVH(BVHierarchy, MeshData, MX_LocalToWorld_Get());
+    ModelPh_Get().xModel->ReFillBVH(BVHierarchy, MeshData, MX_LocalToWorld_Get());
 
     S_radius      = ((xSphere*)BVHierarchy.GetTransformed())->S_radius;
     P_center_Trfm = BVHierarchy.GetTransformed()->P_center;
     P_center      = MX_WorldToLocal.preTransformP(P_center_Trfm);
 }
 
-void RigidObj :: FreeInstanceData()
+void RigidObj :: VerticesChanged(bool init, bool free)
 {
-    modelInstanceGr.Clear();
-    if (hModelGraphics == hModelPhysical)
-        modelInstancePh.L_elements = NULL;
-    modelInstancePh.MX_bones = NULL;
-    modelInstancePh.QT_bones = NULL;
-    modelInstancePh.FL_modified = NULL;
-    modelInstancePh.Clear();
-}
-
-void RigidObj :: VerticesChanged(bool free)
-{
-    if (free) {
-        UpdatePointers();
-        renderer.FreeGraphics(*xModelGr, modelInstanceGr);
-        renderer.FreeGraphics(*xModelPh, modelInstancePh);
-        FreeInstanceData();
-
-        modelInstanceGr.I_elements = xModelGr->I_elements;
-        modelInstanceGr.L_elements = new xElementInstance[xModelGr->I_elements];
-        modelInstanceGr.ZeroElements();
-        //memset(modelInstanceGr.L_elements, 0, modelInstanceGr.I_elements * sizeof(xElementInstance));
-        if (hModelGraphics != hModelPhysical)
+    if (free)
+    {
+        FL_renderNeedsUpdate = true;
+        ModelGr->instance.FreeVertices();
+        if (ModelPh)
         {
-            modelInstancePh.I_elements = xModelPh->I_elements;
-            modelInstancePh.L_elements = new xElementInstance[xModelPh->I_elements];
-            modelInstancePh.ZeroElements();
-            //memset(modelInstancePh.L_elements, 0, modelInstancePh.I_elements * sizeof(xElementInstance));
-        }
-        else
-        {
-            modelInstancePh.I_elements = modelInstanceGr.I_elements;
-            modelInstancePh.L_elements = modelInstanceGr.L_elements;
+            ModelPh->instance.MX_bones = NULL;
+            ModelPh->instance.QT_bones = NULL;
+            ModelPh->instance.FL_modified = NULL;
+            ModelPh->instance.FreeVertices();
         }
     }
-    else InvalidateShadowRenderData();
+    else
+    if (!init)
+        InvalidateShadowData();
 
-    xBoneCalculateMatrices (xModelGr->Spine, &modelInstanceGr);
-    xBoneCalculateQuats    (xModelGr->Spine, &modelInstanceGr);
-    modelInstancePh.MX_bones    = modelInstanceGr.MX_bones;
-    modelInstancePh.QT_bones    = modelInstanceGr.QT_bones;
-    modelInstancePh.FL_modified = modelInstanceGr.FL_modified;
-    modelInstancePh.I_bones     = modelInstanceGr.I_bones;
+    xBoneCalculateMatrices (ModelGr->xModel->Spine, ModelGr->instance);
+    xBoneCalculateQuats    (ModelGr->xModel->Spine, ModelGr->instance);
+    if (ModelPh)
+    {
+        ModelPh->instance.MX_bones    = ModelGr->instance.MX_bones;
+        ModelPh->instance.QT_bones    = ModelGr->instance.QT_bones;
+        ModelPh->instance.FL_modified = ModelGr->instance.FL_modified;
+        ModelPh->instance.I_bones     = ModelGr->instance.I_bones;
+    }
 
     // bounds used for rendering
-    if (xModelGr->Spine.I_bones)
-        xModel_SkinElementInstance(xModelGr, modelInstanceGr);
-    /*modelInstancePh.P_center = modelInstanceGr.P_center = */xModel_GetBounds(*xModelGr, modelInstanceGr);
-    /*
-    if (hModelGraphics != hModelPhysical)
-    {
-        xModel_SkinElementInstance(xModelPh, modelInstancePh);
-        modelInstancePh.P_center = xModel_GetBounds(xModelPh, modelInstancePh);
-    }
-    */
+    if (ModelGr->xModel->Spine.I_bones) xModel_SkinElementInstance(*ModelGr->xModel, ModelGr->instance);
+    xModel_GetBounds(*ModelGr->xModel, ModelGr->instance);
 
     if (FL_customBVH)
         UpdateCustomBVH();
@@ -233,19 +192,19 @@ void RigidObj :: VerticesChanged(bool free)
 
 void RigidObj :: CalculateSkeleton()
 {
-    if (!xModelGr->Spine.I_bones) return;
-    if (xModelGr->Spine.I_bones != modelInstanceGr.I_bones)
+    if (!ModelGr->xModel->Spine.I_bones) return;
+    if (ModelGr->xModel->Spine.I_bones != ModelGr->instance.I_bones)
     {
-        modelInstanceGr.ClearSkeleton();
-        if (!modelInstanceGr.I_bones) // skeleton was added, so refresh VBO data
+        if (!ModelGr->instance.I_bones) // skeleton has been added, so refresh VBO data
         {
-            VerticesChanged(true);
+            VerticesChanged(false, true);
             return;
         }
+        else
+            ModelGr->instance.ClearSkeleton();
     }
-    VerticesChanged(false);
-    renderer.InvalidateBonePositions(modelInstanceGr);
-    renderer.InvalidateBonePositions(modelInstancePh);
+    VerticesChanged(false, false);
+    FL_renderNeedsUpdateBones = true;
 }
 
 
@@ -274,22 +233,43 @@ void RigidObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     MX_WorldToView.row3.init(0.f,0.f,0.f,1.f);
     MX_WorldToView.postTranslate(-light->position).transpose();
 
-    xMatrix MX_ModelToView = modelInstancePh.MX_LocalToWorld * MX_WorldToView;
+    xModelInstance &instance =  ModelPh_Get().instance;
+    xModel         &model    = *ModelPh_Get().xModel;
+    xMatrix MX_LocalToView = MX_LocalToWorld_Get() * MX_WorldToView;
 
     // Find the horizontal and vertical angular spreads to find out FOV and aspect ratio
     float RxMax = 0.f, RyMax = 0.f;
-    for (int ie = 0; ie < modelInstanceGr.I_elements; ++ie)
+    for (int ie = 0; ie < instance.I_elements; ++ie)
     {
-        xMatrix MX_ElementToView = xModelPh->L_kids->ById(ie)->MX_MeshToLocal * MX_WorldToView;
-        xVector4 *iter = modelInstancePh.L_elements[ie].L_vertices;
-        for (int iv = modelInstancePh.L_elements[ie].I_vertices; iv; --iv, ++iter)
-        {
-            xVector4 v = MX_ElementToView * *iter;
-            v.z = 1.f / v.z;
-            v.x *= v.z; v.y *= v.z;
+        xElement &elem = *model.L_kids->ById(ie);
+        xMatrix MX_MeshToView = elem.MX_MeshToLocal * MX_LocalToView;
 
-            if (fabs(v.x) > RxMax) RxMax = fabs(v.x);
-            if (fabs(v.y) > RyMax) RyMax = fabs(v.y);
+        if (instance.L_elements)
+        {
+            xPoint4 *iter = instance.L_elements[ie].L_vertices;
+            for (int iv = instance.L_elements[ie].I_vertices; iv; --iv, ++iter)
+            {
+                xPoint4 v = MX_MeshToView * *iter;
+                v.z = 1.f / v.z;
+                v.x *= v.z; v.y *= v.z;
+
+                if (fabs(v.x) > RxMax) RxMax = fabs(v.x);
+                if (fabs(v.y) > RyMax) RyMax = fabs(v.y);
+            }
+        }
+        else
+        {
+            size_t    stride = elem.GetVertexStride();
+            xBYTE    *srcV   = (xBYTE *) elem.L_vertices,
+                     *lastV  = (xBYTE *) elem.L_vertices + stride*elem.I_vertices;
+            for (; srcV != lastV; srcV += stride)
+            {
+                xPoint3 v = MX_MeshToView.postTransformP(*(xPoint3 *)srcV);
+                v.z = 1.f / v.z;
+                v.x *= v.z; v.y *= v.z;
+                if (fabs(v.x) > RxMax) RxMax = fabs(v.x);
+                if (fabs(v.y) > RyMax) RyMax = fabs(v.y);
+            }
         }
     }
     float ZNear=0.1f, ZFar=1000.f;
@@ -322,7 +302,7 @@ void RigidObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToL
     mtxBlockerToLight.row1.init(0.f, YProj, 0.f, 0.f);
     mtxBlockerToLight.row2.init(0.f, 0.f, (ZFar+ZNear)/(ZNear-ZFar), -1.f);
     mtxBlockerToLight.row3.init(0.f, 0.f, 2.f*ZFar*ZNear/(ZNear-ZFar), 0.f);
-    mtxBlockerToLight.preMultiply(MX_WorldToView).preMultiply(MX_LocalToWorld_Get());
+    mtxBlockerToLight.preMultiply(MX_LocalToView);
 
     // Projection matrix for computing UVs on the receiver object
     mtxReceiverUVMatrix.row0.init(XProj*0.5f, 0.f, 0.f, 0.f);

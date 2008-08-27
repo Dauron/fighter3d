@@ -1,13 +1,57 @@
-[camera free]
+[camera human]
 name	Perspective
-eye     0 8 2.2
-center  0 3 2.2
+eye     -5 5 2.2
+center  0 0 2.2
 up		0 0 1
 speed   1
 (viewport)
-left	0
+left	35
 top		0
-width	100
-height	100
+width	66
+height	70
 (fov)
 angle   45
+(track eye)
+mode	EyeSeeAll_Center
+shift	0 0 1.5
+(track center)
+mode	all_center
+
+[camera free]
+name	Eyes
+eye     0 5 2.2
+center  0 0 2.2
+up		0 0 1
+speed   100
+(viewport)
+left	0
+top		0
+width	35
+height	100
+(fov)
+angle   120
+(track eye)
+mode	subobject
+object  0
+subobj 10
+(track center)
+mode	subobject
+object  0
+subobj 10
+shift   0 -1 0
+
+[camera free]
+name	Top
+eye     0 5 2.2
+center  0 0 2.2
+up		0 0 1
+speed   100
+(viewport)
+left	35
+top		70
+width	66
+height	31
+(track eye)
+mode	EyeSeeAll_CenterTop
+(track center)
+mode	all_center

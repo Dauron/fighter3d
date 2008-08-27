@@ -72,10 +72,10 @@ struct xShadowData
 
     void FreeData()
     {
-        if (L_vertices) delete[] L_vertices;
         if (L_indices)  delete[] L_indices;
-        L_vertices = NULL;
+        if (L_vertices) delete[] L_vertices;
         L_indices  = NULL;
+        L_vertices = NULL;
     }
 
     void InvalidateData()
@@ -108,17 +108,18 @@ struct xElementInstance
     Math::Figures::xSphere *bSphere_T;
 
     xWORD     I_vertices;
-    xVector4 *L_vertices; // skinned
+    xPoint4  *L_vertices; // skinned
     xVector3 *L_normals;  // skinned
 
     void         Transform (const xMatrix &MX_MeshToWorld)
     {
         if (!bSphere_T) bSphere_T = (xSphere*)bSphere.Transform(MX_MeshToWorld);
-        if (!bBox_T)    bBox_T    = (xBoxO*)  bBox.Transform(MX_MeshToWorld);
+        if (!bBox_T)  { bBox_T    = (xBoxO*)  bBox.Transform(MX_MeshToWorld); bBox_T->FillCorners(); }
     }
 
     xShadowData &GetShadowData(xLight &light, xShadowData::xShadowDataLevel zLevel);
     void         Zero();
+    void         Free();
     void         Clear();
     void         InvalidateVertexData();
 };

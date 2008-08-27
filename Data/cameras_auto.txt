@@ -1,6 +1,6 @@
-[camera free]
+[camera human]
 name	Perspective
-eye     0 5 2.2
+eye     -5 5 2.2
 center  0 0 2.2
 up		0 0 1
 speed   1

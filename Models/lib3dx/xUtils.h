@@ -22,7 +22,7 @@ struct xCollisionHierarchyBoundsRoot : public xCollisionHierarchyBounds
     xDWORD                      I_vertices;
 };
 
-void         xModel_SkinElementInstance(const xModel *model, xModelInstance &instance);
+void         xModel_SkinElementInstance(const xModel &model, xModelInstance &instance);
 xVector3     xModel_GetBounds(const xModel &model, xModelInstance &instance);
 
 void xElement_FreeCollisionHierarchyBounds (xCollisionData *pcData, xCollisionHierarchyBounds *hierarchyBP);

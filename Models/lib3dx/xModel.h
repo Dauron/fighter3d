@@ -50,6 +50,7 @@ struct xModelInstance {
 
     void Zero();
     void ZeroElements();
+    void FreeVertices();
     void Clear();
     void ClearSkeleton();
 };

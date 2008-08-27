@@ -19,7 +19,7 @@ void log(int level, const char *fmt, ...)
     if (level > Config::LoggingLevel) return;
 
     if (!log_file)
-        log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
+        log_file = fopen(Filesystem::GetFullPath("Data/log.txt").c_str(), "a+");
     assert(log_file);
     if (!log_file)
         return;
@@ -41,7 +41,7 @@ void logEx(int level, bool withtime, const char *fmt, ...)
     if (level > Config::LoggingLevel) return;
 
     if (!log_file)
-        log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
+        log_file = fopen(Filesystem::GetFullPath("Data/log.txt").c_str(), "a+");
     assert(log_file);
     if (!log_file)
         return;
@@ -72,7 +72,7 @@ void logEx(int level, bool withtime, const char *fmt, ...)
 char *log_read()
 {
     if (!log_file)
-        log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
+        log_file = fopen(Filesystem::GetFullPath("Data/log.txt").c_str(), "a+");
     assert(log_file);
     if (!log_file)
         return NULL;
@@ -91,7 +91,7 @@ char *log_read()
 char *log_tail()
 {
     if (!log_file)
-        log_file = fopen(Filesystem::GetFullPath("log.txt").c_str(), "a+");
+        log_file = fopen(Filesystem::GetFullPath("Data/log.txt").c_str(), "a+");
     assert(log_file);
     if (!log_file)
         return NULL;
@@ -115,7 +115,7 @@ void log_clear()
         fclose(log_file);
         log_file = NULL;
     }
-    remove(Filesystem::GetFullPath("log.txt").c_str());
+    remove(Filesystem::GetFullPath("Data/log.txt").c_str());
 }
 
 bool _CheckForGLError(char *file, int line)

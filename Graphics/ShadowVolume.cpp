@@ -297,12 +297,13 @@ namespace ShadowVolume
             occlusionPyramid[3].init(light.position, FOV.Corners3D[2], FOV.Corners3D[3] );
             occlusionPyramid[4].init(light.position, FOV.Corners3D[3], FOV.Corners3D[0] );
             xPoint3 viewCenter = (FOV.Corners3D[0] + FOV.Corners3D[2]) * 0.5f;
-            lightDirection = viewCenter - light.position;
+            lightDirection = (viewCenter - light.position).normalize();
             numPlanes++;
-            occlusionPyramid[5].init(lightDirection, light.position);
+            occlusionPyramid[5].init(-lightDirection, light.position);
         }
 
-        if (xVector3::DotProduct(lightDirection, occlusionPyramid[0].vector3) < 0.f) // objectViewVector
+        xFLOAT cosa = xVector3::DotProduct(lightDirection, occlusionPyramid[0].vector3);
+        if (cosa < 0.f) // objectViewVector
             // light is behind us, flip all occlusion planes
             for (int i = 0; i < 5; ++i)
                 occlusionPyramid[i].invert();

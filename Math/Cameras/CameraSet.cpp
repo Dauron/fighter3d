@@ -49,6 +49,8 @@ void CameraSet :: Load(char *fileName)
                     camera = new CameraHuman();
                     camera->Init();
                     camera->FOV.Projection = FieldOfView::PROJECT_ORTHOGONAL;
+                    camera->FOV.FrontClip  = 0.1f;
+                    camera->FOV.BackClip   = 1000.f;
                     mode = LoadMode_CameraHuman;
                     continue;
                 }

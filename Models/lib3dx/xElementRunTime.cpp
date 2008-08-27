@@ -40,12 +40,11 @@ void xElementInstance :: Zero()
     L_normals  = NULL;
 }
 
-void xElementInstance :: Clear()
+void xElementInstance :: Free()
 {
     xShadowDataVector::iterator iter = gpuShadows.begin(), iterE = gpuShadows.end();
     for (; iter != iterE; ++iter)
         iter->FreeData();
-    gpuShadows.clear();
 
     if (L_vertices) { delete[] L_vertices; L_vertices = NULL; }
     if (L_normals)  { delete[] L_normals;  L_normals  = NULL; }
@@ -54,12 +53,15 @@ void xElementInstance :: Clear()
     if (bSphere_T) { delete bSphere_T; bSphere_T = NULL; }
 }
 
+void xElementInstance :: Clear()
+{
+    Free();
+    gpuShadows.clear();
+}
+
 void xElementInstance :: InvalidateVertexData()
 {
     xShadowDataVector::iterator iter = gpuShadows.begin(), iterE = gpuShadows.end();
     for (; iter != iterE; ++iter)
         iter->InvalidateData();
-
-    //if (L_vertices) { delete[] L_vertices; L_vertices = NULL; }
-    //if (L_normals)  { delete[] L_normals;  L_normals  = NULL; }
 }

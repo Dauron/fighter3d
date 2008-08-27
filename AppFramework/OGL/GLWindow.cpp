@@ -159,7 +159,7 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
 
     terminated = false;
 
-    if (queryForMultisample)
+    if (queryForMultisample && Config::MultisamplingLevel > 0)
     {
         PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB =
             (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
@@ -181,18 +181,18 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
             float fAttributes[] = {0,0};
             unsigned int NumFormats;
 
+
             // First We Check To See If We Can Get A Pixel Format For 4 Samples
-            if(!wglChoosePixelFormatARB(hDC, iAttributes, fAttributes, 1, &PixelFormat, &NumFormats) || NumFormats == 0)
+            iAttributes[19] = Config::MultisamplingLevel*2;
+            while (Config::MultisamplingLevel &&
+                   !wglChoosePixelFormatARB(hDC, iAttributes, fAttributes, 1, &PixelFormat, &NumFormats) || NumFormats == 0)
             {
-                iAttributes[19] = 2;
-                if(!wglChoosePixelFormatARB(hDC, iAttributes, fAttributes, 1, &PixelFormat, &NumFormats) || NumFormats == 0)
-                {
-                    iAttributes[17] = GL_FALSE;
-                    iAttributes[19] = 0;
-                    if(!wglChoosePixelFormatARB(hDC, iAttributes, fAttributes, 1, &PixelFormat, &NumFormats) || NumFormats == 0)
-                        multisampleAviable = false;
-                }
+                --Config::MultisamplingLevel;
+                iAttributes[19] = Config::MultisamplingLevel*2;
             }
+
+            if (Config::MultisamplingLevel == 0)
+                multisampleAviable = false;
         }
         queryForMultisample = false;
         if (multisampleAviable)

@@ -1,6 +1,10 @@
 [general]
-import	dojo/dojo.map
-skybox	night.3dx
+import   dojo/dojo.map
+# night sky
+skybox   night.3dx
+skycolor 0.04 0.04 0.04
+# day sky
+#skycolor 0.8 0.8 1
 
 #################### LIGHTS
 
@@ -34,7 +38,25 @@ color     0.05 0.05 0.05
 softness  0.8
 direction 20 -20 -100
 
+
+# day sky
+[skip light]
+type      INFINITE
+color     0.9 0.9 1.0
+softness  0.4
+direction -10 -10 -10
+att_const  0.9
+att_linear 0.005
+att_square 0.0005
+
 #################### OBJECTS
+
+[skip model]
+model	dojo/floor0_F.3dx
+position	0.0	0.0	-0.21
+physical	0
+phantom	0
+#
 
 [model]
 #fastm    crate_fst.3dx
@@ -103,10 +125,10 @@ shadows  1
 
 #################### PLAYERS
 
-[skip skeletized]
+[skeletized]
 fastm	    human2_fst.3dx
 model	    human2.3dx
-#rotation    0 0 180
+rotation    0 0 180
 position    -0.7 -3.3 -0.4
 customBVH	0
 physical    1
@@ -118,7 +140,7 @@ restitution 0.9
 control     comboard
 enemy       1
 
-[skip skeletized]
+[skeletized]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 #rotation    0 45 0

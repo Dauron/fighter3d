@@ -34,17 +34,15 @@ public:
 private:
     bool InitGL();
     bool InitWorld();
+    void FreeWorld();
     void InitCameras();
     void InitInputMgr();
-
-    void SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular);
 
     long  accum;
     float stepAccum;
 
-    Math::Cameras::CameraSet  Cameras;
-
     World world;
+    Math::Cameras::CameraSet    Cameras;
     Math::Tracking::TrackingSet Targets;
 
     virtual void RenderSelect(const Math::Cameras::FieldOfView &FOV);

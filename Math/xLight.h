@@ -44,10 +44,10 @@ struct xLight
     void create() { id = ++counter; modified = true; }
     void update();
 
-    bool isVisible(Math::Cameras::FieldOfView *FOV) const
+    bool isVisible(const Math::Cameras::FieldOfView &FOV) const
     {
         if (type == xLight_INFINITE || radius < 0) return true;
-        return FOV->CheckBox(boundingPoints);
+        return FOV.CheckBox(boundingPoints);
     }
 
     bool elementReceivesLight(const xVector3 &bsCenter, float bsRadius) const;

@@ -43,7 +43,7 @@ shadows 1
 # North
 #
 [model]
-model	wall_inner_short.3ds
+model	wall_inner_short.3dx
 position	-19.592	0.055	7.039
 rotation	0	0	-90
 physical	0

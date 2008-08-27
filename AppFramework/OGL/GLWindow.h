@@ -24,7 +24,7 @@ class GLWindow : public IWindow
     bool                  multisampleAviable;
 
   public:
-     GLWindow() : hWnd(NULL), hRC(NULL), hInstance(NULL), queryForMultisample(false), multisampleAviable(false) {}
+     GLWindow() : hWnd(NULL), hRC(NULL), hInstance(NULL), queryForMultisample(true), multisampleAviable(false) {}
     virtual ~GLWindow() {}
 
     virtual bool Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen);

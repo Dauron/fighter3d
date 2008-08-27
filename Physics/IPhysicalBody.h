@@ -78,7 +78,6 @@ namespace Physics {
             FL_initialized = true;
             FL_modified = true;
         }
-        virtual void     Invalidate()               {}
         virtual void     FrameStart()               {}
         virtual void     FrameUpdate(xFLOAT T_time) { if  (IsModified()) P_center_Trfm = MX_LocalToWorld_Get().preTransformP(P_center); }
         virtual void     FrameRender()              {}

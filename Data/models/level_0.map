@@ -1,5 +1,6 @@
 [general]
 skip skybox	night.3dx
+skycolor 0.8 0.8 1.0
 
 # LIGHTS
 
@@ -20,38 +21,29 @@ model	dojo/floor0_F.3dx
 position    0 0 -0.21
 phantom     0
 
-#
-# North
-#
 [model]
-model	dojo/wall_inner_short.3ds
-position	-19.592	0.055	7.039
-rotation	0	0	-90
-physical	0
-phantom	0
-shadows 1
-
-[skip model]
-fastm	crate_fst.3dx
+#fastm	crate_fst.3dx
 model	crate.3dx
 skip rotation    0 10 0
-position    -0.5 -2 0.2
+position    -0.5 10 0.2
 restitution 0.9
 physical    1
 locked      0
 phantom     0
 mass        20
+shadows     1
 
-[skip model]
-fastm	crate_fst.3dx
+[model]
+#fastm	crate_fst.3dx
 model	crate.3dx
 skip rotation    0 10 0
-position    -0.5 -2 1.3
+position    -0.5 5 1.3
 restitution 0.9
 physical    1
 locked      0
 phantom     0
 mass        20
+shadows     1
 
 #
 

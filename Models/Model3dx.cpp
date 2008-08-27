@@ -20,12 +20,11 @@ bool Model3dx :: Load ( const char *name )
             model = xImportFileFrom3ds(file3ds);
             lib3ds_file_free(file3ds);
         }
-        if (model) {
+        if (model && Config::Save3dsTo3dx) {
             // save
             char *fname = strdup (name);
             fname[size-1] = 'x';
             model->FileName = fname;
-            model->Save();
         }
     }
     //model->Save();
@@ -46,7 +45,7 @@ void Model3dx :: Unload( void )
                     mat->texture.htex = 0;
                 }
         model->FL_textures_loaded = false;
-        delete[] model;
+        model->Free();
         model = NULL;
     }
 

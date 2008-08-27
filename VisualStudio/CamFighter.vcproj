@@ -1355,6 +1355,14 @@
 					RelativePath="..\Graphics\OGL\Utils.h"
 					>
 				</File>
+				<File
+					RelativePath="..\Graphics\OGL\WorldRenderGL.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\WorldRenderGL.h"
+					>
+				</File>
 				<Filter
 					Name="Extensions"
 					>
@@ -1464,7 +1472,7 @@
 					</File>
 				</Filter>
 				<Filter
-					Name="Renderer"
+					Name="Render"
 					>
 					<File
 						RelativePath="..\Graphics\OGL\Render\RendererGL.cpp"

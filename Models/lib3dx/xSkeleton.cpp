@@ -236,18 +236,18 @@ void   _xBoneCalculateMatrices(const xBone *L_bones, xBYTE ID_bone, xModelInstan
     for (int i = bone.I_kids; i; --i, ++ID_iter)
         _xBoneCalculateMatrices(L_bones, *ID_iter, instance);
 }
-void    xBoneCalculateMatrices(const xSkeleton &spine, xModelInstance *instance)
+void    xBoneCalculateMatrices(const xSkeleton &spine, xModelInstance &instance)
 {
-    instance->I_bones = spine.I_bones;
+    instance.I_bones = spine.I_bones;
     if (!spine.I_bones)
     {
-        if (instance->MX_bones)    { delete[] instance->MX_bones;    instance->MX_bones = NULL; }
-        if (instance->FL_modified) { delete[] instance->FL_modified; instance->FL_modified = NULL; }
+        if (instance.MX_bones)    { delete[] instance.MX_bones;    instance.MX_bones = NULL; }
+        if (instance.FL_modified) { delete[] instance.FL_modified; instance.FL_modified = NULL; }
         return;
     }
-    if (!instance->MX_bones)    instance->MX_bones    = new xMatrix[spine.I_bones];
-    if (!instance->FL_modified) instance->FL_modified = new bool[spine.I_bones];
-    _xBoneCalculateMatrices(spine.L_bones, 0, *instance);
+    if (!instance.MX_bones)    instance.MX_bones    = new xMatrix[spine.I_bones];
+    if (!instance.FL_modified) instance.FL_modified = new bool[spine.I_bones];
+    _xBoneCalculateMatrices(spine.L_bones, 0, instance);
 }
 
 void   _xBoneCalculateQuats(const xBone *L_bones, xBYTE ID_bone, xModelInstance &instance)
@@ -264,16 +264,16 @@ void   _xBoneCalculateQuats(const xBone *L_bones, xBYTE ID_bone, xModelInstance 
     for (int i = bone.I_kids; i; --i, ++ID_iter)
         _xBoneCalculateQuats(L_bones, *ID_iter, instance);
 }
-void    xBoneCalculateQuats(const xSkeleton &spine, xModelInstance *instance)
+void    xBoneCalculateQuats(const xSkeleton &spine, xModelInstance &instance)
 {
-    instance->I_bones = spine.I_bones;
+    instance.I_bones = spine.I_bones;
     if (!spine.I_bones)
     {
-        if (instance->QT_bones) { delete[] instance->QT_bones;   instance->QT_bones = NULL; }
+        if (instance.QT_bones) { delete[] instance.QT_bones;   instance.QT_bones = NULL; }
         return;
     }
-    if (!instance->QT_bones) instance->QT_bones = new xQuaternion[spine.I_bones*2];
-    _xBoneCalculateQuats(spine.L_bones, 0, *instance);
+    if (!instance.QT_bones) instance.QT_bones = new xQuaternion[spine.I_bones*2];
+    _xBoneCalculateQuats(spine.L_bones, 0, instance);
 }
 
 bool   _xBoneCalculateQuatForVerlet(const xBone *L_bones, xBYTE ID_last, xBYTE ID_bone,

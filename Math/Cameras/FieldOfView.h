@@ -91,7 +91,7 @@ namespace Math { namespace Cameras {
         bool CheckBox(Math::Figures::xBoxO &box) const
         {
             if (Empty || box.S_top == 0.f) return true;
-            return CheckBox(box.FillCorners());
+            return CheckBox(box.P_corners);
         }
 
         bool CheckPoints(const xPoint4 *P_points, xWORD I_count) const;

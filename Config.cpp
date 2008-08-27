@@ -5,23 +5,31 @@
 
 #include "Config.h"
 
-int   Config::Initialize         = false;
-bool  Config::EnableLighting     = true;
-bool  Config::EnableFullLighting = true;
-bool  Config::EnableShadows      = true;
+int   Config::Initialize           = false;
+bool  Config::EnableLighting       = true;
+bool  Config::EnableFullLighting   = true;
+bool  Config::EnableShadows        = true;
+bool  Config::EnableShaders        = true;
+int   Config::MultisamplingLevel   = 0;
+int   Config::PolygonMode          = 0x1B02;
+int   Config::ShadowMapSize        = 512;
+int   Config::WindowX              = 800;
+int   Config::WindowY              = 600;
+int   Config::FullScreenX          = 800;
+int   Config::FullScreenY          = 600;
+
+
 bool  Config::DisplayShadowVolumes = false;
-bool  Config::EnableShaders      = true;
-int   Config::PolygonMode        = 0x1B02;
-int   Config::ShadowMapSize      = 512;
-int   Config::WindowX            = 800;
-int   Config::WindowY            = 600;
-int   Config::FullScreenX        = 800;
-int   Config::FullScreenY        = 600;
+bool  Config::DisplaySkeleton      = false;
+bool  Config::DisplayBVH           = false;
+bool  Config::DisplayCameras       = false;
+
 
 int   Config::TestCase           = 0;
 float Config::Speed              = 1.f;
 
 int   Config::LoggingLevel       = 3;
+bool  Config::Save3dsTo3dx       = false;
 
 bool  State::RenderingSelection  = false;
 bool  State::RenderingShadows    = false;
@@ -139,18 +147,18 @@ void Config :: Load(char *fileName)
                     Config::EnableShadows = level;
                     continue;
                 }
-                if (StartsWith(buffer, "shadowvolumes"))
-                {
-                    int level;
-                    sscanf(buffer+13, "%d", &level);
-                    Config::DisplayShadowVolumes = level;
-                    continue;
-                }
                 if (StartsWith(buffer, "shaders"))
                 {
                     int level;
                     sscanf(buffer+7, "%d", &level);
                     Config::EnableShaders = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "multisampling"))
+                {
+                    int level;
+                    sscanf(buffer+13, "%d", &level);
+                    Config::MultisamplingLevel = level;
                     continue;
                 }
                 if (StartsWith(buffer, "shadowmap"))
@@ -188,6 +196,34 @@ void Config :: Load(char *fileName)
                     Config::FullScreenY = level;
                     continue;
                 }
+                if (StartsWith(buffer, "show_shadowvolumes"))
+                {
+                    int level;
+                    sscanf(buffer+18, "%d", &level);
+                    Config::DisplayShadowVolumes = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "show_skeleton"))
+                {
+                    int level;
+                    sscanf(buffer+13, "%d", &level);
+                    Config::DisplaySkeleton = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "show_bvh"))
+                {
+                    int level;
+                    sscanf(buffer+8, "%d", &level);
+                    Config::DisplayBVH = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "show_cameras"))
+                {
+                    int level;
+                    sscanf(buffer+12, "%d", &level);
+                    Config::DisplayCameras = level;
+                    continue;
+                }
             }
             if (mode == LoadMode_Gameplay)
             {
@@ -210,6 +246,13 @@ void Config :: Load(char *fileName)
                     int level;
                     sscanf(buffer+7, "%d", &level);
                     Config::LoggingLevel = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "3dsTo3dx"))
+                {
+                    int level;
+                    sscanf(buffer+8, "%d", &level);
+                    Config::Save3dsTo3dx = level;
                     continue;
                 }
             }
