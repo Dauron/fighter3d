@@ -60,7 +60,8 @@ mass        70
 shadows     0
 restitution 0.9
 control     comboard
-#enemy       1
+style       anims/karate.txt
+enemy       1
 
 [skeletized]
 fastm	    human2_fst.3dx
@@ -78,9 +79,10 @@ restitution 0.9
 #animation	anims/human/garda.ska 0
 #animation	anims/human/stoi.ska 0
 #animation	anims/human/garda.ska	0	4700
-animation	anims/human/skulony.ska	0
-animation	anims/human/kiwa_sie.ska	0
+#animation	anims/human/skulony.ska	0
+#animation	anims/human/kiwa_sie.ska	0
 #animation	anims/human/idzie.ska 0
 control     camera
+style       anims/karate.txt
 enemy       0
 

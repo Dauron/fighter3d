@@ -8,6 +8,31 @@
 class ComBoard
 {
 public:
+    struct AutoHint
+    {
+        enum Type {
+          HINT_NONE  = -1,
+          HINT_STEP  =  0,
+          HINT_BACK  =  1,
+          HINT_LEFT  =  2,
+          HINT_RIGHT =  3,
+          HINT_COUNT =  4
+        };
+
+        xBYTE       ID_action;
+        std::string SN_action;
+        xFLOAT      S_max_change;
+        bool        FL_breakable;
+
+        void Init ()
+        {
+            ID_action = 0;
+            SN_action.clear();
+            FL_breakable = true;
+            S_max_change = 0.f;
+        }
+    };
+
     struct Combo
     {
         struct Keys {
@@ -60,6 +85,7 @@ public:
         xActionSet  Anims;
         xFLOAT      T_duration;
         bool        FL_pos_rotation;
+        bool        FL_mirror;
 
         std::vector<Combo> L_combos;
 
@@ -72,6 +98,7 @@ public:
             Anims.T_progress = 0;
             Anims.L_actions.clear();
             FL_pos_rotation = false;
+            FL_mirror = false;
         }
 
         void Free ()
@@ -80,33 +107,49 @@ public:
         }
     };
 
-    typedef std::vector<Action> Vec_Action;
+    struct Mirror {
+        xBYTE ID_bone1;
+        xBYTE ID_bone2;
+    };
 
-    Vec_Action L_actions;
+    typedef std::vector<Action>   Vec_Action;
+    typedef std::vector<AutoHint> Vec_Hint;
+    typedef std::vector<Mirror>   Vec_Mirror;
 
-    xBYTE   ID_action_cur;
-    xFLOAT  T_progress;
-    xMatrix MX_shift;
+    std::string    FileName;
 
-    void Init()
+    Vec_Hint       L_hint[AutoHint::HINT_COUNT];
+    AutoHint       StopAction;
+    AutoHint::Type AutoAction;
+
+    Vec_Action     L_actions;
+    xBYTE          ID_action_cur;
+    xFLOAT         T_progress;
+
+    bool           FL_mirror;
+    Vec_Mirror     L_mirror;
+
+    xMatrix        MX_shift;
+
+    void Init();
+
+    xMatrix GetActionRotation()
     {
-        if (L_actions.size())
-        {
-            Vec_Action::iterator A_curr = L_actions.begin(),
-                                 A_last = L_actions.end();
-            for (; A_curr != A_last; ++A_curr)
-                A_curr->Free();
-            L_actions.clear();
-        }
-        ID_action_cur = 0;
-        T_progress    = 0.f;
-        MX_shift.identity();
+        if (L_actions.size() == 0) return xMatrix::Identity();
+        return GetActionRotation(L_actions[ID_action_cur]);
     }
 
-    void Update(xFLOAT T_delta);
-    void Load(char *fileName);
+    bool         AutoMovement  (const xVector3 &NW_aim, const xVector3 &NW_dst, xFLOAT T_delta);
+    void         Update(xFLOAT T_delta, bool FL_keyboard_on);
+    xQuaternion *GetTransformations(xBYTE I_bones);
+
+    void Load(const char *fileName);
 
 private:
+    xMatrix GetActionRotation(Action &action);
+    void    PostActionTransformation(Action &action, bool FL_pos_shift);
+    bool    SetBestAction (AutoHint::Type ActionType, xFLOAT S_dest);
+
     void UpdateIDs();
 };
 

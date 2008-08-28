@@ -75,6 +75,65 @@ void           xAnimation::UpdatePosition()
     }
 }
 
+xQuaternion xAnimation::GetTransformation(xBYTE ID_bone)
+{
+    xQuaternion bone; bone.zeroQ();
+
+    if (!this->CurrentFrame)
+        return bone;
+
+    xKeyFrame   *fCurrent = this->CurrentFrame;
+    xQuaternion &bCurr = fCurrent->QT_bones[ID_bone];
+
+    xLONG time = this->T_progress - fCurrent->T_freeze;
+    if (time <= 0)                         // still freeze
+        return bCurr;
+
+    float complement = time / (float)fCurrent->T_duration; // get percentage of the frame transition
+    float progress = 1.f - complement;
+
+    if (fCurrent->Next)
+    {
+        xQuaternion &bNext = fCurrent->Next->QT_bones[ID_bone];
+
+        if (ID_bone == 0) // root
+        {
+            bone = bCurr * progress + bNext * complement;
+            bone.w = 1.f;
+            return bone;
+        }
+        if (bCurr.w != 1.f && bNext.w != 1.f)
+            return xQuaternion::SLerp(bCurr, bNext, complement);
+        if (bCurr.w != 1.f)
+        {
+            if (bCurr.w > 0.99f)
+                return xQuaternion::Create(bCurr.vector3 * progress, complement + bCurr.w * progress);
+            return xQuaternion::Interpolate(bCurr, progress);
+        }
+        if (bNext.w != 1.f)
+        {
+            if (bNext.w > 0.99f)
+                return xQuaternion::Create(bNext.vector3 * complement, progress + bNext.w * complement);
+            return xQuaternion::Interpolate(bNext, complement);
+        }
+        return bone;
+    }
+
+    if (ID_bone == 0) // root
+    {
+        bone = bCurr * progress;
+        bone.w = 1.f;
+        return bone;
+    }
+    if (bCurr.w != 1.f)
+    {
+        if (bCurr.w > 0.99f)
+            return xQuaternion::Create(bCurr.vector3 * progress, complement + bCurr.w * progress);
+        return xQuaternion::Interpolate(bCurr, progress);
+    }
+    return bone;
+}
+
 xQuaternion *     xAnimation::GetTransformations()
 {
     xQuaternion *bones = new xQuaternion[this->I_bones];

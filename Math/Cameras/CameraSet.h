@@ -35,7 +35,7 @@ namespace Math { namespace Cameras {
             L_cameras.clear();
         }
 
-        void Load(char *fileName);
+        void Load(const char *fileName);
     };
 
 } } // namespace Math::Cameras

@@ -1,0 +1,237 @@
+#[action]
+#name   reference name of action
+#anim   animation file [animation start time] [animation stop time]
+#time   duration of the whole animation (0 for infinity)
+#post   destination action after finishing current action (default first action)
+#rotate if 1, figure is rotated by last skew of the root bones (default 0)
+#mirror if 1, figure position is mirrored after this action (default 0)
+#(combo)
+#action destination action of combo
+#key    key that activates combo
+#first  the first time the combo may be activated (default 0)
+#last   the last time the combo may be activated  (default 0 = infinity)
+#time   initial time of the destination combo (+ time since first, if last != 0, default = 0)
+#prec   if 1, no "+time since first" is applied (default 0)
+#shift  if 1, figure is trasformed by last position of the animation (default 1)
+
+#[auto] - hints automatic movement, breakable says if action may be stoped
+#stop  action - resting action
+#step  action max_distance breakable(0/1) - step forward
+#back  action max_distance breakable(0/1) - step backward
+#left  action max_angle breakable(0/1) - rotation left
+#right action max_angle breakable(0/1) - rotation right
+
+#[mirror]
+#bones bone1 bone2 - these bones should be exchanged during position mirroring
+#bones bone3 bone4 - these bones should be exchanged during position mirroring
+
+[auto]
+stop    position
+step    step         0.58  1
+step    jump_low     2.16  0
+back    step_back    0.26  1
+left    rotate_left  47    1
+left    rotate_180   180   1
+right   rotate_right 39    1
+right   rotate_180   180   1
+
+[mirror]
+bones    2  5
+bones    3  6
+bones    4  7
+bones   11 15
+bones   12 16
+bones   13 17
+bones   14 18
+
+[action]
+name	position
+anim	karate/position.ska 0
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+(combo)
+action  step
+key     Forward
+(combo)
+action  step_back
+key     Backward
+(combo)
+action  rotate_left
+key     Left
+(combo)
+action  rotate_right
+key     Right
+
+[action]
+name    step
+anim    karate/step.ska 0
+time    400
+(combo)
+action  position
+key     Backward
+(combo)
+action  rotate_left
+key     Left
+(combo)
+action  rotate_right
+key     Right
+(combo)
+action  jump_low
+key     Forward
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+
+[action]
+name    step_back
+anim    karate/step-back.ska 0
+time    300
+(combo)
+action  position
+key     Forward
+(combo)
+action  rotate_left
+key     Left
+(combo)
+action  rotate_right
+key     Right
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+
+[action]
+name    rotate_left
+anim    karate/rotate-left.ska 0
+time    400
+rotate  1
+(combo)
+action  position
+key     Right
+(combo)
+action  step
+key     Forward
+(combo)
+action  step_back
+key     Backward
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+
+[action]
+name    rotate_right
+anim    karate/rotate-right.ska 0
+time    400
+rotate  1
+(combo)
+action  rotate_180
+key     Right
+prec    1
+(combo)
+action  position
+key     Left
+(combo)
+action  step
+key     Forward
+(combo)
+action  step_back
+key     Backward
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+
+[action]
+name    rotate_180
+anim    karate/rotate-180.ska 0
+time    400
+rotate  1
+mirror  1
+
+[action]
+name    jump_low
+anim    karate/jump-low.ska 0
+time    500
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+first   100
+last    500
+prec    1
+(combo)
+action  mai_geri_front_mid
+key     LeftKick
+first   100
+last    500
+prec    1
+
+[action]
+name	mai_geri_front_mid
+anim	karate/mai-geri-front-mid.ska 0
+time	600
+(combo)
+action	mai_geri_front_high
+key		LeftKick
+first   0
+last    200
+shift   0
+
+[action]
+name	mai_geri_front_high
+anim	karate/mai-geri-front-high.ska 0
+time	600
+(combo)
+action	mai_geri_front_mid
+key		LeftKick
+first   0
+last    200
+shift   0
+
+[action]
+name    jaku_zuki_mid
+anim    karate/jaku-zuki-mid.ska 0
+time    300
+(combo)
+action	jaku_zuki_high
+key		Forward
+first   0
+last    100
+(combo)
+action	jaku_zuki_low
+key		Backward
+first   0
+last    100
+
+[action]
+name    jaku_zuki_high
+anim    karate/jaku-zuki-high.ska 0
+time    300
+(combo)
+action	jaku_zuki_mid
+key		Backward
+first   0
+last    100
+
+[action]
+name    jaku_zuki_low
+anim    karate/jaku-zuki-low.ska 0
+time    300
+(combo)
+action	jaku_zuki_mid
+key		Forward
+first   0
+last    100

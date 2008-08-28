@@ -17,6 +17,7 @@ struct xActionSet {
     xDWORD        T_progress;
 
     void          Update(xDWORD T_delta);
+    xQuaternion   GetTransformation(xBYTE ID_bone);
     xQuaternion * GetTransformations();
 
     xActionSet () : T_progress(0) {}

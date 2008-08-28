@@ -38,7 +38,6 @@ color     0.05 0.05 0.05
 softness  0.8
 direction 20 -20 -100
 
-
 # day sky
 [skip light]
 type      INFINITE
@@ -138,6 +137,7 @@ mass        70
 shadows     0
 restitution 0.9
 control     comboard
+style       anims/karate.txt
 enemy       1
 
 [skeletized]
@@ -156,8 +156,9 @@ restitution 0.9
 #animation	anims/human/garda.ska 0
 #animation	anims/human/stoi.ska 0
 #animation	anims/human/garda.ska	0	4700
-animation	anims/human/skulony.ska	0
-animation	anims/human/kiwa_sie.ska	0
+#animation	anims/human/skulony.ska	0
+#animation	anims/human/kiwa_sie.ska	0
 #animation	anims/human/idzie.ska 0
 control     camera
+style       anims/karate.txt
 enemy       0

@@ -9,23 +9,6 @@
 class SkeletizedObj : public RigidObj
 {
 public:
-    xVector3     *NW_VerletVelocity;
-    xVector3     *NW_VerletVelocity_new;
-    xVector3     *NW_VerletVelocity_total;
-    xBYTE         I_bones;
-
-    xActionSet    actions;
-
-    VerletSystem  verletSystem;
-    xQuaternion  *QT_verlet;
-    xFLOAT        W_verlet;
-    xFLOAT        T_verlet;
-    xFLOAT        T_verlet_Max;
-    xFLOAT        postHit;
-
-    ComBoard      comBoard;
-    Math::Tracking::ObjectTracker Tracker;
-
     enum EControlType
     {
         Control_AI            = 0,
@@ -33,6 +16,23 @@ public:
         Control_NetworkInput  = 2,
         Control_ComBoardInput = 3
     } ControlType;
+
+    xActionSet    actions;
+    ComBoard      comBoard;
+    bool          FL_auto_movement;
+    Math::Tracking::ObjectTracker Tracker;
+
+    xVector3     *NW_VerletVelocity;
+    xVector3     *NW_VerletVelocity_new;
+    xVector3     *NW_VerletVelocity_total;
+    xBYTE         I_bones;
+
+    VerletSystem  verletSystem;
+    xQuaternion  *QT_verlet;
+    xFLOAT        W_verlet;
+    xFLOAT        T_verlet;
+    xFLOAT        T_verlet_Max;
+    xFLOAT        postHit;
 
 public:
 

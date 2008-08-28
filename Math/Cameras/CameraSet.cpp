@@ -8,7 +8,7 @@
 
 using namespace Math::Cameras;
 
-void CameraSet :: Load(char *fileName)
+void CameraSet :: Load(const char *fileName)
 {
     Init();
 

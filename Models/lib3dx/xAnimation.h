@@ -67,6 +67,7 @@ struct xAnimation
     void          DeleteKeyFrame();
 
     void          UpdatePosition();
+    xQuaternion   GetTransformation(xBYTE ID_bone);
     xQuaternion * GetTransformations();
     void          SaveToSkeleton(xSkeleton &spine);
 

@@ -10,8 +10,10 @@ void SkeletizedObj :: ApplyDefaults()
     RigidObj::ApplyDefaults();
     W_restitution      = 0.9f;
     W_restitution_self = 0.0f;
+    FL_auto_movement   = true;
 
     Tracker.Init();
+    comBoard.Init();
 }
 
 void SkeletizedObj :: Initialize ()
@@ -47,11 +49,7 @@ void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filena
     CreateVerletSystem();
     QT_verlet = new xQuaternion[verletSystem.I_particles];
 
-    if (ControlType == Control_ComBoardInput)
-    {
-        comBoard.Init();
-        comBoard.Load("Data/comboard.txt");
-    }
+    comBoard.Load(comBoard.FileName.c_str());
 }
 
 void SkeletizedObj :: Finalize ()
@@ -442,32 +440,25 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     //////////////////////////////////////////////////////// Track enemy movement
 
-    if (W_verlet == 0.f && T_time > 0.f)
+    if (FL_auto_movement && Tracker.Mode != ObjectTracker::TRACK_NOTHING &&
+        W_verlet == 0.f && T_time > 0.f)
     {
-        xPoint3 P_aim = MX_LocalToWorld_Get().preTransformP(xVector3::Create(0.f, -1.f, 1.f));
+        xVector3 NW_aim = MX_LocalToWorld_Get().preTransformV(
+                              comBoard.GetActionRotation().preTransformV(
+                                  xVector3::Create(0.f, -1.5f, 0.f)));
+        NW_aim.z = 0.f;
+        Tracker.P_destination = P_center_Trfm + NW_aim;
         Tracker.UpdateDestination();
-
-        xVector3 NW_aim = P_aim - P_center_Trfm; NW_aim.z = 0.f;
         xVector3 NW_dst = Tracker.P_destination - P_center_Trfm; NW_dst.z = 0.f;
 
-        xFLOAT      W_cos   = xVector3::DotProduct(NW_aim.normalize(), NW_dst.normalize());
-        xFLOAT      W_angle = acos(W_cos);
-        if ((W_angle > EPSILON3 || W_angle < -EPSILON3) &&
-            (W_angle < DEGTORAD(10) && W_angle > -DEGTORAD(10)) )
-        {
-            //W_angle *= T_time * 0.5f;
-            xFLOAT W_scale = T_time * PI * 0.25f;
-            W_angle = ((W_scale > W_angle) ? W_angle : W_scale) * 0.5f;
-            xFLOAT W_rot_dir = Sign(NW_aim.x*NW_dst.y - NW_aim.y*NW_dst.x);
-
-            xQuaternion QT_rot; QT_rot.init(0.f,0.f,W_rot_dir*sin(W_angle),cos(W_angle));
-            MX_LocalToWorld_Set().preMultiply(xMatrixFromQuaternion(QT_rot).transpose());
-        }
+        comBoard.AutoMovement(NW_aim, NW_dst, T_time);
+        MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
     }
+    bool FL_auto_movement_needed = comBoard.AutoAction != ComBoard::AutoHint::HINT_NONE;
 
     //////////////////////////////////////////////////////// Update Animation
 
-    xQuaternion *bones = NULL, *bones2 = NULL;
+    xQuaternion *bones = NULL;
 
     if (actions.L_actions.size())
     {
@@ -478,34 +469,24 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
         if (actions.T_progress > 10000) actions.T_progress = 0;
     }
-
-
+    else
+    if ((ControlType == Control_ComBoardInput || FL_auto_movement_needed) && comBoard.L_actions.size())
+    {
+        comBoard.Update(T_time * 1000, ControlType == Control_ComBoardInput);
+        MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
+        bones = comBoard.GetTransformations(I_bones);
+    }
+    else
     if (ControlType == Control_CaptureInput)
-        bones2 = g_CaptureInput.GetTransformations();
+        bones = g_CaptureInput.GetTransformations();
     else
     if (ControlType == Control_NetworkInput)
-        bones2 = g_NetworkInput.GetTransformations();
-    if (ControlType == Control_ComBoardInput && comBoard.L_actions.size())
+        bones = g_NetworkInput.GetTransformations();
+    else
     {
-        comBoard.Update(T_time * 1000);
-        MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
-        bones2 = comBoard.L_actions[comBoard.ID_action_cur].Anims.GetTransformations();
-    }
-
-    if (bones2)
-        if (bones)
-        {
-            xAnimation::Combine(bones2, bones, ModelGr->instance.I_bones , bones);
-            delete[] bones2;
-        }
-        else
-            bones = bones2;
-
-    if (false && !bones)
-    {
-        bones = new xQuaternion[ModelGr->instance.I_bones];
-        for (int i = 0; i < ModelGr->instance.I_bones; ++i)
-            bones[i].zeroQ();
+        //bones = new xQuaternion[ModelGr->instance.I_bones];
+        //for (int i = 0; i < ModelGr->instance.I_bones; ++i)
+        //    bones[i].zeroQ();
     }
 
     if (bones && W_verlet > 0.f)
@@ -522,8 +503,6 @@ void SkeletizedObj :: FrameUpdate(float T_time)
         ModelGr->xModel->Spine.QuatsFromArray(QT_verlet);
         CalculateSkeleton();
     }
-    //else
-    //    GetModelGr()->Spine.ResetQ();
 
     //////////////////////////////////////////////////////// Update Physical Representation
 

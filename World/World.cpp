@@ -306,6 +306,13 @@ void World:: Load(const char *mapFileName)
                     continue;
                 }
 
+                if (StartsWith(buffer, "style"))
+                {
+                    char file[255];
+                    sscanf(buffer+5, "%s", file);
+                    ((SkeletizedObj*)model)->comBoard.FileName = Filesystem::GetFullPath(dir + "/" + file);
+                    continue;
+                }
                 if (StartsWith(buffer, "control"))
                 {
                     char name[255];
@@ -318,7 +325,10 @@ void World:: Load(const char *mapFileName)
                         network_controled = (SkeletizedObj*)model;
                     else
                     if (StartsWith(name, "comboard"))
+                    {
                         ((SkeletizedObj*)model)->ControlType = SkeletizedObj::Control_ComBoardInput;
+                        ((SkeletizedObj*)model)->FL_auto_movement = false;
+                    }
                     continue;
                 }
                 if (StartsWith(buffer, "enemy"))
@@ -443,6 +453,7 @@ void World:: Load(const char *mapFileName)
             camera_controled->ControlType = (captureOK)
                 ? SkeletizedObj::Control_CaptureInput
                 : SkeletizedObj::Control_ComBoardInput;
+            camera_controled->FL_auto_movement = true;
         }
         if (network_controled)
         {
@@ -451,6 +462,7 @@ void World:: Load(const char *mapFileName)
             network_controled->ControlType = (networkOK)
                 ? SkeletizedObj::Control_NetworkInput
                 : SkeletizedObj::Control_AI;
+            camera_controled->FL_auto_movement = true;
         }
 
         in.close();
