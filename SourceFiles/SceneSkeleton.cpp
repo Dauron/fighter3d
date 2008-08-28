@@ -90,10 +90,10 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
 
     Model.Initialize(gr_modelName, ph_modelName);
 
-    xModel *modelGr = Model.ModelGr_Get().xModel;
+    xModel *modelGr = Model.ModelGr_Get().xModelP;
     if (Model.ModelPh)
     {
-        xModel *modelPh = Model.ModelPh_Get().xModel;
+        xModel *modelPh = Model.ModelPh_Get().xModelP;
 
         if (modelPh->Spine.I_bones && !modelGr->Spine.I_bones)
         {
@@ -338,7 +338,7 @@ bool SceneSkeleton::FrameRender()
     if (Model.FL_renderNeedsUpdate) wRender.Free(Model);
     Model.FrameRender();
 
-    xModel         &model         = *Model.ModelGr->xModel;
+    xModel         &model         = *Model.ModelGr->xModelP;
     xModelInstance &modelInstance = Model.ModelGr->instance;
 
     render.RenderModel(model, modelInstance, false, Cameras.Current->FOV);
@@ -466,7 +466,7 @@ bool SceneSkeleton::FrameRender()
         if (Constraint.type == IC_BE_CreateConstrAng)
             for (int i = 0; i < 4; ++i)
             {
-                char *label;
+                const char *label = "";
                 if (i == 0) label = "Max X";
                 if (i == 1) label = "Min X";
                 if (i == 2) label = "Max Y";
@@ -661,7 +661,7 @@ xBVHierarchy *SceneSkeleton::GetBVH_byID (xBVHierarchy &bvhNode, xBYTE ID_select
 
 void SceneSkeleton::RenderSelect(const Math::Cameras::FieldOfView &FOV)
 {
-    xModel         &model         = *Model.ModelGr->xModel;
+    xModel         &model         = *Model.ModelGr->xModelP;
     xModelInstance &modelInstance = Model.ModelGr->instance;
     RendererGL      render;
 
@@ -684,7 +684,7 @@ void SceneSkeleton::RenderSelect(const Math::Cameras::FieldOfView &FOV)
 }
 unsigned int SceneSkeleton::CountSelectable()
 {
-    xModel &model = *Model.ModelGr->xModel;
+    xModel &model = *Model.ModelGr->xModelP;
 
     if (EditMode == emCreateBone || EditMode == emCreateConstraint_Node ||
         EditMode == emSelectBone || EditMode == emAnimateBones ||
@@ -721,7 +721,7 @@ xBone *SceneSkeleton::SelectBone(int X, int Y)
         if (sel->size()) {
             GLuint id = sel->back();
             delete sel;
-            return Model.ModelGr_Get().xModel->Spine.L_bones + id;
+            return Model.ModelGr_Get().xModelP->Spine.L_bones + id;
         }
         delete sel;
     }
@@ -737,10 +737,10 @@ xBVHierarchy *SceneSkeleton::SelectBVH(int X, int Y)
         if (sel->size()) {
             GLuint id = sel->back();
             delete sel;
-            if (Model.ModelGr_Get().xModel->BVHierarchy)
+            if (Model.ModelGr_Get().xModelP->BVHierarchy)
             {
                 xBYTE cid = 0;
-                return GetBVH_byID(*Model.ModelGr_Get().xModel->BVHierarchy, id, cid);
+                return GetBVH_byID(*Model.ModelGr_Get().xModelP->BVHierarchy, id, cid);
             }
             return NULL;
         }

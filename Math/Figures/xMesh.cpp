@@ -62,8 +62,6 @@ void  xMeshData :: Transform(const xMatrix  &MX_LocalToWorld)
         for (int i = I_VertexCount; i; --i, ++L_VertexDest_Itr, L_VertexSource_Itr += I_VertexStride,
                                            L_Bone_Itr += I_BoneStride, ++L_FLTransf_Itr)
         {
-            const xPoint3 &point = *(xPoint3*)L_VertexSource_Itr;
-
             xFLOAT4 &boneIdxWgh = *(xFLOAT4*)L_Bone_Itr;
 
             int   idx[4];

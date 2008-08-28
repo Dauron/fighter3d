@@ -71,7 +71,6 @@ void      xElement :: Free()
 
 void xElement :: FillCollisionInfo (xModel &xmodel)
 {
-    xElement *relem;
     for (xElement *elem = this; elem; elem = elem->Next)
     {
         elem->collisionData.Fill(xmodel, *elem);

@@ -29,7 +29,7 @@ class SceneConsole : public Scene
     virtual bool FrameRender();
     virtual void FrameEnd() { if (PrevScene) PrevScene->FrameEnd(); }
 
-    Scene * SceneConsole :: SetCurrentScene(Scene* scene, bool destroyPrev = true);
+    Scene * SetCurrentScene(Scene* scene, bool destroyPrev = true);
 
     void AppendConsole(std::string text);
     virtual bool ShellCommand(std::string &cmd, std::string &output);

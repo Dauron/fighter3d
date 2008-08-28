@@ -153,7 +153,7 @@ xDWORD CollideCapsuleTriangle (const xCapsule &cp1, const xPoint3 &P_A,
     if (AxisSpans::AxisNotOverlap(cp1, P_A, P_B, P_C, spans[15]))
         return false;
 
-    int I_bestSpan;
+    int I_bestSpan = 0;
     xVector3 NW_fix = AxisSpans::GetMinimalFix(spans, 16, I_bestSpan);
     if (I_bestSpan == 1)
         NW_fix.invert();

@@ -86,12 +86,12 @@ namespace Math { namespace Figures {
         virtual void Transform(const xMatrix  &MX_LocalToWorld);
 
         xMeshData()
-            : L_VertexData_Transf(NULL)
+            : MX_Bones(NULL)
+            , MX_BonesToWorld(NULL)
+            , L_BoneData(NULL)
+            , L_VertexData_Transf(NULL)
             , FL_VertexIsTransf(NULL)
             , FL_MeshIsTransf(false)
-            , L_BoneData(NULL)
-            , MX_Bones(NULL)
-            , MX_BonesToWorld(NULL)
         { MX_LocalToWorld.identity(); }
     };
 

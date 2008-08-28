@@ -27,11 +27,11 @@ public:
 
 // Texture query.
     const std::string& GetName( HTexture htex ) const
-        {  return ( m_HandleMgr.Dereference( htex )->m_Name );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->m_Name );  }
     int GetWidth( HTexture htex ) const
-        {  return ( m_HandleMgr.Dereference( htex )->m_Width );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->m_Width );  }
     int GetHeight( HTexture htex ) const
-        {  return ( m_HandleMgr.Dereference( htex )->m_Height );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->m_Height );  }
     GLuint GetTexture( HTexture htex ) const
         {  return ( m_HandleMgr.Dereference( htex )->m_GLTexture );  }
     void BindTexture( HTexture htex ) const

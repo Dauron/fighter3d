@@ -63,7 +63,7 @@ void ComBoard :: PostActionTransformation(Action &action, bool FL_pos_shift)
 {
     if (FL_pos_shift)
     {
-        xVector3 &NW_shift = action.Anims.GetTransformation(0).vector3;
+        xVector3 NW_shift = action.Anims.GetTransformation(0).vector3;
         if (FL_mirror) NW_shift.x = -NW_shift.x;
         MX_shift.postTranslateT(NW_shift);
     }
@@ -95,7 +95,7 @@ void ComBoard :: Update(xFLOAT T_delta, bool FL_keyboard_on)
 
     if (!FL_keyboard_on) return;
 
-    for (int i = 0; i < action->L_combos.size(); ++i)
+    for (xBYTE i = 0; i < action->L_combos.size(); ++i)
     {
         Combo &combo = action->L_combos[i];
 
@@ -162,7 +162,7 @@ bool ComBoard :: SetBestAction(AutoHint::Type ActionType, xFLOAT S_dest)
     Vec_Hint &hints = L_hint[ActionType];
     Vec_Hint::iterator AH_curr = hints.begin(),
                        AH_last = hints.end();
-    for (int i = 0; AH_curr != AH_last; ++AH_curr, ++i)
+    for (xBYTE i = 0; AH_curr != AH_last; ++AH_curr, ++i)
     {
         xFLOAT S_curr = AH_curr->S_max_change - S_dest;
         if (S_curr <= 0.f || (AH_curr->FL_breakable && S_curr > 0.f))
@@ -249,13 +249,13 @@ void ComBoard :: UpdateIDs()
     std::map<std::string, xBYTE> map;
     std::map<std::string, xBYTE>::iterator found;
 
-    for (int i = 0; i < L_actions.size(); ++i)
+    for (xBYTE i = 0; i < L_actions.size(); ++i)
     {
         L_actions[i].ID = i;
         map[L_actions[i].SN_name] = i;
     }
 
-    for (int i = 0; i < L_actions.size(); ++i)
+    for (xBYTE i = 0; i < L_actions.size(); ++i)
     {
         if (L_actions[i].SN_next.length())
         {
@@ -268,7 +268,7 @@ void ComBoard :: UpdateIDs()
         else
             L_actions[i].ID_next = 0;
 
-        for (int j = 0; j < L_actions[i].L_combos.size(); ++j)
+        for (xBYTE j = 0; j < L_actions[i].L_combos.size(); ++j)
         {
             found = map.find(L_actions[i].L_combos[j].SN_action);
             if (found != map.end())
@@ -278,8 +278,8 @@ void ComBoard :: UpdateIDs()
         }
     }
 
-    for (int i = 0; i < AutoHint::HINT_COUNT; ++i)
-        for (int j = 0; j < L_hint[i].size(); ++j)
+    for (xBYTE i = 0; i < AutoHint::HINT_COUNT; ++i)
+        for (xBYTE j = 0; j < L_hint[i].size(); ++j)
         {
             found = map.find(L_hint[i][j].SN_action);
             if (found != map.end())

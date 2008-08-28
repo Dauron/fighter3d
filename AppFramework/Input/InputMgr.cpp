@@ -5,7 +5,7 @@
 #pragma warning(disable : 4996) // deprecated
 #endif
 
-void InputMgr::LoadMap(char *fileName)
+void InputMgr::LoadMap(const char *fileName)
 {
     std::ifstream in;
 
@@ -37,7 +37,7 @@ void InputMgr::LoadMap(char *fileName)
     }
 }
 
-void InputMgr::SaveMap(char *fileName)
+void InputMgr::SaveMap(const char *fileName)
 {
     std::ofstream out;
 
@@ -57,7 +57,7 @@ void InputMgr::SaveMap(char *fileName)
     }
 }
 
-void InputMgr::LoadKeyCodeMap(char *fileName)
+void InputMgr::LoadKeyCodeMap(const char *fileName)
 {
     std::ifstream in;
 

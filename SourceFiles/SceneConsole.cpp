@@ -15,7 +15,7 @@ Scene * SceneConsole :: SetCurrentScene(Scene* scene, bool destroyPrev)
     if (!scene)
         throw "The scene cannot be null";
 
-    bool res = scene->Initialize(0,0,g_Application.MainWindow().Width(), g_Application.MainWindow().Height());
+    scene->Initialize(0,0,g_Application.MainWindow().Width(), g_Application.MainWindow().Height());
 
     if (PrevScene && destroyPrev)
     {

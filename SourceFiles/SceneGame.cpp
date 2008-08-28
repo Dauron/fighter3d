@@ -370,10 +370,10 @@ bool SceneGame :: FrameUpdate(float deltaTime)
         if (obj)
             if (obj->ModelPh)
                 g_Application.SetCurrentScene(new SceneSkeleton(this,
-                    obj->ModelGr->xModel->FileName, obj->ModelPh->xModel->FileName), false);
+                    obj->ModelGr->xModelP->FileName, obj->ModelPh->xModelP->FileName), false);
             else
                 g_Application.SetCurrentScene(new SceneSkeleton(this,
-                    obj->ModelGr->xModel->FileName, NULL), false);
+                    obj->ModelGr->xModelP->FileName, NULL), false);
         return true;
     }
 
@@ -475,7 +475,7 @@ void SceneGame :: RenderSelect(const Math::Cameras::FieldOfView &FOV)
     for ( ; iter != end ; ++iter ) {
         glLoadName(++objectID);
         RigidObj &mdl = *(RigidObj*)*iter;
-        renderer.RenderVertices(*mdl.ModelGr->xModel, mdl.ModelGr->instance, Renderer::smModel);
+        renderer.RenderVertices(*mdl.ModelGr->xModelP, mdl.ModelGr->instance, Renderer::smModel);
     }
 }
 RigidObj *SceneGame :: Select(int X, int Y)

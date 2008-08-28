@@ -27,7 +27,7 @@ struct Config
     static int   LoggingLevel;
     static bool  Save3dsTo3dx;
 
-    static void Load(char *fileName);
+    static void Load(const char *fileName);
 };
 
 struct State

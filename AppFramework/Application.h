@@ -12,7 +12,7 @@ class Application : public Singleton<Application>
   public:
     // Initializes application with given scene... the scene should be a dynamical object
     // (it will be deleted by this class automaticaly on application termination)
-    bool Initialize(char* title, unsigned int width, unsigned int height,
+    bool Initialize(const char* title, unsigned int width, unsigned int height,
                     bool fullscreen, Scene* scene = NULL);
     bool Invalidate();
     void Terminate();
@@ -54,6 +54,7 @@ class Application : public Singleton<Application>
     Scene   *m_scene;
     char    *m_title;
     bool     m_OpenGL;
+    bool     m_Terminating;
 };
 
 #endif

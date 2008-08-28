@@ -40,11 +40,11 @@ namespace Physics {
             : Offender(offender), Figure(NULL), P_collision(p_collision), I_Bones(0)
         {}
         CollisionPoint(IPhysicalBody *offender, const xIFigure3d &figure, const xPoint3 &p_collision, xDWORD id_subobj = 0)
-            : Offender(offender), Figure(&figure), P_collision(p_collision), ID_subobj(id_subobj)
+            : Offender(offender), Figure(&figure), ID_subobj(id_subobj), P_collision(p_collision)
         { SetBoneWeights(); }
         CollisionPoint(IPhysicalBody *offender, const xIFigure3d &figure, const xPoint3 &p_collision,
                        const xVector3 &nw_fix, xDWORD id_subobj = 0)
-            : Offender(offender), Figure(&figure), P_collision(p_collision), NW_fix(nw_fix), ID_subobj(id_subobj)
+            : Offender(offender), Figure(&figure), ID_subobj(id_subobj), P_collision(p_collision), NW_fix(nw_fix)
         { SetBoneWeights(); }
 
         void SetBoneWeights();

@@ -42,7 +42,7 @@ void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView 
 
     if (!listID)
     {
-        elem->renderData.mode = xGPURender::LIST;
+        mode = xGPURender::LIST;
         glNewList(listID = glGenLists(1), GL_COMPILE);
 
         if (elem->FL_skeletized) {

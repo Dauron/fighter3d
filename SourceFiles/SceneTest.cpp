@@ -509,7 +509,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
         {
             selected = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
 
-            if (selected != -1)
+            if (selected != xDWORD_MAX)
             {
                 FL_mouse_down = true;
                 Physics::PhysicalFigure &p_figure = *(Physics::PhysicalFigure*)figures[Config::TestCase][selected];
@@ -661,12 +661,12 @@ bool SceneTest::FrameRender()
     ::Physics::Colliders::CollisionSet cset;
     RendererGL renderer;
 
-    for (int i = 0; i < 2; ++i)
+    for (xDWORD i = 0; i < 2; ++i)
     {
         if (i == selected)
             glColor3f(1.f, 1.f, 0.f);
         else
-        if (selected != -1 && FigureCollider().Collide( NULL, NULL,
+        if (selected != xDWORD_MAX && FigureCollider().Collide( NULL, NULL,
                                                         figures[Config::TestCase][0]->BVHierarchy.GetTransformed(),
                                                         figures[Config::TestCase][1]->BVHierarchy.GetTransformed(), cset) )
             glColor3f(1.f, 0.f, 0.f);
@@ -736,7 +736,7 @@ void SceneTest :: RenderSelect(const Math::Cameras::FieldOfView &FOV)
 xDWORD SceneTest :: Select(int X, int Y)
 {
     std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(*DefaultCamera, X, Y);
-    if (objectIDs == NULL) return -1;
+    if (objectIDs == NULL) return xDWORD_MAX;
     xDWORD res = objectIDs->back();
     delete objectIDs;
     return res;

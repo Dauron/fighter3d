@@ -86,7 +86,9 @@ class SceneSkeleton : public Scene, public ISelectionProvider
     } State;
 
     // Specific Edit Mode properties
-    union {
+#ifdef WIN32
+    union { // Save some memory... not much, but always :)
+#endif
         // Constraint
         struct _Constraint {
             xBYTE  boneA;
@@ -133,7 +135,9 @@ class SceneSkeleton : public Scene, public ISelectionProvider
             };
             xAnimation * Instance;
         } Animation;
+#ifdef WIN32
     };
+#endif
 
     // Selected objects
     struct _Selection {

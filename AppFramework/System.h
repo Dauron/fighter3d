@@ -24,4 +24,3 @@ inline float GetTick()
 }
 
 #endif
-

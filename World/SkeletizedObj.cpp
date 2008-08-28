@@ -26,7 +26,7 @@ void SkeletizedObj :: Initialize ()
     T_verlet_Max = 0.f; // 0.002f;
     postHit = 0.f;
 
-    I_bones =  ModelGr->xModel->Spine.I_bones;
+    I_bones =  ModelGr->xModelP->Spine.I_bones;
     if (NW_VerletVelocity)
     {
         delete[] NW_VerletVelocity;
@@ -75,7 +75,7 @@ void SkeletizedObj :: Finalize ()
 
 void SkeletizedObj :: CreateVerletSystem()
 {
-    xModel &model = *ModelGr->xModel;
+    xModel &model = *ModelGr->xModelP;
     verletSystem.Free();
     verletSystem.Init(model.Spine.I_bones);
     verletSystem.C_collisions = &collisionConstraints;
@@ -117,7 +117,7 @@ void SkeletizedObj :: DestroyVerletSystem()
 
 void SkeletizedObj :: UpdateVerletSystem()
 {
-    xModel      &model   = *ModelGr->xModel;
+    xModel      &model   = *ModelGr->xModelP;
     xBone       *bone    = model.Spine.L_bones;
     xPoint3     *P_old   = verletSystem.P_current;
     xQuaternion *QT_skew = verletSystem.QT_boneSkew;
@@ -370,7 +370,7 @@ void SkeletizedObj :: FrameUpdate(float T_time)
     MX_LocalToWorld_Set().postTranslateT(NW_translation);
     UpdateMatrices();
 
-    xSkeleton &spine = ModelGr->xModel->Spine;
+    xSkeleton &spine = ModelGr->xModelP->Spine;
     verletSystem.C_constraints = spine.C_constraints;
     verletSystem.I_constraints = spine.I_constraints;
     verletSystem.C_lengthConst = spine.C_boneLength;
@@ -440,7 +440,7 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     //////////////////////////////////////////////////////// Track enemy movement
 
-    if (FL_auto_movement && Tracker.Mode != ObjectTracker::TRACK_NOTHING &&
+    if (FL_auto_movement && Tracker.Mode != Math::Tracking::ObjectTracker::TRACK_NOTHING &&
         W_verlet == 0.f && T_time > 0.f)
     {
         xVector3 NW_aim = MX_LocalToWorld_Get().preTransformV(
@@ -494,13 +494,13 @@ void SkeletizedObj :: FrameUpdate(float T_time)
 
     if (bones)
     {
-        ModelGr->xModel->Spine.QuatsFromArray(bones);
+        ModelGr->xModelP->Spine.QuatsFromArray(bones);
         delete[] bones;
         CalculateSkeleton();
     }
     else
     {
-        ModelGr->xModel->Spine.QuatsFromArray(QT_verlet);
+        ModelGr->xModelP->Spine.QuatsFromArray(QT_verlet);
         CalculateSkeleton();
     }
 

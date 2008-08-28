@@ -28,8 +28,8 @@ public:
 
     void Invalidate(RigidObj &obj)
     {
-        if (obj.ModelGr) renderModel.InvalidateGraphics(*obj.ModelGr->xModel, obj.ModelGr->instance);
-        if (obj.ModelPh) renderModel.InvalidateGraphics(*obj.ModelPh->xModel, obj.ModelPh->instance);
+        if (obj.ModelGr) renderModel.InvalidateGraphics(*obj.ModelGr->xModelP, obj.ModelGr->instance);
+        if (obj.ModelPh) renderModel.InvalidateGraphics(*obj.ModelPh->xModelP, obj.ModelPh->instance);
         obj.GetShadowMap().texId = 0;
         obj.FL_renderNeedsUpdate = false;
         obj.FL_renderNeedsUpdateBones = false;
@@ -48,8 +48,8 @@ public:
 
     void Free(RigidObj &obj)
     {
-        if (obj.ModelGr) renderModel.FreeGraphics(*obj.ModelGr->xModel, obj.ModelGr->instance, obj.ModelGr->GetReferences() == 1);
-        if (obj.ModelPh) renderModel.FreeGraphics(*obj.ModelPh->xModel, obj.ModelPh->instance, obj.ModelPh->GetReferences() == 1);
+        if (obj.ModelGr) renderModel.FreeGraphics(*obj.ModelGr->xModelP, obj.ModelGr->instance, obj.ModelGr->GetReferences() == 1);
+        if (obj.ModelPh) renderModel.FreeGraphics(*obj.ModelPh->xModelP, obj.ModelPh->instance, obj.ModelPh->GetReferences() == 1);
 
         xShadowMap &smap = obj.GetShadowMap();
         if (smap.texId)

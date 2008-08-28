@@ -26,9 +26,9 @@ public:
 
 // Texture query.
     const std::string& GetName( HFont hfnt ) const
-        {  return ( m_HandleMgr.Dereference( hfnt )->m_Name );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->m_Name );  }
     int GetSize( HFont hfnt ) const
-        {  return ( m_HandleMgr.Dereference( hfnt )->m_Size );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->m_Size );  }
     const GLFont* GetFont( HFont hfnt ) const
         {  return ( m_HandleMgr.Dereference( hfnt ) );  }
 };

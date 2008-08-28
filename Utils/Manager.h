@@ -21,12 +21,12 @@ protected:
 
     void IncReferences( HANDLE hnd )
     {
-        HANDLE_DST *dat = m_HandleMgr.Dereference( hnd );
+        HANDLE_DST *dat = m_HandleMgr.DereferenceNoValidation( hnd );
         if (dat) dat->IncReferences();
     }
     void DecReferences( HANDLE hnd )
     {
-        HANDLE_DST *dat = m_HandleMgr.Dereference( hnd );
+        HANDLE_DST *dat = m_HandleMgr.DereferenceNoValidation( hnd );
         if (dat) dat->DecReferences();
     }
 
@@ -36,7 +36,7 @@ public:
 
     bool IsHandleValid( HANDLE hnd )
     {
-        return m_HandleMgr.Dereference( hnd );
+        return m_HandleMgr.DereferenceNoValidation( hnd );
     }
 
     ~Manager(void);
@@ -48,7 +48,7 @@ void Manager <HANDLE_DST, HANDLE>
 {
     typename NameIndex::iterator i, begin = m_NameIndex.begin(), end = m_NameIndex.end();
     for ( i = begin ; i != end ; ++i )
-        m_HandleMgr.Dereference( i->second )->Invalidate();
+        m_HandleMgr.DereferenceNoValidation( i->second )->Invalidate();
 }
 
 template <typename HANDLE_DST, class HANDLE>
@@ -58,7 +58,7 @@ Manager <HANDLE_DST, HANDLE>
     // release all our remaining items before we go
     typename NameIndex::iterator i, begin = m_NameIndex.begin(), end = m_NameIndex.end();
     for ( i = begin ; i != end ; ++i )
-        m_HandleMgr.Dereference( i->second )->Unload();
+        m_HandleMgr.DereferenceNoValidation( i->second )->Unload();
 }
 
 // Sample usage:

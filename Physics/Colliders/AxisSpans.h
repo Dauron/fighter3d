@@ -26,7 +26,7 @@ namespace Physics { namespace Colliders {
         static xVector3 GetMinimalFix(const AxisSpans *spans, int I_spans, int &I_bestSpan)
         {
             xFLOAT   W_dist_min = xFLOAT_HUGE_POSITIVE;
-            xFLOAT   S_dist_min;
+            xFLOAT   S_dist_min = 0.f;
 
             for (int i=I_spans; i; --i, ++spans)
             {

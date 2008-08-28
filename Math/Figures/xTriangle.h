@@ -239,6 +239,7 @@ namespace Math { namespace Figures {
 
         // Based on http://www.peroxide.dk/papers/collision/collision.pdf
         // Some reference on http://www.blackpawn.com/texts/pointinpoly/default.html
+        /*
         #define INSIDE(a) ((xDWORD&) a)
         static bool PointInsideTheTriangleEx(const xPoint3& P_test,
                                              const xPoint3& P_A,const xPoint3& P_B, const xPoint3& P_C)
@@ -261,6 +262,7 @@ namespace Math { namespace Figures {
 
             return (( INSIDE(z) & ~(INSIDE(x) | INSIDE(y)) ) & 0x80000000);
         }
+        */
     };
 
 } } // namespace Math.Figures

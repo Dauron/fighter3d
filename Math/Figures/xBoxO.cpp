@@ -5,7 +5,6 @@ using namespace Math::Figures;
 // 0 = inside, 1 = near face, 2 = near edge, 3 = near vertex
 PointPosition xBoxO :: PointRelation(const xVector3 &P_test, xVector3 &NW_closest) const
 {
-    xFLOAT   S_tmp, S_distance = 0.f;
     xVector3 P_center_rel = P_test - P_center;
     int      I_position   = POINT_Inside;
     NW_closest.zero();

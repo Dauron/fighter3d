@@ -32,10 +32,10 @@ namespace Math { namespace Cameras {
         xFLOAT  BackClip;
         xMatrix MX_Projection;
 
-        xDWORD  ViewportLeft;
-        xDWORD  ViewportTop;
-        xDWORD  ViewportWidth;
-        xDWORD  ViewportHeight;
+        xLONG   ViewportLeft;
+        xLONG   ViewportTop;
+        xLONG   ViewportWidth;
+        xLONG   ViewportHeight;
 
         xFLOAT  ViewportLeftPercent;
         xFLOAT  ViewportTopPercent;

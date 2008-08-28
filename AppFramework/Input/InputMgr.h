@@ -53,7 +53,7 @@ public:
         return state;
     }
 
-    void SetScene(char *scene)
+    void SetScene(const char *scene)
     {
         _InputMap = &_ScenesMap[scene];
         memset(_KeysState, 0, IC_LAST_CODE+1);
@@ -94,8 +94,8 @@ public:
         _ScenesMap.clear();
         _KeyCodeMap.clear();
     }
-    void LoadMap(char *fileName);
-    void SaveMap(char *fileName);
+    void LoadMap(const char *fileName);
+    void SaveMap(const char *fileName);
 
     std::string GetKeyName(int keyCode)
     {
@@ -108,15 +108,15 @@ public:
         res += '\0';
         return res;
     }
-    void LoadKeyCodeMap(char *fileName);
+    void LoadKeyCodeMap(const char *fileName);
 
     InputMgr()
     {
         enable = true;
         _InputMap = NULL;
         Buffer.reserve(BUFFER_LENGTH);
-        LoadMap("Data\\keyboard.txt");
-        LoadKeyCodeMap("Data\\keys.txt");
+        LoadMap("Data/keyboard.txt");
+        LoadKeyCodeMap("Data/keys.txt");
     }
 };
 

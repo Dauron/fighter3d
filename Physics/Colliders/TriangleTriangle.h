@@ -469,7 +469,7 @@ xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const x
     if (!p2a) p2a = -1;
     if (!p1b) p1b = -1;
     if (!p2b) p2b = -1;
-    xPoint3 p, p1, p2;
+    xPoint3 p1, p2;
     bool    FL_p1_used = false;
 
     if (p1a*p2b < 0.f || p2a*p1b < 0.f)
@@ -564,7 +564,7 @@ xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const x
     xVector3 N_fix_min;
     xFLOAT   S_minmax = xFLOAT_HUGE_POSITIVE;
     xFLOAT   S_a_min, S_b_min;
-    const xPoint3 *P_fix_min_a, *P_fix_min_b;
+    const xPoint3 *P_fix_min_a, *P_fix_min_b = NULL;
 
     xVector3 NW_12   = P_a2 - P_a1;
     xVector3 NW_23   = P_a3 - P_a2;
@@ -602,7 +602,7 @@ xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const x
     NW_31 = P_b1 - P_b3;
     N_tri = xVector3::CrossProduct(NW_12, NW_23).normalize();
 
-    PN_tri; PN_tri.init(N_tri, P_b1);
+    PN_tri.init(N_tri, P_b1);
     S_1 = PN_tri.distanceToPoint(*a1);
     S_1a = fabs(S_1);
     S_2 = PN_tri.distanceToPoint(*a2);

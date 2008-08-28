@@ -14,8 +14,8 @@ namespace Math { namespace Figures {
 
         xCylinder() { Type = xIFigure3d::Cylinder; }
 
-        xVector3 xCylinder :: GetInnerRayCollisionPoint(const xVector3 &P_ray, const xVector3 &N_ray,
-                                                        const xVector3 &N_side) const;
+        xVector3 GetInnerRayCollisionPoint(const xVector3 &P_ray, const xVector3 &N_ray,
+                                           const xVector3 &N_side) const;
 
         virtual void ComputeSpan(const xVector3 &N_axis, xFLOAT &P_min, xFLOAT &P_max, int axis = -1) const
         {

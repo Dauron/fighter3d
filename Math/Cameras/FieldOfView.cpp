@@ -159,7 +159,6 @@ void FieldOfView :: Update()
     }
     else
     {
-        xVector3 p0;
         Corners3D[0].init(-OrthoScale * Aspect, -OrthoScale, -FrontClip);
         Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, -FrontClip);
         Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, -FrontClip);

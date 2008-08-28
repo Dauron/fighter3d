@@ -20,7 +20,6 @@ xFLOAT FindGammaMax(xFLOAT a, xFLOAT b, xFLOAT tanAlpha, xFLOAT cosAlpha)
 
 bool VConstraintAngular :: Satisfy(VerletSystem *system)
 {
-    xVector3 &P_rootB = system->P_current[particleRootB];
     xVector3 &P_rootE = system->P_current[particleRootE];
     xVector3 &P_curr  = system->P_current[particle];
 
@@ -113,7 +112,6 @@ bool VConstraintAngular :: Test(const xVector3 &P_rootB, const xVector3 &P_rootE
 
     xFLOAT r_Inv = 1.f / sqrt(N_curr_Local.x*N_curr_Local.x+N_curr_Local.y*N_curr_Local.y);
     xFLOAT cosAlpha = fabs(N_curr_Local.x)*r_Inv,
-           sinAlpha = fabs(N_curr_Local.y)*r_Inv,
            tanAlpha;
     if (cosAlpha > EPSILON)
         tanAlpha = N_curr_Local.y / N_curr_Local.x;

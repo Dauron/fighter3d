@@ -33,7 +33,7 @@ HAnimation xAnimationMgr :: GetAnimation    ( const char* name )
 
 void xAnimationMgr :: DeleteAnimation( HAnimation hani )
 {
-    xAnimationH* ani = m_HandleMgr.Dereference( hani );
+    xAnimationH* ani = m_HandleMgr.DereferenceNoValidation( hani );
     if ( ani != 0 )
     {
         ani->DecReferences();

@@ -110,7 +110,7 @@ xDWORD CollideBoxOTriangle (const xBoxO &bo1, const xPoint3 &P_A,
         AxisSpans::AxisNotOverlap(bo1, P_A, P_B, P_C, spans[12].init(xVector3::CrossProduct(bo1.N_top,   NW_CA)) ) )
         return false;
 
-    int I_bestSpan;
+    int I_bestSpan = 0;
     xVector3 NW_fix = AxisSpans::GetMinimalFix(spans, 13, I_bestSpan);
     if (I_bestSpan == 3) NW_fix.invert();
 

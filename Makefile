@@ -15,9 +15,12 @@ SOURCE = ./Config.cpp \
          ./Graphics/OGL/Textures/*.cpp \
          ./Math/*.cpp \
          ./Math/Cameras/*.cpp \
+         ./Math/Figures/*.cpp \
+         ./Math/Tracking/*.cpp \
          ./Models/*.cpp \
          ./Models/lib3dx/*.cpp \
          ./Physics/*.cpp \
+         ./Physics/Colliders/*.cpp \
          ./Physics/Verlet/*.cpp \
          ./Source\ Files/*.cpp \
          ./Utils/*.cpp \

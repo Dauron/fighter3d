@@ -118,7 +118,7 @@ void log_clear()
     remove(Filesystem::GetFullPath("Data/log.txt").c_str());
 }
 
-bool _CheckForGLError(char *file, int line)
+bool _CheckForGLError(const char *file, int line)
 {
     int error;
     bool wasE = false;

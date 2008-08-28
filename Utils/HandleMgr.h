@@ -46,6 +46,7 @@ public:
     HANDLE_DST*       Dereference( HANDLE handle );
     const HANDLE_DST* Dereference( HANDLE handle ) const;
     HANDLE_DST*       DereferenceNoValidation( HANDLE handle );
+    const HANDLE_DST* DereferenceNoValidation( HANDLE handle ) const;
 
     bool        IsHandleValid( HANDLE handle ) const
     {
@@ -117,6 +118,16 @@ inline HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
     }
     HANDLE_DST* res = &*( m_UserData.begin() + index );
     return res;
+}
+
+
+template <typename HANDLE_DST, typename HANDLE>
+inline const HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
+:: DereferenceNoValidation( HANDLE handle ) const
+{
+    // this lazy cast is ok - non-const version does not modify anything
+    typedef HandleMgr <HANDLE_DST, HANDLE> ThisType;
+    return ( const_cast <ThisType*> ( this )->DereferenceNoValidation( handle ) );
 }
 
 template <typename HANDLE_DST, typename HANDLE>

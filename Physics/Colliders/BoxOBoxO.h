@@ -120,7 +120,7 @@ xDWORD CollideBoxOBoxO (const xBoxO &bo1, const xBoxO &bo2,
         AxisSpans::AxisNotOverlap(bo1, bo2, spans[14].init(xVector3::CrossProduct(bo1.N_axis[2], bo2.N_axis[2])) ))
         return false;
 
-    int I_bestSpan;
+    int I_bestSpan = 0;
     xVector3 NW_fix = AxisSpans::GetMinimalFix(spans, 15, I_bestSpan);
     if (I_bestSpan >= 3 && I_bestSpan <= 5)
         NW_fix.invert();

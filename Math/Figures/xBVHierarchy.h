@@ -178,7 +178,7 @@ namespace Math { namespace Figures {
 
         void remove (xBYTE I_idx)
         {
-            if (I_idx < 0 || I_idx >= I_items) return;
+            if (I_idx >= I_items) return;
 
             L_items[I_idx].free();
 

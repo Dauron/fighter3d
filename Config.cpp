@@ -91,7 +91,7 @@ void _Performance :: NextFrame(float ticks)
         FPSmin = FPS;
 }
 
-void Config :: Load(char *fileName)
+void Config :: Load(const char *fileName)
 {
     std::ifstream in;
     in.open(Filesystem::GetFullPath(fileName).c_str());

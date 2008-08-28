@@ -40,7 +40,7 @@ void  log_clear();
         ( _CheckForGLError(__FILE__, __LINE__) ? DEB_LOG(2, errorFmt , ## a ), true : false )
 #endif
 
-bool _CheckForGLError(char *file, int line);
+bool _CheckForGLError(const char *file, int line);
 
 #ifndef NDEBUG
 

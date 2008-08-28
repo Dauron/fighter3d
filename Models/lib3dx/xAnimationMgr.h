@@ -43,7 +43,7 @@ public:
 
 // Model query.
     const char* GetName( HAnimation hani ) const
-        {  return ( m_HandleMgr.Dereference( hani )->Name );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( hani )->Name );  }
     xAnimation* GetAnimation( HAnimation hani )
         {  return ( m_HandleMgr.Dereference( hani ) );  }
 };

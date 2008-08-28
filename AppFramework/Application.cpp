@@ -1,8 +1,10 @@
 #include "Application.h"
 
-bool Application::Initialize(char *title, unsigned int width, unsigned int height,
+bool Application::Initialize(const char *title, unsigned int width, unsigned int height,
                              bool fullscreen, Scene* scene)
 {
+    m_Terminating = false;
+
     if (scene != NULL)
     {
         if (m_scene) m_scene->Terminate();
@@ -34,6 +36,8 @@ bool Application::SetCurrentScene(Scene* scene, bool destroyPrev)
 
 bool Application::Invalidate()
 {
+    if (m_Terminating) return true;
+
     m_scene->Invalidate();
     if (OnApplicationInvalidate) OnApplicationInvalidate(this);
     return true;
@@ -41,6 +45,7 @@ bool Application::Invalidate()
 
 void Application::Terminate()
 {
+    m_Terminating = true;
     m_window->Terminate();
     m_scene->Terminate();
     delete m_scene;

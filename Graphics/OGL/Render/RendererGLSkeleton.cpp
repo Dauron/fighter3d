@@ -15,7 +15,6 @@ void RenderBoneCore ( const xBone &bone )
     xVector3 P_fifth  = bone.P_begin + NW_fifth;
     xVector3 P_third  = P_fifth + xVector3::Orthogonal(NW_fifth).normalize() * 0.1f;
 
-    float W_sin = sin(PI * 0.25f);
     xQuaternion QT_rot; QT_rot.init(NW_fifth.normalize() * sin(PI * 0.25f), cos(PI * 0.25f));
 
     W_bone[0] = bone.ID + 0.1f;

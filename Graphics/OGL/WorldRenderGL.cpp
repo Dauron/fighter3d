@@ -88,7 +88,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         glDisable(GL_STENCIL_TEST);
         glDisable(GL_BLEND);
         if (world.skyBox)
-            renderModel.RenderModel(*world.skyBox->ModelGr->xModel, world.skyBox->ModelGr->instance, false, camera.FOV);
+            renderModel.RenderModel(*world.skyBox->ModelGr->xModelP, world.skyBox->ModelGr->instance, false, camera.FOV);
 
         if (GLExtensions::Exists_ARB_Multisample && Config::MultisamplingLevel > 0)
             glEnable(GL_MULTISAMPLE_ARB);
@@ -106,7 +106,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderDepth( *obj.ModelGr->xModel, obj.ModelGr->instance, false, camera.FOV );
+            renderModel.RenderDepth( *obj.ModelGr->xModelP, obj.ModelGr->instance, false, camera.FOV );
         }
 
         ////// RENDER GLOBAL AMBIENT PASS
@@ -118,7 +118,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderAmbient( *obj.ModelGr->xModel, obj.ModelGr->instance, world.lights, false, camera.FOV );
+            renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, false, camera.FOV );
         }
 
         ////// RENDER SHADOWS AND LIGHTS
@@ -168,7 +168,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                     {
                         RigidObj &obj = *(RigidObj*)*MD_curr;
                         if (obj.FL_shadowcaster)
-                            renderModel.RenderShadowVolume( *obj.ModelGr->xModel, obj.ModelGr->instance, *LT_curr, camera.FOV );
+                            renderModel.RenderShadowVolume( *obj.ModelGr->xModelP, obj.ModelGr->instance, *LT_curr, camera.FOV );
                     }
 
                     // Clean-up
@@ -190,7 +190,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                 for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
                 {
                     RigidObj &obj = *(RigidObj*)*MD_curr;
-                    renderModel.RenderDiffuse( *obj.ModelGr->xModel, obj.ModelGr->instance, *LT_curr, false, camera.FOV );
+                    renderModel.RenderDiffuse( *obj.ModelGr->xModelP, obj.ModelGr->instance, *LT_curr, false, camera.FOV );
                 }
 
                 ////// DISPLAY SHADOW VOLUMES PASS
@@ -210,7 +210,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                     {
                         RigidObj &obj = *(RigidObj*)*MD_curr;
                         if (obj.FL_shadowcaster)
-                            renderModel.RenderShadowVolume( *obj.ModelGr->xModel, obj.ModelGr->instance, *LT_curr, camera.FOV );
+                            renderModel.RenderShadowVolume( *obj.ModelGr->xModelP, obj.ModelGr->instance, *LT_curr, camera.FOV );
                     }
                     glPopAttrib();
                 }
@@ -231,7 +231,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderAmbient( *obj.ModelGr->xModel, obj.ModelGr->instance, world.lights, true, camera.FOV );
+            renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, true, camera.FOV );
         }
         GLShader::Suspend();
 
@@ -244,7 +244,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
-                renderModel.RenderSkeleton( *obj.ModelGr->xModel, obj.ModelGr->instance, xWORD_MAX );
+                renderModel.RenderSkeleton( *obj.ModelGr->xModelP, obj.ModelGr->instance, xWORD_MAX );
             }
         }
 
@@ -331,7 +331,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderAmbient( *obj.ModelGr->xModel, obj.ModelGr->instance, light, false, camera.FOV );
+            renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, light, false, camera.FOV );
         }
 
         ////// RENDER SHADOWS AND LIGHTS
@@ -366,7 +366,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
                 if (obj.FL_shadowcaster)
-                    renderModel.RenderShadowVolume( *obj.ModelGr->xModel, obj.ModelGr->instance, light, camera.FOV );
+                    renderModel.RenderShadowVolume( *obj.ModelGr->xModelP, obj.ModelGr->instance, light, camera.FOV );
             }
             // Clean-up
             glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
@@ -387,7 +387,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderDiffuse( *obj.ModelGr->xModel, obj.ModelGr->instance, light, false, camera.FOV );
+            renderModel.RenderDiffuse( *obj.ModelGr->xModelP, obj.ModelGr->instance, light, false, camera.FOV );
         }
 
         ////// DISPLAY SHADOW VOLUMES PASS
@@ -407,7 +407,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
                 if (obj.FL_shadowcaster)
-                    renderModel.RenderShadowVolume( *obj.ModelGr->xModel, obj.ModelGr->instance, light, camera.FOV );
+                    renderModel.RenderShadowVolume( *obj.ModelGr->xModelP, obj.ModelGr->instance, light, camera.FOV );
             }
             glPopAttrib();
         }
@@ -426,7 +426,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderAmbient( *obj.ModelGr->xModel, obj.ModelGr->instance, light, true, camera.FOV );
+            renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, light, true, camera.FOV );
         }
         GLShader::Suspend();
 
@@ -439,7 +439,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
-                renderModel.RenderSkeleton( *obj.ModelGr->xModel, obj.ModelGr->instance, xWORD_MAX );
+                renderModel.RenderSkeleton( *obj.ModelGr->xModelP, obj.ModelGr->instance, xWORD_MAX );
             }
         }
 
@@ -524,7 +524,7 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderAmbient( *obj.ModelGr->xModel, obj.ModelGr->instance, world.lights, false, camera.FOV );
+            renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, false, camera.FOV );
         }
 
         ////// RENDER TRANSPARENT PASS
@@ -533,7 +533,7 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderAmbient( *obj.ModelGr->xModel, obj.ModelGr->instance, world.lights, true, camera.FOV );
+            renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, true, camera.FOV );
         }
         GLShader::Suspend();
 
@@ -546,7 +546,7 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
-                renderModel.RenderSkeleton( *obj.ModelGr->xModel, obj.ModelGr->instance, xWORD_MAX );
+                renderModel.RenderSkeleton( *obj.ModelGr->xModelP, obj.ModelGr->instance, xWORD_MAX );
             }
         }
 

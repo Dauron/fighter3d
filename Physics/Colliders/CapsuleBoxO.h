@@ -120,7 +120,6 @@ void HitPointsCapsuleBoxO(const xBoxO    &bo2,
         return;
     }
 
-    int I_touch = 0;
     xPoint3 P_min, P_max;
 
     if (SegmentBoxOMinMax(P_closest[0], P_closest[1], bo2, P_min, P_max))
@@ -177,7 +176,7 @@ xDWORD CollideCapsuleBoxO(const xCapsule &cp1, const xBoxO &bo2,
     if (!spans[7].wrong && AxisSpans::AxisNotOverlap(cp1, bo2, spans[7]))
         return false;
 
-    int I_bestSpan;
+    int I_bestSpan = 0;
     xVector3 NW_fix = AxisSpans::GetMinimalFix(spans, 8, I_bestSpan);
     if (I_bestSpan >= 0 && I_bestSpan <= 2)
         NW_fix.invert();

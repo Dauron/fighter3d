@@ -39,9 +39,9 @@ public:
     SkeletizedObj ()
         : RigidObj()
         , ControlType(Control_AI)
-        , I_bones(0)
         , NW_VerletVelocity(NULL)
         , NW_VerletVelocity_new(NULL)
+        , I_bones(0)
     {}
 
     virtual void Stop()
@@ -102,7 +102,7 @@ public:
 
     virtual Math::Tracking::TrackedObject &GetSubObject(xBYTE ID_sub)
     {
-        xBone  &bone = ModelGr->xModel->Spine.L_bones[ID_sub];
+        xBone  &bone = ModelGr->xModelP->Spine.L_bones[ID_sub];
         xMatrix MX_SubObjectToWorld;
         if (ModelGr->instance.MX_bones)
             MX_SubObjectToWorld = xMatrix::Transpose(ModelGr->instance.MX_bones[ID_sub]);
