@@ -6,6 +6,12 @@
 #include "../SourceFiles/ComBoard.h"
 #include "../Math/Tracking/ObjectTracker.h"
 
+struct FightingStyle
+{
+    std::string Name;
+    std::string FileName;
+};
+
 class SkeletizedObj : public RigidObj
 {
 public:
@@ -17,9 +23,10 @@ public:
         Control_ComBoardInput = 3
     } ControlType;
 
-    xActionSet    actions;
-    ComBoard      comBoard;
-    bool          FL_auto_movement;
+    xActionSet                    actions;
+    ComBoard                      comBoard;
+    std::vector<FightingStyle>    styles;
+    bool                          FL_auto_movement;
     Math::Tracking::ObjectTracker Tracker;
 
     xVector3     *NW_VerletVelocity;
@@ -56,6 +63,8 @@ public:
                 NW_VerletVelocity_total[i].zero();
             }
     }
+
+    virtual void LoadLine(char *buffer, std::string &dir);
 
     virtual void ApplyDefaults();
     virtual void Initialize ();
@@ -121,6 +130,10 @@ protected:
 
 private:
     Math::Tracking::TrackedObject LastTO;
+
+public:
+    static SkeletizedObj *camera_controled;
+    static SkeletizedObj *network_controled;
 };
 
 #endif

@@ -1,0 +1,15 @@
+[map]
+name Dojo
+file models/level_3.map
+
+[map]
+name Fast test
+file models/level_0.map
+
+[map]
+name Bounce test
+file models/level_1.map
+
+[map]
+name Motion capture test
+file models/level_2.map

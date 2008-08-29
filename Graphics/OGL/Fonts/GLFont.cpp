@@ -10,10 +10,9 @@
 
 const float GLFont::INTERLINE = 0.2f;
 
-bool GLFont::Load(const std::string& name, char size)
+bool GLFont::Load(const std::string& name, int size)
 {
     assert (m_GLFontBase == -1);
-    assert (m_GLFontBase3d == -1);
 
     m_Name = name;
     m_Size = size;
@@ -31,18 +30,11 @@ void GLFont::Unload()
         glDeleteLists(m_GLFontBase, NUM_CHARS);   // Delete All Characters
         m_GLFontBase = -1;
     }
-    if (m_GLFontBase3d != -1)
-    {
-        m_Name.erase();
-        glDeleteLists(m_GLFontBase3d, NUM_CHARS); // Delete All Characters
-        m_GLFontBase3d = -1;
-    }
 }
 
 void GLFont::Init()
 {
     assert(m_GLFontBase == -1);
-    assert(m_GLFontBase3d == -1);
 
     HDC hDC = g_Application.MainWindow().HDC();
     if (!hDC) return;
@@ -50,8 +42,6 @@ void GLFont::Init()
     m_GLFontBase = glGenLists(NUM_CHARS);           // Storage For 96 Characters
 
 #ifdef WIN32
-    m_GLFontBase3d = glGenLists(NUM_CHARS);         // Storage For 96 Characters
-
     HFONT    font;                                  // Windows Font ID
     HFONT    oldfont;                               // Used For Good House Keeping
 
@@ -73,9 +63,16 @@ void GLFont::Init()
     oldfont = (HFONT)SelectObject(hDC, font);       // Selects The Font We Want
 
     // BUG: call it 2 times, cause sometimes 1 time is not enought
-    wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, m_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
+    //wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, m_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
     wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, m_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
 
+    ABCFLOAT metrics[NUM_CHARS]; // Storage For Information About Our Font
+    GetCharABCWidthsFloat(hDC, FIRST_CHAR, FIRST_CHAR+NUM_CHARS-1, metrics);
+    for (int i = FIRST_CHAR; i != NUM_CHARS; ++i)
+        LWidth[i] = metrics[i].abcfA + metrics[i].abcfB + metrics[i].abcfC;
+
+/*
+    GLYPHMETRICSFLOAT gmf[NUM_CHARS]; // Storage For Information About Our Font
     wglUseFontOutlines(hDC,                         // Select The Current DC
             FIRST_CHAR,                             // Starting Character
             NUM_CHARS,                              // Number Of Display Lists To Build
@@ -84,7 +81,7 @@ void GLFont::Init()
             0.2f,                                   // Font Thickness In The Z Direction
             WGL_FONT_POLYGONS,                      // Use Polygons, Not Lines
             gmf);                                   // Address Of Buffer To Recieve Data
-
+*/
     SelectObject(hDC, oldfont);                     // Selects The Font We Want
     DeleteObject(font);                             // Delete The Font
 #else
@@ -215,7 +212,20 @@ void GLFont::PrintF (const char *fmt, ...) const
     glPopAttrib();                     // Pops The Display List Bits
 }
 
+float GLFont::Length (const char *text) const
+{
+    assert(m_GLFontBase != -1);
+    //if (m_GLFontBase == -1) Init();
+    float length = 0.0f;
+
+    for (; *text; ++text)    // Loop To Find Text Length
+        if (*text >= FIRST_CHAR && *text < FIRST_CHAR+NUM_CHARS)
+            length += LWidth[*text-FIRST_CHAR]; // Increase Length By Each Characters Width
+    return length;
+}
+
 #ifdef WIN32
+/*
 void GLFont::Print3d (const char *fmt, ...) const
 {
     assert(m_GLFontBase3d != -1);
@@ -249,7 +259,7 @@ void GLFont::Print3d (const char *fmt, ...) const
     glTranslatef(length/2,0.0f,0.0f);             // Center Our Text On The Screen
 }
 
-GLfloat GLFont::Length3d (char *text) const
+GLfloat GLFont::Length3d (const char *text) const
 {
     assert(m_GLFontBase3d != -1);
     //if (m_GLFontBase3d == -1) Init();
@@ -261,5 +271,6 @@ GLfloat GLFont::Length3d (char *text) const
             length += gmf[*text-FIRST_CHAR].gmfCellIncX; // Increase Length By Each Characters Width
     return length;
 }
+*/
 #endif
 

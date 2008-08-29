@@ -6,6 +6,7 @@
 #include "SceneConsole.h"
 #include "SceneGame.h"
 #include "SceneTest.h"
+#include "SceneMenu.h"
 
 void OnApplicationInitialize(Application* sender);
 void OnApplicationInvalidate(Application* sender);
@@ -27,10 +28,10 @@ int main( int argc, char **argv )
     game.OnApplicationInvalidate = OnApplicationInvalidate;
     game.OnApplicationTerminate  = OnApplicationTerminate;
 #ifndef NDEBUG
-    if (!game.Initialize("Camera Fighter - Debug", Config::WindowX, Config::WindowY, false, new SceneConsole(new SceneGame())))
+    if (!game.Initialize("Camera Fighter - Debug", Config::WindowX, Config::WindowY, Config::FullScreen, new SceneConsole(new SceneMenu())))
         return 1;
 #else
-    if (!game.Initialize("Camera Fighter", Config::WindowX, Config::WindowY, false, new SceneConsole(new SceneGame())))
+    if (!game.Initialize("Camera Fighter", Config::WindowX, Config::WindowY, Config::FullScreen, new SceneConsole(new SceneMenu())))
         return 1;
 #endif
     int res = game.Run();

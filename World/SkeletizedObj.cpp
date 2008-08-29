@@ -4,6 +4,10 @@
 #include "../MotionCapture/CaptureInput.h"
 #include "../Multiplayer/NetworkInput.h"
 #include "ObjectTypes.h"
+#include "../Utils/Filesystem.h"
+
+SkeletizedObj *SkeletizedObj::camera_controled  = NULL;
+SkeletizedObj *SkeletizedObj::network_controled = NULL;
 
 void SkeletizedObj :: ApplyDefaults()
 {
@@ -13,6 +17,7 @@ void SkeletizedObj :: ApplyDefaults()
     FL_auto_movement   = true;
 
     Tracker.Init();
+    styles.clear();
     comBoard.Init();
 }
 
@@ -522,4 +527,60 @@ void SkeletizedObj :: FrameUpdate(float T_time)
             NW_VerletVelocity_total[i].zero();
 
     Performance.CollisionDataFillMS += GetTick() - delta;
+}
+
+
+void SkeletizedObj :: LoadLine(char *buffer, std::string &dir)
+{
+    if (StartsWith(buffer, "animation"))
+    {
+        int start = 0, end = -1;
+        char file[255];
+        sscanf(buffer+9, "%s\t%d\t%d", file, &start, &end);
+        std::string animFile = Filesystem::GetFullPath(dir + "/" + file);
+        if (end <= start)
+            actions.AddAnimation(animFile.c_str(), start);
+        else
+            actions.AddAnimation(animFile.c_str(), start, end);
+        return;
+    }
+
+    if (StartsWith(buffer, "style"))
+    {
+        char file[255], name[255];
+        sscanf(buffer+5, "%s\t%s", name, file);
+        FightingStyle style;
+        style.Name = name;
+        style.FileName = Filesystem::GetFullPath(dir + "/" + file);
+        styles.push_back(style);
+        comBoard.FileName = style.FileName;
+        return;
+    }
+    if (StartsWith(buffer, "control"))
+    {
+        char name[255];
+        sscanf(buffer+7, "%s", name);
+
+        if (StartsWith(name, "camera"))
+            SkeletizedObj::camera_controled = this;
+        else
+        if (StartsWith(name, "network"))
+            SkeletizedObj::network_controled = this;
+        else
+        if (StartsWith(name, "comboard"))
+        {
+            ControlType = SkeletizedObj::Control_ComBoardInput;
+            FL_auto_movement = false;
+        }
+        return;
+    }
+    if (StartsWith(buffer, "enemy"))
+    {
+        int b;
+        sscanf(buffer+5, "%d", &b);
+        Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
+        Tracker.ID_object = b;
+    }
+
+    RigidObj::LoadLine(buffer, dir);
 }

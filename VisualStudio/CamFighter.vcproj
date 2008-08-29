@@ -209,6 +209,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source Files\SceneMenu.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Source Files\SceneMenu.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Source Files\SceneSkeleton.cpp"
 				>
 			</File>
@@ -228,6 +236,30 @@
 				RelativePath="..\Source Files\SceneTest.h"
 				>
 			</File>
+			<Filter
+				Name="MenuStates"
+				>
+				<File
+					RelativePath="..\Source Files\MenuStates\BaseState.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Source Files\MenuStates\CreditsState.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Source Files\MenuStates\MainState.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Source Files\MenuStates\MenuStates.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Source Files\MenuStates\PlayState.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Models"
@@ -1544,6 +1576,10 @@
 					</File>
 				</Filter>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="AI"
+			>
 		</Filter>
 		<File
 			RelativePath="..\Config.cpp"

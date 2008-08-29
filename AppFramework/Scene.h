@@ -10,7 +10,7 @@
 class Scene
 {
 public:
-    Scene * PrevScene;
+    Scene       * PrevScene;
     const char  * sceneName;
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height)
@@ -21,7 +21,16 @@ public:
     }
     virtual bool Invalidate()
     { return PrevScene ? PrevScene->Invalidate() : true; }
-    virtual void Terminate() { Initialized = false; }
+    virtual void Terminate()
+    {
+        Initialized = false;
+        if (PrevScene)
+        {
+            PrevScene->Terminate();
+            delete PrevScene;
+            PrevScene = NULL;
+        }
+    }
 
     virtual void FrameStart() {}
     virtual bool FrameUpdate(float deltaTime) = 0;

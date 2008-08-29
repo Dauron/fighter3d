@@ -19,9 +19,8 @@ struct GLFont : public HandleDst
     static const int NUM_CHARS  = 32+96+128;
 
     std::string m_Name;          // for reconstruction
-    char        m_Size;          // for reconstruction
+    int         m_Size;          // for reconstruction
     int         m_GLFontBase;    // GL list identifier
-    int         m_GLFontBase3d;  // GL list identifier
 
     float       LineH() const
     {
@@ -33,7 +32,7 @@ struct GLFont : public HandleDst
         Invalidate();
     }
 
-    bool Load(const std::string& name, char size = 14);
+    bool Load(const std::string& name, int size = 14);
     void Unload();
 
     bool ReLoad  ()
@@ -46,24 +45,22 @@ struct GLFont : public HandleDst
     void Invalidate()
     {
         m_GLFontBase   = -1;
-        m_GLFontBase3d = -1;
     }
     bool IsValid() const
-        { return m_GLFontBase != -1 && m_GLFontBase3d != -1 &&
-            glIsList( m_GLFontBase ) && glIsList( m_GLFontBase3d ); }
+        { return m_GLFontBase != -1 && glIsList( m_GLFontBase ); }
 
     void Print   (float x, float y, float z, float maxHeight, int skipLines, const char *text) const;
     void PrintF  (float x, float y, float z, const char *fmt, ...) const;
     void Print   (const char *text) const;
     void PrintF  (const char *fmt, ...) const;
-    void Print3d (const char *fmt, ...) const;
+    //void Print3d (const char *fmt, ...) const;
 
-    GLfloat Length3d (char *text) const;
+    float Length (const char *text) const;
+    //GLfloat Length3d (const char *text) const;
+
+    float LWidth[NUM_CHARS];
 
 private:
-#ifdef WIN32
-    GLYPHMETRICSFLOAT gmf[NUM_CHARS]; // Storage For Information About Our Font
-#endif
     void Init();
 };
 

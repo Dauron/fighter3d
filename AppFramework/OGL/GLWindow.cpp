@@ -202,7 +202,7 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
     ShowWindow(hWnd, SW_SHOW);
     SetForegroundWindow(hWnd);
     SetFocus(hWnd);
-    this->fullscreen = fullscreen;
+    Config::FullScreen = this->fullscreen = fullscreen;
     this->OnResized(width, height);
 
     if (this->title != title)

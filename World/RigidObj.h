@@ -39,6 +39,8 @@ struct ModelInstance
 class RigidObj : public Physics::PhysicalBody
 {
 public:
+    std::string Name;
+
     bool FL_shadowcaster;
     bool FL_customBVH;
 
@@ -55,6 +57,8 @@ protected:
 
     /******** LIFETIME : BEGIN ********/
 public:
+    virtual void LoadLine(char *buffer, std::string &dir);
+
     virtual void ApplyDefaults();
     virtual void Initialize ();
     virtual void Finalize   ();
@@ -118,6 +122,7 @@ private:
     /********* RENDERING : END *********/
 
 public:
+    std::string fastModelFile, modelFile;
     ModelInstance *ModelGr, *ModelPh;
 
     ModelInstance &ModelGr_Get() { return *ModelGr; }

@@ -1,10 +1,11 @@
 #include "FontMgr.h"
 
-HFont FontMgr :: GetFont( const char* name, const char size )
+HFont FontMgr :: GetFont( const char* name, int size )
 {
     std::string key( name );
     key.append("|", 1);
-    key.append(&size, 1);
+    key += itos(size);
+    //key.append(&size, 1);
 
     // insert/find
     NameIndexInsertRc rc =
@@ -44,7 +45,7 @@ void FontMgr :: DeleteFont( HFont hfnt )
         {
             std::string key( fnt->m_Name );
             key.append("|", 1);
-            key.append(&(fnt->m_Size), 1);
+            key += itos(fnt->m_Size);
             // delete from index
             m_NameIndex.erase( m_NameIndex.find( key ) );
             // delete from db

@@ -13,7 +13,7 @@ class SceneConsole : public Scene
     {
         PrevScene = prevScene;
         carretTick = 0;
-        font = HFont();
+        font = font15 = HFont();
         overlayInput = false;
         overlayClock = false;
         visible      = !PrevScene;
@@ -29,13 +29,12 @@ class SceneConsole : public Scene
     virtual bool FrameRender();
     virtual void FrameEnd() { if (PrevScene) PrevScene->FrameEnd(); }
 
-    Scene * SetCurrentScene(Scene* scene, bool destroyPrev = true);
-
-    void AppendConsole(std::string text);
-    virtual bool ShellCommand(std::string &cmd, std::string &output);
+    virtual Scene *SetCurrentScene(Scene* scene, bool destroyPrev = true);
+    virtual bool   ShellCommand(std::string &cmd, std::string &output);
 
   private:
     void InitInputMgr();
+    void AppendConsole(std::string text);
 
     HFont    font;
     HFont    font15;
@@ -46,10 +45,10 @@ class SceneConsole : public Scene
     int      scroll_v;
     int      pageSize;
 
-    bool     justOpened; // skip the key that has opened the console
+    bool     justOpened;   // skip the key that has opened the console
     bool     visible;
-    bool     overlayInput;
-    bool     overlayClock;
+    bool     overlayInput; // send keys to subscene
+    bool     overlayClock; // send ticks to subscene
 
     std::string history;    // console history
     int         histLines;  // no of lines in history

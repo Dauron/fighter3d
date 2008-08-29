@@ -8,7 +8,6 @@
 
 #include "../Utils/Debug.h"
 #include "../Utils/GraphicsModes.h"
-#include "../Models/ModelMgr.h"
 
 Scene * SceneConsole :: SetCurrentScene(Scene* scene, bool destroyPrev)
  {
@@ -56,9 +55,9 @@ void SceneConsole::Resize(int left, int top, unsigned int width, unsigned int he
         Scene::Resize(left, top, width, height);
 
         if (!g_FontMgr.IsHandleValid(font))
-            font = g_FontMgr.GetFont("Courier New", 12); // it takes about second to create a font
+            font = g_FontMgr.GetFont("Courier New", 12);
         if (!g_FontMgr.IsHandleValid(font15))
-            font15 = g_FontMgr.GetFont("Courier New", 15); // it takes about second to create a font
+            font15 = g_FontMgr.GetFont("Courier New", 15);
         const GLFont* pFont = g_FontMgr.GetFont(font);
 
         pageSize = (int)(height/2.0f/pFont->LineH()) - 3;
@@ -94,12 +93,7 @@ void SceneConsole::Terminate()
     font = HFont();
     g_FontMgr.DeleteFont(font15);
     font15 = HFont();
-    if (PrevScene)
-    {
-        PrevScene->Terminate();
-        delete PrevScene;
-        PrevScene = NULL;
-    }
+
     Scene::Terminate();
 }
 
@@ -157,13 +151,13 @@ bool SceneConsole :: FrameUpdate(float deltaTime)
             im.SetScene(PrevScene->sceneName);
         }
         else
-        if (PrevScene->PrevScene)
+        //if (PrevScene->PrevScene)
         {
             im.SetInputState(IC_Reject, true);
             PrevScene->FrameUpdate(0.f);
         }
-        else
-            g_Application.MainWindow().Terminate();
+        //else
+            //g_Application.MainWindow().Terminate();
         /*
         if (PrevScene)
         {
@@ -441,10 +435,6 @@ bool SceneConsole::FrameRender()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    if (!g_FontMgr.IsHandleValid(font))
-        font = g_FontMgr.GetFont("Courier New", 12);
-    if (!g_FontMgr.IsHandleValid(font15))
-        font15 = g_FontMgr.GetFont("Courier New", 15);
     const GLFont* pFont = g_FontMgr.GetFont(font);
 
     float lineHeight = pFont->LineH();

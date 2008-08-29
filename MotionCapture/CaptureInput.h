@@ -15,7 +15,6 @@ public:
     bool Initialize(const xSkeleton &spine)
     {
         this->Spine = &spine;
-
         return true;
     }
     void Finalize()

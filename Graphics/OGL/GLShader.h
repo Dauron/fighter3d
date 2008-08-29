@@ -11,6 +11,7 @@ struct ShaderProgram
     static GLenum currProgram;
 
     GLenum program;
+    bool   FL_invalid;
 
     GLenum vertex_shader;
     char *vertexShaderFile;
@@ -33,7 +34,7 @@ struct ShaderProgram
     virtual void   Terminate();
     virtual void   Invalidate()
     {
-        program = vertex_shader = fragment_shader = 0;
+        program = vertex_shader = fragment_shader = 0; FL_invalid = true;
     }
 };
 

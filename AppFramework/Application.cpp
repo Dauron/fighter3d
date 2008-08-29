@@ -46,9 +46,8 @@ bool Application::Invalidate()
 void Application::Terminate()
 {
     m_Terminating = true;
-    m_window->Terminate();
-    m_scene->Terminate();
-    delete m_scene;
+    if (m_window) { m_window->Terminate(); }
+    if (m_scene)  { m_scene->Terminate(); delete m_scene; m_scene = NULL; }
     if (OnApplicationTerminate) OnApplicationTerminate(this);
 }
 

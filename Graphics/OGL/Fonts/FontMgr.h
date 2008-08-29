@@ -21,7 +21,7 @@ public:
    ~FontMgr( void ) {  /* ... */  }
 
 // Texture management.
-    HFont GetFont   ( const char* name, const char size );
+    HFont GetFont   ( const char* name, int size );
     void  DeleteFont( HFont hfnt );
 
 // Texture query.

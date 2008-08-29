@@ -8,6 +8,7 @@ Multisampling   1
 ShadowMap       512
 WindowX         800
 WindowY         600
+FillScreen      0
 FullScreenX    1680
 FullScreenY    1050
 

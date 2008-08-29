@@ -38,6 +38,7 @@ ShaderProgram :: ShaderProgram()
     vertexShaderSrc    = NULL;
     fragmentShaderFile = NULL;
     fragmentShaderSrc  = NULL;
+    FL_invalid         = true;
 }
 
 void ShaderProgram :: Load(const char *vShaderFile, const char *fShaderFile)
@@ -101,6 +102,9 @@ GLenum ShaderProgram :: Initialize()
     assert(!program);
     assert(!vertex_shader);
     assert(!fragment_shader);
+
+    FL_invalid = false;
+
     if (CheckForGLError("Pre create GLSL program")) {}
 
     if (!GLExtensions::Exists_ARB_ShaderObjects ||
@@ -475,6 +479,7 @@ bool GLShader :: Start()
     else
         currShader = & slShader->Plain;
 
+    if (currShader->FL_invalid) currShader->Initialize();
     if (!currShader->program) return false;
 
     if (ShaderProgram::currProgram != currShader->program)

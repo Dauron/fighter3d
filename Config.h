@@ -13,6 +13,7 @@ struct Config
     static int   ShadowMapSize;
     static int   WindowX;
     static int   WindowY;
+    static bool  FullScreen;
     static int   FullScreenX;
     static int   FullScreenY;
 

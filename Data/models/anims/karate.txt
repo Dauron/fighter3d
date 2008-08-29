@@ -5,6 +5,7 @@
 #post   destination action after finishing current action (default first action)
 #rotate if 1, figure is rotated by last skew of the root bones (default 0)
 #mirror if 1, figure position is mirrored after this action (default 0)
+#
 #(combo)
 #action destination action of combo
 #key    key that activates combo
@@ -13,14 +14,22 @@
 #time   initial time of the destination combo (+ time since first, if last != 0, default = 0)
 #prec   if 1, no "+time since first" is applied (default 0)
 #shift  if 1, figure is trasformed by last position of the animation (default 1)
-
+#
+#available combo keys:
+# Forward,       Backward,
+# Left,          Right,
+# LeftPunch,     RightPunch,
+# LeftKick,      RightKick,
+# LeftHandGuard, RightHandGuard,
+# LeftLegGuard,  LeftLegGuard
+#
 #[auto] - hints automatic movement, breakable says if action may be stoped
 #stop  action - resting action
 #step  action max_distance breakable(0/1) - step forward
 #back  action max_distance breakable(0/1) - step backward
 #left  action max_angle breakable(0/1) - rotation left
 #right action max_angle breakable(0/1) - rotation right
-
+#
 #[mirror]
 #bones bone1 bone2 - these bones should be exchanged during position mirroring
 #bones bone3 bone4 - these bones should be exchanged during position mirroring

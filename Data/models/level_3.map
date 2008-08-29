@@ -124,7 +124,7 @@ shadows  1
 
 #################### PLAYERS
 
-[skeletized]
+[skip skeletized]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 rotation    0 0 180
@@ -137,10 +137,10 @@ mass        70
 shadows     0
 restitution 0.9
 control     comboard
-style       anims/karate.txt
+style       Karate anims/karate.txt
 enemy       1
 
-[skeletized]
+[skip skeletized]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 #rotation    0 45 0
@@ -160,5 +160,5 @@ restitution 0.9
 #animation	anims/human/kiwa_sie.ska	0
 #animation	anims/human/idzie.ska 0
 control     camera
-style       anims/karate.txt
+style       Karate anims/karate.txt
 enemy       0

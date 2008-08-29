@@ -39,10 +39,17 @@ void WorldRenderGL :: SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bo
 
 void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &cameraSet)
 {
+    glHint(GL_POINT_SMOOTH_HINT,           GL_NICEST);
+    glHint(GL_LINE_SMOOTH_HINT,            GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT,         GL_NICEST);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   // Nice perspective calculations
+
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);    // GL_TRUE=two, GL_FALSE=one
-    glDisable (GL_LINE_SMOOTH);
-    glDisable (GL_POLYGON_SMOOTH);                       // produces errors on many cards... use FSAA!
+    glDisable   (GL_LINE_SMOOTH);
+    glDisable   (GL_POLYGON_SMOOTH);                     // produces errors on many cards... use FSAA!
+    glEnable    (GL_POINT_SMOOTH);
+    glShadeModel(GL_SMOOTH); // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
     glDisable(GL_LIGHT0); glDisable(GL_LIGHT1); glDisable(GL_LIGHT2); glDisable(GL_LIGHT3);
     glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
 
@@ -69,8 +76,6 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
     glColorMask(1,1,1,1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glShadeModel(GL_SMOOTH);
-
     for (; CAM_curr != CAM_last; ++CAM_curr)
     {
         Math::Cameras::Camera &camera = **CAM_curr;
@@ -84,6 +89,9 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         GLShader::SetLightType(xLight_NONE);
         GLShader::EnableTexturing(xState_Enable);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glFrontFace(GL_CCW);     // Front faces are drawn in counter-clockwise direction
+        glEnable   (GL_CULL_FACE);
+        glCullFace (GL_BACK);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_STENCIL_TEST);
         glDisable(GL_BLEND);
@@ -98,8 +106,6 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         glEnable   (GL_DEPTH_TEST);
         glDepthMask(1);
         glDepthFunc(GL_LESS);
-        glEnable   (GL_CULL_FACE);
-        glCullFace (GL_BACK);
         glColorMask(0,0,0,0);
         GLShader::SetLightType(xLight_NONE);
         GLShader::EnableTexturing(xState_Off);
@@ -276,12 +282,20 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
 
 void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math::Cameras::CameraSet &cameraSet)
 {
+    glHint(GL_POINT_SMOOTH_HINT,           GL_NICEST);
+    glHint(GL_LINE_SMOOTH_HINT,            GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT,         GL_NICEST);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   // Nice perspective calculations
+
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);    // GL_TRUE=two, GL_FALSE=one
-    glDisable (GL_LINE_SMOOTH);
-    glDisable (GL_POLYGON_SMOOTH);                       // produces errors on many cards... use FSAA!
+    glDisable   (GL_LINE_SMOOTH);
+    glDisable   (GL_POLYGON_SMOOTH);                     // produces errors on many cards... use FSAA!
+    glEnable    (GL_POINT_SMOOTH);
+    glShadeModel(GL_SMOOTH); // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
     glDisable(GL_LIGHT0); glDisable(GL_LIGHT1); glDisable(GL_LIGHT2); glDisable(GL_LIGHT3);
     glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
+
 
     // Prepare iterators
     World::Vec_Object::iterator
@@ -302,8 +316,6 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
     glColorMask(1,1,1,1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glShadeModel(GL_SMOOTH);
-
     for (; CAM_curr != CAM_last; ++CAM_curr)
     {
         Math::Cameras::Camera &camera = **CAM_curr;
@@ -321,6 +333,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         glEnable   (GL_DEPTH_TEST);
         glDepthMask(1);
         glDepthFunc(GL_LESS);
+        glFrontFace(GL_CCW);     // Front faces are drawn in counter-clockwise direction
         glEnable   (GL_CULL_FACE);
         glCullFace (GL_BACK);
         glColorMask(1,1,1,1);
@@ -471,12 +484,20 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
 
 void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Cameras::CameraSet &cameraSet)
 {
+    glHint(GL_POINT_SMOOTH_HINT,           GL_NICEST);
+    glHint(GL_LINE_SMOOTH_HINT,            GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT,         GL_NICEST);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);   // Nice perspective calculations
+
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE); // GL_FALSE = infinite viewpoint, GL_TRUE = locale viewpoint
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);    // GL_TRUE=two, GL_FALSE=one
-    glDisable (GL_LINE_SMOOTH);
-    glDisable (GL_POLYGON_SMOOTH);                       // produces errors on many cards... use FSAA!
+    glDisable   (GL_LINE_SMOOTH);
+    glDisable   (GL_POLYGON_SMOOTH);                     // produces errors on many cards... use FSAA!
+    glEnable    (GL_POINT_SMOOTH);
+    glShadeModel(GL_SMOOTH); // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
     glDisable(GL_LIGHT0); glDisable(GL_LIGHT1); glDisable(GL_LIGHT2); glDisable(GL_LIGHT3);
     glDisable(GL_LIGHT4); glDisable(GL_LIGHT5); glDisable(GL_LIGHT6); glDisable(GL_LIGHT7);
+
 
     // Prepare iterators
     World::Vec_Object::iterator
@@ -500,8 +521,6 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
     glColorMask(1,1,1,1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glShadeModel(GL_SMOOTH);
-
     for (; CAM_curr != CAM_last; ++CAM_curr)
     {
         Math::Cameras::Camera &camera = **CAM_curr;
@@ -515,6 +534,7 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
         glEnable   (GL_DEPTH_TEST);
         glDepthMask(1);
         glDepthFunc(GL_LESS);
+        glFrontFace(GL_CCW);     // Front faces are drawn in counter-clockwise direction
         glEnable   (GL_CULL_FACE);
         glCullFace (GL_BACK);
         glColorMask(1, 1, 1, 1);

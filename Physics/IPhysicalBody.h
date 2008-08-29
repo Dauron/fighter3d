@@ -21,10 +21,11 @@ namespace Physics {
 
     protected:
         bool         IsDefaultsApplied() const { return FL_defaults_applied; }
-        bool         IsInitialized()     const { return FL_initialized; }
         bool         IsModified()        const { return FL_modified; }
 
     public:
+        bool         IsInitialized()     const { return FL_initialized; }
+
         bool         FL_stationary; // no movement
         bool         FL_phantom;    // no collisions
         bool         FL_physical;   // affected by gravity?

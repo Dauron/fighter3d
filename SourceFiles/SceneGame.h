@@ -6,14 +6,19 @@
 #include "../Graphics/OGL/Fonts/FontMgr.h"
 #include "../Graphics/OGL/ISelectionProvider.h"
 #include "../World/World.h"
+#include "../World/SkeletizedObj.h"
 
 class SceneGame : public Scene, private ISelectionProvider
 {
 public:
     Math::Cameras::Camera *DefaultCamera;
 
-    SceneGame() : DefaultCamera(NULL) { sceneName="[Game]"; };
+    SceneGame() : DefaultCamera(NULL), player1(NULL), player2(NULL) { sceneName="[Game]"; };
+    SceneGame(SkeletizedObj *player1, SkeletizedObj *player2)
+        : DefaultCamera(NULL), player1(player1), player2(player2)
+    { sceneName="[Game]"; };
 
+    //bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
     virtual bool Invalidate();
     virtual void Terminate();
@@ -32,16 +37,14 @@ public:
     virtual bool ShellCommand(std::string &cmd, std::string &output);
 
 private:
-    bool InitGL();
     bool InitWorld();
     void FreeWorld();
     void InitCameras();
     void InitInputMgr();
 
-    long  accum;
-    float stepAccum;
-
-    World world;
+    SkeletizedObj              *player1;
+    SkeletizedObj              *player2;
+    World                       world;
     Math::Cameras::CameraSet    Cameras;
     Math::Tracking::TrackingSet Targets;
 

@@ -13,6 +13,9 @@ public:
     RigidObj *skyBox;
     xColor    skyColor;
 
+    xMatrix   MX_spawn1;
+    xMatrix   MX_spawn2;
+
 public:
 
     World( void ) : skyBox(NULL) { skyColor.init(0.f,0.f,0.f,0.f); }

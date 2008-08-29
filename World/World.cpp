@@ -78,10 +78,7 @@ void World:: Load(const char *mapFileName)
         std::string dir = Filesystem::GetParentDir(mapFileName);
         char buffer[255];
         int  len;
-        RigidObj      *model = NULL;
-        SkeletizedObj *camera_controled  = NULL;
-        SkeletizedObj *network_controled = NULL;
-        std::string fastModelFile, modelFile;
+        RigidObj *model = NULL;
 
         xLight light;
         light.modified = false;
@@ -92,6 +89,11 @@ void World:: Load(const char *mapFileName)
         light.spotDirection.init(0.f,0.f,-1.f);
         light.spotCutOff = 45.f;
         light.spotAttenuation = 1.f;
+
+        SkeletizedObj::camera_controled  = NULL;
+        SkeletizedObj::network_controled = NULL;
+        MX_spawn1.identity();
+        MX_spawn2.identity();
 
         enum LoadMode
         {
@@ -115,54 +117,27 @@ void World:: Load(const char *mapFileName)
                     mode = LoadMode_General;
                     continue;
                 }
-                if (StartsWith(buffer, "[model]"))
+                if (StartsWith(buffer, "[model]") || StartsWith(buffer, "[skeletized]"))
                 {
                     if (model)
                     {
-                        if (modelFile.size() && fastModelFile.size())
+                        if (model->modelFile.size() && model->fastModelFile.size())
                         {
-                            model->Initialize(modelFile.c_str(), fastModelFile.c_str());
+                            model->Initialize(model->modelFile.c_str(), model->fastModelFile.c_str());
                             objects.push_back(model);
                         }
                         else
-                        if (modelFile.size())
+                        if (model->modelFile.size())
                         {
-                            model->Initialize(modelFile.c_str());
+                            model->Initialize(model->modelFile.c_str());
                             objects.push_back(model);
                         }
                         else
                             delete model;
                     }
                     mode = LoadMode_Model;
-                    model = new RigidObj();
+                    model = StartsWith(buffer, "[model]") ? new RigidObj() : new SkeletizedObj();
                     model->ApplyDefaults();
-                    fastModelFile.clear();
-                    modelFile.clear();
-                    continue;
-                }
-                if (StartsWith(buffer, "[skeletized]"))
-                {
-                    if (model)
-                    {
-                        if (modelFile.size() && fastModelFile.size())
-                        {
-                            model->Initialize(modelFile.c_str(), fastModelFile.c_str());
-                            objects.push_back(model);
-                        }
-                        else
-                        if (modelFile.size())
-                        {
-                            model->Initialize(modelFile.c_str());
-                            objects.push_back(model);
-                        }
-                        else
-                            delete model;
-                    }
-                    mode = LoadMode_Model;
-                    model = new SkeletizedObj();
-                    model->ApplyDefaults();
-                    fastModelFile.clear();
-                    modelFile.clear();
                     continue;
                 }
                 if (StartsWith(buffer, "[light]"))
@@ -198,147 +173,38 @@ void World:: Load(const char *mapFileName)
                     sscanf(buffer+8, "%f\t%f\t%f", &skyColor.r, &skyColor.g, &skyColor.b);
                     continue;
                 }
+                if (StartsWith(buffer, "spawn1pos"))
+                {
+                    float x,y,z;
+                    sscanf(buffer+9, "%f\t%f\t%f", &x,&y,&z);
+                    MX_spawn1.postTranslateT(xVector3::Create(x,y,z));
+                    continue;
+                }
+                if (StartsWith(buffer, "spawn2pos"))
+                {
+                    float x,y,z;
+                    sscanf(buffer+9, "%f\t%f\t%f", &x,&y,&z);
+                    MX_spawn2.postTranslateT(xVector3::Create(x,y,z));
+                    continue;
+                }
+                if (StartsWith(buffer, "spawn1rot"))
+                {
+                    float x,y,z;
+                    sscanf(buffer+9, "%f\t%f\t%f", &x,&y,&z);
+                    MX_spawn1 *= xMatrixRotateRad(DegToRad(x), DegToRad(y), DegToRad(z));
+                    continue;
+                }
+                if (StartsWith(buffer, "spawn2rot"))
+                {
+                    float x,y,z;
+                    sscanf(buffer+9, "%f\t%f\t%f", &x,&y,&z);
+                    MX_spawn2 *= xMatrixRotateRad(DegToRad(x), DegToRad(y), DegToRad(z));
+                    continue;
+                }
             }
             if (mode == LoadMode_Model)
             {
-                if (StartsWith(buffer, "fastm"))
-                {
-                    char file[255];
-                    sscanf(buffer+5, "%s", file);
-                    fastModelFile = Filesystem::GetFullPath(dir + "/" + file);
-                    continue;
-                }
-                if (StartsWith(buffer, "model"))
-                {
-                    char file[255];
-                    sscanf(buffer+5, "%s", file);
-                    modelFile = Filesystem::GetFullPath(dir + "/" + file);
-                    continue;
-                }
-                if (StartsWith(buffer, "customBVH"))
-                {
-                    int customBVH;
-                    sscanf(buffer+9, "%d", &customBVH);
-                    model->FL_customBVH = customBVH;
-                    continue;
-                }
-                if (StartsWith(buffer, "position"))
-                {
-                    float x,y,z;
-                    sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
-                    model->Translate(x, y, z);
-                    continue;
-                }
-                if (StartsWith(buffer, "rotation"))
-                {
-                    float x,y,z;
-                    sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
-                    model->Rotate(x, y, z);
-                    continue;
-                }
-                if (StartsWith(buffer, "velocity"))
-                {
-                    float x,y,z;
-                    sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
-                    model->ApplyAcceleration(xVector3::Create(x,y,z), 1.f);
-                    continue;
-                }
-                if (StartsWith(buffer, "physical"))
-                {
-                    int b;
-                    sscanf(buffer+8, "%d", &b);
-                    model->FL_physical = b;
-                    continue;
-                }
-                if (StartsWith(buffer, "locked"))
-                {
-                    int b;
-                    sscanf(buffer+6, "%d", &b);
-                    model->FL_stationary = b;
-                    continue;
-                }
-                if (StartsWith(buffer, "phantom"))
-                {
-                    int b;
-                    sscanf(buffer+7, "%d", &b);
-                    model->FL_phantom = b;
-                    continue;
-                }
-                if (StartsWith(buffer, "mass"))
-                {
-                    float mass;
-                    sscanf(buffer+4, "%f", &mass);
-                    model->M_mass = mass;
-                    continue;
-                }
-                if (StartsWith(buffer, "restitution"))
-                {
-                    float restitution;
-                    sscanf(buffer+11, "%f", &restitution);
-                    model->W_restitution = restitution;
-                    continue;
-                }
-                if (StartsWith(buffer, "restitution_self"))
-                {
-                    float restitution;
-                    sscanf(buffer+16, "%f", &restitution);
-                    model->W_restitution_self = restitution;
-                    continue;
-                }
-                if (StartsWith(buffer, "shadows"))
-                {
-                    int b;
-                    sscanf(buffer+7, "%d", &b);
-                    model->FL_shadowcaster = b;
-                    continue;
-                }
-
-                if (StartsWith(buffer, "animation"))
-                {
-                    int start = 0, end = -1;
-                    char file[255];
-                    sscanf(buffer+9, "%s\t%d\t%d", file, &start, &end);
-                    std::string animFile = Filesystem::GetFullPath(dir + "/" + file);
-                    if (end <= start)
-                        ((SkeletizedObj*)model)->actions.AddAnimation(animFile.c_str(), start);
-                    else
-                        ((SkeletizedObj*)model)->actions.AddAnimation(animFile.c_str(), start, end);
-                    continue;
-                }
-
-                if (StartsWith(buffer, "style"))
-                {
-                    char file[255];
-                    sscanf(buffer+5, "%s", file);
-                    ((SkeletizedObj*)model)->comBoard.FileName = Filesystem::GetFullPath(dir + "/" + file);
-                    continue;
-                }
-                if (StartsWith(buffer, "control"))
-                {
-                    char name[255];
-                    sscanf(buffer+7, "%s", name);
-
-                    if (StartsWith(name, "camera"))
-                        camera_controled = (SkeletizedObj*)model;
-                    else
-                    if (StartsWith(name, "network"))
-                        network_controled = (SkeletizedObj*)model;
-                    else
-                    if (StartsWith(name, "comboard"))
-                    {
-                        ((SkeletizedObj*)model)->ControlType = SkeletizedObj::Control_ComBoardInput;
-                        ((SkeletizedObj*)model)->FL_auto_movement = false;
-                    }
-                    continue;
-                }
-                if (StartsWith(buffer, "enemy"))
-                {
-                    int b;
-                    sscanf(buffer+5, "%d", &b);
-                    SkeletizedObj &so    = *(SkeletizedObj*)model;
-                    so.Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
-                    so.Tracker.ID_object = b;
-                }
+                model->LoadLine(buffer, dir);
             }
             if (mode == LoadMode_Light)
             {
@@ -429,15 +295,15 @@ void World:: Load(const char *mapFileName)
         }
         if (model)
         {
-            if (modelFile.size() && fastModelFile.size())
+            if (model->modelFile.size() && model->fastModelFile.size())
             {
-                model->Initialize(modelFile.c_str(), fastModelFile.c_str());
+                model->Initialize(model->modelFile.c_str(), model->fastModelFile.c_str());
                 objects.push_back(model);
             }
             else
-            if (modelFile.size())
+            if (model->modelFile.size())
             {
-                model->Initialize(modelFile.c_str());
+                model->Initialize(model->modelFile.c_str());
                 objects.push_back(model);
             }
             else
@@ -446,23 +312,23 @@ void World:: Load(const char *mapFileName)
         if (light.modified)
             lights.push_back(light);
 
-        if (camera_controled)
+        if (SkeletizedObj::camera_controled)
         {
             g_CaptureInput.Finalize();
-            bool captureOK = g_CaptureInput.Initialize(camera_controled->ModelGr_Get().xModelP->Spine);
-            camera_controled->ControlType = (captureOK)
+            bool captureOK = g_CaptureInput.Initialize(SkeletizedObj::camera_controled->ModelGr_Get().xModelP->Spine);
+            SkeletizedObj::camera_controled->ControlType = (captureOK)
                 ? SkeletizedObj::Control_CaptureInput
                 : SkeletizedObj::Control_ComBoardInput;
-            camera_controled->FL_auto_movement = true;
+            SkeletizedObj::camera_controled->FL_auto_movement = true;
         }
-        if (network_controled)
+        if (SkeletizedObj::network_controled)
         {
             g_NetworkInput.Finalize();
-            bool networkOK = g_NetworkInput.Initialize(model->ModelGr_Get().xModelP->Spine);
-            network_controled->ControlType = (networkOK)
+            bool networkOK = g_NetworkInput.Initialize(SkeletizedObj::network_controled->ModelGr_Get().xModelP->Spine);
+            SkeletizedObj::network_controled->ControlType = (networkOK)
                 ? SkeletizedObj::Control_NetworkInput
                 : SkeletizedObj::Control_AI;
-            camera_controled->FL_auto_movement = true;
+            SkeletizedObj::network_controled->FL_auto_movement = true;
         }
 
         in.close();

@@ -1,3 +1,9 @@
+[general]
+spawn1rot 0 0 180
+spawn1pos -0.7 -3.3 -0.4
+spawn2rot 0 0 0
+spawn2pos -0.5 -2 -0.2
+
 # OBJECTS
 
 [model]

@@ -1,4 +1,5 @@
 #include "SceneGame.h"
+#include "SceneMenu.h"
 #include "SceneConsole.h"
 #include "SceneSkeleton.h"
 
@@ -10,18 +11,24 @@
 #include "../Graphics/OGL/WorldRenderGL.h"
 
 #include "../World/ObjectTypes.h"
-#include "../World/SkeletizedObj.h"
 
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
-
+/*
+bool SceneGame :: Initialize(int left, int top, unsigned int width, unsigned int height,
+                             SkeletizedObj *player1, SkeletizedObj *player2)
+{
+    this->player1 = player1;
+    this->player2 = player2;
+    return Initialize(left, top, width, height);
+}
+*/
 bool SceneGame :: Initialize(int left, int top, unsigned int width, unsigned int height)
 {
     Scene::Initialize(left, top, width, height);
 
-    stepAccum = 0.0f;
     InitInputMgr();
 
     if (!world.objects.size())
@@ -29,34 +36,8 @@ bool SceneGame :: Initialize(int left, int top, unsigned int width, unsigned int
     else
         InitCameras();
 
-    return InitGL();
-}
-
-bool SceneGame :: InitGL()
-{
-    glClearDepth(1.f);                      // Mapped draw distance ([0-1])
-    glDepthFunc(GL_LEQUAL);                 // Depth testing function
-
-    glEnable(GL_CULL_FACE);                 // Do not draw hidden faces
-    glCullFace (GL_BACK);                   // Hide back faces
-    glFrontFace(GL_CCW);                    // Front faces are drawn in counter-clockwise direction
-
-    glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
-    glEnable (GL_POINT_SMOOTH);
-
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Nice perspective calculations
-
     GLExtensions::SetVSync(false);
 
-    //if (!shader.IsInitialized())
-    {
-        //GLShader::Terminate();
-        //GLShader::Load();
-        //GLShader::Initialize();
-    }
     return true;
 }
 
@@ -64,6 +45,9 @@ bool SceneGame :: InitWorld()
 {
     FreeWorld();
     world.Initialize();
+
+    if (player1) { player1->MX_LocalToWorld_Set() = world.MX_spawn1; world.objects.push_back(player1); player1 = NULL; }
+    if (player2) { player2->MX_LocalToWorld_Set() = world.MX_spawn2; world.objects.push_back(player2); player2 = NULL; }
 
     Targets.L_objects.clear();
     Physics::PhysicalWorld::Vec_Object::iterator
@@ -301,7 +285,8 @@ bool SceneGame :: FrameUpdate(float deltaTime)
 
     if (im.GetInputStateAndClear(IC_Reject))
     {
-        g_Application.MainWindow().Terminate();
+        //g_Application.MainWindow().Terminate();
+        g_Application.SetCurrentScene(new SceneMenu());
         return true;
     }
 

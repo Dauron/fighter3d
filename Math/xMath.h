@@ -91,4 +91,23 @@ inline void GetMinMax3(xFLOAT v1, xFLOAT v2, xFLOAT v3, xFLOAT &minV, xFLOAT &ma
     }
 }
 
+
+struct xRectangle
+{
+    xFLOAT X, Y, W, H;
+
+    bool Contains(xFLOAT x, xFLOAT y)
+    { return x >= X && x <= X + W && y >= Y && y <= Y + H; }
+
+    bool Contains(int x, int y)
+    { return x >= X && x <= X + W && y >= Y && y <= Y + H; }
+
+    xRectangle()
+        : X(0.f), Y(0.f), W(0.f), H(0.f)
+    {}
+    xRectangle(xFLOAT x, xFLOAT y, xFLOAT w, xFLOAT h)
+        : X(x), Y(y), W(w), H(h)
+    {}
+};
+
 #endif

@@ -15,6 +15,7 @@ int   Config::PolygonMode          = 0x1B02;
 int   Config::ShadowMapSize        = 512;
 int   Config::WindowX              = 800;
 int   Config::WindowY              = 600;
+bool  Config::FullScreen           = false;
 int   Config::FullScreenX          = 800;
 int   Config::FullScreenY          = 600;
 
@@ -194,6 +195,13 @@ void Config :: Load(const char *fileName)
                     int level;
                     sscanf(buffer+11, "%d", &level);
                     Config::FullScreenY = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "fullscreen"))
+                {
+                    int level;
+                    sscanf(buffer+10, "%d", &level);
+                    Config::FullScreen = level;
                     continue;
                 }
                 if (StartsWith(buffer, "show_shadowvolumes"))

@@ -263,12 +263,6 @@ void SceneSkeleton::Terminate()
     g_FontMgr.DeleteFont(Font);
     Font = HFont();
 
-    if (PrevScene) {
-        PrevScene->Terminate();
-        delete PrevScene;
-        PrevScene = NULL;
-    }
-
     Directories.clear();
 }
 

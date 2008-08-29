@@ -3,6 +3,7 @@
 #include "../AppFramework/System.h"
 #include "../Math/Figures/xCapsule.h"
 #include "ObjectTypes.h"
+#include "../Utils/Filesystem.h"
 
 void RigidObj :: ApplyDefaults()
 {
@@ -14,6 +15,10 @@ void RigidObj :: ApplyDefaults()
     FL_customBVH    = true;
     M_mass          = 0.f;
     S_radius        = 0.f;
+
+    Name.clear();
+    fastModelFile.clear();
+    modelFile.clear();
 }
 
 void RigidObj :: Initialize ()
@@ -208,6 +213,107 @@ void RigidObj :: CalculateSkeleton()
 }
 
 
+void RigidObj :: LoadLine(char *buffer, std::string &dir)
+{
+    if (StartsWith(buffer, "name"))
+    {
+        char file[255];
+        sscanf(buffer+4, "%s", file);
+        Name = file;
+        return;
+    }
+    if (StartsWith(buffer, "fastm"))
+    {
+        char file[255];
+        sscanf(buffer+5, "%s", file);
+        fastModelFile = Filesystem::GetFullPath(dir + "/" + file);
+        return;
+    }
+    if (StartsWith(buffer, "model"))
+    {
+        char file[255];
+        sscanf(buffer+5, "%s", file);
+        modelFile = Filesystem::GetFullPath(dir + "/" + file);
+        return;
+    }
+    if (StartsWith(buffer, "customBVH"))
+    {
+        int customBVH;
+        sscanf(buffer+9, "%d", &customBVH);
+        FL_customBVH = customBVH;
+        return;
+    }
+    if (StartsWith(buffer, "position"))
+    {
+        float x,y,z;
+        sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
+        Translate(x, y, z);
+        return;
+    }
+    if (StartsWith(buffer, "rotation"))
+    {
+        float x,y,z;
+        sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
+        Rotate(x, y, z);
+        return;
+    }
+    if (StartsWith(buffer, "velocity"))
+    {
+        float x,y,z;
+        sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
+        ApplyAcceleration(xVector3::Create(x,y,z), 1.f);
+        return;
+    }
+    if (StartsWith(buffer, "physical"))
+    {
+        int b;
+        sscanf(buffer+8, "%d", &b);
+        FL_physical = b;
+        return;
+    }
+    if (StartsWith(buffer, "locked"))
+    {
+        int b;
+        sscanf(buffer+6, "%d", &b);
+        FL_stationary = b;
+        return;
+    }
+    if (StartsWith(buffer, "phantom"))
+    {
+        int b;
+        sscanf(buffer+7, "%d", &b);
+        FL_phantom = b;
+        return;
+    }
+    if (StartsWith(buffer, "mass"))
+    {
+        float mass;
+        sscanf(buffer+4, "%f", &mass);
+        M_mass = mass;
+        return;
+    }
+    if (StartsWith(buffer, "restitution"))
+    {
+        float restitution;
+        sscanf(buffer+11, "%f", &restitution);
+        W_restitution = restitution;
+        return;
+    }
+    if (StartsWith(buffer, "restitution_self"))
+    {
+        float restitution;
+        sscanf(buffer+16, "%f", &restitution);
+        W_restitution_self = restitution;
+        return;
+    }
+    if (StartsWith(buffer, "shadows"))
+    {
+        int b;
+        sscanf(buffer+7, "%d", &b);
+        FL_shadowcaster = b;
+        return;
+    }
+}
 
 
 void RigidObj :: GetShadowProjectionMatrix(xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width)
