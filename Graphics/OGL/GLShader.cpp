@@ -41,47 +41,76 @@ ShaderProgram :: ShaderProgram()
     FL_invalid         = true;
 }
 
+std::string LoadFile(std::string &fileName)
+{
+    char *outData = NULL;
+
+    fileName = Filesystem::GetFullPath(fileName);
+    std::ifstream in;
+    in.open(fileName.c_str(), std::ios::in);
+    if (in.is_open()) {
+        in.seekg( 0, std::ios::end );
+        size_t size = in.tellg();
+        in.seekg( 0, std::ios::beg );
+
+        outData = new char[size+1];
+        in.read(outData, size);
+        size = in.gcount();
+        outData[size] = 0;
+        in.close();
+    }
+    in.clear();
+
+    if (outData)
+    {
+        std::string res(outData);
+        delete[] outData;
+        return res;
+    }
+    return std::string();
+}
+
+void AddIncludes(std::string &data, const std::string &dir)
+{
+    size_t      pos = 0;
+    while ((pos = data.find("#include", pos)) != std::string::npos)
+    {
+        size_t fileS = data.find("\"", pos+9);
+        size_t fileE = data.find("\"", fileS+1);
+
+        if (fileS != std::string::npos && fileS != std::string::npos)
+        {
+            std::string relFileName = dir + "/" + data.substr(fileS+1, fileE-fileS-1);
+            std::string inclData    = LoadFile (relFileName);
+            AddIncludes(inclData, Filesystem::GetParentDir(relFileName));
+
+            data = data.substr(0, pos) + inclData + data.substr(fileE+1);
+        }
+    }
+}
+
 void ShaderProgram :: Load(const char *vShaderFile, const char *fShaderFile)
 {
     Unload();
 
-    std::ifstream in;
-
     if (vShaderFile) {
-        std::string fname = vShaderFile;
-        fname = Filesystem::GetFullPath("Data/shaders/" + fname);
-        vertexShaderFile = strdup(fname.c_str());
-        in.open(vertexShaderFile, std::ios::in);
-        if (in.is_open()) {
-            in.seekg( 0, std::ios::end );
-            int width = in.tellg();
-            in.seekg( 0, std::ios::beg );
+        std::string fname = "Data/shaders/";
+        fname += vShaderFile;
+        std::string data = LoadFile (fname);
+        AddIncludes(data, Filesystem::GetParentDir(fname));
 
-            vertexShaderSrc = new char[width+1];
-            in.read(vertexShaderSrc, width);
-            width = in.gcount();
-            vertexShaderSrc[width] = 0;
-            in.close();
-        }
-        in.clear();
+        vertexShaderFile = strdup(fname.c_str());
+        vertexShaderSrc  = strdup(data.c_str());
     }
 
     if (fShaderFile) {
-        std::string fname = fShaderFile;
-        fname = Filesystem::GetFullPath("Data/shaders/" + fname);
-        fragmentShaderFile = strdup(fname.c_str());
-        in.open(fragmentShaderFile, std::ios::in);
-        if (in.is_open()) {
-            in.seekg( 0, std::ios::end );
-            int width = in.tellg();
-            in.seekg( 0, std::ios::beg );
+        std::string fname = "Data/shaders/";
+        fname += fShaderFile;
+        std::string data = LoadFile (fname);
+        AddIncludes(data, Filesystem::GetParentDir(fname));
 
-            fragmentShaderSrc = new char[width+1];
-            in.read(fragmentShaderSrc, width);
-            width = in.gcount();
-            fragmentShaderSrc[width] = 0;
-            in.close();
-        }
+        fragmentShaderFile = strdup(fname.c_str());
+        fragmentShaderSrc  = strdup(data.c_str());
     }
 }
 
@@ -202,7 +231,9 @@ void ShaderProgram :: Terminate()
 
 ShaderSkeletal :: ShaderSkeletal() : ShaderProgram()
 {
-    uBones        = 0;
+    uQuats        = 0;
+    uRoots        = 0;
+    uTrans        = 0;
     aBoneIdxWghts = 0;
 }
 
@@ -211,7 +242,9 @@ GLenum ShaderSkeletal :: Initialize()
     ShaderProgram::Initialize();
     if (program)
     {
-        uBones        = glGetUniformLocationARB(program, "bones");
+        uQuats        = glGetUniformLocationARB(program, "quats");
+        uRoots        = glGetUniformLocationARB(program, "roots");
+        uTrans        = glGetUniformLocationARB(program, "trans");
         aBoneIdxWghts = glGetAttribLocationARB (program, "boneIdxWghts");
     }
     return program;

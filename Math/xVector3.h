@@ -139,13 +139,13 @@ union xVector3 {
     }
 };
 
-xVector3 operator + (const xVector3 &a, const xVector3 &b);
-xVector3 operator - (const xVector3 &a, const xVector3 &b);
-xVector3 operator * (float f, const xVector3 &v);
-xVector3 operator * (const xVector3 &v, float f);
-xVector3 operator / (const xVector3 &v, float f);
-xVector3 operator - (const xVector3 &a);
-bool     operator ==(const xVector3 &a, const xVector3 &b);
-bool     operator !=(const xVector3 &a, const xVector3 &b);
-bool     operator <=(const xVector3 &a, const xVector3 &b);
-bool     operator >=(const xVector3 &a, const xVector3 &b);
+xVector3  operator + (const xVector3 &a, const xVector3 &b);
+xVector3  operator - (const xVector3 &a, const xVector3 &b);
+xVector3  operator * (float f, const xVector3 &v);
+xVector3  operator * (const xVector3 &v, float f);
+xVector3  operator / (const xVector3 &v, float f);
+xVector3  operator - (const xVector3 &a);
+bool      operator ==(const xVector3 &a, const xVector3 &b);
+bool      operator !=(const xVector3 &a, const xVector3 &b);
+bool      operator <=(const xVector3 &a, const xVector3 &b);
+bool      operator >=(const xVector3 &a, const xVector3 &b);

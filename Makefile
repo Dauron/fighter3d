@@ -3,20 +3,20 @@ OTHER = -L/usr/X11R6/lib
 LIB = -lGL -lGLU -lXxf86vm -lm -l3ds
 OUTPUT = fighter
 OUTPUTDBG = fighter_dbg
-SOURCE = ./Config.cpp \
-         ./App\ Framework/*.cpp \
-         ./App\ Framework/OGL/*.cpp \
-         ./App\ Framework/Input/*.cpp \
-         ./Graphics/*.cpp \
+SOURCE_MATH = ./Math/*.cpp \
+         ./Math/Cameras/*.cpp \
+         ./Math/Figures/*.cpp \
+         ./Math/Tracking/*.cpp
+SOURCE_GRPH = ./Graphics/*.cpp \
          ./Graphics/OGL/*.cpp \
          ./Graphics/OGL/Extensions/*.cpp \
          ./Graphics/OGL/Fonts/*.cpp \
          ./Graphics/OGL/Render/*.cpp \
-         ./Graphics/OGL/Textures/*.cpp \
-         ./Math/*.cpp \
-         ./Math/Cameras/*.cpp \
-         ./Math/Figures/*.cpp \
-         ./Math/Tracking/*.cpp \
+         ./Graphics/OGL/Textures/*.cpp
+SOURCE_END = ./Config.cpp \
+         ./App\ Framework/*.cpp \
+         ./App\ Framework/OGL/*.cpp \
+         ./App\ Framework/Input/*.cpp \
          ./Models/*.cpp \
          ./Models/lib3dx/*.cpp \
          ./Physics/*.cpp \
@@ -27,14 +27,14 @@ SOURCE = ./Config.cpp \
          ./World/*.cpp
 CPPFLAGS = -DGLX_GLXEXT_PROTOTYPES
 
-all:
-	$(CC) ${SOURCE} -o ${OUTPUT} ${CPPFLAGS} ${OTHER} ${LIB}
-
 release:
-	$(CC) -O2 ${SOURCE} -o ${OUTPUT} ${CPPFLAGS} ${OTHER} ${LIB}
+	$(CC) -O2 ${SOURCE_MATH} ${SOURCE_GRPH} ${SOURCE_END} -o ${OUTPUT} ${CPPFLAGS} ${OTHER} ${LIB}
 
 debug:
-	$(CC) -ggdb ${SOURCE} -o ${OUTPUTDBG} ${CPPFLAGS} ${OTHER} ${LIB}
+	$(CC) -ggdb ${SOURCE_MATH} ${SOURCE_GRPH} ${SOURCE_END} -o ${OUTPUTDBG} ${CPPFLAGS} ${OTHER} ${LIB}
+
+all: release
+	
 
 clean:
 	@echo Cleaning up...

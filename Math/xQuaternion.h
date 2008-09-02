@@ -19,9 +19,12 @@ public:
     static xQuaternion GetRotation     (const xPoint3 &srcP, const xPoint3 &dstP, const xPoint3 &center)
     { return GetRotation(srcP-center, dstP-center); }
 
-    xPoint3 rotate(const xPoint3 &p) const;
-    xPoint3 rotate(const xPoint3 &p, const xPoint3 &center) const
+    xVector3 rotate(const xVector3 &p) const;
+    xPoint3  rotate(const xPoint3 &p, const xPoint3 &center) const
     { return rotate(p - center) + center; }
+    xVector3 unrotate(const xVector3 &p) const;
+    xPoint3  unrotate(const xPoint3 &p, const xPoint3 &center) const
+    { return unrotate(p - center) + center; }
 
            xVector3    angularVelocity() const;
     static xQuaternion AngularVelocity(const xVector3 &omega);

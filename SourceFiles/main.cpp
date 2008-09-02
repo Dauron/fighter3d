@@ -28,10 +28,12 @@ int main( int argc, char **argv )
     game.OnApplicationInvalidate = OnApplicationInvalidate;
     game.OnApplicationTerminate  = OnApplicationTerminate;
 #ifndef NDEBUG
-    if (!game.Initialize("Camera Fighter - Debug", Config::WindowX, Config::WindowY, Config::FullScreen, new SceneConsole(new SceneMenu())))
+    if (!game.Initialize("Camera Fighter - Debug", Config::WindowX, Config::WindowY, Config::FullScreen,
+        new Scenes::SceneConsole(new Scenes::SceneMenu())))
         return 1;
 #else
-    if (!game.Initialize("Camera Fighter", Config::WindowX, Config::WindowY, Config::FullScreen, new SceneConsole(new SceneMenu())))
+    if (!game.Initialize("Camera Fighter", Config::WindowX, Config::WindowY, Config::FullScreen,
+        new Scenes::SceneConsole(new Scenes::SceneMenu())))
         return 1;
 #endif
     int res = game.Run();

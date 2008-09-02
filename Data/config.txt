@@ -6,11 +6,12 @@ Shaders         1
 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
 Multisampling   1
 ShadowMap       512
+VSync           0
 WindowX         800
 WindowY         600
 FillScreen      0
-FullScreenX    1680
-FullScreenY    1050
+FullScreenX    1280
+FullScreenY    1024
 
 # debug rendering modes
 Show_ShadowVolumes   0

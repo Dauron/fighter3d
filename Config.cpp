@@ -13,6 +13,7 @@ bool  Config::EnableShaders        = true;
 int   Config::MultisamplingLevel   = 0;
 int   Config::PolygonMode          = 0x1B02;
 int   Config::ShadowMapSize        = 512;
+bool  Config::VSync                = false;
 int   Config::WindowX              = 800;
 int   Config::WindowY              = 600;
 bool  Config::FullScreen           = false;
@@ -167,6 +168,13 @@ void Config :: Load(const char *fileName)
                     int level;
                     sscanf(buffer+9, "%d", &level);
                     Config::ShadowMapSize = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "vsync"))
+                {
+                    int level;
+                    sscanf(buffer+5, "%d", &level);
+                    Config::VSync = level;
                     continue;
                 }
                 if (StartsWith(buffer, "windowx"))

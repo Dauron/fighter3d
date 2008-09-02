@@ -6,7 +6,9 @@
 
 #include "MenuStates/MenuStates.h"
 
-BaseState* BaseState::Current = NULL;
+using namespace Scenes;
+
+Menu::BaseState* Menu::BaseState::Current = NULL;
 
 bool SceneMenu :: Initialize(int left, int top, unsigned int width, unsigned int height)
 {
@@ -15,10 +17,12 @@ bool SceneMenu :: Initialize(int left, int top, unsigned int width, unsigned int
 
     if (!root)
     {
-        root = new MainState();
+        root = new Menu::MainState();
         root->Init(NULL);
-        BaseState::SwitchState(*root);
+        Menu::BaseState::SwitchState(*root);
     }
+
+    GLExtensions::SetVSync(Config::VSync);
 
     return true;
 }
@@ -85,8 +89,8 @@ void SceneMenu :: Terminate()
 
 bool SceneMenu :: Invalidate()
 {
-    if (BaseState::Current_Get())
-        BaseState::Current_Get()->Invalidate();
+    if (Menu::BaseState::Current_Get())
+        Menu::BaseState::Current_Get()->Invalidate();
     return true;
 }
 
@@ -98,7 +102,7 @@ bool SceneMenu :: FrameUpdate(float deltaTime)
         return true;
     }
 
-    return BaseState::Current_Get()->Update(deltaTime);
+    return Menu::BaseState::Current_Get()->Update(deltaTime);
 }
 
 bool SceneMenu :: FrameRender()
@@ -119,7 +123,7 @@ bool SceneMenu :: FrameRender()
     // Set projection
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, Width, 0, Height, 0, 100);
+    glOrtho(0, Width, Height, 0, 0, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -137,7 +141,7 @@ bool SceneMenu :: FrameRender()
     const GLFont* pFont05 = g_FontMgr.GetFont(font05);
     const GLFont* pFont10 = g_FontMgr.GetFont(font10);
 
-    BaseState::Current_Get()->Render(pFont03, pFont04, pFont05, pFont10, Width, Height);
+    Menu::BaseState::Current_Get()->Render(pFont03, pFont04, pFont05, pFont10, Width, Height);
 
     glDisable(GL_BLEND);
 

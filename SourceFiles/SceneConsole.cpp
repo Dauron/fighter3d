@@ -9,6 +9,8 @@
 #include "../Utils/Debug.h"
 #include "../Utils/GraphicsModes.h"
 
+using namespace Scenes;
+
 Scene * SceneConsole :: SetCurrentScene(Scene* scene, bool destroyPrev)
  {
     if (!scene)

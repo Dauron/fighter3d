@@ -8,13 +8,14 @@
 #include "../Graphics/OGL/Render/RendererGL.h"
 #include "../Physics/Colliders/FigureCollider.h"
 
+using namespace Scenes;
+using namespace Math::Figures;
+using namespace Physics::Colliders;
+
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
-
-using namespace Math::Figures;
-using namespace Physics::Colliders;
 
 bool SceneTest::Initialize(int left, int top, unsigned int width, unsigned int height)
 {
@@ -256,7 +257,7 @@ bool SceneTest::InitGL()
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Nice perspective calculations
 
-    GLExtensions::SetVSync(false);
+    GLExtensions::SetVSync(Config::VSync);
 
     return true;
 }

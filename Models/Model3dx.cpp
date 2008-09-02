@@ -26,6 +26,8 @@ bool Model3dx :: Load ( const char *name )
             fname[size-1] = 'x';
             model->FileName = fname;
         }
+        else
+            model->FileName = strdup (name);
     }
     //model->Save();
     return model;

@@ -1,7 +1,7 @@
 [camera human]
 name	Perspective
-eye     0 8 2.2
-center  0 3 2.2
+eye     8 -3 2.2
+center  3 -3 2.2
 up		0 0 1
 speed   1
 (viewport)

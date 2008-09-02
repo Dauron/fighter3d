@@ -124,9 +124,10 @@ public:
     }
 
 protected:
-    virtual void CreateVerletSystem();
-    virtual void DestroyVerletSystem();
-    virtual void UpdateVerletSystem();
+    void CreateVerletSystem();
+    void DestroyVerletSystem();
+    void UpdateVerletSystem();
+    void UpdateSkews(xQuaternion *QT_bone);
 
 private:
     Math::Tracking::TrackedObject LastTO;

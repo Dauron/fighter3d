@@ -6,14 +6,15 @@
 
 class GLButton
 {
-    xWORD X,Y,X2,Y2;
-    bool  mOver;
+    bool   mOver;
 
   public:
-    int   Action;
-    char *Text;
-    bool  RadioBox;
-    bool  Down;
+    xFLOAT X,Y,X2,Y2;
+
+    int    Action;
+    char  *Text;
+    bool   RadioBox;
+    bool   Down;
     xColor Background;
 
     GLButton(const GLButton &button)
@@ -27,8 +28,17 @@ class GLButton
         Text     = strdup(button.Text);
         memcpy(&Background, &button.Background, sizeof(xColor));
     }
-    GLButton(const char *text, xWORD x, xWORD y, xWORD w, xWORD h, int action, bool radioBox = false, bool down = false)
-        : X(x), Y(y), X2(x+w), Y2(y+h), mOver(false), Action(action), RadioBox(radioBox), Down(down)
+    GLButton(const char *text, xFLOAT x, xFLOAT y, xFLOAT w, xFLOAT h, int action, bool radioBox = false, bool down = false)
+        : mOver(false), X(x), Y(y), X2(x+w), Y2(y+h), Action(action), RadioBox(radioBox), Down(down)
+    {
+        Text = strdup(text);
+        Background.r = Background.g = Background.b = 0.3f; Background.a = 1.0f;
+    }
+    GLButton(const char *text, xFLOAT x, xFLOAT y, const GLFont* pFont, int action, bool radioBox = false, bool down = false)
+        : mOver(false), X(x), Y(y)
+        , X2(x + pFont->Length(text) + 6)
+        , Y2(y + pFont->LineH())
+        , Action(action), RadioBox(radioBox), Down(down)
     {
         Text = strdup(text);
         Background.r = Background.g = Background.b = 0.3f; Background.a = 1.0f;
@@ -39,15 +49,15 @@ class GLButton
         Text = NULL;
     }
 
-    bool HitTest(xWORD x, xWORD y)
+    bool HitTest(xFLOAT x, xFLOAT y)
     {
         return (x >= X && y >= Y && x <= X2 && y <= Y2);
     }
-    bool Hover(xWORD x, xWORD y)
+    bool Hover(xFLOAT x, xFLOAT y)
     {
         return mOver = HitTest(x, y);
     }
-    bool Click(xWORD x, xWORD y)
+    bool Click(xFLOAT x, xFLOAT y)
     {
         mOver = false;
         return HitTest(x, y);
@@ -56,6 +66,8 @@ class GLButton
     void Render(const GLFont* pFont)
     {
         if (!Text) return;
+
+        int fHeight = pFont->m_Size;
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         if (Down)
@@ -77,7 +89,7 @@ class GLButton
             glColor4f( 0.f, 0.f, 0.f, 1.f );
         else
             glColor4f( 1.f, 1.f, 1.f, 1.f );
-        pFont->PrintF(X+3.f, Y+3.f, 0.f, Text);
+        pFont->PrintF(X+3.f, Y2-(Y2-Y-fHeight*0.5f)*0.5f, 0.f, Text);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glRectf(X, Y, X2, Y2);

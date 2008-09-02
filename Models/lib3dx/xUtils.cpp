@@ -1,6 +1,9 @@
 #include "xUtils.h"
 
-void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, const bool *boneMods,
+void _xElement_SkinElementInstance(const xElement *elem,
+                                   const xMatrix *bones,
+                                   //const xQuaternion *bones, const xPoint3 *roots, const xPoint3 *trans,
+                                   const bool *boneMods,
                                    xElementInstance &instance)
 {
     xWORD     count  = instance.I_vertices = elem->I_vertices;
@@ -22,7 +25,6 @@ void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, c
         {
             xVertexSkel *vert = (xVertexSkel *)srcV;
 
-            xVector4 vec;  vec.init(* (xVector3 *)vert->pos, 1.f);
             xMatrix  bone;
 
             int   idx[4];
@@ -43,13 +45,16 @@ void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, c
                     (!boneMods[idx[3]] || wght[3] < 0.001f))
                     continue; // vertex has not changed
 
-            itrV->init(0.f, 0.f, 0.f, 0.f);
+            itrV->init(0.f, 0.f, 0.f, 1.f);
             itrN->init(0.f, 0.f, 0.f);
             for (int b=0; b<4; ++b)
             {
-                bone = bones[idx[b]] * wght[b]*10;
-                *itrV  += bone * vec;
-                *itrN  += bone.postTransformV(*srcN);
+                if (wght[b] < 0.001f) break;
+                xFLOAT wgh = wght[b] * 10;
+                //itrV->vector3 += wgh * (bones[idx[b]].rotate(vert->pos - roots[idx[b]]) + trans[idx[b]]);
+                //*itrN         += wgh * bones[idx[b]].rotate(*srcN);
+                itrV->vector3 += wgh * bones[idx[b]].postTransformP(vert->pos);
+                *itrN         += wgh * bones[idx[b]].postTransformV(*srcN);
             }
         }
     }
@@ -68,17 +73,22 @@ void _xElement_SkinElementInstance(const xElement *elem, const xMatrix *bones, c
 }
 
 void _xModel_SkinElementInstance(const xElement *elem, xElementInstance *instanceP,
-                                 const xMatrix *bones, const bool *boneMods)
+                                 const xMatrix *bones,
+                                 //const xQuaternion *bones, const xPoint3 *roots, const xPoint3 *trans,
+                                 const bool *boneMods)
 {
     for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
-        _xModel_SkinElementInstance(celem, instanceP, bones, boneMods);
+        _xModel_SkinElementInstance(celem, instanceP, bones, /*roots, trans,*/ boneMods);
 
-    _xElement_SkinElementInstance(elem, bones, boneMods, instanceP[elem->ID]);
+    _xElement_SkinElementInstance(elem, bones, /*roots, trans,*/ boneMods, instanceP[elem->ID]);
 }
 void xModel_SkinElementInstance(const xModel &model, xModelInstance &instance)
 {
     for (xElement *celem = model.L_kids; celem; celem = celem->Next)
-        _xModel_SkinElementInstance(celem, instance.L_elements, instance.MX_bones, instance.FL_modified);
+        _xModel_SkinElementInstance(celem, instance.L_elements,
+            instance.MX_bones,
+            //instance.QT_bones, instance.P_bone_roots, instance.P_bone_trans,
+            instance.FL_modified);
 }
 
 xBoxA    _xBoundingBox(const xVector4 *vertexP, xWORD vertexC)

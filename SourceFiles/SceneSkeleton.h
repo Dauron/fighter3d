@@ -15,183 +15,189 @@
 
 #include <string>
 
-class SceneSkeleton : public Scene, public ISelectionProvider
-{
-  public:
-    SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName);
-    ~SceneSkeleton();
+namespace Scenes {
 
-    virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
-    virtual bool Invalidate();
-    virtual void Terminate();
-    virtual bool FrameUpdate(float deltaTime);
-    virtual bool FrameRender();
-
-    virtual void Resize(int left, int top, unsigned int width, unsigned int height)
+    class SceneSkeleton : public Scene, public ISelectionProvider
     {
-        Scene::Resize(left, top, width, height);
-        InitCameras(false);
-    }
+      public:
+        SceneSkeleton(const char *gr_modelName, const char *ph_modelName);
+        ~SceneSkeleton();
 
-  private:
-    void InitInputMgr();
-    void InitCameras(bool FL_reposition = false);
+        virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
+        virtual void Resize(int left, int top, unsigned int width, unsigned int height);
+        virtual bool Invalidate();
+        virtual void Terminate();
+        virtual bool FrameUpdate(float deltaTime);
+        virtual bool FrameRender();
 
-    struct _Cameras
-    {
-        Math::Cameras::CameraHuman Front, Back, Left, Right, Perspective;
-        Math::Cameras::CameraFree  Top, Bottom;
-        Math::Cameras::Camera *Current;
-    } Cameras;
+      private:
+        void InitInputMgr();
+        void InitCameras(bool FL_reposition = false);
 
-    enum
-    {
-        emMain, emCreateBone,
-        emCreateConstraint_Type, emCreateConstraint_Node, emCreateConstraint_Params,
-        emEditBVH, emSelectBVHBone, emCreateBVH, emEditVolume,
-        emSelectElement, emSelectVertex, emSelectBone, emInputWght,
-        emSelectAnimation, emEditAnimation, emAnimateBones, emFrameParams,
-        emLoadAnimation, emSaveAnimation,
-        emLast
-    } EditMode;
+        struct _Cameras
+        {
+            Math::Cameras::CameraHuman Front, Back, Left, Right, Perspective;
+            Math::Cameras::CameraFree  Top, Bottom;
+            Math::Cameras::Camera *Current;
+        } Cameras;
 
-    HFont       Font;
-    RigidObj    Model;
+        enum
+        {
+            emMain, emCreateBone,
+            emCreateConstraint_Type, emCreateConstraint_Node, emCreateConstraint_Params,
+            emEditBVH, emSelectBVHBone, emCreateBVH, emEditVolume,
+            emSelectElement, emSelectVertex, emSelectBone, emInputWght,
+            emSelectAnimation, emEditAnimation, emAnimateBones, emFrameParams,
+            emLoadAnimation, emSaveAnimation, emSaveModel,
+            emLast
+        } EditMode;
 
-    VerletSystem vSystem;
-    VerletSolver vEngine;
+        HFont       Font;
+        RigidObj    Model;
 
-    char                              * KeyName_Accept;
-    char                              * KeyName_Modify;
-    std::vector<std::vector<GLButton> > Buttons;
-    std::vector<GLButton>               Directories;
-    std::string                         CurrentDirectory;
-    std::string                         AnimationName;
+        VerletSystem vSystem;
+        VerletSolver vEngine;
 
-    // Input states and key buffer
-    struct _InputState {
-        int         LastX, LastY;
-        bool        MouseLIsDown;
-        bool        MouseRIsDown;
-        std::string String;
-    } InputState;
+        char                              * KeyName_Accept;
+        char                              * KeyName_Modify;
+        std::vector<std::vector<GLButton> > Buttons;         // Buttons[EditMode][ButtonNo]
+        std::vector<GLButton>               Directories;
+        std::string                         CurrentDirectory;
+        std::string                         AnimationName;
 
-    // Scene state properties
-    struct _State {
-        bool        DisplayPhysical;
-        bool        HideBonesOnAnim;
-        bool        ShowBonesAlways;
-        bool        PlayAnimation;
-        int         CurrentAction;
-    } State;
+        // Input states and key buffer
+        struct _InputState {
+            int         LastX, LastY;
+            bool        MouseLIsDown;
+            bool        MouseRIsDown;
+            std::string String;
+        } InputState;
 
-    // Specific Edit Mode properties
-#ifdef WIN32
-    union { // Save some memory... not much, but always :)
-#endif
-        // Constraint
-        struct _Constraint {
-            xBYTE  boneA;
-            xBYTE  boneB;
-            xLONG  type;
-            union {
-                xFLOAT M_weight;
-                xFLOAT S_length;
-                struct {
-                    xFLOAT maxX;
-                    xFLOAT minX;
-                    xFLOAT maxY;
-                    xFLOAT minY;
-                    xBYTE  step;
+        // Scene state properties
+        struct _State {
+            bool        DisplayPhysical;
+            bool        HideBonesOnAnim;
+            bool        ShowBonesAlways;
+            bool        PlayAnimation;
+            int         CurrentAction;
+        } State;
+
+        // Specific Edit Mode properties
+    #ifdef WIN32
+        union { // Save some memory... not much, but always :)
+    #endif
+            // Constraint
+            struct _Constraint {
+                xBYTE  boneA;
+                xBYTE  boneB;
+                xLONG  type;
+                union {
+                    xFLOAT M_weight;
+                    xFLOAT S_length;
+                    struct {
+                        xFLOAT maxX;
+                        xFLOAT minX;
+                        xFLOAT maxY;
+                        xFLOAT minY;
+                        xBYTE  step;
+                    };
+                    xFLOAT4    angles;
                 };
-                xFLOAT4    angles;
-            };
-        } Constraint;
-        // BVH
-        struct _BVH {
-            xPoint3 P_prevMouse;
-        } BVH;
-        // Skinning
-        struct _Skin {
-            struct {
-                xBYTE id;
-                xBYTE weight;
-            } BoneWeight[4];
-        } Skin;
-        // Animation
-        struct _Animation {
-            union {
-                // Key Frame parameters
+            } Constraint;
+            // BVH
+            struct _BVH {
+                xPoint3 P_prevMouse;
+            } BVH;
+            // Skinning
+            struct _Skin {
                 struct {
-                    xBYTE step;
-                    xLONG freeze;
-                    xLONG duration;
-                } KeyFrame;
-                // Bone rotation
-                struct {
-                    Math::Figures::xBoxA Bounds;
-                    xQuaternion          PreviousQuaternion;
-                } Skeleton;
-            };
-            xAnimation * Instance;
-        } Animation;
-#ifdef WIN32
+                    xBYTE id;
+                    xBYTE weight;
+                } BoneWeight[4];
+            } Skin;
+            // Animation
+            struct _Animation {
+                union {
+                    // Key Frame parameters
+                    struct {
+                        xBYTE step;
+                        xLONG freeze;
+                        xLONG duration;
+                    } KeyFrame;
+                    // Bone rotation
+                    struct {
+                        Math::Figures::xBoxA Bounds;
+                        xQuaternion          PreviousQuaternion;
+                    } Skeleton;
+                };
+                xAnimation * Instance;
+            } Animation;
+            // Save model
+            struct _SaveModel {
+                bool FL_save_physical;
+            } SaveModel;
+    #ifdef WIN32
+        };
+    #endif
+
+        // Selected objects
+        struct _Selection {
+            xBone             * Bone;
+            xBVHierarchy      * BVHNode;
+            xBYTE               BVHNodeID;
+            xBYTE               FigureDim;
+            xElement          * Element;
+            xWORD               ElementId;
+            std::vector<xDWORD> Vertices;
+
+            int                 RectStartX, RectStartY;
+        } Selection;
+        xDWORD          HoveredVert;
+
+        void          RenderProgressBar();
+
+        void          SwitchDisplayedModel();
+
+        /* BVH */
+        xBYTE         GetBVH_Count (xBVHierarchy &bvhNode);
+        xBYTE         GetBVH_ID (xBVHierarchy &bvhNode, xBVHierarchy *selected, xBYTE &ID);
+        xBVHierarchy *GetBVH_byID (xBVHierarchy &bvhNode, xBYTE ID_selected, xBYTE &ID);
+        void          UpdateCustomBVH();
+        void          UpdateBBox();
+
+        /* INPUT & CAMERAS */
+        bool        UpdateButton(GLButton &button);
+        void        UpdateDisplay(float deltaTime);
+        /* MOUSE */
+        void        UpdateMouse(float deltaTime);
+        void        MouseLDown (int X, int Y);
+        void        MouseLUp   (int X, int Y);
+        void        MouseRDown (int X, int Y);
+        void        MouseRUp   (int X, int Y);
+        void        MouseMove  (int X, int Y);
+        void        MouseLDown_BVH(int X, int Y);
+        void        MouseLMove_BVH(int X, int Y);
+        /* 3D */
+        xVector3    CastPoint (xVector3 rayPos, xVector3 planeP);
+        /* TEXT INPUT */
+        void        GetCommand();
+        void        GetConstraintParams();
+        void        GetBoneIdAndWeight();
+        void        GetFrameParams();
+        /* FILES */
+        void        FillDirectoryBtns(bool files = false, const char *mask = NULL);
+
+        /* SELECT */
+        virtual void         RenderSelect   (const Math::Cameras::FieldOfView &FOV);
+        virtual unsigned int CountSelectable();
+        std::vector<xDWORD> *SelectCommon  (int X, int Y, int W = 1, int H = 1);
+        xBone               *SelectBone    (int X, int Y);
+        xBVHierarchy        *SelectBVH     (int X, int Y);
+        xWORD                SelectElement (int X, int Y);
+
+
     };
-#endif
 
-    // Selected objects
-    struct _Selection {
-        xBone             * Bone;
-        xBVHierarchy      * BVHNode;
-        xBYTE               BVHNodeID;
-        xBYTE               FigureDim;
-        xElement          * Element;
-        xWORD               ElementId;
-        std::vector<xDWORD> Vertices;
-
-        int                 RectStartX, RectStartY;
-    } Selection;
-    xDWORD          HoveredVert;
-
-    void        RenderProgressBar();
-
-    /* BVH */
-    xBYTE         GetBVH_Count (xBVHierarchy &bvhNode);
-    xBYTE         GetBVH_ID (xBVHierarchy &bvhNode, xBVHierarchy *selected, xBYTE &ID);
-    xBVHierarchy *GetBVH_byID (xBVHierarchy &bvhNode, xBYTE ID_selected, xBYTE &ID);
-    void          UpdateCustomBVH();
-    void          UpdateBBox();
-
-    /* INPUT & CAMERAS */
-    bool        UpdateButton(GLButton &button);
-    void        UpdateDisplay(float deltaTime);
-    /* MOUSE */
-    void        UpdateMouse(float deltaTime);
-    void        MouseLDown (int X, int Y);
-    void        MouseLUp   (int X, int Y);
-    void        MouseRDown (int X, int Y);
-    void        MouseRUp   (int X, int Y);
-    void        MouseMove  (int X, int Y);
-    void        MouseLDown_BVH(int X, int Y);
-    void        MouseLMove_BVH(int X, int Y);
-    /* 3D */
-    xVector3    CastPoint (xVector3 rayPos, xVector3 planeP);
-    /* TEXT INPUT */
-    void        GetCommand();
-    void        GetConstraintParams();
-    void        GetBoneIdAndWeight();
-    void        GetFrameParams();
-    /* FILES */
-    void        FillDirectoryBtns(bool files = false, const char *mask = NULL);
-
-    /* SELECT */
-    virtual void         RenderSelect   (const Math::Cameras::FieldOfView &FOV);
-    virtual unsigned int CountSelectable();
-    std::vector<xDWORD> *SelectCommon  (int X, int Y, int W = 1, int H = 1);
-    xBone               *SelectBone    (int X, int Y);
-    xBVHierarchy        *SelectBVH     (int X, int Y);
-    xWORD                SelectElement (int X, int Y);
-
-};
+} // namespace Scenes
 
 #endif

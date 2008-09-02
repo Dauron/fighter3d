@@ -29,7 +29,8 @@ void RenderElementDepthLST(
         GLShader::EnableSkeleton(xState_On);
         GLShader::Start();
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
+        g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
         g_AnimSkeletal.SetElement(elem, &instance, false);
     }
     else
@@ -90,7 +91,8 @@ void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
         GLShader::EnableSkeleton(xState_On);
         GLShader::Start();
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
+        g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
         g_AnimSkeletal.SetElement(elem, &instance, true);
     }
     else

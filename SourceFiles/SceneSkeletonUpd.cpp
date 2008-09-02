@@ -14,12 +14,25 @@
 #include "../Math/Figures/xBoxO.h"
 #include "../Models/lib3dx/xUtils.h"
 
+using namespace Scenes;
+using namespace Math::Figures;
+
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
 
-using namespace Math::Figures;
+void SceneSkeleton::SwitchDisplayedModel()
+{
+    State.DisplayPhysical = !State.DisplayPhysical;
+    if (Model.ModelPh)
+    {
+        RigidObj::CopySpine(Model.ModelGr->xModelP->Spine, Model.ModelPh->xModelP->Spine);
+        Model.SwapModels();
+        Model.VerticesChanged(false, true);
+    }
+    Buttons[emMain][4].Down = State.DisplayPhysical;
+}
 
 void SceneSkeleton::UpdateBBox()
 {
@@ -175,14 +188,8 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
     if (EditMode != emSelectVertex && EditMode != emSelectBone && EditMode != emInputWght &&
         im.GetInputStateAndClear(IC_ViewPhysicalModel))
     {
-        State.DisplayPhysical = !State.DisplayPhysical;
-        if (Model.ModelPh)
-        {
-            RigidObj::CopySpine(Model.ModelGr->xModelP->Spine, Model.ModelPh->xModelP->Spine);
-            Model.SwapModels();
-            Model.VerticesChanged(false, true);
-        }
-        Buttons[emMain][3].Down = State.DisplayPhysical;
+        SwitchDisplayedModel();
+        return true;
     }
     if (EditMode == emCreateConstraint_Params)
     {
@@ -199,7 +206,7 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
         GetFrameParams();
         return true;
     }
-    if (EditMode == emSaveAnimation)
+    if (EditMode == emSaveAnimation || EditMode == emSaveModel)
     {
         GetCommand();
         return true;
@@ -316,25 +323,18 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             EditMode = emSelectAnimation;
         else
         if (button.Action == IC_BE_Select)
-        {
-            State.DisplayPhysical = !State.DisplayPhysical;
-            if (Model.ModelPh)
-            {
-                RigidObj::CopySpine(Model.ModelGr->xModelP->Spine, Model.ModelPh->xModelP->Spine);
-                Model.SwapModels();
-                Model.VerticesChanged(false, true);
-            }
-            button.Down = State.DisplayPhysical;
-        }
+            SwitchDisplayedModel();
         else
         if (button.Action == IC_BE_Save)
         {
-            Model.ModelGr->xModelP->Save();
-            if (Model.ModelPh)
-            {
-                RigidObj::CopySpine(Model.ModelGr->xModelP->Spine, Model.ModelPh->xModelP->Spine);
-                Model.ModelPh->xModelP->Save();
-            }
+            if (State.DisplayPhysical)
+                SwitchDisplayedModel();
+            CurrentDirectory = Filesystem::GetParentDir(Model.ModelGr->xModelP->FileName);
+            InputState.String = Filesystem::GetFileName(Model.ModelGr->xModelP->FileName);
+            SaveModel.FL_save_physical = false;
+            FillDirectoryBtns(true, "*.3dx");
+            EditMode = emSaveModel;
+            g_InputMgr.Buffer.clear();
         }
 
         return true;
@@ -563,7 +563,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         {
             FillDirectoryBtns(true, "*.ska");
             EditMode = emSaveAnimation;
-            InputState.String.clear();
+            InputState.String = AnimationName;
             g_InputMgr.Buffer.clear();
         }
         return true;
@@ -666,6 +666,61 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         }
         return true;
     }
+    if (EditMode == emSaveModel)
+    {
+        if (button.Action == IC_BE_Move)
+        {
+            if (!strcmp(button.Text, ".."))
+                CurrentDirectory = Filesystem::GetParentDir(CurrentDirectory);
+            else
+            {
+                CurrentDirectory += "/";
+                CurrentDirectory += button.Text;
+            }
+            FillDirectoryBtns(true, "*.ska");
+            return true;
+        }
+        if (button.Action == IC_BE_Select)
+        {
+            InputState.String = button.Text;
+        }
+        if (button.Action == IC_Accept)
+        {
+            if (!InputState.String.size())
+                InputState.String = Model.ModelGr->xModelP->FileName;
+
+            if (InputState.String.size())
+            {
+                if (Filesystem::GetFileExt(InputState.String) == "3ds")
+                    InputState.String = Filesystem::ChangeFileExt(InputState.String, "3dx");
+
+                InputState.String = CurrentDirectory + "/" + InputState.String;
+
+                delete[] Model.ModelGr->xModelP->FileName;
+                Model.ModelGr->xModelP->FileName = strdup (InputState.String.c_str());
+                Model.ModelGr->xModelP->Save();
+
+                if (Model.ModelPh && !SaveModel.FL_save_physical)
+                {
+                    SwitchDisplayedModel();
+                    CurrentDirectory = Filesystem::GetParentDir(Model.ModelGr->xModelP->FileName);
+                    InputState.String = Filesystem::GetFileName(Model.ModelGr->xModelP->FileName);
+                    FillDirectoryBtns(true, "*.3dx");
+                    g_InputMgr.Buffer.clear();
+                    SaveModel.FL_save_physical = true;
+                }
+                else
+                    EditMode = emMain;
+            }
+            return true;
+        }
+        if (button.Action == IC_Reject)
+        {
+            Directories.clear();
+            EditMode = emMain;
+            return true;
+        }
+    }
     return false;
 }
 
@@ -718,7 +773,7 @@ void SceneSkeleton::MouseLUp   (int X, int Y)
     std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
     std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
-        if (begin->Click(X, Height-Y) && UpdateButton(*begin))
+        if (begin->Click((xFLOAT)X, (xFLOAT)Y) && UpdateButton(*begin))
             return;
 
     if (EditMode == emCreateBone)
@@ -936,12 +991,12 @@ void SceneSkeleton::MouseLUp   (int X, int Y)
             UpdateBBox();
     }
     else
-    if (EditMode == emLoadAnimation || EditMode == emSaveAnimation)
+    if (EditMode == emLoadAnimation || EditMode == emSaveAnimation || EditMode == emSaveModel)
     {
         begin = Directories.begin();
         end   = Directories.end();
         for (; begin != end; ++begin)
-            if (begin->Click(X, Height-Y) && UpdateButton(*begin))
+            if (begin->Click((xFLOAT)X, (xFLOAT)Y) && UpdateButton(*begin))
                 return;
     }
 }
@@ -961,7 +1016,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
     std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
     std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
-        begin->Hover(X, Height-Y);
+        begin->Hover((xFLOAT)X, (xFLOAT)Y);
 
     if (EditMode == emCreateBone && Selection.Bone && // edit-move bone (ending)
         InputState.MouseLIsDown && State.CurrentAction == IC_BE_Move)
@@ -1046,7 +1101,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
                 xFLOAT      *M_iter  = vSystem.M_weight_Inv;
                 xMatrix     *MX_bone = Model.ModelGr->instance.MX_bones;
                 xQuaternion *QT_bone = Model.ModelGr->instance.QT_bones;
-                for (int i = spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++MX_bone, QT_bone+=2, ++M_iter)
+                for (int i = spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++MX_bone, ++QT_bone, ++M_iter)
                 {
                     *P_cur  = *P_old = MX_bone->postTransformP(bone->P_end);
                     *QT_skew = bone->getSkew(*QT_bone);
@@ -1057,8 +1112,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
                 vSystem.P_current[Selection.Bone->ID] = Cameras.Current->FOV.Get3dPos(X, Height-Y, vSystem.P_current[Selection.Bone->ID]);
                 vEngine.SatisfyConstraints();
 
-                spine.CalcQuats(vSystem.P_current, vSystem.QT_boneSkew,
-                                0, xMatrix::Identity(), xVector3::Create(0.f,0.f,0.f));
+                spine.CalcQuats(vSystem.P_current, vSystem.QT_boneSkew, 0, xMatrix::Identity());
             }
             Model.CalculateSkeleton();                                     // refresh model in GPU
         }
@@ -1072,12 +1126,12 @@ void SceneSkeleton::MouseMove  (int X, int Y)
         }
     }
     else
-    if (EditMode == emLoadAnimation || EditMode == emSaveAnimation)
+    if (EditMode == emLoadAnimation || EditMode == emSaveAnimation || EditMode == emSaveModel)
     {
         std::vector<GLButton>::iterator begin = Directories.begin();
         std::vector<GLButton>::iterator end   = Directories.end();
         for (; begin != end; ++begin)
-            begin->Hover(X, Height-Y);
+            begin->Hover((xFLOAT)X, (xFLOAT)Y);
     }
 
     InputState.LastX = X;
@@ -1305,13 +1359,13 @@ void SceneSkeleton::GetCommand()
 }
 void SceneSkeleton::FillDirectoryBtns(bool files, const char *mask)
 {
-    Filesystem::VectorString dirs = Filesystem::GetDirectories(CurrentDirectory);
+    Filesystem::Vec_string dirs = Filesystem::GetDirectories(CurrentDirectory);
     Directories.clear();
-    int top  = Height-20, left = 5, width = Width/3-10;
+    xFLOAT top  = 5.f, left = 5.f, width = Width*0.333f-10;
     for (size_t i=0; i<dirs.size(); ++i)
     {
-        top -= 20;
-        if (top < 45) { top = Height-40; left += Width/3; }
+        top += 20;
+        if (top > Height-45) { top = 25.f; left += Width*0.333f; }
         Directories.push_back(GLButton(dirs[i].c_str(), left, top, width, 15, IC_BE_Move));
     }
     if (files)
@@ -1319,8 +1373,8 @@ void SceneSkeleton::FillDirectoryBtns(bool files, const char *mask)
         dirs = Filesystem::GetFiles(CurrentDirectory, mask);
         for (size_t i=0; i<dirs.size(); ++i)
         {
-            top -= 20;
-            if (top < 45) { top = Height-40; left += Width/3; }
+            top += 20;
+            if (top > Height-45) { top = 25.f; left += Width*0.333f; }
             Directories.push_back(GLButton(dirs[i].c_str(), left, top, width, 15, IC_BE_Select));
             GLButton &btn = Directories.back();
             btn.Background.r = btn.Background.g = btn.Background.b = 0.35f;

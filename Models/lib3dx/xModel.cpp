@@ -431,12 +431,14 @@ void xModel::CreateBVH(xBVHierarchy &BVH_node, xMeshData *&MeshData)
 /* model instance */
 void xModelInstance :: Zero()
 {
-    MX_bones    = NULL;
-    QT_bones    = NULL;
-    I_bones     = 0;
-    FL_modified = NULL;
-    I_elements  = 0;
-    L_elements  = NULL;
+    MX_bones     = NULL;
+    QT_bones     = NULL;
+    P_bone_roots = NULL;
+    P_bone_trans = NULL;
+    I_bones      = 0;
+    FL_modified  = NULL;
+    I_elements   = 0;
+    L_elements   = NULL;
 }
 
 void xModelInstance :: ZeroElements()
@@ -451,9 +453,11 @@ void xModelInstance :: ZeroElements()
 
 void xModelInstance :: ClearSkeleton()
 {
-    if (MX_bones)    delete[] MX_bones;    MX_bones = NULL;
-    if (QT_bones)    delete[] QT_bones;    QT_bones = NULL;
-    if (FL_modified) delete[] FL_modified; FL_modified = NULL;
+    if (MX_bones)     { delete[] MX_bones;     MX_bones = NULL; }
+    if (QT_bones)     { delete[] QT_bones;     QT_bones = NULL; }
+    if (P_bone_roots) { delete[] P_bone_roots; P_bone_roots = NULL; }
+    if (P_bone_trans) { delete[] P_bone_trans; P_bone_trans = NULL; }
+    if (FL_modified)  { delete[] FL_modified;  FL_modified = NULL; }
 }
 
 void xModelInstance :: FreeVertices()

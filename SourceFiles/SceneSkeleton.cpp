@@ -5,10 +5,10 @@
 #include "../Graphics/OGL/GLShader.h"
 #include "../Graphics/OGL/WorldRenderGL.h"
 
-SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const char *ph_modelName)
-{
-    PrevScene = prevScene;
+using namespace Scenes;
 
+SceneSkeleton::SceneSkeleton(const char *gr_modelName, const char *ph_modelName)
+{
     EditMode = emMain;
 
     State.CurrentAction   = 0;
@@ -34,59 +34,6 @@ SceneSkeleton::SceneSkeleton(Scene *prevScene, const char *gr_modelName, const c
     sceneName = "[Skeleton]";
     Font      = HFont();
     Cameras.Current = NULL;
-
-    Buttons.resize(emLast);
-    Buttons[emMain].push_back(GLButton("Create Skeleton",  10, 2, 145, 15, IC_BE_ModeSkeletize));
-    Buttons[emMain].push_back(GLButton("Edit BVH",        160, 2,  80, 15, IC_BE_ModeBVH));
-    Buttons[emMain].push_back(GLButton("Skinning",        245, 2,  80, 15, IC_BE_ModeSkin));
-    Buttons[emMain].push_back(GLButton("Animating",       330, 2,  90, 15, IC_BE_ModeAnimate));
-    Buttons[emMain].push_back(GLButton("Graph/Phys",      425, 2, 100, 15, IC_BE_Select));
-    Buttons[emMain].push_back(GLButton("Save",            530, 2,  45, 15, IC_BE_Save));
-
-    Buttons[emCreateBone].push_back(GLButton("Select", 100, 2, 65, 15, IC_BE_Select, true, true));
-    Buttons[emCreateBone].push_back(GLButton("Create", 170, 2, 65, 15, IC_BE_Create, true));
-    Buttons[emCreateBone].push_back(GLButton("Move",   240, 2, 45, 15, IC_BE_Move,   true));
-    Buttons[emCreateBone].push_back(GLButton("Delete", 290, 2, 65, 15, IC_BE_Delete));
-    Buttons[emCreateBone].push_back(GLButton("Create constr", 360, 2, 130, 15, IC_BE_CreateConstr));
-    Buttons[emCreateBone].push_back(GLButton("Delete constr", 495, 2, 130, 15, IC_BE_DeleteConstr, true));
-
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Max",    205, 2, 35, 15, IC_BE_CreateConstrMax));
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Min",    245, 2, 35, 15, IC_BE_CreateConstrMin));
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Const",  285, 2, 55, 15, IC_BE_CreateConstrEql));
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Ang",    345, 2, 35, 15, IC_BE_CreateConstrAng));
-    Buttons[emCreateConstraint_Type].push_back(GLButton("Weight", 385, 2, 65, 15, IC_BE_CreateConstrWeight));
-
-    Buttons[emEditBVH].push_back(GLButton("Create", 120, 2, 65, 15, IC_BE_Create));
-    Buttons[emEditBVH].push_back(GLButton("Edit",   190, 2, 45, 15, IC_BE_Edit, true, true));
-    Buttons[emEditBVH].push_back(GLButton("Clone",  240, 2, 55, 15, IC_BE_Clone, true));
-    Buttons[emEditBVH].push_back(GLButton("Delete", 300, 2, 65, 15, IC_BE_Delete, true));
-
-    Buttons[emCreateBVH].push_back(GLButton("Sphere",  120, 2, 65, 15, IC_BE_CreateSphere));
-    Buttons[emCreateBVH].push_back(GLButton("Capsule", 190, 2, 75, 15, IC_BE_CreateCapsule));
-    Buttons[emCreateBVH].push_back(GLButton("Box",     270, 2, 35, 15, IC_BE_CreateBox));
-
-    Buttons[emSelectAnimation].push_back(GLButton("New",  110, 2, 35, 15, IC_BE_Create));
-    Buttons[emSelectAnimation].push_back(GLButton("Load", 150, 2, 45, 15, IC_BE_Select));
-
-    Buttons[emEditAnimation].push_back(GLButton("Play",      110, 2, 45, 15, IC_BE_Play));
-    Buttons[emEditAnimation].push_back(GLButton("Insert KF", 160, 2, 90, 15, IC_BE_Create));
-    Buttons[emEditAnimation].push_back(GLButton("Edit KF",   255, 2, 70, 15, IC_BE_Edit));
-    Buttons[emEditAnimation].push_back(GLButton("KF Time",   330, 2, 70, 15, IC_BE_Move));
-    Buttons[emEditAnimation].push_back(GLButton("Delete KF", 405, 2, 90, 15, IC_BE_Delete));
-    Buttons[emEditAnimation].push_back(GLButton("Loop",      500, 2, 45, 15, IC_BE_Loop));
-    Buttons[emEditAnimation].push_back(GLButton("Save",      550, 2, 45, 15, IC_BE_Save));
-
-    Buttons[emAnimateBones].push_back(GLButton("Select",     110, 2, 65, 15, IC_BE_Select, true, true));
-    Buttons[emAnimateBones].push_back(GLButton("Move",       180, 2, 45, 15, IC_BE_Move,   true));
-    Buttons[emAnimateBones].push_back(GLButton("Reset Bone", 230, 2, 95, 15, IC_BE_Delete));
-    Buttons[emAnimateBones].push_back(GLButton("Tgl.Bones",  330, 2, 90, 15, IC_BE_ModeSkeletize));
-    Buttons[emAnimateBones].push_back(GLButton("Accept",     425, 2, 65, 15, IC_BE_Save));
-    Buttons[emAnimateBones].push_back(GLButton("Reject",     495, 2, 65, 15, IC_Reject));
-
-    Buttons[emLoadAnimation].push_back(GLButton("Reject",    110, 2, 65, 15, IC_Reject));
-
-    Buttons[emSaveAnimation].push_back(GLButton("Accept",    110, 2, 65, 15, IC_Accept));
-    Buttons[emSaveAnimation].push_back(GLButton("Reject",    180, 2, 65, 15, IC_Reject));
 
     Model.Initialize(gr_modelName, ph_modelName);
 
@@ -123,6 +70,81 @@ bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned i
         KeyName_Modify = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_BE_Modifier)).c_str());
         KeyName_Accept = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_Accept)).c_str());
     }
+
+    if (!g_FontMgr.IsHandleValid(Font))
+        Font = g_FontMgr.GetFont("Courier New", 15);
+
+    if (!Buttons.size())
+    {
+        const GLFont* pFont = g_FontMgr.GetFont(Font);
+
+        Buttons.resize(emLast);
+        std::vector<GLButton> &menu1 = Buttons[emMain];
+        menu1.push_back(GLButton("Create Skeleton", 10,              Height-20.f, pFont, IC_BE_ModeSkeletize));
+        menu1.push_back(GLButton("Edit BVH",        menu1[0].X2 + 5, Height-20.f, pFont, IC_BE_ModeBVH));
+        menu1.push_back(GLButton("Skinning",        menu1[1].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkin));
+        menu1.push_back(GLButton("Animating",       menu1[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeAnimate));
+        menu1.push_back(GLButton("Graph/Phys",      menu1[3].X2 + 5, Height-20.f, pFont, IC_BE_Select));
+        menu1.push_back(GLButton("Save",            menu1[4].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+
+        std::vector<GLButton> &menu2 = Buttons[emCreateBone];
+        menu2.push_back(GLButton("Select",        100,             Height-20.f, pFont, IC_BE_Select, true, true));
+        menu2.push_back(GLButton("Create",        menu2[0].X2 + 5, Height-20.f, pFont, IC_BE_Create, true));
+        menu2.push_back(GLButton("Move",          menu2[1].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
+        menu2.push_back(GLButton("Delete",        menu2[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+        menu2.push_back(GLButton("Create constr", menu2[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstr));
+        menu2.push_back(GLButton("Delete constr", menu2[4].X2 + 5, Height-20.f, pFont, IC_BE_DeleteConstr, true));
+
+        std::vector<GLButton> &menu3 = Buttons[emCreateConstraint_Type];
+        menu3.push_back(GLButton("Max",    205,             Height-20.f, pFont, IC_BE_CreateConstrMax));
+        menu3.push_back(GLButton("Min",    menu3[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrMin));
+        menu3.push_back(GLButton("Const",  menu3[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrEql));
+        menu3.push_back(GLButton("Ang",    menu3[2].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrAng));
+        menu3.push_back(GLButton("Weight", menu3[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrWeight));
+
+        std::vector<GLButton> &menu4 = Buttons[emEditBVH];
+        menu4.push_back(GLButton("Create", 120,             Height-20.f, pFont, IC_BE_Create));
+        menu4.push_back(GLButton("Edit",   menu4[0].X2 + 5, Height-20.f, pFont, IC_BE_Edit, true, true));
+        menu4.push_back(GLButton("Clone",  menu4[1].X2 + 5, Height-20.f, pFont, IC_BE_Clone, true));
+        menu4.push_back(GLButton("Delete", menu4[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete, true));
+
+        std::vector<GLButton> &menu5 = Buttons[emCreateBVH];
+        menu5.push_back(GLButton("Sphere",  120,             Height-20.f, pFont, IC_BE_CreateSphere));
+        menu5.push_back(GLButton("Capsule", menu5[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateCapsule));
+        menu5.push_back(GLButton("Box",     menu5[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateBox));
+
+        std::vector<GLButton> &menu6 = Buttons[emSelectAnimation];
+        menu6.push_back(GLButton("New",  110,             Height-20.f, pFont, IC_BE_Create));
+        menu6.push_back(GLButton("Load", menu6[0].X2 + 5, Height-20.f, pFont, IC_BE_Select));
+
+        std::vector<GLButton> &menu7 = Buttons[emEditAnimation];
+        menu7.push_back(GLButton("Play",      110,             Height-20.f, pFont, IC_BE_Play));
+        menu7.push_back(GLButton("Insert KF", menu7[0].X2 + 5, Height-20.f, pFont, IC_BE_Create));
+        menu7.push_back(GLButton("Edit KF",   menu7[1].X2 + 5, Height-20.f, pFont, IC_BE_Edit));
+        menu7.push_back(GLButton("KF Time",   menu7[2].X2 + 5, Height-20.f, pFont, IC_BE_Move));
+        menu7.push_back(GLButton("Delete KF", menu7[3].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+        menu7.push_back(GLButton("Loop",      menu7[4].X2 + 5, Height-20.f, pFont, IC_BE_Loop));
+        menu7.push_back(GLButton("Save",      menu7[5].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+
+        std::vector<GLButton> &menu8 = Buttons[emAnimateBones];
+        menu8.push_back(GLButton("Select",     110,             Height-20.f, pFont, IC_BE_Select, true, true));
+        menu8.push_back(GLButton("Move",       menu8[0].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
+        menu8.push_back(GLButton("Reset Bone", menu8[1].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+        menu8.push_back(GLButton("Tgl.Bones",  menu8[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkeletize));
+        menu8.push_back(GLButton("Accept",     menu8[3].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+        menu8.push_back(GLButton("Reject",     menu8[4].X2 + 5, Height-20.f, pFont, IC_Reject));
+
+        Buttons[emLoadAnimation].push_back(GLButton("Reject", 110, Height-20.f, pFont, IC_Reject));
+
+        std::vector<GLButton> &menu9 = Buttons[emSaveAnimation];
+        menu9.push_back(GLButton("Accept", 110,             Height-20.f, pFont, IC_Accept));
+        menu9.push_back(GLButton("Reject", menu9[0].X2 + 5, Height-20.f, pFont, IC_Reject));
+
+        std::vector<GLButton> &menu10 = Buttons[emSaveModel];
+        menu10.push_back(GLButton("Accept", 110,              Height-20.f, pFont, IC_Accept));
+        menu10.push_back(GLButton("Reject", menu10[0].X2 + 5, Height-20.f, pFont, IC_Reject));
+    }
+
     InitCameras(!Cameras.Current);
 
     return true;
@@ -231,6 +253,20 @@ void SceneSkeleton::InitInputMgr()
     im.SetInputCodeIfKeyIsFree('J', IC_OrbitDown);
     im.SetInputCodeIfKeyIsFree('H', IC_OrbitLeft);
     im.SetInputCodeIfKeyIsFree('K', IC_OrbitRight);
+}
+
+void SceneSkeleton::Resize(int left, int top, unsigned int width, unsigned int height)
+{
+    Scene::Resize(left, top, width, height);
+    InitCameras(false);
+
+    const GLFont* pFont = g_FontMgr.GetFont(Font);
+    for (size_t i = 0; i < Buttons.size(); ++i)
+        for (size_t j = 0; j < Buttons[i].size(); ++j)
+        {
+            Buttons[i][j].Y = Height-20.f;
+            Buttons[i][j].Y2 = Buttons[i][j].Y + pFont->LineH();
+        }
 }
 
 bool SceneSkeleton::Invalidate()
@@ -391,7 +427,7 @@ bool SceneSkeleton::FrameRender()
     // Set text output projection
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, Width, 0, Height, 0, 100);
+    glOrtho(0, Width, Height, 0, 0, 100);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -414,8 +450,6 @@ bool SceneSkeleton::FrameRender()
         glDisable(GL_BLEND);
     }
 
-    if (!g_FontMgr.IsHandleValid(Font))
-        Font = g_FontMgr.GetFont("Courier New", 15);
     const GLFont* pFont = g_FontMgr.GetFont(Font);
 
     glColor4f( 1.f, 1.f, 1.f, 1.f );
@@ -435,25 +469,25 @@ bool SceneSkeleton::FrameRender()
         sCamera = "Bottom";
     if (Cameras.Current == &Cameras.Perspective)
         sCamera = "Perspective";
-    pFont->PrintF(5.f, Height - 20.f, 0.f, sCamera);
+    pFont->PrintF(5.f, 20.f, 0.f, sCamera);
 
     if (EditMode == emCreateBone)
-        pFont->PrintF(5.f, 5.f, 0.f, "Skeleton |");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton |");
     else if (EditMode == emCreateConstraint_Type)
-        pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints |");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints |");
     else if (EditMode == emCreateConstraint_Node)
     {
         if (Constraint.type == IC_BE_CreateConstrWeight)
-            pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select bone");
+            pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | select bone");
         else
         if (Constraint.type == IC_BE_CreateConstrAng)
-            pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select bone to constrain");
+            pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | select bone to constrain");
         else
         if (Constraint.boneA == xBYTE_MAX)
-            pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select first node");
+            pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | select first node");
         else
         if (Constraint.boneB == xBYTE_MAX)
-            pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | select second node");
+            pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | select second node");
     }
     else if (EditMode == emCreateConstraint_Params)
     {
@@ -466,87 +500,84 @@ bool SceneSkeleton::FrameRender()
                 if (i == 2) label = "Max Y";
                 if (i == 3) label = "Min Y";
                 if (Constraint.step < i)
-                    pFont->PrintF(5.f, 85.f-20.f*i, 0.f, "%s Angle: ?", label);
+                    pFont->PrintF(5.f, Height-85.f+20.f*i, 0.f, "%s Angle: ?", label);
                 else
                 if (Constraint.step == i)
-                    pFont->PrintF(5.f, 85.f-20.f*i, 0.f, "%s Angle: (%2.2f) %s", label, Constraint.angles[i], InputState.String.c_str());
+                    pFont->PrintF(5.f, Height-85.f+20.f*i, 0.f, "%s Angle: (%2.2f) %s", label, Constraint.angles[i], InputState.String.c_str());
                 else
-                    pFont->PrintF(5.f, 85.f-20.f*i, 0.f, "%s Angle: %2.2f", label, Constraint.angles[i]);
+                    pFont->PrintF(5.f, Height-85.f+20.f*i, 0.f, "%s Angle: %2.2f", label, Constraint.angles[i]);
             }
         else
         if (Constraint.type == IC_BE_CreateConstrWeight)
-            pFont->PrintF(5.f, 25, 0.f, "Weight: (%2.2f) %s", Constraint.M_weight, InputState.String.c_str());
+            pFont->PrintF(5.f, Height-25.f, 0.f, "Weight: (%2.2f) %s", Constraint.M_weight, InputState.String.c_str());
         else
-            pFont->PrintF(5.f, 25, 0.f, "Length: (%2.2f) %s", Constraint.S_length, InputState.String.c_str());
-        pFont->PrintF(5.f, 5.f, 0.f, "Skeleton constraints | Input parameters of the constraint");
+            pFont->PrintF(5.f, Height-25.f, 0.f, "Length: (%2.2f) %s", Constraint.S_length, InputState.String.c_str());
+        pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | Input parameters of the constraint");
     }
     else if (EditMode == emEditBVH)
-        pFont->PrintF(5.f, 5.f, 0.f, "BVH Editor |");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "BVH Editor |");
     else if (EditMode == emSelectBVHBone)
-        pFont->PrintF(5.f, 5.f, 0.f, "BVH Editor | Click: Select Bone");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "BVH Editor | Click: Select Bone");
     else if (EditMode == emCreateBVH)
-        pFont->PrintF(5.f, 5.f, 0.f, "BVH Editor |");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "BVH Editor |");
     else if (EditMode == emEditVolume)
-        pFont->PrintF(5.f, 5.f, 0.f, "BVH Editor | Drag: Edit bounding volume");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "BVH Editor | Drag: Edit bounding volume");
     else if (EditMode == emSelectElement)
-        pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Click: Select Element");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "Skinning | Click: Select Element");
     else if (EditMode == emSelectVertex)
     {
-        pFont->PrintF(5.f, 5.f, 0.f,
+        pFont->PrintF(5.f, Height-5.f, 0.f,
             "Skinning | Drag: Select Vertices | %s+Drag: Unselect Vertices | %s: Assign bones to selected Vertices",
             KeyName_Modify, KeyName_Accept);
-        pFont->PrintF(5.f, Height-40.f, 0.f, "%d vertices selected", Selection.Vertices.size());
+        pFont->PrintF(5.f, 40.f, 0.f, "%d vertices selected", Selection.Vertices.size());
 
         if (Selection.Element->FL_skeletized && HoveredVert != xDWORD_MAX)
         {
             size_t stride = Selection.Element->FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
             xVertexSkel *vert = (xVertexSkel*)(((xBYTE*)Selection.Element->L_vertices) + stride * HoveredVert);
             for (int i=0; i < 4 && fractf(vert->bone[i]) != 0.f; ++i)
-                pFont->PrintF(5.f, Height - 20.f * (i+3), 0.f, "Bone id%d : %d", (int)floorf(vert->bone[i]), (int)(fractf(vert->bone[i])*1000));
+                pFont->PrintF(5.f, 20.f * (i+3), 0.f, "Bone id%d : %d", (int)floorf(vert->bone[i]), (int)(fractf(vert->bone[i])*1000));
         }
     }
     else if (EditMode == emSelectBone)
-        pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Click: Select Bone");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "Skinning | Click: Select Bone");
     else if (EditMode == emInputWght)
-        pFont->PrintF(5.f, 5.f, 0.f, "Skinning | Type in Bone weight | %s: Accept", KeyName_Accept);
+        pFont->PrintF(5.f, Height-5.f, 0.f, "Skinning | Type in Bone weight | %s: Accept", KeyName_Accept);
+    else if (EditMode == emSaveModel)
+        pFont->PrintF(5.f, Height-5.f, 0.f, "Save |");
 
     else if (EditMode == emSelectAnimation || EditMode == emAnimateBones
         || EditMode == emLoadAnimation || EditMode == emEditAnimation
         || EditMode == emFrameParams || EditMode == emSaveAnimation)
     {
-        pFont->PrintF(5.f, 5.f, 0.f, "Animation |");
+        pFont->PrintF(5.f, Height-5.f, 0.f, "Animation |");
         if (EditMode != emSelectAnimation && EditMode != emLoadAnimation)
             if (AnimationName.size())
-                pFont->PrintF(150.f, Height - 20.f, 0.f, "Animation: %s", AnimationName.c_str());
+                pFont->PrintF(150.f, 20.f, 0.f, "Animation: %s", AnimationName.c_str());
             else
-                pFont->PrintF(150.f, Height - 20.f, 0.f, "Animation: new animation");
+                pFont->PrintF(150.f, 20.f, 0.f, "Animation: new animation");
     }
 
     if (EditMode == emEditAnimation)
         RenderProgressBar();
     else if (EditMode == emFrameParams) {
         if (Animation.KeyFrame.step == 1)
-            pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: (%d) %s", Animation.KeyFrame.freeze, InputState.String.c_str());
+            pFont->PrintF(5.f, 40.f, 0.f, "Freeze: (%d) %s", Animation.KeyFrame.freeze, InputState.String.c_str());
         else
         {
-            pFont->PrintF(5.f, Height - 40.f, 0.f, "Freeze: %d", Animation.KeyFrame.freeze);
-            pFont->PrintF(5.f, Height - 60.f, 0.f, "Duration: (%d) %s", Animation.KeyFrame.duration, InputState.String.c_str());
+            pFont->PrintF(5.f, 40.f, 0.f, "Freeze: %d", Animation.KeyFrame.freeze);
+            pFont->PrintF(5.f, 60.f, 0.f, "Duration: (%d) %s", Animation.KeyFrame.duration, InputState.String.c_str());
         }
     }
-    else if (EditMode == emSaveAnimation)
-    {
-        if (AnimationName.size())
-            pFont->PrintF(5.f, 25, 0.f, "Filename: (%s) %s", AnimationName.c_str(), InputState.String.c_str());
-        else
-            pFont->PrintF(5.f, 25, 0.f, "Filename: %s", InputState.String.c_str());
-    }
+    else if (EditMode == emSaveAnimation || EditMode == emSaveModel)
+        pFont->PrintF(5.f, Height-25.f, 0.f, "Filename: %s", InputState.String.c_str());
 
     std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
     std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
         begin->Render(pFont);
 
-    if (EditMode == emSaveAnimation || EditMode == emLoadAnimation)
+    if (EditMode == emSaveAnimation || EditMode == emLoadAnimation || EditMode == emSaveModel)
     {
         begin = Directories.begin();
         end   = Directories.end();
@@ -559,10 +590,10 @@ bool SceneSkeleton::FrameRender()
         int sum = 0;
         for (i=0; i < 4 && Skin.BoneWeight[i].weight != 0; ++i) {
             sum += Skin.BoneWeight[i].weight;
-            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : %d", Skin.BoneWeight[i].id, Skin.BoneWeight[i].weight);
+            pFont->PrintF(5.f, 20.f * (i+2), 0.f, "Bone id%d : %d", Skin.BoneWeight[i].id, Skin.BoneWeight[i].weight);
         }
         if (EditMode == emInputWght)
-            pFont->PrintF(5.f, Height - 20.f * (i+2), 0.f, "Bone id%d : (%d) %s", Selection.Bone->ID, 100 - sum, InputState.String.c_str());
+            pFont->PrintF(5.f, 20.f * (i+2), 0.f, "Bone id%d : (%d) %s", Selection.Bone->ID, 100 - sum, InputState.String.c_str());
     }
 
     glFlush();
@@ -575,8 +606,8 @@ void SceneSkeleton::RenderProgressBar()
 
     float x  = (float)Width - pWidth - 10;
     float x1, x2, x3 = x;
-    float y1 = (float)Height - 10;
-    float y2 = y1-pHeight;
+    float y1 = 10.f;
+    float y2 = y1+pHeight;
 
     xAnimationInfo info = Animation.Instance->GetInfo();
     float scale = ((float)pWidth) / info.T_duration;
@@ -611,7 +642,7 @@ void SceneSkeleton::RenderProgressBar()
     glEnd();
 
     const GLFont* pFont = g_FontMgr.GetFont(Font);
-    pFont->PrintF(5.f, Height-40.f, 0.f, "Frame: %d/%d | Progress: %d/%d (%d/%d)",
+    pFont->PrintF(5.f, 40.f, 0.f, "Frame: %d/%d | Progress: %d/%d (%d/%d)",
         info.I_frameNo, Animation.Instance->I_frames,
         info.T_progress, info.T_duration,
         Animation.Instance->T_progress,

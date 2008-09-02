@@ -15,6 +15,8 @@ class GLAnimSkeletal : public Singleton<GLAnimSkeletal>
     // temporary storage used by CPU algorithm between BeginAnimation() and EndAnimation()
     const xMatrix     *sft_bonesM;
     const xQuaternion *sft_bonesQ;
+    const xPoint3     *sft_bonesR;
+    const xPoint3     *sft_bonesT;
     GLsizei            sft_boneCount;
     const GLfloat     *sft_boneIdxWghts;
     GLsizei            sft_boneIdxStride;
@@ -33,7 +35,11 @@ public:
     void BeginAnimation();
     void EndAnimation();
 
-    void SetBones(GLsizei noOfBones, const xMatrix *bonesM, const xQuaternion *bonesQ,
+    void SetBones(GLsizei noOfBones,
+                              const xMatrix *bonesM,
+                              const xQuaternion *bonesQ,
+                              const xPoint3     *bonesR,
+                              const xPoint3     *bonesT,
                               const xElement *element, bool VBO);
     void SetElement(const xElement *element, const xElementInstance *instance, bool VBO = false);
 

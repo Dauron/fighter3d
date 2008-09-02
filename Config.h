@@ -11,6 +11,7 @@ struct Config
     static int   MultisamplingLevel;
     static int   PolygonMode;
     static int   ShadowMapSize;
+    static bool  VSync;
     static int   WindowX;
     static int   WindowY;
     static bool  FullScreen;
@@ -21,7 +22,6 @@ struct Config
     static bool  DisplaySkeleton;
     static bool  DisplayBVH;
     static bool  DisplayCameras;
-
 
     static int   TestCase;
     static float Speed;

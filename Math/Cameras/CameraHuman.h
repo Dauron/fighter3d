@@ -30,6 +30,12 @@ namespace Math { namespace Cameras {
         virtual void Rotate (xFLOAT heading, xFLOAT pitch, xFLOAT roll);
         virtual void Orbit  (xFLOAT horz, xFLOAT vert);
 
+        virtual void Update(xFLOAT T_delta)
+        {
+            Camera::Update(T_delta);
+            N_front.init(P_center.x-P_eye.x, P_center.y-P_eye.y, 0).normalize();
+        }
+
         void MakeStep(xFLOAT numFrames)
         {
             step += numFrames * PI/FRAMES_PER_HALF_STEP;

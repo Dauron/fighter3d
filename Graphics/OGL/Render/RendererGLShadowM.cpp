@@ -27,7 +27,8 @@ void RenderShadowMapLST(xElement *elem, xModelInstance &modelInstance,
 
     if (elem->FL_skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
+        g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
         g_AnimSkeletal.SetElement(elem, &instance);
     }
     else
@@ -76,7 +77,8 @@ void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance,
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.vertexB );
     if (elem->FL_skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
+        g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
         g_AnimSkeletal.SetElement(elem, &instance, true);
     }
     else
@@ -164,7 +166,8 @@ void RenderShadowMapTextureLST(xElement *elem, xModelInstance &modelInstance, bo
 
     if (elem->FL_skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
+        g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
         g_AnimSkeletal.SetElement(elem, &instance);
     }
     else
@@ -211,7 +214,8 @@ void RenderShadowMapTextureVBO(xElement *elem, xModelInstance &modelInstance, bo
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.vertexB );
     if (elem->FL_skeletized) {
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
+        g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
         g_AnimSkeletal.SetElement(elem, &instance, true);
     }
     else

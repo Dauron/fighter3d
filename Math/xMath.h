@@ -102,6 +102,9 @@ struct xRectangle
     bool Contains(int x, int y)
     { return x >= X && x <= X + W && y >= Y && y <= Y + H; }
 
+    bool Contains(xDWORD x, xDWORD y)
+    { return x >= X && x <= X + W && y >= Y && y <= Y + H; }
+
     xRectangle()
         : X(0.f), Y(0.f), W(0.f), H(0.f)
     {}

@@ -41,7 +41,9 @@ struct ShaderProgram
 struct ShaderSkeletal : public ShaderProgram
 {
     // identifiers of vertex uniforms and attributes
-    int uBones;
+    int uQuats;
+    int uRoots;
+    int uTrans;
     int aBoneIdxWghts;
 
     ShaderSkeletal();

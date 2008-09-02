@@ -107,8 +107,8 @@ void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *MX_bones,
     }
     else
     {
-        N_up    = QT_bones[boneRB.ID*2].rotate(N_up);
-        N_front = QT_bones[boneRB.ID*2].rotate(bone.getFront());
+        N_up    = QT_bones[boneRB.ID].rotate(N_up);
+        N_front = QT_bones[boneRB.ID].rotate(bone.getFront());
     }
 
     xMatrix MX_BoneToWorld = xMatrixFromVectors(N_front, N_up).transpose();
@@ -291,7 +291,8 @@ void RendererGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWO
         if (model.Spine.I_bones)
         {
             g_AnimSkeletal.BeginAnimation();
-            g_AnimSkeletal.SetBones(instance.I_bones, instance.MX_bones, instance.QT_bones, NULL, false);
+            g_AnimSkeletal.SetBones(instance.I_bones, instance.MX_bones, instance.QT_bones,
+                                instance.P_bone_roots, instance.P_bone_trans, NULL, false);
 
             glColor4f(1.0f,1.0f,0.0f,1.0f);
             glBegin(GL_TRIANGLES);
@@ -416,7 +417,8 @@ void RendererGL :: RenderSkeletonSelection ( xModel &model, xModelInstance &inst
         {
             g_AnimSkeletal.ForceSoftware(true);
             g_AnimSkeletal.BeginAnimation();
-            g_AnimSkeletal.SetBones(instance.I_bones, instance.MX_bones, instance.QT_bones, NULL, false);
+            g_AnimSkeletal.SetBones(instance.I_bones, instance.MX_bones, instance.QT_bones,
+                                instance.P_bone_roots, instance.P_bone_trans, NULL, false);
             RenderBoneSelection(model.Spine.L_bones, 0);
             g_AnimSkeletal.EndAnimation();
             g_AnimSkeletal.ForceSoftware(false);

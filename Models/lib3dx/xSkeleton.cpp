@@ -45,40 +45,63 @@ void xSkeleton :: Clear()
 }
 
 void xSkeleton :: CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_boneSkew,
-                            xBYTE ID_bone, xMatrix MX_parent_Inv, xPoint3 P_end_parent)
+                            xBYTE ID_bone, xMatrix MX_parent_Inv)
 {
     xBone   &bone   = L_bones[ID_bone];
-    xPoint3  P_endN = MX_parent_Inv.postTransformP(P_current[ID_bone]);
 
     if (ID_bone)
     {
-        xVector3    NW_up = bone.P_end-bone.P_begin;
-        xQuaternion quat;
+        xPoint3 NW_upN = MX_parent_Inv.postTransformV(P_current[ID_bone]-P_current[bone.ID_parent]);
+        if (QT_boneSkew && QT_boneSkew[ID_bone].w < EPSILON)
+            NW_upN = QT_boneSkew[ID_bone].unrotate(NW_upN);
+        xQuaternion quat = xQuaternion::GetRotation(bone.P_end-bone.P_begin, NW_upN);
 
-        if (QT_boneSkew)
-        {
-            quat.init(-QT_boneSkew[ID_bone].vector3, QT_boneSkew[ID_bone].w);
-            P_endN = quat.rotate(P_endN, P_end_parent);
-        }
-        quat = xQuaternion::GetRotation(NW_up, P_endN-P_end_parent);
-
-        if (QT_boneSkew)
+        if (QT_boneSkew && QT_boneSkew[ID_bone].w < EPSILON)
             bone.QT_rotation = xQuaternion::Product(QT_boneSkew[ID_bone], quat);
         else
             bone.QT_rotation = quat;
         quat.init(-bone.QT_rotation.vector3, bone.QT_rotation.w);
-        MX_parent_Inv.preMultiply(xMatrixFromQuaternion(quat).preTranslate(P_end_parent).postTranslate(-P_end_parent));
+        MX_parent_Inv.preMultiply(xMatrixFromQuaternion(quat));
     }
     else
     {
-        bone.QT_rotation.init(P_endN - bone.P_end, 1.f);
-        //MX_parent_Inv.preMultiply(xMatrixTranslate(-bone.QT_rotation.x, -bone.QT_rotation.y, -bone.QT_rotation.z));
+        xPoint3 P_end_N = MX_parent_Inv.postTransformP(P_current[0]);
+        bone.QT_rotation.init(P_end_N - bone.P_end, 1.f);
     }
 
     for (int i = 0; i < bone.I_kids; ++i)
-        CalcQuats(P_current, QT_boneSkew,
-                  bone.ID_kids[i], MX_parent_Inv,
-                  MX_parent_Inv.postTransformP(P_current[ID_bone]));
+        CalcQuats(P_current, QT_boneSkew, bone.ID_kids[i], MX_parent_Inv);
+}
+
+void xSkeleton :: CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_boneSkew,
+                            const bool *FL_calculate, xBYTE ID_bone,
+                            xMatrix MX_parent_Inv)
+{
+    xBone   &bone   = L_bones[ID_bone];
+
+    if (ID_bone)
+    {
+        xPoint3 NW_upN = MX_parent_Inv.postTransformV(P_current[ID_bone]-P_current[bone.ID_parent]);
+        if (QT_boneSkew && QT_boneSkew[ID_bone].w < EPSILON)
+            NW_upN = QT_boneSkew[ID_bone].unrotate(NW_upN);
+        xQuaternion quat = xQuaternion::GetRotation(bone.P_end-bone.P_begin, NW_upN);
+
+        if (QT_boneSkew && QT_boneSkew[ID_bone].w < EPSILON)
+            bone.QT_rotation = xQuaternion::Product(QT_boneSkew[ID_bone], quat);
+        else
+            bone.QT_rotation = quat;
+        quat.init(-bone.QT_rotation.vector3, bone.QT_rotation.w);
+        MX_parent_Inv.preMultiply(xMatrixFromQuaternion(quat));
+    }
+    else
+    {
+        xPoint3 P_end_N = MX_parent_Inv.postTransformP(P_current[0]);
+        bone.QT_rotation.init(P_end_N - bone.P_end, 1.f);
+    }
+
+    for (int i = 0; i < bone.I_kids; ++i)
+        if (FL_calculate[bone.ID_kids[i]])
+            CalcQuats(P_current, QT_boneSkew, FL_calculate, bone.ID_kids[i], MX_parent_Inv);
 }
 
 void xSkeleton :: FillBoneConstraints()
@@ -239,12 +262,7 @@ void   _xBoneCalculateMatrices(const xBone *L_bones, xBYTE ID_bone, xModelInstan
 void    xBoneCalculateMatrices(const xSkeleton &spine, xModelInstance &instance)
 {
     instance.I_bones = spine.I_bones;
-    if (!spine.I_bones)
-    {
-        if (instance.MX_bones)    { delete[] instance.MX_bones;    instance.MX_bones = NULL; }
-        if (instance.FL_modified) { delete[] instance.FL_modified; instance.FL_modified = NULL; }
-        return;
-    }
+    if (!spine.I_bones) return;
     if (!instance.MX_bones)    instance.MX_bones    = new xMatrix[spine.I_bones];
     if (!instance.FL_modified) instance.FL_modified = new bool[spine.I_bones];
     _xBoneCalculateMatrices(spine.L_bones, 0, instance);
@@ -253,12 +271,34 @@ void    xBoneCalculateMatrices(const xSkeleton &spine, xModelInstance &instance)
 void   _xBoneCalculateQuats(const xBone *L_bones, xBYTE ID_bone, xModelInstance &instance)
 {
     const xBone &bone    = L_bones[ID_bone];
-    xQuaternion *QT_bone = instance.QT_bones + ID_bone*2;
-    QT_bone[0] = bone.QT_rotation;
+    xQuaternion &QT_bone = instance.QT_bones[ID_bone];
+    xPoint3     &P_root  = instance.P_bone_roots[ID_bone];
+    xPoint3     &P_tran  = instance.P_bone_trans[ID_bone];
+
+    P_root = bone.P_begin;
     if (bone.ID)
-        QT_bone[1].init(bone.P_begin, bone.ID_parent);
+    {
+        xQuaternion &QT_bone_p = instance.QT_bones[bone.ID_parent];
+
+        if (bone.ID_parent)
+        {
+            xPoint3     &P_root_p  = instance.P_bone_roots[bone.ID_parent];
+            xPoint3     &P_tran_p  = instance.P_bone_trans[bone.ID_parent];
+
+            QT_bone = xQuaternion::Product(QT_bone_p, bone.QT_rotation);
+            P_tran  = QT_bone_p.rotate(bone.P_begin - P_root_p) + P_tran_p;
+        }
+        else
+        {
+            QT_bone = bone.QT_rotation;
+            P_tran  = bone.P_begin + QT_bone_p.vector3;
+        }
+    }
     else
-        QT_bone[1].init(bone.QT_rotation.vector3, -1.f);
+    {
+        QT_bone = bone.QT_rotation;
+        P_tran  = P_root + QT_bone.vector3;
+    }
 
     xBYTE *ID_iter = bone.ID_kids;
     for (int i = bone.I_kids; i; --i, ++ID_iter)
@@ -267,12 +307,10 @@ void   _xBoneCalculateQuats(const xBone *L_bones, xBYTE ID_bone, xModelInstance 
 void    xBoneCalculateQuats(const xSkeleton &spine, xModelInstance &instance)
 {
     instance.I_bones = spine.I_bones;
-    if (!spine.I_bones)
-    {
-        if (instance.QT_bones) { delete[] instance.QT_bones;   instance.QT_bones = NULL; }
-        return;
-    }
-    if (!instance.QT_bones) instance.QT_bones = new xQuaternion[spine.I_bones*2];
+    if (!spine.I_bones) return;
+    if (!instance.QT_bones)     instance.QT_bones = new xQuaternion[spine.I_bones];
+    if (!instance.P_bone_roots) instance.P_bone_roots = new xPoint3[spine.I_bones];
+    if (!instance.P_bone_trans) instance.P_bone_trans = new xPoint3[spine.I_bones];
     _xBoneCalculateQuats(spine.L_bones, 0, instance);
 }
 
@@ -291,7 +329,7 @@ bool   _xBoneCalculateQuatForVerlet(const xBone *L_bones, xBYTE ID_last, xBYTE I
                 parent = L_bones + L_bones->ID_kids[1];
             else
                 parent = L_bones + L_bones->ID_kids[0];
-            QT_parent.init(parent->QT_rotation.vector3, parent->QT_rotation.w);
+            QT_parent = parent->QT_rotation;
         }
         else
             QT_parent.zeroQ();

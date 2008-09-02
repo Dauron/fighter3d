@@ -6,6 +6,7 @@
 #pragma warning(disable : 4996) // deprecated
 #else
 #include <stdarg.h>
+#include "../../../Utils/Utils.h"
 #endif
 
 const float GLFont::INTERLINE = 0.2f;
@@ -86,8 +87,25 @@ void GLFont::Init()
     DeleteObject(font);                             // Delete The Font
 #else
     /* load a font with a specific name in "Host Portable Character Encoding" */
-    XFontStruct *font = XLoadQueryFont(hDC,
-        "-*-helvetica-bold-r-normal--12-*-*-*-p-*-iso8859-1");
+/*
+ *  We construct an X font-name by using the name, style and size fields.
+ *  An X font name has the following structure:
+ *
+ *  -fndry-family-weight-slant-swdth-adstyl-pixelsize-pointsize-
+ *  resx-resy-spc-avgWdth-rgstry-encdng
+ *
+ *  We leave as wildcards those fields we don't wish to specify.
+ *  The ones which are important to use are:
+ *
+ *  family = { courier, fixed, helvetica, lucida, new century schoolbook,
+ *      screen, times }
+ *  weight = { *, bold, medium }
+ *  slant  = { r, i } roman or italic
+ *  swdth  = { normal, condensed, double wide, narrow, semicondensed, wide }
+ *  adstyl = { *, sans, serif }
+*/
+    std::string sfont = "-*-helvetica-*-r-normal--" + itos(m_Size) + "-*-*-*-*-*-*-*";
+    XFontStruct *font = XLoadQueryFont(hDC, sfont.c_str());
     if (font == NULL)
     {
         /* this really *should* be available on every X Window System...*/
@@ -97,6 +115,11 @@ void GLFont::Init()
     }
     /* build 96 display lists out of our font starting at char 32 */
     glXUseXFont(font->fid, FIRST_CHAR, NUM_CHARS, m_GLFontBase);
+
+    char s = FIRST_CHAR;
+    for (int i = 0; i < NUM_CHARS; ++i, ++s)
+        LWidth[i] = XTextWidth(font, &s, 1);
+
     /* free our XFontStruct since we have our display lists */
     XFreeFont(hDC, font);
 #endif
@@ -219,8 +242,12 @@ float GLFont::Length (const char *text) const
     float length = 0.0f;
 
     for (; *text; ++text)    // Loop To Find Text Length
-        if (*text >= FIRST_CHAR && *text < FIRST_CHAR+NUM_CHARS)
-            length += LWidth[*text-FIRST_CHAR]; // Increase Length By Each Characters Width
+#if FIRST_CHAR
+        if ((unsigned char)*text >= FIRST_CHAR && (unsigned char)*text < FIRST_CHAR+NUM_CHARS)
+#elseif FIRST_CHAR+NUM_CHARS < 255
+        if ((unsigned char)*text < FIRST_CHAR+NUM_CHARS)
+#endif
+            length += LWidth[(unsigned char)*text-FIRST_CHAR]; // Increase Length By Each Characters Width
     return length;
 }
 

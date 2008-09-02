@@ -43,6 +43,8 @@ struct xModelInstance {
     xBYTE         I_bones;
     xMatrix     * MX_bones;
     xQuaternion * QT_bones;
+    xPoint3     * P_bone_roots;
+    xPoint3     * P_bone_trans;
     bool        * FL_modified;
 
     xElementInstance  *L_elements;

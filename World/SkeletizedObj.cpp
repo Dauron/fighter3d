@@ -96,7 +96,7 @@ void SkeletizedObj :: CreateVerletSystem()
 
     if (MX_bone)
         for (int i = model.Spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++A_iter, ++M_iter, ++FL_lock,
-            ++MX_bone, QT_bone+=2)
+            ++MX_bone, ++QT_bone)
         {
             *P_old   = *P_cur = MX_LocalToWorld_Get().preTransformP( MX_bone->postTransformP(bone->P_end) );
             *QT_skew = bone->getSkew(*QT_bone);
@@ -120,19 +120,27 @@ void SkeletizedObj :: DestroyVerletSystem()
     verletSystem.Free();
 }
 
+void SkeletizedObj :: UpdateSkews(xQuaternion *QT_bone)
+{
+    xModel      &model   = *ModelGr->xModelP;
+    xBone       *bone    = model.Spine.L_bones;
+    xQuaternion *QT_skew = verletSystem.QT_boneSkew;
+    if (QT_bone)
+        for (int i = model.Spine.I_bones; i; --i, ++bone, ++QT_skew, ++QT_bone)
+            *QT_skew = bone->getSkew(*QT_bone);
+    else
+        for (int i = model.Spine.I_bones; i; --i, ++QT_skew)
+            QT_skew->zeroQ();
+}
+
 void SkeletizedObj :: UpdateVerletSystem()
 {
     xModel      &model   = *ModelGr->xModelP;
     xBone       *bone    = model.Spine.L_bones;
     xPoint3     *P_old   = verletSystem.P_current;
-    xQuaternion *QT_skew = verletSystem.QT_boneSkew;
     xMatrix     *MX_bone = ModelGr->instance.MX_bones;
-    xQuaternion *QT_bone = ModelGr->instance.QT_bones;
-    for (int i = model.Spine.I_bones; i; --i, ++bone, ++P_old, ++QT_skew, ++MX_bone, QT_bone+=2)
-    {
+    for (int i = model.Spine.I_bones; i; --i, ++bone, ++P_old, ++MX_bone)
         *P_old   = MX_LocalToWorld_Get().preTransformP( MX_bone->postTransformP(bone->P_end) );
-        *QT_skew = bone->getSkew(*QT_bone);
-    }
 }
 
 xVector3 SkeletizedObj :: GetVelocity(const Physics::Colliders::CollisionPoint &CP_point) const
@@ -285,8 +293,6 @@ xVector3 SkeletizedObj :: MergeCollisions()
 
 void SkeletizedObj :: FrameUpdate(float T_time)
 {
-    float delta = GetTick();
-
     //RigidObj::FrameUpdate(T_time);
 
     //////////////////////////////////////////////////////// Update Verlets
@@ -331,16 +337,15 @@ void SkeletizedObj :: FrameUpdate(float T_time)
             }
             if (!I_count)
             {
-                /*
-                if (T_time != 0)
-                {
-                    //drag
-                    xFLOAT V_vel = NW_VerletVelocity[i].length();
-                    xFLOAT W_air_drag = air_drag(S_radius, V_vel*V_vel) * T_time / M_mass;
-                    if (V_vel > W_air_drag)
-                        NW_VerletVelocity_new[i] += NW_VerletVelocity[i] * (1.f - W_air_drag / V_vel);
-                }
-                else*/
+                //if (T_time != 0)
+                //{
+                //    //drag
+                //    xFLOAT V_vel = NW_VerletVelocity[i].length();
+                //    xFLOAT W_air_drag = air_drag(S_radius, V_vel*V_vel) * T_time / M_mass;
+                //    if (V_vel > W_air_drag)
+                //        NW_VerletVelocity_new[i] += NW_VerletVelocity[i] * (1.f - W_air_drag / V_vel);
+                //}
+                //else
                     NW_VerletVelocity_new[bi] += NW_VerletVelocity[bi];
             }
             NW_VerletVelocity[bi] = NW_VerletVelocity_new[bi];
@@ -391,9 +396,6 @@ void SkeletizedObj :: FrameUpdate(float T_time)
     //engine.Verlet();
     engine.SatisfyConstraints();
 
-    Performance.CollisionDeterminationMS += GetTick() - delta;
-    delta = GetTick();
-
     if (T_time > EPSILON)
     {
         xFLOAT T_time_Inv = 1.f / T_time;
@@ -431,7 +433,7 @@ void SkeletizedObj :: FrameUpdate(float T_time)
             NW_VerletVelocity[i].zero();
 
     spine.CalcQuats(verletSystem.P_current, verletSystem.QT_boneSkew,
-        0, verletSystem.MX_WorldToModel_T, xVector3::Create(0.f,0.f,0.f));
+        0, verletSystem.MX_WorldToModel_T);
     spine.QuatsToArray(QT_verlet);
 
     if (postHit != 0.f)
@@ -494,8 +496,11 @@ void SkeletizedObj :: FrameUpdate(float T_time)
         //    bones[i].zeroQ();
     }
 
-    if (bones && W_verlet > 0.f)
-        xAnimation::Average(QT_verlet, bones, ModelGr->instance.I_bones, 1.f-W_verlet, bones);
+    if (bones)
+        if (W_verlet > 0.f)
+            xAnimation::Average(QT_verlet, bones, ModelGr->instance.I_bones, 1.f-W_verlet, bones);
+        else
+            UpdateSkews(bones);
 
     if (bones)
     {
@@ -525,8 +530,6 @@ void SkeletizedObj :: FrameUpdate(float T_time)
     else
         for (int i = 0; i < I_bones; ++i)
             NW_VerletVelocity_total[i].zero();
-
-    Performance.CollisionDataFillMS += GetTick() - delta;
 }
 
 

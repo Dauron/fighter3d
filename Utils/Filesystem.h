@@ -76,7 +76,7 @@ public:
 
     static std::string WorkingDirectory;
 
-    typedef std::vector<std::string> VectorString;
+    typedef std::vector<std::string> Vec_string;
 
     static std::string GetSystemWorkingDirectory()
     {
@@ -137,9 +137,9 @@ public:
         return res + ext;
     }
 
-    static VectorString GetDirectories(const std::string &path)
+    static Vec_string GetDirectories(const std::string &path)
     {
-        VectorString vec;
+        Vec_string vec;
         std::string p = path;
         if (!p.length() || p[p.length()-1] != '/')
             p += '/';
@@ -158,8 +158,6 @@ public:
             while(FindNextFile(h, &f));
             FindClose(h);
         }
-        else
-            LOG(3, "Directory open error %d - %s", GetLastError(), path.c_str());
 #else
         dirent **eps;
         dirent **dirp;
@@ -180,16 +178,14 @@ public:
            }
            delete[] eps;
         }
-        else
-            LOG(3, "Directory open error: %s - %s", strerror(errno), path.c_str());
 #endif
 
         return vec;
     }
 
-    static VectorString GetFiles(const std::string &path, const char *mask)
+    static Vec_string GetFiles(const std::string &path, const char *mask)
     {
-        VectorString vec;
+        Vec_string vec;
         std::string p = path;
         if (!p.length() || p[p.length()-1] != '/')
             p += '/';
@@ -208,8 +204,6 @@ public:
             while(FindNextFile(h, &f));
             FindClose(h);
         }
-        else
-            LOG(3, "Directory open error: %d - %s", GetLastError(), path.c_str());
 #else
         dirent **eps;
         dirent **dirp;
@@ -231,45 +225,43 @@ public:
            }
            delete[] eps;
         }
-        else
-            LOG(3, "Directory open error: %s - %s", strerror(errno), path.c_str());
 #endif
         return vec;
     }
 
 
-    static int MatchWildcards(const char *wild, const char *string) {
     // Written by Jack Handy - jakkhandy@hotmail.com
+    static int MatchWildcards(const char *wild, const char *string)
+    {
+        const char *cp = NULL, *mp = NULL;
 
-    const char *cp = NULL, *mp = NULL;
-
-    while ((*string) && (*wild != '*')) {
-        if ((*wild != *string) && (*wild != '?'))
-        return 0;
-        ++wild;
-        ++string;
-    }
-
-    while (*string) {
-        if (*wild == '*') {
-        if (!*++wild)
-            return 1;
-        mp = wild;
-        cp = string+1;
+        while ((*string) && (*wild != '*')) {
+            if ((*wild != *string) && (*wild != '?'))
+                return 0;
+            ++wild;
+            ++string;
         }
-        else if ((*wild == *string) || (*wild == '?')) {
-        ++wild;
-        ++string;
-        }
-        else {
-        wild = mp;
-        string = cp++;
-        }
-    }
 
-    while (*wild == '*')
-        wild++;
-    return !*wild;
+        while (*string) {
+            if (*wild == '*') {
+                if (!*++wild)
+                    return 1;
+                mp = wild;
+                cp = string+1;
+            }
+            else if ((*wild == *string) || (*wild == '?')) {
+                ++wild;
+                ++string;
+            }
+            else {
+                wild = mp;
+                string = cp++;
+            }
+        }
+
+        while (*wild == '*')
+            wild++;
+        return !*wild;
     }
 };
 

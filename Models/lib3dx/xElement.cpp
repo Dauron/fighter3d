@@ -286,9 +286,46 @@ xSkinnedData xElement :: GetSkinnedVertices(const xMatrix *bones) const
         {
             xVertexSkel *vert = (xVertexSkel *)srcV;
 
-            xVector4 vec;  vec.init(* (xVector3 *)vert->pos, 1.f);
-            xVector4 nor;  nor.init(* srcN, 0.f);
-            xMatrix  bone;
+            itrV->init(0.f, 0.f, 0.f);
+            itrN->init(0.f, 0.f, 0.f);
+            for (int b=0; b<4; ++b)
+            {
+                int   i = (int) floor(vert->bone[b]);
+                float w = (vert->bone[b] - i)*10;
+                if (w < 0.01f) break;
+                *itrV  += w * bones[i].postTransformP(vert->pos);
+                *itrN  += w * bones[i].postTransformV(* srcN);
+            }
+        }
+    }
+    else
+    {
+        xDWORD stride = FL_textured ? sizeof(xVertexTex) : sizeof(xVertex);
+        for (int i = count; i > 0; --i, ++itrV, srcV += stride)
+            *itrV = *(xVector3 *)srcV;
+        memcpy(dst.L_normals, renderData.L_normals, sizeof(xVector3)*count);
+    }
+    return dst;
+}
+
+xSkinnedData xElement :: GetSkinnedVertices(const xQuaternion *bones, const xPoint3 *roots, const xPoint3 *trans) const
+{
+    xWORD     count  = renderData.I_vertices;
+    xBYTE    *srcV   = (xBYTE *) renderData.L_vertices;
+    xVector3 *srcN   = renderData.L_normals;
+
+    xSkinnedData dst;
+    dst.L_vertices = new xVector3[count];
+    dst.L_normals  = new xVector3[count];
+    xVector3 *itrV = dst.L_vertices;
+    xVector3 *itrN = dst.L_normals;
+
+    if (FL_skeletized)
+    {
+        xDWORD stride = FL_textured ? sizeof(xVertexTexSkel) : sizeof(xVertexSkel);
+        for (int i = count; i > 0; --i, ++itrV, ++itrN, srcV += stride, ++srcN)
+        {
+            xVertexSkel *vert = (xVertexSkel *)srcV;
 
             itrV->init(0.f, 0.f, 0.f);
             itrN->init(0.f, 0.f, 0.f);
@@ -296,10 +333,12 @@ xSkinnedData xElement :: GetSkinnedVertices(const xMatrix *bones) const
             {
                 int   i = (int) floor(vert->bone[b]);
                 float w = (vert->bone[b] - i)*10;
-                bone = bones[i] * w;
-                *itrV  += (bone * vec).vector3;
-                *itrN  += (bone * nor).vector3;
+                if (w < 0.01f) break;
+                *itrV += (bones[i].rotate(vert->pos - roots[i])+trans[i]) * w;
+                *itrN += bones[i].rotate(*srcN) * w;
             }
+            *itrV += bones[0].vector3; // shift
+            itrN->normalize();
         }
     }
     else

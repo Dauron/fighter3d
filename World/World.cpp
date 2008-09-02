@@ -41,11 +41,12 @@ void World:: FrameUpdate(float T_delta)
         LT_curr->update();
 }
 
-void World:: Initialize()
+void World:: Initialize(std::string MapFileName)
 {
     g_CaptureInput.Finalize();
-    std::string filename = "Data/models/level_" + itos( Config::TestCase ) + ".map";
-    Load(filename.c_str());
+    if (!MapFileName.size())
+        MapFileName = "Data/models/level_" + itos( Config::TestCase ) + ".map";
+    Load(MapFileName.c_str());
 }
 
 

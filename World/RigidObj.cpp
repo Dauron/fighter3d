@@ -90,6 +90,8 @@ void RigidObj :: Finalize ()
     {
         ModelPh->instance.MX_bones = NULL;
         ModelPh->instance.QT_bones = NULL;
+        ModelPh->instance.P_bone_roots = NULL;
+        ModelPh->instance.P_bone_trans = NULL;
         ModelPh->instance.FL_modified = NULL;
         delete ModelPh;
         ModelPh = NULL;
@@ -167,6 +169,8 @@ void RigidObj :: VerticesChanged(bool init, bool free)
         {
             ModelPh->instance.MX_bones = NULL;
             ModelPh->instance.QT_bones = NULL;
+            ModelPh->instance.P_bone_roots = NULL;
+            ModelPh->instance.P_bone_trans = NULL;
             ModelPh->instance.FL_modified = NULL;
             ModelPh->instance.FreeVertices();
         }
@@ -179,20 +183,29 @@ void RigidObj :: VerticesChanged(bool init, bool free)
     xBoneCalculateQuats    (ModelGr->xModelP->Spine, ModelGr->instance);
     if (ModelPh)
     {
-        ModelPh->instance.MX_bones    = ModelGr->instance.MX_bones;
-        ModelPh->instance.QT_bones    = ModelGr->instance.QT_bones;
-        ModelPh->instance.FL_modified = ModelGr->instance.FL_modified;
-        ModelPh->instance.I_bones     = ModelGr->instance.I_bones;
+        ModelPh->instance.MX_bones     = ModelGr->instance.MX_bones;
+        ModelPh->instance.QT_bones     = ModelGr->instance.QT_bones;
+        ModelPh->instance.P_bone_roots = ModelGr->instance.P_bone_roots;
+        ModelPh->instance.P_bone_trans = ModelGr->instance.P_bone_trans;
+        ModelPh->instance.FL_modified  = ModelGr->instance.FL_modified;
+        ModelPh->instance.I_bones      = ModelGr->instance.I_bones;
     }
+
+    float delta = GetTick();
 
     // bounds used for rendering
     if (ModelGr->xModelP->Spine.I_bones) xModel_SkinElementInstance(*ModelGr->xModelP, ModelGr->instance);
     xModel_GetBounds(*ModelGr->xModelP, ModelGr->instance);
 
+    Performance.CollisionDataFillMS += GetTick() - delta;
+    delta = GetTick();
+
     if (FL_customBVH)
         UpdateCustomBVH();
     else
         UpdateGeneratedBVH();
+
+    Performance.CollisionDeterminationMS += GetTick() - delta;
 }
 
 void RigidObj :: CalculateSkeleton()

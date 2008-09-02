@@ -12,6 +12,8 @@
 
 #include "../World/ObjectTypes.h"
 
+using namespace Scenes;
+
 #define MULT_MOVE   5.0f
 #define MULT_RUN    2.0f
 #define MULT_ROT    80.0f
@@ -36,7 +38,7 @@ bool SceneGame :: Initialize(int left, int top, unsigned int width, unsigned int
     else
         InitCameras();
 
-    GLExtensions::SetVSync(false);
+    GLExtensions::SetVSync(Config::VSync);
 
     return true;
 }
@@ -44,7 +46,7 @@ bool SceneGame :: Initialize(int left, int top, unsigned int width, unsigned int
 bool SceneGame :: InitWorld()
 {
     FreeWorld();
-    world.Initialize();
+    world.Initialize(MapFileName);
 
     if (player1) { player1->MX_LocalToWorld_Set() = world.MX_spawn1; world.objects.push_back(player1); player1 = NULL; }
     if (player2) { player2->MX_LocalToWorld_Set() = world.MX_spawn2; world.objects.push_back(player2); player2 = NULL; }
@@ -209,6 +211,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     if (cmd.substr(0, 6) == "level ")
     {
         Config::TestCase = atoi(cmd.substr(6).c_str());
+        MapFileName.clear();
         InitWorld();
         return true;
     }
@@ -354,10 +357,10 @@ bool SceneGame :: FrameUpdate(float deltaTime)
         RigidObj *obj = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
         if (obj)
             if (obj->ModelPh)
-                g_Application.SetCurrentScene(new SceneSkeleton(this,
+                g_Application.SetCurrentScene(new SceneSkeleton(
                     obj->ModelGr->xModelP->FileName, obj->ModelPh->xModelP->FileName), false);
             else
-                g_Application.SetCurrentScene(new SceneSkeleton(this,
+                g_Application.SetCurrentScene(new SceneSkeleton(
                     obj->ModelGr->xModelP->FileName, NULL), false);
         return true;
     }

@@ -18,9 +18,7 @@ void VerletSolver :: SatisfyConstraints()
 
         VConstraint **constr = system->C_constraints;
         for (xWORD i = system->I_constraints; i; --i, ++constr)
-        {
             modified |= (*constr)->Satisfy(system);
-        }
 
         if (system->C_collisions)
         {

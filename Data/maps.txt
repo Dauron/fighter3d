@@ -1,6 +1,7 @@
 [map]
 name Dojo
 file models/level_3.map
+img  models/level_3.tga
 
 [map]
 name Fast test

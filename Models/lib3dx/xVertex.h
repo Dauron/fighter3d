@@ -9,7 +9,7 @@ union xVertex {
         xFLOAT x, y, z; // vertex coordinates
     };
     struct {
-        xFLOAT3 pos;
+        xPoint3 pos;
     };
 };
 
@@ -18,7 +18,7 @@ union xVertexTex {
         xFLOAT x, y, z, tx, ty; // vertex and texture coordinates
     };
     struct {
-        xFLOAT3 pos;
+        xPoint3 pos;
         xFLOAT2 tex;
     };
 };
@@ -29,7 +29,7 @@ union xVertexSkel {
         xFLOAT b0, b1, b2, b3; // bones
     };
     struct {
-        xFLOAT3 pos;
+        xPoint3 pos;
         xFLOAT4 bone; // up to 4 bones per vertex. boneIndex = floor(bone), boneInfluence = fract(bone)*10
     };
 };
@@ -41,7 +41,7 @@ union xVertexTexSkel {
         xFLOAT tx, ty;         // texture coordinates
     };
     struct {
-        xFLOAT3 pos;
+        xPoint3 pos;
         xFLOAT4 bone; // up to 4 bones per vertex. boneIndex = floor(bone), boneInfluence = fract(bone)*10
         xFLOAT2 tex;
     };

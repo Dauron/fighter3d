@@ -1,51 +1,51 @@
-#include "PlayState.h"
+#ifndef __incl_Scenes_MenuStates_MenuStates_h
+#define __incl_Scenes_MenuStates_MenuStates_h
+
+#include "BaseState.h"
+#include "SelectMapState.h"
+#include "EditModelState.h"
 #include "CreditsState.h"
 
-class EditModelState : public BaseState {
+namespace Scenes { namespace Menu {
 
-    virtual void Init(BaseState *parent)
-    {
-        BaseState::Init(parent);
-        Name = "Model editor";
-        FL_enabled = false;
-    }
+    struct EditMapState : public BaseState {
 
-};
+        virtual void Init(BaseState *parent)
+        {
+            BaseState::Init(parent);
+            Name = "Map editor";
+            FL_enabled = false;
+        }
 
-class EditMapState : public BaseState {
+    };
 
-    virtual void Init(BaseState *parent)
-    {
-        BaseState::Init(parent);
-        Name = "Map editor";
-        FL_enabled = false;
-    }
+    struct OptionsState : public BaseState {
 
-};
+        virtual void Init(BaseState *parent)
+        {
+            BaseState::Init(parent);
+            Name = "Options";
+            FL_enabled = false;
+        }
 
-class OptionsState : public BaseState {
+    };
 
-    virtual void Init(BaseState *parent)
-    {
-        BaseState::Init(parent);
-        Name = "Options";
-        FL_enabled = false;
-    }
+    struct ExitState : public BaseState {
 
-};
+        virtual void Init(BaseState *parent)
+        {
+            BaseState::Init(parent);
+            Name = "Exit";
+        }
 
-class ExitState : public BaseState {
+        virtual void Enter()
+        {
+            g_Application.Terminate();
+        }
+    };
 
-    virtual void Init(BaseState *parent)
-    {
-        BaseState::Init(parent);
-        Name = "Exit";
-    }
-
-    virtual void Enter()
-    {
-        g_Application.Terminate();
-    }
-};
+} } // namespace Scenes::Menu
 
 #include "MainState.h"
+
+#endif

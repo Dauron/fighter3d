@@ -20,7 +20,7 @@ public:
 
     World( void ) : skyBox(NULL) { skyColor.init(0.f,0.f,0.f,0.f); }
 
-    void Initialize ();
+    void Initialize (std::string MapFileName);
     void Finalize   ();
 
     void InitialUpdate()

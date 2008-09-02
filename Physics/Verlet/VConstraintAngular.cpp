@@ -24,9 +24,16 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     xVector3 &P_curr  = system->P_current[particle];
 
     xQuaternion QT_parent, QT_current;
-    // OPTIMIZE: calc only needed quats
-    system->Spine->CalcQuats(system->P_current, system->QT_boneSkew,
-                             0, system->MX_WorldToModel_T, xVector3::Create(0.f,0.f,0.f));
+
+    // calc only needed quats
+    bool FL_calculate[100]; FL_calculate[0] = true;
+    for (int i = 1; i < system->I_particles; ++i) FL_calculate[i] = false;
+    xBYTE idx = particle;
+    while (!FL_calculate[idx]) { FL_calculate[idx] = true; idx = system->Spine->L_bones[idx].ID_parent; }
+    idx = particleRootE ? particleRootE : particleRootB;
+    while (!FL_calculate[idx]) { FL_calculate[idx] = true; idx = system->Spine->L_bones[idx].ID_parent; }
+    system->Spine->CalcQuats(system->P_current, system->QT_boneSkew, FL_calculate,
+                             0, system->MX_WorldToModel_T);
     xBoneCalculateQuatForVerlet(*system->Spine, particle, QT_parent, QT_current);
     QT_current = xQuaternion::Product(QT_parent, QT_current);
 
@@ -92,8 +99,8 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     w1 /= (w1+w2);
     w2 = 1.f - w1;
 
-    xQuaternion QT_curr = xQuaternion::Interpolate(QT_minFix, w1);
-    xQuaternion QT_root = xQuaternion::Interpolate(QT_minFix, w2);
+    xQuaternion QT_curr = xQuaternion::InterpolateFull(QT_minFix, w1);
+    xQuaternion QT_root = xQuaternion::InterpolateFull(QT_minFix, w2);
     xMatrix &MX_BoneToWorld = MX_WorldToBone.invert();
     P_rootE = MX_BoneToWorld.preTransformP( QT_root.rotate(-P_curr_Local) + P_curr_Local );
     P_curr  = MX_BoneToWorld.preTransformP( QT_curr.rotate(P_curr_Local) );

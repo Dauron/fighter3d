@@ -53,7 +53,8 @@ void RenderElementAmbientLST(bool transparent, const Math::Cameras::FieldOfView 
 
         if (elem->FL_skeletized) {
             g_AnimSkeletal.BeginAnimation();
-            g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
+            g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
             g_AnimSkeletal.SetElement(elem, &instance);
         }
         else
@@ -100,7 +101,8 @@ void RenderElementAmbientLST(bool transparent, const Math::Cameras::FieldOfView 
         if (elem->FL_skeletized) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.L_verticesTS->tx));
-            g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
+            g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
         }
         else {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -198,7 +200,8 @@ void RenderElementAmbientVBO(bool transparent, const Math::Cameras::FieldOfView 
         GLShader::EnableSkeleton(xState_On);
         GLShader::Start();
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
+        g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
         g_AnimSkeletal.SetElement(elem, &instance, true);
     }
     else
@@ -224,7 +227,9 @@ void RenderElementAmbientVBO(bool transparent, const Math::Cameras::FieldOfView 
         if (faceL->Material != m_currentMaterial)
         {
             RendererGL::SetMaterial(elem->Color, m_currentMaterial = faceL->Material);
-            if (elem->FL_skeletized) g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
+            if (elem->FL_skeletized)
+                g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
         }
         glDrawElements(GL_TRIANGLES, 3*faceL->I_count, GL_UNSIGNED_SHORT, (void*)(faceL->I_offset*3*sizeof(xWORD)));
     }
@@ -305,7 +310,8 @@ void RenderElementAmbientLST(bool transparent, const Math::Cameras::FieldOfView 
 
         if (elem->FL_skeletized) {
             g_AnimSkeletal.BeginAnimation();
-            g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
+            g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
             g_AnimSkeletal.SetElement(elem, &instance);
         }
         else
@@ -352,7 +358,8 @@ void RenderElementAmbientLST(bool transparent, const Math::Cameras::FieldOfView 
         if (elem->FL_skeletized) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.L_verticesTS->tx));
-            g_AnimSkeletal.SetBones (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, false);
+            g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
         }
         else {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -439,7 +446,8 @@ void RenderElementAmbientVBO(bool transparent, const Math::Cameras::FieldOfView 
         GLShader::EnableSkeleton(xState_On);
         GLShader::Start();
         g_AnimSkeletal.BeginAnimation();
-        g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
+        g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
         g_AnimSkeletal.SetElement(elem, &instance, true);
     }
     else
@@ -465,7 +473,9 @@ void RenderElementAmbientVBO(bool transparent, const Math::Cameras::FieldOfView 
         if (faceL->Material != m_currentMaterial)
         {
             RendererGL::SetMaterial(elem->Color, m_currentMaterial = faceL->Material);
-            if (elem->FL_skeletized) g_AnimSkeletal.SetBones  (modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones, elem, true);
+            if (elem->FL_skeletized)
+                g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
+                                modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
         }
         glDrawElements(GL_TRIANGLES, 3*faceL->I_count, GL_UNSIGNED_SHORT, (void*)(faceL->I_offset*3*sizeof(xWORD)));
     }

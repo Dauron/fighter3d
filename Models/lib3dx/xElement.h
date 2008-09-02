@@ -59,7 +59,8 @@ struct xElement {
 
     void         FillShadowEdges();
     void         CalculateSmoothVertices();
-    xSkinnedData GetSkinnedVertices(const xMatrix *bones) const;
+    xSkinnedData GetSkinnedVertices(const xMatrix     *bones) const;
+    xSkinnedData GetSkinnedVertices(const xQuaternion *bones, const xPoint3 *roots, const xPoint3 *trans) const;
 
     void                 FillCollisionInfo (xModel &xmodel);
     Math::Figures::xBoxA FillBVH  ( Math::Figures::xBVHierarchy *L_BVH, Math::Figures::xMeshData *MeshData );

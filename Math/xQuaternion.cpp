@@ -31,7 +31,7 @@ xQuaternion xQuaternion::GetRotation(const xPoint3 &srcV, const xPoint3 &dstV)
     return quat;
 }
 
-xPoint3 xQuaternion::rotate(const xPoint3 &p) const
+xVector3 xQuaternion::rotate(const xVector3 &p) const
 {
     //return (xVector3)QuaternionProduct(QuaternionProduct(q,(xVector4)p),(QuaternionComplement(q)));
     xQuaternion ret;
@@ -41,6 +41,18 @@ xPoint3 xQuaternion::rotate(const xPoint3 &p) const
     ret.w = - x*p.x - y*p.y - z*p.z;
 
     return Product(ret, xQuaternion::Create(-x,-y,-z,w)).vector3;
+}
+
+xVector3 xQuaternion::unrotate(const xVector3 &p) const
+{
+    //return (xVector3)QuaternionProduct(QuaternionProduct((QuaternionComplement(q),(xVector4)p),q));
+    xQuaternion ret;
+    ret.x = - y*p.z + z*p.y + w*p.x;
+    ret.y = - z*p.x + x*p.z + w*p.y;
+    ret.z = - x*p.y + y*p.x + w*p.z;
+    ret.w =   x*p.x + y*p.y + z*p.z;
+
+    return Product(ret, *this).vector3;
 }
 
 xVector3 xQuaternion::angularVelocity() const

@@ -19,7 +19,10 @@ struct xSkeleton
     void      ResetQ();
 
     void      CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_boneSkew,
-                        xBYTE ID_bone, xMatrix MX_parent_Inv, xPoint3 P_end_parent);
+                        xBYTE ID_bone, xMatrix MX_parent_Inv);
+    void      CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_boneSkew,
+                        const bool *FL_calculate,
+                        xBYTE ID_bone, xMatrix MX_parent_Inv);
     void      FillBoneConstraints();
     xBone    *BoneAdd(xBYTE ID_parent, xPoint3 P_end);
 
