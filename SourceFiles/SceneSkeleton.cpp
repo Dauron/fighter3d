@@ -346,9 +346,9 @@ bool SceneSkeleton::FrameRender()
     GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
     GLfloat light_position[]   = { 0.0f, 1.0f, 1.0f, 0.0f };
-    GLfloat light_amb_color[]  = { 0.09f, 0.07f, 0.0f, 1.0f };
-    GLfloat light_dif_color[]  = { 0.9f, 0.7f, 0.0f, 1.0f };
-    GLfloat light_spec_color[] = { 0.9f, 0.7f, 0.0f, 1.0f };
+    GLfloat light_amb_color[]  = { 0.1f, 0.1f, 0.1f, 1.0f };
+    GLfloat light_dif_color[]  = { 0.9f, 0.9f, 0.9f, 1.0f };
+    GLfloat light_spec_color[] = { 0.9f, 0.9f, 0.9f, 1.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, light_position);
     glLightfv(GL_LIGHT0, GL_AMBIENT,  light_amb_color);  // environment
     glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_dif_color);  // direct light

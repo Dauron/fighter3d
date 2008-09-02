@@ -18,13 +18,7 @@ struct smoothVert {
 
 void xElement :: CalculateSmoothVertices ()
 {
-    size_t stride = this->FL_skeletized
-        ? this->FL_textured
-        ? sizeof (xVertexTexSkel)
-        : sizeof (xVertexSkel)
-        : this->FL_textured
-        ? sizeof (xVertexTex)
-        : sizeof (xVertex);
+    size_t stride     = this->GetVertexStride();
     xBYTE *verticesIn = (xBYTE*) this->L_vertices;
 
     this->renderData.L_face_normals = new xVector3[this->I_faces];
@@ -90,16 +84,17 @@ void xElement :: CalculateSmoothVertices ()
     std::vector<std::vector<smoothVert> >::iterator vertE = vertices.end();
     xBYTE *xvertI = verticesIn, *xvertI2;
 
-    for (; vertF != vertE; ++vertF, xvertI += stride)
+    for (int i=0; vertF != vertE; ++vertF, xvertI += stride, ++i)
     {
         if (!vertF->size()) continue;
         xVector3 *v1 = (xVector3*)xvertI;
 
-        xvertI2 = xvertI+1;
-        for (vertF2 = vertF+1; vertF2 != vertE; ++vertF2, xvertI2 += stride)
+        xvertI2 = xvertI+stride;
+        int j = i+1;
+        for (vertF2 = vertF+1; vertF2 != vertE; ++vertF2, xvertI2 += stride, ++j)
         {
             xVector3 *v2 = (xVector3*)xvertI2;
-            if (v1 != v2) continue;
+            if (!v1->nearlyEqual(*v2)) continue;
 
             iterE  = vertF->end();
             iterE2 = vertF2->end();
