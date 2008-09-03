@@ -47,7 +47,7 @@ namespace Scenes { namespace Menu {
             for (size_t i = 0; i < L_maps.size(); ++i)
                 if (!L_maps[i].Texture.IsNull())
                 {
-                    g_TextureMgr.DeleteTexture(L_maps[i].Texture);
+                    g_TextureMgr.DeleteReference(L_maps[i].Texture);
                     L_maps[i].Texture = HTexture();
                 }
             L_maps.clear();

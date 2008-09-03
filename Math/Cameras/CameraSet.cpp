@@ -140,6 +140,15 @@ void CameraSet :: Load(const char *fileName)
                     {
                         tracker->Mode = ObjectTracker::TRACK_CUSTOM_SCRIPT;
                         tracker->ScriptName = name;
+                        if (StartsWith(name, "EyeSeeAll_CenterTop"))
+                            tracker->Script = Camera::SCRIPT_EyeSeeAll_CenterTop;
+                        else
+                        if (StartsWith(name, "EyeSeeAll_Center"))
+                            tracker->Script = Camera::SCRIPT_EyeSeeAll_Center;
+                        else
+                        if (StartsWith(name, "EyeSeeAll_Radius"))
+                            tracker->Script = Camera::SCRIPT_EyeSeeAll_Radius;
+
                     }
                     continue;
                 }

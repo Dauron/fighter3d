@@ -17,6 +17,8 @@ struct Texture : public HandleDst
         Invalidate();
     }
 
+    virtual const std::string &GetId() { return m_Name; }
+
     bool Load  ( const std::string& name, bool mipmap );
     void Unload( void );
 

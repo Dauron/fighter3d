@@ -52,7 +52,7 @@ void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
         if (hModelPh != hModelGr)
             ModelPh = new ModelInstance(hModelPh);
         else
-            g_ModelMgr.DeleteModel(hModelPh);
+            g_ModelMgr.DeleteReference(hModelPh);
     }
     FL_renderNeedsUpdate      = false;
     FL_renderNeedsUpdateBones = false;

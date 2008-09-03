@@ -521,9 +521,9 @@ bool           xAnimation::Save(const char *fileName)
     {
         xAnimationInfo info = GetInfo();
 
-        xBYTE i = (Name) ? strlen(Name) : 0;
+        xBYTE i = Name.size();
         fwrite(&i, sizeof(xBYTE), 1, file);
-        fwrite(this->Name,          sizeof(char), i, file);
+        fwrite(this->Name.c_str(),  sizeof(char), i, file);
         fwrite(&(this->I_bones),    sizeof(this->I_bones), 1, file);
         fwrite(&(this->I_priority), sizeof(this->I_priority), 1, file);
         fwrite(&(this->I_frames),   sizeof(this->I_frames), 1, file);
@@ -556,11 +556,11 @@ bool           xAnimation::Load(const char *fileName)
         xBYTE i;
         fread(&i, sizeof(xBYTE), 1, file);
         if (i) {
-            this->Name = new char[i];
-            fread(this->Name,        sizeof(char), i, file);
-            delete[] this->Name;
+            char *name = new char[i];
+            fread(name,        sizeof(char), i, file);
+            delete[] name;
         }
-        this->Name = strdup(fileName); // overwrite name with path
+        this->Name = fileName; // overwrite name with path
 
         fread(&(this->I_bones),    sizeof(this->I_bones), 1, file);
         fread(&(this->I_priority), sizeof(this->I_priority), 1, file);

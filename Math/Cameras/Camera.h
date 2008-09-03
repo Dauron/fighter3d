@@ -9,11 +9,26 @@ namespace Math { namespace Cameras {
     using namespace Math::Cameras;
     using namespace Math::Tracking;
 
+    struct CameraTrackingData {
+        xPoint3 *P_current;
+        Camera  *camera;
+
+        CameraTrackingData ()
+            : P_current(NULL), camera(NULL)
+        {}
+        CameraTrackingData (xPoint3 &p_current, Camera  &cam)
+            : P_current(&p_current), camera(&cam)
+        {}
+    };
+
     class Camera
     {
     private:
         xMatrix       MX_WorldToView;
         xMatrix       MX_ViewToWorld;
+
+        CameraTrackingData eyeTrackingData;
+        CameraTrackingData centerTrackingData;
 
     public:
         std::string   SN_name;
@@ -29,9 +44,12 @@ namespace Math { namespace Cameras {
         xVector3      NW_up;
 
     public:
-        static const char *SCRIPT_EyeSeeAll_Center;
-        static const char *SCRIPT_EyeSeeAll_CenterTop;
-        static const char *SCRIPT_EyeSeeAll_Radius;
+        //static const char *SCRIPT_EyeSeeAll_Center;
+        //static const char *SCRIPT_EyeSeeAll_CenterTop;
+        //static const char *SCRIPT_EyeSeeAll_Radius;
+        static const TrackingScript SCRIPT_EyeSeeAll_Center;
+        static const TrackingScript SCRIPT_EyeSeeAll_CenterTop;
+        static const TrackingScript SCRIPT_EyeSeeAll_Radius;
 
         virtual void Init()
         { Init (0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f); }
@@ -41,8 +59,14 @@ namespace Math { namespace Cameras {
         {
             SN_name.clear();
             SetCamera(eyex, eyey, eyez, centerx, centery, centerz, upx, upy, upz);
+
             EyeTracker.Init();
             CenterTracker.Init();
+            eyeTrackingData    = CameraTrackingData(P_eye, *this);
+            centerTrackingData = CameraTrackingData(P_center, *this);
+            EyeTracker.ScriptData    = (xBYTE*)&eyeTrackingData;
+            CenterTracker.ScriptData = (xBYTE*)&centerTrackingData;
+
             W_TrackingSpeed = 1.f;
             FOV.InitCamera(this);
         }
@@ -63,10 +87,6 @@ namespace Math { namespace Cameras {
 
     private:
         void LookAtMatrix(xMatrix &MX_WorldToView);
-
-        void Script_EyeSeeAll_Center(ObjectTracker &tracker, const xPoint3 &P_current);
-        void Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, const xPoint3 &P_current);
-        void Script_EyeSeeAll_Radius(ObjectTracker &tracker, const xPoint3 &P_current);
     };
 
 } } // namespace Math::Cameras

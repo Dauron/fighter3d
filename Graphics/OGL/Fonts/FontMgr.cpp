@@ -5,7 +5,6 @@ HFont FontMgr :: GetFont( const char* name, int size )
     std::string key( name );
     key.append("|", 1);
     key += itos(size);
-    //key.append(&size, 1);
 
     // insert/find
     NameIndexInsertRc rc =
@@ -32,25 +31,5 @@ HFont FontMgr :: GetFont( const char* name, int size )
     {
         assert (false);
         return HFont();
-    }
-}
-
-void FontMgr :: DeleteFont( HFont hfnt )
-{
-    GLFont* fnt = m_HandleMgr.DereferenceNoValidation( hfnt );
-    if ( fnt != 0 )
-    {
-        fnt->DecReferences();
-        if (!fnt->m_References)
-        {
-            std::string key( fnt->m_Name );
-            key.append("|", 1);
-            key += itos(fnt->m_Size);
-            // delete from index
-            m_NameIndex.erase( m_NameIndex.find( key ) );
-            // delete from db
-            fnt->Unload();
-            m_HandleMgr.Release( hfnt );
-        }
     }
 }

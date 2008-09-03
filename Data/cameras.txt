@@ -1,3 +1,26 @@
+#[camera human] - create human camera
+#[camera free]  - create free camera
+#name   - camera name
+#eye    - initial eye position
+#center - initial center position
+#up     - initial up vector
+#speed  - tracking speed
+#(viewport) - define window percentage used by the camera
+#left   - percent of window width where camera screen starts
+#width  - percent of window width that camera screen takes
+#top    - percent of window height where camera screen starts
+#height - percent of window height that camera screen takes
+#(fov)  - define field of view (and switch to orthogonal projection)
+#angle  - define fov angle (and switch to perspective projection)
+#front  - define near clipping distance
+#back   - define far clipping distance
+#(track eye)    - configure eye tracking
+#(track center) - configure center tracking
+#mode   - tracking mode (nothing/object/subobject/all_center/script name)
+#object - tracked object index
+#subobj - tracked object's subobject index
+#shift  - shift of tracked destination
+
 [camera human]
 name	Perspective
 eye     8 -3 2.2

@@ -2,9 +2,18 @@
 
 using namespace Math::Cameras;
 
-const char * Camera::SCRIPT_EyeSeeAll_Center = "EyeSeeAll_Center";
-const char * Camera::SCRIPT_EyeSeeAll_CenterTop = "EyeSeeAll_CenterTop";
-const char * Camera::SCRIPT_EyeSeeAll_Radius = "EyeSeeAll_Radius";
+//const char * Camera::SCRIPT_EyeSeeAll_Center    = "EyeSeeAll_Center";
+//const char * Camera::SCRIPT_EyeSeeAll_CenterTop = "EyeSeeAll_CenterTop";
+//const char * Camera::SCRIPT_EyeSeeAll_Radius    = "EyeSeeAll_Radius";
+
+void Script_EyeSeeAll_Center   (ObjectTracker &tracker, xBYTE *CameraDataPtr);
+void Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, xBYTE *CameraDataPtr);
+void Script_EyeSeeAll_Radius   (ObjectTracker &tracker, xBYTE *CameraDataPtr);
+
+const TrackingScript Camera::SCRIPT_EyeSeeAll_Center    = Script_EyeSeeAll_Center;
+const TrackingScript Camera::SCRIPT_EyeSeeAll_CenterTop = Script_EyeSeeAll_CenterTop;
+const TrackingScript Camera::SCRIPT_EyeSeeAll_Radius    = Script_EyeSeeAll_Radius;
+
 
 void Camera :: SetCamera (xFLOAT eyex, xFLOAT eyey, xFLOAT eyez,
                           xFLOAT centerx, xFLOAT centery, xFLOAT centerz,
@@ -38,23 +47,10 @@ void Camera :: Update(xFLOAT T_delta)
 {
     EyeTracker.P_destination    = P_eye;
     CenterTracker.P_destination = P_center;
-    if (EyeTracker.Mode == ObjectTracker::TRACK_CUSTOM_SCRIPT)
-    {
-        if (EyeTracker.ScriptName == SCRIPT_EyeSeeAll_Center)
-            Script_EyeSeeAll_Center(EyeTracker, P_eye);
-        else
-        if (EyeTracker.ScriptName == SCRIPT_EyeSeeAll_CenterTop)
-            Script_EyeSeeAll_CenterTop(EyeTracker, P_eye);
-        else
-        if (EyeTracker.ScriptName == SCRIPT_EyeSeeAll_Radius)
-            Script_EyeSeeAll_Radius(EyeTracker, P_eye);
-    }
-    else
-        EyeTracker.UpdateDestination();
+    EyeTracker.UpdateDestination();
     CenterTracker.UpdateDestination();
 
-    xFLOAT W_weight = W_TrackingSpeed * T_delta;
-    if (W_weight > 1.f) W_weight = 1.f;
+    xFLOAT W_weight = min(W_TrackingSpeed * T_delta, 1.f);
 
     EyeTracker.InterpolatePosition(P_eye, CenterTracker.P_destination, W_weight);
     CenterTracker.InterpolatePosition(P_center, EyeTracker.P_destination, W_weight);
@@ -91,9 +87,10 @@ void Camera :: Update(xFLOAT T_delta)
     FOV.Update();
 }
 
-void Camera :: Script_EyeSeeAll_Center(ObjectTracker &tracker, const xPoint3 &P_current)
+void Script_EyeSeeAll_Center   (ObjectTracker &tracker, xBYTE *CameraDataPtr)
 {
     if (tracker.Targets->L_objects.size() == 0) return;
+    CameraTrackingData &ctd = *(CameraTrackingData*) CameraDataPtr;
 
     xPoint3 P_min_d, P_max_d, P_min, P_max, P_min_t, P_max_t, P_tmp;
     Vec_TrackedObject::iterator TO_curr = tracker.Targets->L_objects.begin(),
@@ -168,7 +165,7 @@ void Camera :: Script_EyeSeeAll_Center(ObjectTracker &tracker, const xPoint3 &P_
         N_up.init(0.f, 0.f, 1.f);
     xVector3 N_front  = xVector3::CrossProduct(N_up, NW_diagonal[I_max]).normalize();
     xPlane   PN_screen; PN_screen.init(N_front, P_center);
-    if (PN_screen.distanceToPoint(P_current) < 0.f)
+    if (PN_screen.distanceToPoint(*ctd.P_current) < 0.f)
     {
         N_front.invert();
         PN_screen.vector3.invert();
@@ -189,24 +186,25 @@ void Camera :: Script_EyeSeeAll_Center(ObjectTracker &tracker, const xPoint3 &P_
     xFLOAT S_up    = fabs(xVector3::DotProduct(N_up,   P_max_d-P_min_d)) * 0.5f;
     xFLOAT S_side  = fabs(xVector3::DotProduct(N_side, NW_diagonal[I_max])) * 0.5f;
 
-    if (FOV.Projection == FieldOfView::PROJECT_PERSPECTIVE)
+    if (ctd.camera->FOV.Projection == FieldOfView::PROJECT_PERSPECTIVE)
     {
-        S_up = max(S_up, S_side/FOV.Aspect) * 1.5f;
-        xFLOAT S_aux = S_up / tan( DegToRad(FOV.PerspAngle) *0.5f );
+        S_up = max(S_up, S_side/ctd.camera->FOV.Aspect) * 1.5f;
+        xFLOAT S_aux = S_up / tan( DegToRad(ctd.camera->FOV.PerspAngle) *0.5f );
         tracker.P_destination = P_center + N_front * (S_front + S_aux);// + tracker.NW_destination_shift;
     }
     else
     {
-        S_up = max(S_up * FOV.Aspect, S_side);
+        S_up = max(S_up * ctd.camera->FOV.Aspect, S_side);
         tracker.P_destination = P_center + N_front * S_up;// + tracker.NW_destination_shift;
     }
     tracker.P_destination += N_front * tracker.NW_destination_shift.y
                            + N_side  * tracker.NW_destination_shift.x
                            + N_up    * tracker.NW_destination_shift.z;
 }
-void Camera :: Script_EyeSeeAll_Radius(ObjectTracker &tracker, const xPoint3 &P_current)
+void Script_EyeSeeAll_Radius   (ObjectTracker &tracker, xBYTE *CameraDataPtr)
 {
     if (tracker.Targets->L_objects.size() == 0) return;
+    CameraTrackingData &ctd = *(CameraTrackingData*) CameraDataPtr;
 
     xPoint3 P_min, P_max, P_min_t, P_max_t;
     Vec_TrackedObject::iterator TO_curr = tracker.Targets->L_objects.begin(),
@@ -269,7 +267,7 @@ void Camera :: Script_EyeSeeAll_Radius(ObjectTracker &tracker, const xPoint3 &P_
         N_up.init(0.f, 0.f, 1.f);
     xVector3 N_front  = xVector3::CrossProduct(N_up, NW_diagonal[I_max]).normalize();
     xPlane   PN_screen; PN_screen.init(N_front, P_center);
-    if (PN_screen.distanceToPoint(P_current) < 0.f)
+    if (PN_screen.distanceToPoint(*ctd.P_current) < 0.f)
     {
         N_front.invert();
         PN_screen.vector3.invert();
@@ -290,15 +288,15 @@ void Camera :: Script_EyeSeeAll_Radius(ObjectTracker &tracker, const xPoint3 &P_
     xFLOAT S_up    = fabs(xVector3::DotProduct(N_up,   NW_diagonal[I_max])) * 0.5f;
     xFLOAT S_side  = fabs(xVector3::DotProduct(N_side, NW_diagonal[I_max])) * 0.5f;
 
-    if (FOV.Projection == FieldOfView::PROJECT_PERSPECTIVE)
+    if (ctd.camera->FOV.Projection == FieldOfView::PROJECT_PERSPECTIVE)
     {
-        S_up = max(S_up, S_side/FOV.Aspect) * 1.5f;
-        xFLOAT S_aux = S_up / tan( DegToRad(FOV.PerspAngle) *0.5f );
+        S_up = max(S_up, S_side/ctd.camera->FOV.Aspect) * 1.5f;
+        xFLOAT S_aux = S_up / tan( DegToRad(ctd.camera->FOV.PerspAngle) *0.5f );
         tracker.P_destination = P_center + N_front * (S_front + S_aux);// + tracker.NW_destination_shift;
     }
     else
     {
-        S_up = max(S_up * FOV.Aspect, S_side);
+        S_up = max(S_up * ctd.camera->FOV.Aspect, S_side);
         tracker.P_destination = P_center + N_front * S_up;// + tracker.NW_destination_shift;
     }
     tracker.P_destination += N_front * tracker.NW_destination_shift.y
@@ -306,9 +304,10 @@ void Camera :: Script_EyeSeeAll_Radius(ObjectTracker &tracker, const xPoint3 &P_
                            + N_up    * tracker.NW_destination_shift.z;
 
 }
-void Camera :: Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, const xPoint3 &P_current)
+void Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, xBYTE *CameraDataPtr)
 {
     if (tracker.Targets->L_objects.size() == 0) return;
+    CameraTrackingData &ctd = *(CameraTrackingData*) CameraDataPtr;
 
     xPoint3 P_min_d, P_max_d, P_min, P_max, P_min_t, P_max_t, P_tmp;
     Vec_TrackedObject::iterator TO_curr = tracker.Targets->L_objects.begin(),
@@ -403,15 +402,15 @@ void Camera :: Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, const xPoint3 
     xFLOAT S_up    = fabs(xVector3::DotProduct(N_up,   P_max_d-P_min_d)) * 0.5f;
     xFLOAT S_side  = fabs(xVector3::DotProduct(N_side, NW_diagonal[I_max])) * 0.5f;
 
-    if (FOV.Projection == FieldOfView::PROJECT_PERSPECTIVE)
+    if (ctd.camera->FOV.Projection == FieldOfView::PROJECT_PERSPECTIVE)
     {
-        S_up = max(S_up, S_side/FOV.Aspect) * 1.5f;
-        xFLOAT S_aux = S_up / tan( DegToRad(FOV.PerspAngle) *0.5f );
+        S_up = max(S_up, S_side/ctd.camera->FOV.Aspect) * 1.5f;
+        xFLOAT S_aux = S_up / tan( DegToRad(ctd.camera->FOV.PerspAngle) *0.5f );
         tracker.P_destination = P_center + N_front * (S_front + S_aux);// + tracker.NW_destination_shift;
     }
     else
     {
-        S_up = max(S_up * FOV.Aspect, S_side) * 0.5f;
+        S_up = max(S_up * ctd.camera->FOV.Aspect, S_side) * 0.5f;
         tracker.P_destination = P_center + N_front * S_up;// + tracker.NW_destination_shift;
     }
 

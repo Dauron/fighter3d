@@ -13,18 +13,18 @@ typedef Handle<xAnimationMgr> HAnimation;
 
 struct xAnimationH : public xAnimation, public HandleDst
 {
+    virtual const std::string &GetId() { return Name; }
+
     bool ReLoad()
     {
-        assert(Name);
-        char *l_name = strdup(Name);
+        assert(Name.size());
+        std::string l_name = Name;
         Unload();
-        bool res = Load(l_name);
-        delete[] l_name;
-        return res;
+        return Load(l_name.c_str());
     }
 
-    void Invalidate()  { I_bones = 0; }
-    bool IsValid()     { return I_bones; }
+    void Invalidate()    { I_bones = 0; }
+    bool IsValid() const { return I_bones; }
 };
 
 class xAnimationMgr : public Singleton<xAnimationMgr>, public Manager<xAnimationH, HAnimation>
@@ -37,14 +37,13 @@ public:
     xAnimationMgr ( void ) {  /* ... */  }
    ~xAnimationMgr ( void ) {  /* ... */  }
 
-// Model management.
+// Animation management.
     HAnimation GetAnimation    ( const char* name );
-    void       DeleteAnimation ( HAnimation hani );
 
-// Model query.
-    const char* GetName( HAnimation hani ) const
+// Animation query.
+    const std::string &GetName( HAnimation hani ) const
         {  return ( m_HandleMgr.DereferenceNoValidation( hani )->Name );  }
-    xAnimation* GetAnimation( HAnimation hani )
+    xAnimation        *GetAnimation( HAnimation hani )
         {  return ( m_HandleMgr.Dereference( hani ) );  }
 };
 

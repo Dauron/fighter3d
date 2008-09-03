@@ -20,11 +20,10 @@ public:
     FontMgr( void ) {  /* ... */  }
    ~FontMgr( void ) {  /* ... */  }
 
-// Texture management.
+// Font management.
     HFont GetFont   ( const char* name, int size );
-    void  DeleteFont( HFont hfnt );
 
-// Texture query.
+// Font query.
     const std::string& GetName( HFont hfnt ) const
         {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->m_Name );  }
     int GetSize( HFont hfnt ) const

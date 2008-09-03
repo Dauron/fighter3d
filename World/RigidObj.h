@@ -27,7 +27,7 @@ struct ModelInstance
     }
 
     ~ModelInstance()
-    { g_ModelMgr.DeleteModel(hModel); instance.Clear(); }
+    { g_ModelMgr.DeleteReference(hModel); instance.Clear(); }
 
     void Update()
     { xModelP = g_ModelMgr.GetModel(hModel)->model; }

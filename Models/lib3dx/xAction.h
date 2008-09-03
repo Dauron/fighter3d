@@ -37,7 +37,7 @@ struct xActionSet {
             Vec_xAction::iterator A_curr = L_actions.begin(),
                                   A_last = L_actions.end();
             for (; A_curr != A_last; ++A_curr)
-                g_AnimationMgr.DeleteAnimation(A_curr->hAnimation);
+                g_AnimationMgr.DeleteReference(A_curr->hAnimation);
             L_actions.clear();
         }
     }

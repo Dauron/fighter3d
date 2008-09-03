@@ -30,20 +30,3 @@ HTexture TextureMgr :: GetTexture( const char* name )
         return HTexture();
     }
 }
-
-void TextureMgr :: DeleteTexture( HTexture htex )
-{
-    Texture* tex = m_HandleMgr.DereferenceNoValidation( htex );
-    if ( tex != 0 )
-    {
-        tex->DecReferences();
-        if (!tex->m_References)
-        {
-            // delete from index
-            m_NameIndex.erase( m_NameIndex.find( tex->m_Name ) );
-            // delete from db
-            tex->Unload();
-            m_HandleMgr.Release( htex );
-        }
-    }
-}

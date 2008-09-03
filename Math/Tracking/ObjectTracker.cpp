@@ -49,6 +49,11 @@ void ObjectTracker :: UpdateDestination()
         P_destination = (P_min + P_max) * 0.5f + NW_destination_shift;
         return;
     }
+    if (Mode == TRACK_CUSTOM_SCRIPT && ScriptData && Script)
+    {
+        Script(*this, ScriptData);
+        return;
+    }
 }
 
 void ObjectTracker :: InterpolatePosition(xPoint3 &P_current,

@@ -23,7 +23,6 @@ public:
 
 // Texture management.
     HTexture GetTexture   ( const char* name );
-    void     DeleteTexture( HTexture htex );
 
 // Texture query.
     const std::string& GetName( HTexture htex ) const
@@ -32,9 +31,9 @@ public:
         {  return ( m_HandleMgr.DereferenceNoValidation( htex )->m_Width );  }
     int GetHeight( HTexture htex ) const
         {  return ( m_HandleMgr.DereferenceNoValidation( htex )->m_Height );  }
-    GLuint GetTexture( HTexture htex ) const
+    GLuint GetTexture( HTexture htex )
         {  return ( m_HandleMgr.Dereference( htex )->m_GLTexture );  }
-    void BindTexture( HTexture htex ) const
+    void BindTexture( HTexture htex )
         { glBindTexture(GL_TEXTURE_2D, m_HandleMgr.Dereference( htex )->m_GLTexture ); }
 };
 

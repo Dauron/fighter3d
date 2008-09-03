@@ -14,6 +14,10 @@
 
 struct GLFont : public HandleDst
 {
+private:
+    std::string m_Id;
+
+public:
     static const float INTERLINE;
     static const int FIRST_CHAR = 0;
     static const int NUM_CHARS  = 32+96+128;
@@ -31,6 +35,8 @@ struct GLFont : public HandleDst
     {
         Invalidate();
     }
+
+    virtual const std::string &GetId() { return m_Id; }
 
     bool Load(const std::string& name, int size = 14);
     void Unload();

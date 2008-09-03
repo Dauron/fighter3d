@@ -30,20 +30,3 @@ HModel ModelMgr :: GetModel( const char* name )
         return HModel();
     }
 }
-
-void ModelMgr :: DeleteModel( HModel hmod )
-{
-    Model3dx* mod = m_HandleMgr.DereferenceNoValidation( hmod );
-    if ( mod != 0 )
-    {
-        mod->DecReferences();
-        if (!mod->m_References)
-        {
-            // delete from index
-            m_NameIndex.erase( m_NameIndex.find( mod->m_Name ) );
-            // delete from db
-            mod->Unload();
-            m_HandleMgr.Release( hmod );
-        }
-    }
-}

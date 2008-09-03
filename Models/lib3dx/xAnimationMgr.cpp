@@ -30,20 +30,3 @@ HAnimation xAnimationMgr :: GetAnimation    ( const char* name )
         return HAnimation();
     }
 }
-
-void xAnimationMgr :: DeleteAnimation( HAnimation hani )
-{
-    xAnimationH* ani = m_HandleMgr.DereferenceNoValidation( hani );
-    if ( ani != 0 )
-    {
-        ani->DecReferences();
-        if (!ani->m_References)
-        {
-            // delete from index
-            m_NameIndex.erase( m_NameIndex.find( ani->Name ) );
-            // delete from db
-            ani->Unload();
-            m_HandleMgr.Release( hani );
-        }
-    }
-}

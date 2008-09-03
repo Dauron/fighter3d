@@ -39,6 +39,8 @@ public:
         return m_HandleMgr.DereferenceNoValidation( hnd );
     }
 
+    void DeleteReference( HANDLE hnd );
+
     ~Manager(void);
 };
 
@@ -49,6 +51,25 @@ void Manager <HANDLE_DST, HANDLE>
     typename NameIndex::iterator i, begin = m_NameIndex.begin(), end = m_NameIndex.end();
     for ( i = begin ; i != end ; ++i )
         m_HandleMgr.DereferenceNoValidation( i->second )->Invalidate();
+}
+
+template <typename HANDLE_DST, class HANDLE>
+void Manager <HANDLE_DST, HANDLE>
+:: DeleteReference( HANDLE hnd )
+{
+    HANDLE_DST* dst = m_HandleMgr.DereferenceNoValidation( hnd );
+    if ( dst != 0 )
+    {
+        dst->DecReferences();
+        if (!dst->m_References)
+        {
+            // delete from index
+            m_NameIndex.erase( m_NameIndex.find( dst->GetId() ) );
+            // delete from db
+            dst->Unload();
+            m_HandleMgr.Release( hnd );
+        }
+    }
 }
 
 template <typename HANDLE_DST, class HANDLE>

@@ -25,20 +25,20 @@ struct xAnimationInfo
 
 struct xAnimation
 {
-    char      *Name;
-    xWORD      I_bones;      // no of bones per frame
-    xBYTE      I_priority;   // higher priority matrices replace matrices of lower priority
+    std::string Name;
+    xWORD       I_bones;      // no of bones per frame
+    xBYTE       I_priority;   // higher priority matrices replace matrices of lower priority
 
-    xKeyFrame *L_frames;     // key frame list or cycle
-    xWORD      I_frames;     // no of key frames
+    xKeyFrame  *L_frames;     // key frame list or cycle
+    xWORD       I_frames;     // no of key frames
 
-    xKeyFrame *CurrentFrame; // current frame pointer
-    xLONG      T_progress;   // ms of progress of the current frame
+    xKeyFrame  *CurrentFrame; // current frame pointer
+    xLONG       T_progress;   // ms of progress of the current frame
 
     void Reset(xWORD I_bones)
     {
         this->I_bones  = I_bones;
-        Name           = NULL;
+        Name.clear();
         L_frames       = NULL;
         I_frames       = 0;
         CurrentFrame   = NULL;
@@ -47,8 +47,7 @@ struct xAnimation
     }
     void Unload()
     {
-        if (Name)
-            delete[] Name;
+        Name.clear();
         xKeyFrame *kfCur = L_frames;
         xWORD cnt = I_frames;
         while (kfCur && cnt)

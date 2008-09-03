@@ -15,6 +15,10 @@ namespace Math { namespace Tracking {
         Vec_TrackedObject L_objects;
     };
 
+    struct ObjectTracker;
+
+    typedef void (*TrackingScript)(ObjectTracker &tracker, xBYTE *data);
+
     struct ObjectTracker
     {
         enum TrackingMode {
@@ -25,8 +29,10 @@ namespace Math { namespace Tracking {
             TRACK_CUSTOM_SCRIPT
         };
 
-        TrackingMode  Mode;
-        std::string   ScriptName;
+        TrackingMode   Mode;
+        std::string    ScriptName;
+        TrackingScript Script;
+        xBYTE         *ScriptData;
 
         TrackingSet  *Targets;
         xBYTE         ID_object;
@@ -40,6 +46,8 @@ namespace Math { namespace Tracking {
             Targets = (FL_init_empty) ? NULL : new TrackingSet();
             Mode    = TRACK_NOTHING;
             ScriptName.clear();
+            Script     = NULL;
+            ScriptData = NULL;
             P_destination.zero();
             NW_destination_shift.zero();
             ID_object = ID_subobject = 0;

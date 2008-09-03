@@ -93,7 +93,8 @@ void SceneGame :: InitCameras()
             Cameras.L_cameras[0]->CenterTracker.Mode    = Math::Tracking::ObjectTracker::TRACK_ALL_CENTER;
             Cameras.L_cameras[0]->EyeTracker.Targets    = &Targets;
             Cameras.L_cameras[0]->EyeTracker.Mode       = Math::Tracking::ObjectTracker::TRACK_CUSTOM_SCRIPT;
-            Cameras.L_cameras[0]->EyeTracker.ScriptName = Math::Cameras::Camera::SCRIPT_EyeSeeAll_Center;
+            Cameras.L_cameras[0]->EyeTracker.ScriptName = "EyeSeeAll_Center";
+            Cameras.L_cameras[0]->EyeTracker.Script     = Math::Cameras::Camera::SCRIPT_EyeSeeAll_Center;
             Cameras.L_cameras[0]->EyeTracker.NW_destination_shift.init(0.f,0.f,1.5f);
         }
 

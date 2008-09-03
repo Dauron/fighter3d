@@ -292,7 +292,7 @@ void SceneSkeleton::Terminate()
             Animation.Instance = NULL;
         }
 
-    g_FontMgr.DeleteFont(Font);
+    g_FontMgr.DeleteReference(Font);
     Font = HFont();
 
     Directories.clear();

@@ -2,14 +2,15 @@
 
 #include "lib3dx/xImport.h"
 #include "../Graphics/OGL/Textures/TextureMgr.h"
+#include "../Utils/Filesystem.h"
 
 bool Model3dx :: Load ( const char *name )
 {
     assert (model == NULL);
 
-    if (m_Name != name) m_Name = strdup(name); // set name if not reloading
+    m_Name = name;
 
-    int size = strlen(name);
+    int size = m_Name.size();
     if (!strcasecmp(name + size - 4, ".3dx"))
         model = xModel::Load(name);
     else
@@ -22,9 +23,8 @@ bool Model3dx :: Load ( const char *name )
         }
         if (model && Config::Save3dsTo3dx) {
             // save
-            char *fname = strdup (name);
-            fname[size-1] = 'x';
-            model->FileName = fname;
+            model->FileName = strdup (Filesystem::ChangeFileExt(m_Name, "3dx").c_str());
+            model->Save();
         }
         else
             model->FileName = strdup (name);
@@ -43,13 +43,12 @@ void Model3dx :: Unload( void )
                 {
                     HTexture htex;
                     htex.SetHandle(mat->texture.htex);
-                    g_TextureMgr.DeleteTexture(htex);
+                    g_TextureMgr.DeleteReference(htex);
                     mat->texture.htex = 0;
                 }
         model->FL_textures_loaded = false;
         model->Free();
         model = NULL;
     }
-
-    if (m_Name) { delete[] m_Name; m_Name = NULL; }
+    m_Name.clear();
 }

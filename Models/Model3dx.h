@@ -7,25 +7,25 @@
 struct Model3dx : public HandleDst
 {
 public:
-    char      *m_Name;  // for reconstruction
+    std::string m_Name;  // for reconstruction
     xModel     *model;
 
-    Model3dx() : m_Name(NULL), model(NULL) {}
+    Model3dx() : model(NULL) {}
+
+    virtual const std::string &GetId() { return m_Name; }
 
     bool Load ( const char *name );
     void Unload( void );
     bool ReLoad()
     {
-        assert(m_Name);
-        char *name = strdup(m_Name);
+        assert(m_Name.size());
+        std::string name = m_Name;
         Unload();
-        bool res = Load(name);
-        delete[] name;
-        return res;
+        return Load(name.c_str());
     }
 
-    void Invalidate()  { model->FL_textures_loaded = false; }
-    bool IsValid()     { return model; }
+    void Invalidate()    { model->FL_textures_loaded = false; }
+    bool IsValid() const { return model; }
 };
 
 #endif

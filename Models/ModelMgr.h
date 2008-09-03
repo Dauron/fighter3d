@@ -22,12 +22,11 @@ public:
 
 // Model management.
     HModel GetModel   ( const char* name );
-    void   DeleteModel( HModel hmod );
 
 // Model query.
-    const char* GetName( HModel hmod ) const
+    const std::string &GetName( HModel hmod ) const
         {  return ( m_HandleMgr.Dereference( hmod )->m_Name );  }
-    Model3dx  * GetModel( HModel hmod )
+    Model3dx          *GetModel( HModel hmod )
         {  return ( m_HandleMgr.Dereference( hmod ) );  }
 };
 
