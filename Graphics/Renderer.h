@@ -49,11 +49,12 @@ public:
 
     void RenderBVH              ( Math::Figures::xBVHierarchy &bvh,
                                   const xMatrix &MX_LocalToWorld,
+                                  bool  FL_color = true,
                                   xBYTE I_level = 0, xBYTE ID_selected = xBYTE_MAX,
                                   bool FL_selection = false)
     {
         xBYTE ID = 0;
-        RenderBVHExt(bvh, MX_LocalToWorld, I_level, ID, ID_selected, FL_selection);
+        RenderBVHExt(bvh, MX_LocalToWorld, I_level, ID, ID_selected, FL_selection, FL_color);
     }
 
     virtual void RenderShadowVolume      ( xModel &model, xModelInstance &instance,
@@ -77,7 +78,8 @@ protected:
                                            xBYTE          I_level,
                                            xBYTE         &ID,
                                            xBYTE          ID_selected = xBYTE_MAX,
-                                           bool           FL_selection = false) = 0;
+                                           bool           FL_selection = false,
+                                           bool           FL_color = true) = 0;
 };
 
 #endif

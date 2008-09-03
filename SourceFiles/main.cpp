@@ -23,17 +23,24 @@ int main( int argc, char **argv )
     Config::Load("Data/config.txt");
     GLShader::Load();
 
+    Scene *scene = NULL;
+    if (!strcmp(Config::Scene, "test")) scene = new Scenes::SceneTest();
+    else
+    if (!strcmp(Config::Scene, "game")) scene = new Scenes::SceneGame();
+    else                                scene = new Scenes::SceneMenu();
+    if (Config::EnableConsole)          scene = new Scenes::SceneConsole(scene);
+
     Application game;
     game.OnApplicationInitialize = OnApplicationInitialize;
     game.OnApplicationInvalidate = OnApplicationInvalidate;
     game.OnApplicationTerminate  = OnApplicationTerminate;
 #ifndef NDEBUG
     if (!game.Initialize("Camera Fighter - Debug", Config::WindowX, Config::WindowY, Config::FullScreen,
-        new Scenes::SceneConsole(new Scenes::SceneMenu())))
+        scene))
         return 1;
 #else
     if (!game.Initialize("Camera Fighter", Config::WindowX, Config::WindowY, Config::FullScreen,
-        new Scenes::SceneConsole(new Scenes::SceneMenu())))
+        scene))
         return 1;
 #endif
     int res = game.Run();

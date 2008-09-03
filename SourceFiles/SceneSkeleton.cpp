@@ -35,29 +35,8 @@ SceneSkeleton::SceneSkeleton(const char *gr_modelName, const char *ph_modelName)
     Font      = HFont();
     Cameras.Current = NULL;
 
-    Model.Initialize(gr_modelName, ph_modelName);
-
-    xModel *modelGr = Model.ModelGr_Get().xModelP;
-    if (Model.ModelPh)
-    {
-        xModel *modelPh = Model.ModelPh_Get().xModelP;
-
-        if (modelPh->Spine.I_bones && !modelGr->Spine.I_bones)
-        {
-            modelGr->SkeletonAdd(); //   add skeleton to model
-            RigidObj::CopySpine(modelPh->Spine, modelGr->Spine);
-        }
-        else
-        if (!modelGr->Spine.I_bones && modelPh->Spine.I_bones)
-        {
-            modelPh->SkeletonAdd(); //   add skeleton to model
-            RigidObj::CopySpine(modelGr->Spine, modelPh->Spine);
-        }
-        else
-            RigidObj::CopySpine(modelPh->Spine, modelGr->Spine);
-    }
-    modelGr->Spine.ResetQ();
-    Model.CalculateSkeleton();
+    Model.modelFile     = gr_modelName ? gr_modelName : "";
+    Model.fastModelFile = ph_modelName ? ph_modelName : "";
 
     CurrentDirectory = Filesystem::GetFullPath("Data/models");
 }
@@ -74,6 +53,7 @@ bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned i
     if (!g_FontMgr.IsHandleValid(Font))
         Font = g_FontMgr.GetFont("Courier New", 15);
 
+    // Init buttons
     if (!Buttons.size())
     {
         const GLFont* pFont = g_FontMgr.GetFont(Font);
@@ -145,10 +125,36 @@ bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned i
         menu10.push_back(GLButton("Reject", menu10[0].X2 + 5, Height-20.f, pFont, IC_Reject));
     }
 
+    // Init cameras
     InitCameras(!Cameras.Current);
+
+    // Init model
+    Model.Initialize(Model.modelFile.c_str(), Model.fastModelFile.size() ? Model.fastModelFile.c_str() : NULL);
+    xModel *modelGr = Model.ModelGr_Get().xModelP;
+    if (Model.ModelPh)
+    {
+        xModel *modelPh = Model.ModelPh_Get().xModelP;
+
+        if (modelPh->Spine.I_bones && !modelGr->Spine.I_bones)
+        {
+            modelGr->SkeletonAdd(); //   add skeleton to model
+            RigidObj::CopySpine(modelPh->Spine, modelGr->Spine);
+        }
+        else
+        if (!modelGr->Spine.I_bones && modelPh->Spine.I_bones)
+        {
+            modelPh->SkeletonAdd(); //   add skeleton to model
+            RigidObj::CopySpine(modelGr->Spine, modelPh->Spine);
+        }
+        else
+            RigidObj::CopySpine(modelPh->Spine, modelGr->Spine);
+    }
+    modelGr->Spine.ResetQ();
+    Model.CalculateSkeleton();
 
     return true;
 }
+
 void SceneSkeleton::InitCameras(bool FL_reposition)
 {
     if (!Cameras.Current)
@@ -197,20 +203,16 @@ void SceneSkeleton::InitCameras(bool FL_reposition)
     Cameras.Bottom.FOV.InitViewport(Left,Top,Width,Height);
     Cameras.Perspective.FOV.InitViewport(Left,Top,Width,Height);
 }
+
 void SceneSkeleton::InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
     im.SetScene(sceneName);
 
+    im.SetInputCodeIfKeyIsFree(VK_F11,    IC_FullScreen);
     im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
     im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
     im.SetInputCodeIfKeyIsFree(VK_BACK,   IC_Con_BackSpace);
-    im.SetInputCodeIfKeyIsFree(VK_F11,    IC_FullScreen);
-#ifdef WIN32
-    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
-#else
-    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
-#endif
 
     im.SetInputCodeIfKeyIsFree('C',       IC_CameraChange);
     im.SetInputCodeIfKeyIsFree(VK_TAB,    IC_CameraReset);
@@ -276,12 +278,6 @@ bool SceneSkeleton::Invalidate()
     return Scene::Invalidate();
 }
 
-SceneSkeleton::~SceneSkeleton()
-{
-    WorldRenderGL renderer;
-    renderer.Free(Model);
-    Model.Finalize();
-}
 void SceneSkeleton::Terminate()
 {
     Cameras.Current = NULL;
@@ -300,6 +296,10 @@ void SceneSkeleton::Terminate()
     Font = HFont();
 
     Directories.clear();
+
+    WorldRenderGL renderer;
+    renderer.Free(Model);
+    Model.Finalize();
 }
 
 #define fractf(a)    ((a)-floorf(a))
@@ -414,7 +414,7 @@ bool SceneSkeleton::FrameRender()
     glDisable(GL_DEPTH_TEST);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     if ((EditMode == emEditBVH || EditMode == emEditVolume) && model.BVHierarchy)
-        render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), 0, Selection.BVHNodeID);
+        render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), true, 0, Selection.BVHNodeID);
 
     GLShader::Suspend();
 
@@ -699,7 +699,7 @@ void SceneSkeleton::RenderSelect(const Math::Cameras::FieldOfView &FOV)
             render.RenderSkeletonSelection(model, modelInstance, false);
     else
     if (EditMode == emEditBVH && model.BVHierarchy)
-        render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), 0, 0, true);
+        render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), true, 0, 0, true);
     else
     if (EditMode == emSelectElement)
         render.RenderVertices(model, modelInstance, Renderer::smElement);

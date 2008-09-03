@@ -1,5 +1,4 @@
 #include "SceneSkeleton.h"
-#include "SceneConsole.h"
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
@@ -101,10 +100,6 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
         if (im.GetInputStateAndClear(begin->Action))
         { UpdateButton(*begin); return true; }
 
-    if (im.GetInputStateAndClear(IC_Console)) {
-        g_Application.SetCurrentScene(new SceneConsole(this), false);
-        return true;
-    }
     if (im.GetInputStateAndClear(IC_FullScreen)) {
         g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
         return true;

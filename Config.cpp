@@ -26,7 +26,8 @@ bool  Config::DisplaySkeleton      = false;
 bool  Config::DisplayBVH           = false;
 bool  Config::DisplayCameras       = false;
 
-
+bool  Config::EnableConsole      = false;
+char* Config::Scene              = strdup("menu");
 int   Config::TestCase           = 0;
 float Config::Speed              = 1.f;
 
@@ -243,6 +244,20 @@ void Config :: Load(const char *fileName)
             }
             if (mode == LoadMode_Gameplay)
             {
+                if (StartsWith(buffer, "console"))
+                {
+                    int level;
+                    sscanf(buffer+7, "%d", &level);
+                    Config::EnableConsole = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "scene"))
+                {
+                    char name[255];
+                    sscanf(buffer+5, "%s", name);
+                    Config::Scene = strdup(name);
+                    continue;
+                }
                 if (StartsWith(buffer, "level"))
                 {
                     int level;

@@ -53,11 +53,15 @@ public:
         return state;
     }
 
-    void SetScene(const char *scene)
+    void SetScene(const char *scene, bool FL_zero_state = true)
     {
         _InputMap = &_ScenesMap[scene];
-        memset(_KeysState, 0, IC_LAST_CODE+1);
+        enable = true;
+        if (FL_zero_state) ZeroState();
     }
+
+    void ZeroState()
+    { memset(_KeysState, 0, IC_LAST_CODE+1); }
 
     // Get / Set the keyCode to inputCode mapping
     int GetInputCode(int keyCode)

@@ -21,7 +21,6 @@ namespace Scenes {
     {
       public:
         SceneSkeleton(const char *gr_modelName, const char *ph_modelName);
-        ~SceneSkeleton();
 
         virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
         virtual void Resize(int left, int top, unsigned int width, unsigned int height);

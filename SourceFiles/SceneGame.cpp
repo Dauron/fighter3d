@@ -1,6 +1,5 @@
 #include "SceneGame.h"
 #include "SceneMenu.h"
-#include "SceneConsole.h"
 #include "SceneSkeleton.h"
 
 #include "../AppFramework/Application.h"
@@ -119,15 +118,12 @@ void SceneGame :: InitInputMgr()
     InputMgr &im = g_InputMgr;
     im.SetScene(sceneName);
 
-    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
-    im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
-#ifdef WIN32
-    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
-#else
-    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
-#endif
+    im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
+    im.SetInputCodeIfKeyIsFree(VK_RETURN,  IC_Accept);
+    im.SetInputCodeIfKeyIsFree(VK_ESCAPE,  IC_Reject);
     im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
 
+    // Cameras
     im.SetInputCodeIfKeyIsFree(VK_NUMPAD8, IC_TurnUp);
     im.SetInputCodeIfKeyIsFree(VK_NUMPAD5, IC_TurnDown);
     im.SetInputCodeIfKeyIsFree(VK_NUMPAD4, IC_TurnLeft);
@@ -148,6 +144,7 @@ void SceneGame :: InitInputMgr()
     im.SetInputCodeIfKeyIsFree(VK_INSERT, IC_MoveDown);
     im.SetInputCodeIfKeyIsFree(VK_LSHIFT, IC_RunModifier);
 
+    // ComBoard
     im.SetInputCodeIfKeyIsFree('S', IC_CB_LeftPunch);
     im.SetInputCodeIfKeyIsFree('A', IC_CB_LeftHandGuard);
     im.SetInputCodeIfKeyIsFree('X', IC_CB_LeftKick);
@@ -160,8 +157,6 @@ void SceneGame :: InitInputMgr()
     im.SetInputCodeIfKeyIsFree(VK_DOWN,  IC_CB_Backward);
     im.SetInputCodeIfKeyIsFree(VK_LEFT,  IC_CB_Left);
     im.SetInputCodeIfKeyIsFree(VK_RIGHT, IC_CB_Right);
-
-    im.SetInputCodeIfKeyIsFree(VK_F11, IC_FullScreen);
 }
 
 bool SceneGame :: Invalidate()
@@ -288,16 +283,19 @@ bool SceneGame :: FrameUpdate(float deltaTime)
 
     if (im.GetInputStateAndClear(IC_Reject))
     {
-        //g_Application.MainWindow().Terminate();
-        g_Application.SetCurrentScene(new SceneMenu());
+        if (PrevScene)
+        {
+            Scene *tmp = PrevScene;
+            PrevScene = NULL;
+            g_Application.SetCurrentScene(tmp/*new SceneMenu()*/);
+        }
+        else
+            g_Application.MainWindow().Terminate();
         return true;
     }
 
     if (im.GetInputStateAndClear(IC_FullScreen))
         g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
-
-    if (im.GetInputStateAndClear(IC_Console))
-        g_Application.SetCurrentScene(new SceneConsole(this), false);
 
     float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
     float deltaTmp = deltaTime*MULT_ROT*run;

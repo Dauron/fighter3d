@@ -23,12 +23,17 @@ struct Config
     static bool  DisplayBVH;
     static bool  DisplayCameras;
 
+    static bool  EnableConsole;
+    static char* Scene;
     static int   TestCase;
     static float Speed;
     static int   LoggingLevel;
     static bool  Save3dsTo3dx;
 
     static void Load(const char *fileName);
+
+    ~Config()
+    { if (Scene) delete[] Scene; }
 };
 
 struct State

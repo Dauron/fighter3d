@@ -20,7 +20,10 @@ Show_BVH             0
 Show_Cameras         0
 
 [Gameplay]
-Level           3
+Console         1
+# menu, game, test
+Scene           menu
+Level           2
 Speed           1
 # 0 = almost none, 1 = important errors, 2 = all errors, 3 = all errors + warnings
 Logging         3

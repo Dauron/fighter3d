@@ -98,7 +98,8 @@ class RendererGL : public Renderer
                                            xBYTE          I_level,
                                            xBYTE         &ID,
                                            xBYTE          ID_selected = xBYTE_MAX,
-                                           bool           FL_selection = false);
+                                           bool           FL_selection = false,
+                                           bool           FL_color = true);
 
   private:
     void InitTextures(xModel &model);

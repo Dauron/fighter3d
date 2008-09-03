@@ -70,7 +70,7 @@ void PhysicalWorld :: Interact(xFLOAT T_time, Vec_Object &L_objects)
                                     cp2.V_reaction = cp1.V_action * (W_cos * W_V1_2);
                                 }
                                 W_cos = -xVector3::DotProduct(xVector3::Normalize(cp2.V_action), xVector3::Normalize(cp2.NW_fix));
-                                if (W_cos < 0.f)
+                                if (W_cos > 0.f)
                                 {
                                     cp1.V_reaction += cp2.V_action * (W_cos * W_V2_1);
                                     cp2.V_reaction += cp2.V_action * (W_cos * W_V2_2);

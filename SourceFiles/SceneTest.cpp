@@ -3,7 +3,6 @@
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
 #include "../Graphics/OGL/Utils.h"
-#include "SceneConsole.h"
 #include "../Graphics/OGL/Extensions/GLExtensions.h"
 #include "../Graphics/OGL/Render/RendererGL.h"
 #include "../Physics/Colliders/FigureCollider.h"
@@ -67,9 +66,8 @@ bool SceneTest::Initialize(int left, int top, unsigned int width, unsigned int h
 
         DefaultCamera = &Camera;
         InitObjects();
-        Config::TestCase = 0;
-        selected         = -1;
-        FL_pause         = false;
+        selected = -1;
+        FL_pause = false;
     }
     InitInputMgr();
 
@@ -272,13 +270,9 @@ void SceneTest::InitInputMgr()
     InputMgr &im = g_InputMgr;
     im.SetScene(sceneName);
 
-    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
-    im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
-#ifdef WIN32
-    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
-#else
-    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
-#endif
+    im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
+    im.SetInputCodeIfKeyIsFree(VK_RETURN,  IC_Accept);
+    im.SetInputCodeIfKeyIsFree(VK_ESCAPE,  IC_Reject);
     im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
 
     im.SetInputCodeIfKeyIsFree(VK_UP, IC_TurnUp);
@@ -314,8 +308,6 @@ void SceneTest::InitInputMgr()
     im.SetInputCodeIfKeyIsFree('7', IC_TS_Test7);
     im.SetInputCodeIfKeyIsFree('8', IC_TS_Test8);
     im.SetInputCodeIfKeyIsFree('9', IC_TS_Test9);
-
-    im.SetInputCodeIfKeyIsFree(VK_F11, IC_FullScreen);
 }
 
 void SceneTest::Terminate()
@@ -372,9 +364,6 @@ bool SceneTest::FrameUpdate(float deltaTime)
 
     if (im.GetInputStateAndClear(IC_FullScreen))
         g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
-
-    if (im.GetInputStateAndClear(IC_Console))
-        g_Application.SetCurrentScene(new SceneConsole(this), false);
 
     float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
     float deltaTmp = deltaTime*MULT_ROT*run;
@@ -508,7 +497,7 @@ bool SceneTest::FrameUpdate(float deltaTime)
         }
         else
         {
-            selected = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
+            selected = Select(g_InputMgr.mouseX, Height - g_InputMgr.mouseY);
 
             if (selected != xDWORD_MAX)
             {
@@ -673,7 +662,7 @@ bool SceneTest::FrameRender()
             glColor3f(1.f, 0.f, 0.f);
         else
             glColor3f(1.f, 1.f, 1.f);
-        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy, figures[Config::TestCase][i]->MX_LocalToWorld_Get());
+        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy, figures[Config::TestCase][i]->MX_LocalToWorld_Get(), false);
     }
 
     if (cset.collisions.size())
@@ -731,7 +720,7 @@ void SceneTest :: RenderSelect(const Math::Cameras::FieldOfView &FOV)
     for (int i = 0; i < 2; ++i)
     {
         glLoadName(i);
-        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy, figures[Config::TestCase][i]->MX_LocalToWorld_Get());
+        renderer.RenderBVH(figures[Config::TestCase][i]->BVHierarchy, figures[Config::TestCase][i]->MX_LocalToWorld_Get(), false);
     }
 }
 xDWORD SceneTest :: Select(int X, int Y)

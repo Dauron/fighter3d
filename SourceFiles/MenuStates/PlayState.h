@@ -147,7 +147,14 @@ namespace Scenes { namespace Menu {
 
                     *choosen[0] = SkeletizedObj();
                     *choosen[1] = SkeletizedObj();
-                    g_Application.SetCurrentScene(new SceneGame(player1,player2,MapFile));
+                    std::string map = MapFile;
+
+                    // reload players
+                    this->Clear();
+                    SwitchState(*Parent);
+                    this->Init(Parent);
+
+                    g_Application.SetCurrentScene(new SceneGame(player1,player2,map), false);
 
                     return true;
                 }

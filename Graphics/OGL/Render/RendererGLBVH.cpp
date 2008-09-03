@@ -227,7 +227,8 @@ void RenderMesh(const xMesh &object)
 // BVH
 
 void RendererGL :: RenderBVHExt ( xBVHierarchy &bvh, const xMatrix &MX_LocalToWorld,
-                                  xBYTE I_level, xBYTE &ID, xBYTE ID_selected, bool FL_selection )
+                                  xBYTE I_level, xBYTE &ID, xBYTE ID_selected,
+                                  bool FL_selection, bool FL_color )
 {
     if (I_level == 0)
     {
@@ -241,13 +242,16 @@ void RendererGL :: RenderBVHExt ( xBVHierarchy &bvh, const xMatrix &MX_LocalToWo
         //glMultMatrixf(& bvh.MX_RawToLocal_Get().x0);
     }
 
-    if (FL_selection)
-        glLoadName(ID);
-    else
-    if (ID == ID_selected)
-        glColor3f(1.f,1.f,0.f);
-    else
-        glColor3f(1.f,1.f,1.f);
+    if (FL_color)
+    {
+        if (FL_selection)
+            glLoadName(ID);
+        else
+        if (ID == ID_selected)
+            glColor3f(1.f,1.f,0.f);
+        else
+            glColor3f(1.f,1.f,1.f);
+    }
 
     // Sphere
     if (bvh.Figure->Type == xIFigure3d::Sphere)

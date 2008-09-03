@@ -49,24 +49,13 @@ void SceneMenu :: InitInputMgr()
     InputMgr &im = g_InputMgr;
     im.SetScene(sceneName);
 
-    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
-    im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
-    im.SetInputCodeIfKeyIsFree(VK_F11,    IC_FullScreen);
-    im.SetInputCodeIfKeyIsFree(VK_BACK,   IC_Con_BackSpace);
-#ifdef WIN32
-    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
-#else
-    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
-#endif
-    im.SetInputCodeIfKeyIsFree(VK_UP,    IC_MoveUp);
-    im.SetInputCodeIfKeyIsFree(VK_DOWN,  IC_MoveDown);
-    im.SetInputCodeIfKeyIsFree(VK_LEFT,  IC_MoveLeft);
-    im.SetInputCodeIfKeyIsFree(VK_RIGHT, IC_MoveRight);
-
+    im.SetInputCodeIfKeyIsFree(VK_RETURN,  IC_Accept);
+    im.SetInputCodeIfKeyIsFree(VK_ESCAPE,  IC_Reject);
+    im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
+    im.SetInputCodeIfKeyIsFree(VK_UP,      IC_MoveUp);
+    im.SetInputCodeIfKeyIsFree(VK_DOWN,    IC_MoveDown);
     im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
-    im.SetInputCodeIfKeyIsFree(VK_RBUTTON, IC_RClick);
-
-    im.SetInputCodeIfKeyIsFree(VK_F11,   IC_FullScreen);
+    im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
 }
 
 void SceneMenu :: Terminate()
