@@ -6,8 +6,8 @@ void _xElement_SkinElementInstance(const xElement *elem,
                                    const bool *boneMods,
                                    xElementInstance &instance)
 {
-    xWORD     count  = instance.I_vertices = elem->I_vertices;
-    xBYTE    *srcV   = (xBYTE *) elem->L_vertices;
+    xWORD     count  = instance.I_vertices = elem->renderData.I_vertices;
+    xBYTE    *srcV   = (xBYTE *) elem->renderData.L_vertices;
     xVector3 *srcN   = elem->renderData.L_normals;
     xDWORD    stride = elem->GetVertexStride();
 

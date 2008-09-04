@@ -19,7 +19,7 @@ namespace Scenes {
             overlayInput = false;
             overlayClock = false;
             visible      = !PrevScene;
-            sceneName    = "[Console]";
+            SceneName    = "[Console]";
         }
 
         virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);

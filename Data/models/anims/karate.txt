@@ -57,7 +57,7 @@ bones   14 18
 name	position
 anim	karate/position.ska 0
 (combo)
-action  mai_geri_front_mid
+action  kop_podbicie
 key     LeftKick
 (combo)
 action  jaku_zuki_mid
@@ -95,7 +95,7 @@ key     Forward
 action  jaku_zuki_mid
 key     LeftPunch
 (combo)
-action  mai_geri_front_mid
+action  kop_podbicie
 key     LeftKick
 
 [action]
@@ -115,7 +115,7 @@ key     Right
 action  jaku_zuki_mid
 key     LeftPunch
 (combo)
-action  mai_geri_front_mid
+action  kop_podbicie
 key     LeftKick
 
 [action]
@@ -136,7 +136,7 @@ key     Backward
 action  jaku_zuki_mid
 key     LeftPunch
 (combo)
-action  mai_geri_front_mid
+action  kop_podbicie
 key     LeftKick
 
 [action]
@@ -161,7 +161,7 @@ key     Backward
 action  jaku_zuki_mid
 key     LeftPunch
 (combo)
-action  mai_geri_front_mid
+action  kop_podbicie
 key     LeftKick
 
 [action]
@@ -182,22 +182,33 @@ first   100
 last    500
 prec    1
 (combo)
-action  mai_geri_front_mid
+action  kop_podbicie
 key     LeftKick
 first   100
 last    500
 prec    1
 
 [action]
-name	mai_geri_front_mid
-anim	karate/mai-geri-front-mid.ska 0
-time	600
+name	kop_podbicie
+anim	karate/kop-podbicie.ska 0
+time	500
 (combo)
-action	mai_geri_front_high
+action	mai_geri_front_mid
 key		LeftKick
 first   0
 last    200
 shift   0
+(combo)
+action	mai_geri_front_high
+key		Forward
+first   0
+last    200
+shift   0
+
+[action]
+name	mai_geri_front_mid
+anim	karate/mai-geri-front-mid.ska 0
+time	600
 
 [action]
 name	mai_geri_front_high

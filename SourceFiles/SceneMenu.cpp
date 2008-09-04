@@ -47,7 +47,7 @@ void SceneMenu :: Resize(int left, int top, unsigned int width, unsigned int hei
 void SceneMenu :: InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
-    im.SetScene(sceneName);
+    im.SetScene(SceneName);
 
     im.SetInputCodeIfKeyIsFree(VK_RETURN,  IC_Accept);
     im.SetInputCodeIfKeyIsFree(VK_ESCAPE,  IC_Reject);

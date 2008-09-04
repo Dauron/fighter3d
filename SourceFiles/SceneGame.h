@@ -15,10 +15,10 @@ namespace Scenes {
     public:
         Math::Cameras::Camera *DefaultCamera;
 
-        SceneGame() : DefaultCamera(NULL), player1(NULL), player2(NULL) { sceneName="[Game]"; };
+        SceneGame() : DefaultCamera(NULL), player1(NULL), player2(NULL) { SceneName="[Game]"; };
         SceneGame(SkeletizedObj *player1, SkeletizedObj *player2, std::string mapFileName)
             : DefaultCamera(NULL), player1(player1), player2(player2), MapFileName(mapFileName)
-        { sceneName="[Game]"; };
+        { SceneName="[Game]"; };
 
         //bool Initialize(int left, int top, unsigned int width, unsigned int height);
         virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);

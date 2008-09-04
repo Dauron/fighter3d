@@ -11,7 +11,7 @@ class Scene
 {
 public:
     Scene       * PrevScene;
-    const char  * sceneName;
+    const char  * SceneName;
 
     virtual bool Initialize(int left, int top, unsigned int width, unsigned int height)
     {
@@ -49,7 +49,7 @@ public:
         AspectRatio = ((float)width)/height;
     }
 
-    Scene() { sceneName = NULL; Initialized = false; PrevScene = NULL; }
+    Scene() { SceneName = NULL; Initialized = false; PrevScene = NULL; }
     virtual ~Scene() {}
 
 protected:

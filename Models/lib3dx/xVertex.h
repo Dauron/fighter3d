@@ -4,47 +4,30 @@
 #include "../../Math/xMath.h"
 
 // Vertices
-union xVertex {
-    struct {
-        xFLOAT x, y, z; // vertex coordinates
-    };
-    struct {
-        xPoint3 pos;
-    };
+struct xVertex {
+    xPoint3 pos;
 };
 
-union xVertexTex {
-    struct {
-        xFLOAT x, y, z, tx, ty; // vertex and texture coordinates
-    };
-    struct {
-        xPoint3 pos;
-        xFLOAT2 tex;
-    };
+struct xVertexTex {
+    xPoint3 pos;
+    xTextUV tex;
 };
 
-union xVertexSkel {
-    struct {
-        xFLOAT x, y, z;        // vertex coordinates
+struct xVertexSkel {
+    xPoint3 pos;
+    union {
         xFLOAT b0, b1, b2, b3; // bones
-    };
-    struct {
-        xPoint3 pos;
-        xFLOAT4 bone; // up to 4 bones per vertex. boneIndex = floor(bone), boneInfluence = fract(bone)*10
+        xFLOAT4 bone;          // up to 4 bones per vertex. boneIndex = floor(bone), boneInfluence = fract(bone)*10
     };
 };
 
-union xVertexTexSkel {
-    struct {
-        xFLOAT x, y, z;        // vertex coordinates
+struct xVertexTexSkel {
+    xPoint3 pos;
+    union {
         xFLOAT b0, b1, b2, b3; // bones
-        xFLOAT tx, ty;         // texture coordinates
+        xFLOAT4 bone;          // up to 4 bones per vertex. boneIndex = floor(bone), boneInfluence = fract(bone)*10
     };
-    struct {
-        xPoint3 pos;
-        xFLOAT4 bone; // up to 4 bones per vertex. boneIndex = floor(bone), boneInfluence = fract(bone)*10
-        xFLOAT2 tex;
-    };
+    xTextUV tex;
 };
 
 #endif

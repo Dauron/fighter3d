@@ -28,7 +28,7 @@ Scene * SceneConsole :: SetCurrentScene(Scene* scene, bool destroyPrev)
         scene->PrevScene = PrevScene;
     PrevScene = scene;
 
-    g_InputMgr.SetScene(PrevScene->sceneName);
+    g_InputMgr.SetScene(PrevScene->SceneName);
 #ifdef WIN32
     g_InputMgr.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
 #else
@@ -52,9 +52,9 @@ bool SceneConsole::Initialize(int left, int top, unsigned int width, unsigned in
     scroll_v = 0;
 
     if (!visible)
-        g_InputMgr.SetScene(PrevScene->sceneName);
+        g_InputMgr.SetScene(PrevScene->SceneName);
     else
-        g_InputMgr.SetScene(sceneName);
+        g_InputMgr.SetScene(SceneName);
 
     return true;
 }
@@ -80,7 +80,7 @@ void SceneConsole::Resize(int left, int top, unsigned int width, unsigned int he
 void SceneConsole::InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
-    im.SetScene(sceneName);
+    im.SetScene(SceneName);
 
     im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
     im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
@@ -98,7 +98,7 @@ void SceneConsole::InitInputMgr()
     im.SetInputCodeIfKeyIsFree(VK_HOME,  IC_Con_FirstPage);
     im.SetInputCodeIfKeyIsFree(VK_END,   IC_Con_LastPage);
 
-    im.SetScene(PrevScene->sceneName);
+    im.SetScene(PrevScene->SceneName);
 #ifdef WIN32
     im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
 #else
@@ -142,7 +142,7 @@ bool SceneConsole :: FrameUpdate(float deltaTime)
     }
 
     InputMgr &im = g_InputMgr;
-    im.SetScene(sceneName, false);
+    im.SetScene(SceneName, false);
 
     if (im.GetInputStateAndClear(IC_Console))
     {
@@ -168,7 +168,7 @@ bool SceneConsole :: FrameUpdate(float deltaTime)
         else
         //if (PrevScene->PrevScene)
         {
-            im.SetScene(PrevScene->sceneName);
+            im.SetScene(PrevScene->SceneName);
             im.SetInputState(IC_Reject, true);
             PrevScene->FrameUpdate(0.f);
         }
@@ -189,21 +189,21 @@ bool SceneConsole :: FrameUpdate(float deltaTime)
 
     if (!visible)
     {
-        im.SetScene(PrevScene->sceneName, false);
+        im.SetScene(PrevScene->SceneName, false);
         PrevScene->FrameUpdate(deltaTime);
         return true;
     }
 
     if (overlayClock)
     {
-        im.SetScene(PrevScene->sceneName, false);
+        im.SetScene(PrevScene->SceneName, false);
         im.enable = overlayInput;
         bool res = PrevScene->FrameUpdate(deltaTime);
         if (overlayInput)
             return res;
     }
 
-    im.SetScene(sceneName, false);
+    im.SetScene(SceneName, false);
 
     if (im.GetInputStateAndClear(IC_FullScreen))
         g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
@@ -425,7 +425,7 @@ test  = ";
         {
             overlayClock = false;
             overlayInput = false;
-            g_InputMgr.SetScene(sceneName);
+            g_InputMgr.SetScene(SceneName);
         }
         return true;
     }

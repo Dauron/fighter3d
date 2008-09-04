@@ -8,9 +8,7 @@ void RendererGL :: InitVBO (xElement *elem)
     if (elem->renderData.mode == xGPURender::NONE)
     {
         elem->renderData.mode = xGPURender::VBO;
-        int stride = (elem->FL_skeletized && elem->FL_textured) ? sizeof(xVertexTexSkel)
-            : (elem->FL_skeletized) ? sizeof(xVertexSkel)
-            : (elem->FL_textured) ? sizeof(xVertexTex) : sizeof(xVertex);
+        int stride = elem->GetVertexStride();
         GLuint p;
         glGenBuffersARB(1, &p); elem->renderData.gpuMain.vertexB = p;
         glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.vertexB );
@@ -584,13 +582,13 @@ void RenderModelLST(bool transparent, const Math::Cameras::FieldOfView &FOV,
 
         if (elem->FL_skeletized) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.L_verticesTS->tx));
+            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), &(elem->renderData.L_verticesTS->tex.u));
             g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
                                 modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
         }
         else {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), &(elem->renderData.L_verticesT->tx));
+            glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTex), &(elem->renderData.L_verticesT->tex.u));
         }
 
         xFaceList *faceL = elem->L_faceLists;

@@ -30,7 +30,7 @@ struct xElement {
     xFaceList  *L_faceLists;
     xWORD       I_faceLists;
     xEdge      *L_edges;
-    xWORD       I_edges;
+    xDWORD      I_edges;
 
     bool       FL_textured;     // Are there texture coordinates attached
     bool       FL_skeletized;   // Are there bone weights attached

@@ -97,7 +97,8 @@ typedef Handle <TextureMgr> HTexture;
 class TextureMgr : public Manager<Texture, HTexture>
 {
   public:
-    Texture* GetTexture( const char* name );
+    HTexture* GetTexture( const char* name );
+    void BindTexture( HTexture htex );
     // ...
 };
 

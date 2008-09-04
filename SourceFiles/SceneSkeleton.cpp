@@ -31,7 +31,7 @@ SceneSkeleton::SceneSkeleton(const char *gr_modelName, const char *ph_modelName)
     KeyName_Modify = NULL;
     KeyName_Accept = NULL;
 
-    sceneName = "[Skeleton]";
+    SceneName = "[Skeleton]";
     Font      = HFont();
     Cameras.Current = NULL;
 
@@ -207,7 +207,7 @@ void SceneSkeleton::InitCameras(bool FL_reposition)
 void SceneSkeleton::InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
-    im.SetScene(sceneName);
+    im.SetScene(SceneName);
 
     im.SetInputCodeIfKeyIsFree(VK_F11,    IC_FullScreen);
     im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
@@ -440,10 +440,10 @@ bool SceneSkeleton::FrameRender()
         glBegin(GL_QUADS);
         {
             int x = g_InputMgr.mouseX, y = g_InputMgr.mouseY;
-            glVertex3i(Selection.RectStartX, Height - Selection.RectStartY, 0);
-            glVertex2i(Selection.RectStartX, Height - y);
-            glVertex2i(x, Height - y);
-            glVertex2i(x, Height - Selection.RectStartY);
+            glVertex3i(Selection.RectStartX, Selection.RectStartY, 0);
+            glVertex2i(Selection.RectStartX, y);
+            glVertex2i(x, y);
+            glVertex2i(x, Selection.RectStartY);
         }
         glEnd();
         glEnable(GL_CULL_FACE);

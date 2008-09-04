@@ -70,11 +70,6 @@ void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
         else
             FL_customBVH = false;
     }
-    if (!FL_customBVH)
-    {
-        ModelPh_Get().xModelP->CreateBVH(BVHierarchy, MeshData);
-        P_center = BVHierarchy.Figure->P_center;
-    }
 
     VerticesChanged(true, false);
 
@@ -174,10 +169,17 @@ void RigidObj :: VerticesChanged(bool init, bool free)
             ModelPh->instance.FL_modified = NULL;
             ModelPh->instance.FreeVertices();
         }
+        BVHierarchy.free(); BVHierarchy.zero();
     }
     else
     if (!init)
         InvalidateShadowData();
+
+    if (!FL_customBVH && !BVHierarchy.Figure)
+    {
+        ModelPh_Get().xModelP->CreateBVH(BVHierarchy, MeshData);
+        P_center = BVHierarchy.Figure->P_center;
+    }
 
     xBoneCalculateMatrices (ModelGr->xModelP->Spine, ModelGr->instance);
     xBoneCalculateQuats    (ModelGr->xModelP->Spine, ModelGr->instance);

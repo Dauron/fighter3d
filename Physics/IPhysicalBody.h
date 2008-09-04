@@ -72,6 +72,7 @@ namespace Physics {
             S_radius            = 1.f;
             P_center.zero(); P_center_Trfm.zero();
             TrackedObject::MX_LocalToWorld_Set().identity();
+            BVHierarchy.zero();
         }
         virtual void     Initialize()
         {

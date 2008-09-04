@@ -59,15 +59,16 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
     pivot = scl * pivot;
     elem->MX_MeshToLocal.preTranslateT(pivot.vector3);
 
-    elem->L_smooth = NULL;
-    elem->L_faces = NULL;
-    elem->I_faces = 0;
-    elem->L_faces = NULL;
+    elem->L_smooth    = NULL;
+    elem->L_faces     = NULL;
+    elem->I_faces     = 0;
+    elem->L_faces     = NULL;
     elem->I_faceLists = 0;
     elem->L_faceLists = NULL;
-    elem->L_edges = NULL;
-    elem->I_vertices = 0;
-    elem->L_vertices = NULL;
+    elem->I_edges     = 0;
+    elem->L_edges     = NULL;
+    elem->I_vertices  = 0;
+    elem->L_vertices  = NULL;
     elem->FL_textured = elem->FL_skeletized = false;
 
     if (node->type == LIB3DS_OBJECT_NODE && strcmp(node->name,"$$$DUMMY")!=0)
@@ -102,21 +103,21 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
             for(; L_kids != lastP; ++L_kids)
             {
                 if (elem->FL_textured) {
-                    xvertT->x = L_kids->pos[0];
-                    xvertT->y = L_kids->pos[1];
-                    xvertT->z = L_kids->pos[2];
+                    xvertT->pos.x = L_kids->pos[0];
+                    xvertT->pos.y = L_kids->pos[1];
+                    xvertT->pos.z = L_kids->pos[2];
                     if (firstT) {
-                        xvertT->tx = (*firstT)[0];
-                        xvertT->ty = (*firstT)[1];
+                        xvertT->tex.u = (*firstT)[0];
+                        xvertT->tex.v = (*firstT)[1];
                         ++firstT;
                     }
                     ++xvertT;
                 }
                 else
                 {
-                    xvert->x = L_kids->pos[0];
-                    xvert->y = L_kids->pos[1];
-                    xvert->z = L_kids->pos[2];
+                    xvert->pos.x = L_kids->pos[0];
+                    xvert->pos.y = L_kids->pos[1];
+                    xvert->pos.z = L_kids->pos[2];
                     ++xvert;
                 }
             }

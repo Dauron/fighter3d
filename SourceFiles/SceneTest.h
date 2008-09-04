@@ -32,7 +32,7 @@ namespace Scenes {
             , pf_cube2(new ::Math::Figures::xBoxO())
             , pf_mesh1(new ::Math::Figures::xMesh())
             , pf_mesh2(new ::Math::Figures::xMesh())
-        { sceneName="[Test]"; };
+        { SceneName="[Test]"; };
 
         virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
         virtual bool Invalidate();

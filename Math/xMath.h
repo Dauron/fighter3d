@@ -62,6 +62,10 @@ const xDWORD xDWORD_MAX = (xDWORD)-1;
 const xWORD  xWORD_MAX  = (xWORD)-1;
 const xBYTE  xBYTE_MAX  = (xBYTE)-1;
 
+#include "xVector2.h"
+typedef xVector2 xPoint2;
+typedef xVector2 xTextUV;
+
 #include "xVector3.h"
 typedef xVector3 xPoint3;
 

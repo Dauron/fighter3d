@@ -1153,6 +1153,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Math\xVector2.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Math\xVector3.h"
 				>
 			</File>

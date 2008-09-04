@@ -249,7 +249,7 @@ void xElement :: FillShadowEdges ()
         : sizeof (xVertex);
     xBYTE *verticesIn = (xBYTE*) this->L_vertices;
 
-    xWORD cnt = 0;
+    xDWORD cnt = 0;
     for (int i = 0; i < this->I_faces; ++i, ++iterF1, iterUsed1 += 3)
     {
         bool transp1;

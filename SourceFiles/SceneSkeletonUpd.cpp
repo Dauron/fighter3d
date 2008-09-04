@@ -178,13 +178,17 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
             return true;
         }
     }
-    if (im.GetInputStateAndClear(IC_ShowBonesAlways))
-        State.ShowBonesAlways = !State.ShowBonesAlways;
-    if (EditMode != emSelectVertex && EditMode != emSelectBone && EditMode != emInputWght &&
-        im.GetInputStateAndClear(IC_ViewPhysicalModel))
+    if (EditMode != emSaveModel && EditMode != emSaveAnimation && EditMode != emFrameParams &&
+        EditMode != emInputWght && EditMode != emCreateConstraint_Params)
     {
-        SwitchDisplayedModel();
-        return true;
+        if (im.GetInputStateAndClear(IC_ShowBonesAlways))
+            State.ShowBonesAlways = !State.ShowBonesAlways;
+        if (EditMode != emSelectVertex && EditMode != emSelectBone &&
+            im.GetInputStateAndClear(IC_ViewPhysicalModel))
+        {
+            SwitchDisplayedModel();
+            return true;
+        }
     }
     if (EditMode == emCreateConstraint_Params)
     {
@@ -311,7 +315,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
                     root->L_items[i].MX_RawToLocal_Set(xMatrix::Identity());
         }
         else // must be skeletized to perform skinning
-        if (button.Action == IC_BE_ModeSkin && Model.ModelGr->xModelP->Spine.L_bones)
+        if (button.Action == IC_BE_ModeSkin /*&& Model.ModelGr->xModelP->Spine.L_bones*/)
             EditMode = emSelectElement;
         else
         if (button.Action == IC_BE_ModeAnimate)
@@ -672,7 +676,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
                 CurrentDirectory += "/";
                 CurrentDirectory += button.Text;
             }
-            FillDirectoryBtns(true, "*.ska");
+            FillDirectoryBtns(true, "*.3dx");
             return true;
         }
         if (button.Action == IC_BE_Select)

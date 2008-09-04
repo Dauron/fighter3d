@@ -11,7 +11,7 @@ namespace Scenes {
     {
     public:
         SceneMenu() {
-            sceneName="[Menu]";
+            SceneName="[Menu]";
             font03 = font04 = font05 = font10 = HFont();
             root = NULL;
         };

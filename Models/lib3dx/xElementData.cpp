@@ -219,12 +219,12 @@ void xCollisionData :: Fill (xModel &xmodel, xElement &elem)
                 bVertices[bone].push_back(i);
 
                 xBoxA &bounding = cBoundings[bone];
-                if (vert->x < bounding.P_min.x) bounding.P_min.x = vert->x;
-                if (vert->y < bounding.P_min.y) bounding.P_min.y = vert->y;
-                if (vert->z < bounding.P_min.z) bounding.P_min.z = vert->z;
-                if (vert->x > bounding.P_max.x) bounding.P_max.x = vert->x;
-                if (vert->y > bounding.P_max.y) bounding.P_max.y = vert->y;
-                if (vert->z > bounding.P_max.z) bounding.P_max.z = vert->z;
+                if (vert->pos.x < bounding.P_min.x) bounding.P_min.x = vert->pos.x;
+                if (vert->pos.y < bounding.P_min.y) bounding.P_min.y = vert->pos.y;
+                if (vert->pos.z < bounding.P_min.z) bounding.P_min.z = vert->pos.z;
+                if (vert->pos.x > bounding.P_max.x) bounding.P_max.x = vert->pos.x;
+                if (vert->pos.y > bounding.P_max.y) bounding.P_max.y = vert->pos.y;
+                if (vert->pos.z > bounding.P_max.z) bounding.P_max.z = vert->pos.z;
             }
 
             //CreateHierarchyFromVertices(elem, NULL, cBoundings, cHierarchy);

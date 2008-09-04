@@ -1,4 +1,20 @@
 [player]
+name        Male Text
+fastm	    models/human1_fst.3dx
+model	    models/human1.3dx
+customBVH	0
+physical    1
+locked      0
+phantom     0
+mass        70
+shadows     0
+restitution 0.9
+#control     comboard
+style       Dummy  models/anims/dummy.txt
+style       Karate models/anims/karate.txt
+#enemy       1
+
+[player]
 name        Male
 fastm	    models/human2_fst.3dx
 model	    models/human2.3dx

@@ -268,7 +268,7 @@ bool SceneTest::Invalidate()
 void SceneTest::InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
-    im.SetScene(sceneName);
+    im.SetScene(SceneName);
 
     im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
     im.SetInputCodeIfKeyIsFree(VK_RETURN,  IC_Accept);

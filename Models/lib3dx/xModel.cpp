@@ -21,8 +21,8 @@ void _xElement_SkeletonAdd(xElement *elem)
             if (!count) continue;
             xBYTE *ptrO  = (xBYTE *) (dataSrc ? elem->L_vertices : elem->renderData.L_vertices);
             xBYTE *ptrN  = new xBYTE[strideN*count];
-            xBYTE *oldF = ptrO, *oldE = ptrO + strideO*count, *newF = ptrN;
-            for (; oldF != oldE; oldF+=strideO, newF+=strideN) {
+            xBYTE *oldF = ptrO, *oldE = ptrO + strideO*count, *newF = ptrN; int i = 0;
+            for (; oldF != oldE; oldF+=strideO, newF+=strideN, ++i) {
                 memcpy(newF, oldF, 3*sizeof(xFLOAT));
                 if (elem->FL_textured)
                     memcpy(newF + 7*sizeof(xFLOAT), oldF + 3*sizeof(xFLOAT), 2*sizeof(xFLOAT));

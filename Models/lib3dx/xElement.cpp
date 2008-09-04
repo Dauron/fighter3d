@@ -101,14 +101,14 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
     memset(&(elem->renderData),    0, sizeof(elem->renderData));
     memset(&(elem->collisionData), 0, sizeof(elem->collisionData));
 
-    elem->L_vertices = NULL;
-    elem->L_smooth   = NULL;
-    elem->L_faces    = NULL;
+    elem->L_vertices  = NULL;
+    elem->L_smooth    = NULL;
+    elem->L_faces     = NULL;
     elem->L_faceLists = NULL;
-    elem->L_edges    = NULL;
-    elem->I_edges   = 0;
-    elem->L_kids = NULL;
-    elem->Next = NULL;
+    elem->L_edges     = NULL;
+    elem->I_edges     = 0;
+    elem->L_kids      = NULL;
+    elem->Next        = NULL;
     elem->FL_transparent = elem->FL_opaque = false;
 
     if (elem->Name)
