@@ -38,7 +38,7 @@ void GLFont::Init()
 {
     assert(m_GLFontBase == -1);
 
-    HDC hDC = g_Application.MainWindow().HDC();
+    HDC hDC = g_Application.MainWindow_Get().HDC();
     if (!hDC) return;
 
     m_GLFontBase = glGenLists(NUM_CHARS);           // Storage For 96 Characters

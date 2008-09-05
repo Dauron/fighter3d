@@ -1,6 +1,6 @@
 #ifndef WIN32
 
-#include "Window.h"
+#include "IWindow.h"
 #include "Input/InputMgr.h"
 
 int TranslateXKeyToVKey(KeySym key);
@@ -20,7 +20,7 @@ bool WindowProc(IWindow *thisWnd, XEvent &event)
         case ConfigureNotify:
             if (((long)event.xconfigure.width != (long)thisWnd->width) ||
                 ((long)event.xconfigure.height != (long)thisWnd->height))
-                thisWnd->OnResized (event.xconfigure.width, event.xconfigure.height);
+                thisWnd->Resize (event.xconfigure.width, event.xconfigure.height);
             break;
 
         case KeyPress:
@@ -70,16 +70,16 @@ bool WindowProc(IWindow *thisWnd, XEvent &event)
         case ClientMessage:
             if (*XGetAtomName(thisWnd->hDC, event.xclient.message_type) == *"WM_PROTOCOLS")
             {
-                thisWnd->Terminate();
+                thisWnd->Destroy();
                 return false;
             }
             break;
 
         case FocusIn:
-            thisWnd->SetActive(true);        // Program Is Active
+            thisWnd->Active_Set(true);        // Program Is Active
             break;
         case FocusOut:
-            thisWnd->SetActive(false);       // Program Is No Longer Active
+            thisWnd->Active_Set(false);       // Program Is No Longer Active
             break;
         default:
             break;

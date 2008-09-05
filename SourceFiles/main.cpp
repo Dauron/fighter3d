@@ -8,9 +8,9 @@
 #include "SceneTest.h"
 #include "SceneMenu.h"
 
-void OnApplicationInitialize(Application* sender);
-void OnApplicationInvalidate(Application* sender);
-void OnApplicationTerminate (Application* sender);
+void Application_OnCreate     (Application& sender, void *reciever, bool &res);
+void Application_OnInvalidate (Application& sender, void *reciever, bool &res);
+void Application_OnDestroy    (Application& sender, void *reciever, bool &res);
 
 int main( int argc, char **argv )
 {
@@ -28,30 +28,33 @@ int main( int argc, char **argv )
     else
     if (!strcmp(Config::Scene, "game")) scene = new Scenes::SceneGame();
     else                                scene = new Scenes::SceneMenu();
-    if (Config::EnableConsole)          scene = new Scenes::SceneConsole(scene);
+    if (Config::EnableConsole)
+    {
+        Scene *prev = scene;
+        scene = new Scenes::SceneConsole();
+        scene->PrevScene = prev;
+    }
 
     Application game;
-    game.OnApplicationInitialize = OnApplicationInitialize;
-    game.OnApplicationInvalidate = OnApplicationInvalidate;
-    game.OnApplicationTerminate  = OnApplicationTerminate;
+    game.OnApplicationCreate.Set     ( Application_OnCreate     );
+    game.OnApplicationInvalidate.Set ( Application_OnInvalidate );
+    game.OnApplicationDestroy.Set    ( Application_OnDestroy    );
 #ifndef NDEBUG
-    if (!game.Initialize("Camera Fighter - Debug", Config::WindowX, Config::WindowY, Config::FullScreen,
-        scene))
-        return 1;
+    int cres = game.Create("Camera Fighter - Debug", Config::WindowX, Config::WindowY, Config::FullScreen, *scene);
 #else
-    if (!game.Initialize("Camera Fighter", Config::WindowX, Config::WindowY, Config::FullScreen,
-        scene))
-        return 1;
+    int cres = game.Create("Camera Fighter", Config::WindowX, Config::WindowY, Config::FullScreen, *scene);
 #endif
-    int res = game.Run();
-    game.Terminate();
+    if (cres != Application::SUCCESS) return cres;
+
+    int rres = game.Run();
+    game.Destroy();
 
     GLShader::Unload();
 
     logEx(0, true, "Game finished");
     logEx(0, false, "***********************************");
 
-    return res;
+    return rres;
 }
 
 #ifdef WIN32
@@ -92,41 +95,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 #include "../AppFramework/Input/InputMgr.h"
 #include "../MotionCapture/CaptureInput.h"
+#include "../Multiplayer/NetworkInput.h"
 #include "../Graphics/OGL/Textures/TextureMgr.h"
 #include "../Graphics/OGL/Fonts/FontMgr.h"
 #include "../Graphics/OGL/GLAnimSkeletal.h"
 #include "../Models/ModelMgr.h"
 #include "../Models/lib3dx/xAnimationMgr.h"
 
-void OnApplicationInitialize(Application* sender)
+void Application_OnCreate(Application& sender, void *reciever, bool &res)
 {
-    GLExtensions::Init();
-
-    if (!InputMgr::GetSingletonPtr())
-        new InputMgr();
-
-    if (!CaptureInput::GetSingletonPtr())
-        new CaptureInput();
-
-    if (!FontMgr::GetSingletonPtr())
-        new FontMgr();
-
-    if (!TextureMgr::GetSingletonPtr())
-        new TextureMgr();
-
-    GLShader::Initialize();
-
-    if (!GLAnimSkeletal::GetSingletonPtr())
-        new GLAnimSkeletal();
-
-    if (!xAnimationMgr::GetSingletonPtr())
-        new xAnimationMgr();
-
-    if (!ModelMgr::GetSingletonPtr())
-        new ModelMgr();
+    GLExtensions   ::Create();
+    InputMgr       ::Create(IC_CODE_COUNT);
+    NetworkInput   ::Create();
+    CaptureInput   ::Create();
+    FontMgr        ::Create();
+    TextureMgr     ::Create();
+    GLShader       ::Create();
+    GLAnimSkeletal ::Create();
+    xAnimationMgr  ::Create();
+    ModelMgr       ::Create();
+    res = true;
 }
 
-void OnApplicationInvalidate(Application* sender)
+void Application_OnInvalidate(Application& sender, void *reciever, bool &res)
 {
     if (FontMgr::GetSingletonPtr())
         g_FontMgr.InvalidateItems();
@@ -141,23 +132,20 @@ void OnApplicationInvalidate(Application* sender)
 
     if (ModelMgr::GetSingletonPtr())
         g_ModelMgr.InvalidateItems();
+
+    res = true;
 }
 
-void OnApplicationTerminate(Application* sender)
+void Application_OnDestroy(Application& sender, void *reciever, bool &res)
 {
-    if (ModelMgr::GetSingletonPtr())
-        delete ModelMgr::GetSingletonPtr();
-    if (xAnimationMgr::GetSingletonPtr())
-        delete xAnimationMgr::GetSingletonPtr();
-    if (FontMgr::GetSingletonPtr())
-        delete FontMgr::GetSingletonPtr();
-    if (TextureMgr::GetSingletonPtr())
-        delete TextureMgr::GetSingletonPtr();
-    if (InputMgr::GetSingletonPtr())
-        delete InputMgr::GetSingletonPtr();
-    if (CaptureInput::GetSingletonPtr())
-        delete CaptureInput::GetSingletonPtr();
-    if (GLAnimSkeletal::GetSingletonPtr())
-        delete GLAnimSkeletal::GetSingletonPtr();
-    GLShader::Terminate();
+    ModelMgr       ::Destroy();
+    xAnimationMgr  ::Destroy();
+    GLAnimSkeletal ::Destroy();
+    GLShader       ::Destroy();
+    TextureMgr     ::Destroy();
+    FontMgr        ::Destroy();
+    CaptureInput   ::Destroy();
+    NetworkInput   ::Destroy();
+    InputMgr       ::Destroy();
+    res = true;
 }

@@ -17,43 +17,31 @@ using namespace Scenes;
 #define MULT_RUN    2.0f
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
-/*
-bool SceneGame :: Initialize(int left, int top, unsigned int width, unsigned int height,
-                             SkeletizedObj *player1, SkeletizedObj *player2)
-{
-    this->player1 = player1;
-    this->player2 = player2;
-    return Initialize(left, top, width, height);
-}
-*/
-bool SceneGame :: Initialize(int left, int top, unsigned int width, unsigned int height)
-{
-    Scene::Initialize(left, top, width, height);
 
-    InitInputMgr();
+bool SceneGame :: Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene)
+{
+    Scene::Create(left, top, width, height, prevScene);
 
-    if (!world.objects.size())
-        InitWorld();
-    else
-        InitCameras();
+    InitInputMgr(); // inside -> InitCameras();
+    InitMap();
 
     GLExtensions::SetVSync(Config::VSync);
 
     return true;
 }
 
-bool SceneGame :: InitWorld()
+bool SceneGame :: InitMap()
 {
-    FreeWorld();
-    world.Initialize(MapFileName);
+    FreeMap();
+    Map.Create(MapFileName);
 
-    if (player1) { player1->MX_LocalToWorld_Set() = world.MX_spawn1; world.objects.push_back(player1); player1 = NULL; }
-    if (player2) { player2->MX_LocalToWorld_Set() = world.MX_spawn2; world.objects.push_back(player2); player2 = NULL; }
+    if (Player1) { Player1->MX_LocalToWorld_Set() = Map.MX_spawn1; Map.objects.push_back(Player1); Player1 = NULL; }
+    if (Player2) { Player2->MX_LocalToWorld_Set() = Map.MX_spawn2; Map.objects.push_back(Player2); Player2 = NULL; }
 
     Targets.L_objects.clear();
     Physics::PhysicalWorld::Vec_Object::iterator
-        OB_curr = world.objects.begin(),
-        OB_last = world.objects.end();
+        OB_curr = Map.objects.begin(),
+        OB_last = Map.objects.end();
     for (; OB_curr != OB_last; ++OB_curr)
         if ( (**OB_curr).Type == AI::ObjectType::Human )
         {
@@ -61,19 +49,18 @@ bool SceneGame :: InitWorld()
             ((SkeletizedObj*)(*OB_curr))->Tracker.Targets = &Targets;
         }
 
-    Cameras.Free();
+    //Cameras.Free();
     InitCameras();
 
-    world.InitialUpdate();
+    Map.InitialUpdate();
 
     return true;
 }
 
-void SceneGame :: FreeWorld()
+void SceneGame :: FreeMap()
 {
-    WorldRenderGL renderer;
-    renderer.Free(world);
-    world.Finalize();
+    WorldRenderGL().Free(Map);
+    Map.Destroy();
 }
 
 void SceneGame :: InitCameras()
@@ -89,16 +76,14 @@ void SceneGame :: InitCameras()
             Cameras.L_cameras[0]->FOV.InitPerspective();
             Cameras.L_cameras[0]->FOV.InitViewportPercent(0.f,0.f,1.f,1.f, Width, Height);
 
-            Cameras.L_cameras[0]->CenterTracker.Targets = &Targets;
             Cameras.L_cameras[0]->CenterTracker.Mode    = Math::Tracking::ObjectTracker::TRACK_ALL_CENTER;
-            Cameras.L_cameras[0]->EyeTracker.Targets    = &Targets;
             Cameras.L_cameras[0]->EyeTracker.Mode       = Math::Tracking::ObjectTracker::TRACK_CUSTOM_SCRIPT;
             Cameras.L_cameras[0]->EyeTracker.ScriptName = "EyeSeeAll_Center";
             Cameras.L_cameras[0]->EyeTracker.Script     = Math::Cameras::Camera::SCRIPT_EyeSeeAll_Center;
             Cameras.L_cameras[0]->EyeTracker.NW_destination_shift.init(0.f,0.f,1.5f);
         }
 
-        DefaultCamera = Cameras.L_cameras[0];
+        MainCamera = Cameras.L_cameras[0];
     }
 
     Math::Cameras::CameraSet::Vec_Camera::iterator
@@ -117,69 +102,65 @@ void SceneGame :: InitCameras()
 void SceneGame :: InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
-    im.SetScene(SceneName);
+    im.SetScene(Name);
 
-    im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
-    im.SetInputCodeIfKeyIsFree(VK_RETURN,  IC_Accept);
-    im.SetInputCodeIfKeyIsFree(VK_ESCAPE,  IC_Reject);
-    im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
+    im.Key2InputCode_SetIfKeyFree(VK_F11,     IC_FullScreen);
+    im.Key2InputCode_SetIfKeyFree(VK_RETURN,  IC_Accept);
+    im.Key2InputCode_SetIfKeyFree(VK_ESCAPE,  IC_Reject);
+    im.Key2InputCode_SetIfKeyFree(VK_LBUTTON, IC_LClick);
 
     // Cameras
-    im.SetInputCodeIfKeyIsFree(VK_NUMPAD8, IC_TurnUp);
-    im.SetInputCodeIfKeyIsFree(VK_NUMPAD5, IC_TurnDown);
-    im.SetInputCodeIfKeyIsFree(VK_NUMPAD4, IC_TurnLeft);
-    im.SetInputCodeIfKeyIsFree(VK_NUMPAD6, IC_TurnRight);
-    im.SetInputCodeIfKeyIsFree('Y', IC_RollLeft);
-    im.SetInputCodeIfKeyIsFree('I', IC_RollRight);
+    im.Key2InputCode_SetIfKeyFree(VK_NUMPAD8, IC_TurnUp);
+    im.Key2InputCode_SetIfKeyFree(VK_NUMPAD5, IC_TurnDown);
+    im.Key2InputCode_SetIfKeyFree(VK_NUMPAD4, IC_TurnLeft);
+    im.Key2InputCode_SetIfKeyFree(VK_NUMPAD6, IC_TurnRight);
+    im.Key2InputCode_SetIfKeyFree('Y', IC_RollLeft);
+    im.Key2InputCode_SetIfKeyFree('I', IC_RollRight);
 
-    im.SetInputCodeIfKeyIsFree('U', IC_OrbitUp);
-    im.SetInputCodeIfKeyIsFree('J', IC_OrbitDown);
-    im.SetInputCodeIfKeyIsFree('H', IC_OrbitLeft);
-    im.SetInputCodeIfKeyIsFree('K', IC_OrbitRight);
+    im.Key2InputCode_SetIfKeyFree('U', IC_OrbitUp);
+    im.Key2InputCode_SetIfKeyFree('J', IC_OrbitDown);
+    im.Key2InputCode_SetIfKeyFree('H', IC_OrbitLeft);
+    im.Key2InputCode_SetIfKeyFree('K', IC_OrbitRight);
 
-    im.SetInputCodeIfKeyIsFree(VK_HOME,   IC_MoveForward);
-    im.SetInputCodeIfKeyIsFree(VK_END,    IC_MoveBack);
-    im.SetInputCodeIfKeyIsFree(VK_DELETE, IC_MoveLeft);
-    im.SetInputCodeIfKeyIsFree(VK_NEXT,   IC_MoveRight);
-    im.SetInputCodeIfKeyIsFree(VK_PRIOR,  IC_MoveUp);
-    im.SetInputCodeIfKeyIsFree(VK_INSERT, IC_MoveDown);
-    im.SetInputCodeIfKeyIsFree(VK_LSHIFT, IC_RunModifier);
+    im.Key2InputCode_SetIfKeyFree(VK_HOME,   IC_MoveForward);
+    im.Key2InputCode_SetIfKeyFree(VK_END,    IC_MoveBack);
+    im.Key2InputCode_SetIfKeyFree(VK_DELETE, IC_MoveLeft);
+    im.Key2InputCode_SetIfKeyFree(VK_NEXT,   IC_MoveRight);
+    im.Key2InputCode_SetIfKeyFree(VK_PRIOR,  IC_MoveUp);
+    im.Key2InputCode_SetIfKeyFree(VK_INSERT, IC_MoveDown);
+    im.Key2InputCode_SetIfKeyFree(VK_LSHIFT, IC_RunModifier);
 
     // ComBoard
-    im.SetInputCodeIfKeyIsFree('S', IC_CB_LeftPunch);
-    im.SetInputCodeIfKeyIsFree('A', IC_CB_LeftHandGuard);
-    im.SetInputCodeIfKeyIsFree('X', IC_CB_LeftKick);
-    im.SetInputCodeIfKeyIsFree('Z', IC_CB_LeftLegGuard);
-    im.SetInputCodeIfKeyIsFree('D', IC_CB_RightPunch);
-    im.SetInputCodeIfKeyIsFree('F', IC_CB_RightHandGuard);
-    im.SetInputCodeIfKeyIsFree('C', IC_CB_RightKick);
-    im.SetInputCodeIfKeyIsFree('V', IC_CB_RightLegGuard);
-    im.SetInputCodeIfKeyIsFree(VK_UP,    IC_CB_Forward);
-    im.SetInputCodeIfKeyIsFree(VK_DOWN,  IC_CB_Backward);
-    im.SetInputCodeIfKeyIsFree(VK_LEFT,  IC_CB_Left);
-    im.SetInputCodeIfKeyIsFree(VK_RIGHT, IC_CB_Right);
+    im.Key2InputCode_SetIfKeyFree('S', IC_CB_LeftPunch);
+    im.Key2InputCode_SetIfKeyFree('A', IC_CB_LeftHandGuard);
+    im.Key2InputCode_SetIfKeyFree('X', IC_CB_LeftKick);
+    im.Key2InputCode_SetIfKeyFree('Z', IC_CB_LeftLegGuard);
+    im.Key2InputCode_SetIfKeyFree('D', IC_CB_RightPunch);
+    im.Key2InputCode_SetIfKeyFree('F', IC_CB_RightHandGuard);
+    im.Key2InputCode_SetIfKeyFree('C', IC_CB_RightKick);
+    im.Key2InputCode_SetIfKeyFree('V', IC_CB_RightLegGuard);
+    im.Key2InputCode_SetIfKeyFree(VK_UP,    IC_CB_Forward);
+    im.Key2InputCode_SetIfKeyFree(VK_DOWN,  IC_CB_Backward);
+    im.Key2InputCode_SetIfKeyFree(VK_LEFT,  IC_CB_Left);
+    im.Key2InputCode_SetIfKeyFree(VK_RIGHT, IC_CB_Right);
 }
 
 bool SceneGame :: Invalidate()
 {
-    Vec_xLight::iterator LT_curr = world.lights.begin(),
-                         LT_last = world.lights.end();
+    Vec_xLight::iterator LT_curr = Map.lights.begin(),
+                         LT_last = Map.lights.end();
     for (; LT_curr != LT_last ; ++LT_curr)
         LT_curr->modified = true;
-
-    WorldRenderGL renderer;
-    renderer.Invalidate(world);
+    WorldRenderGL().Invalidate(Map);
     return true;
 }
 
-void SceneGame :: Terminate()
+void SceneGame :: Destroy()
 {
-    DefaultCamera = NULL;
-    FreeWorld();
-    Targets.L_objects.clear();
-    Scene::Terminate();
-
+    Scene::Destroy();
     Cameras.Free();
+    FreeMap();
+    Clear();
 }
 
 
@@ -196,9 +177,10 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     toggle_lights       | tls           | turns the lighting on and off\n\
     toggle_shadows      | tshadow       | toggles shadow rendering\n\
     toggle_shadow_vol   | tshadowv      | toggles shadow volume rendering\n\
-    reinitialize        | init          | reinitialize objects, etc.\n\
+    init map            | initm         | reinitialize map\n\
+    init cam            | initc         | reinitialize cameras\n\
     toggle_shader       | tshd          | toggles custom shader\n\
-    toggle_polygon_mode | tpm           | toggle polygon mode\n\
+    toggle_polygon_mode | tpm           | toggles polygon mode\n\
     ------------------------------------------------------------------------\n\
     level {int}         | level {int}   | load 'level_{int}.map' scene\n\
     speed {float}       | speed {float} | enter clock speed multiplier\n");
@@ -208,12 +190,19 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     {
         Config::TestCase = atoi(cmd.substr(6).c_str());
         MapFileName.clear();
-        InitWorld();
+        Cameras.Free();
+        InitMap();
         return true;
     }
-    if (cmd == "init" || cmd == "reinitialize")
+    if (cmd == "initm" || cmd == "init map")
     {
-        InitWorld();
+        InitMap();
+        return true;
+    }
+    if (cmd == "initc" || cmd == "init cam")
+    {
+        Cameras.Free();
+        InitCameras();
         return true;
     }
     if (cmd.substr(0, 6) == "speed ")
@@ -232,8 +221,8 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     if (cmd.substr(0, 4) == "tls ")
     {
         unsigned int id = (unsigned int)atoi(cmd.substr(4).c_str());
-        if (id >= 0 && id < world.lights.size())
-            world.lights[id].turned_on = !world.lights[id].turned_on;
+        if (id >= 0 && id < Map.lights.size())
+            Map.lights[id].turned_on = !Map.lights[id].turned_on;
         return true;
     }
     if (cmd == "tshadow" || cmd == "toggle_shadows")
@@ -278,7 +267,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     return false;
 }
 
-bool SceneGame :: FrameUpdate(float deltaTime)
+bool SceneGame :: Update(float T_delta)
 {
     InputMgr &im = g_InputMgr;
 
@@ -286,93 +275,99 @@ bool SceneGame :: FrameUpdate(float deltaTime)
     {
         if (PrevScene)
         {
-            Scene *tmp = PrevScene;
+            Scene &tmp = *PrevScene;
             PrevScene = NULL;
-            g_Application.SetCurrentScene(tmp/*new SceneMenu()*/);
+            g_Application.Scene_Set(tmp);
         }
         else
-            g_Application.MainWindow().Terminate();
+            g_Application.Destroy();
         return true;
     }
 
     if (im.GetInputStateAndClear(IC_FullScreen))
-        g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
+    {
+        if (g_Application.MainWindow_Get().IsFullScreen())
+            g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
+        else
+            g_Application.MainWindow_Get().FullScreen_Set(Config::FullScreenX, Config::FullScreenY, true);
+        return true;
+    }
 
     float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
-    float deltaTmp = deltaTime*MULT_ROT*run;
+    float T_scaled = T_delta*MULT_ROT*run;
 
     if (im.GetInputState(IC_TurnLeft))
-        DefaultCamera->Rotate (deltaTmp, 0.0f, 0.0f);
+        MainCamera->Rotate (T_scaled, 0.0f, 0.0f);
     if (im.GetInputState(IC_TurnRight))
-        DefaultCamera->Rotate (-deltaTmp, 0.0f, 0.0f);
+        MainCamera->Rotate (-T_scaled, 0.0f, 0.0f);
     if (im.GetInputState(IC_TurnUp))
-        DefaultCamera->Rotate (0.0f, deltaTmp, 0.0f);
+        MainCamera->Rotate (0.0f, T_scaled, 0.0f);
     if (im.GetInputState(IC_TurnDown))
-        DefaultCamera->Rotate (0.0f, -deltaTmp, 0.0f);
+        MainCamera->Rotate (0.0f, -T_scaled, 0.0f);
     if (im.GetInputState(IC_RollLeft))
-        DefaultCamera->Rotate (0.0f, 0.0f, -deltaTmp);
+        MainCamera->Rotate (0.0f, 0.0f, -T_scaled);
     if (im.GetInputState(IC_RollRight))
-        DefaultCamera->Rotate (0.0f, 0.0f, deltaTmp);
+        MainCamera->Rotate (0.0f, 0.0f, T_scaled);
 
     if (im.GetInputState(IC_OrbitLeft))
-        DefaultCamera->Orbit (deltaTmp, 0.0f);
+        MainCamera->Orbit (T_scaled, 0.0f);
     if (im.GetInputState(IC_OrbitRight))
-        DefaultCamera->Orbit (-deltaTmp, 0.0f);
+        MainCamera->Orbit (-T_scaled, 0.0f);
     if (im.GetInputState(IC_OrbitUp))
-        DefaultCamera->Orbit (0.0f, deltaTmp);
+        MainCamera->Orbit (0.0f, T_scaled);
     if (im.GetInputState(IC_OrbitDown))
-        DefaultCamera->Orbit (0.0f, -deltaTmp);
+        MainCamera->Orbit (0.0f, -T_scaled);
 
-    deltaTmp = deltaTime*MULT_MOVE*run;
+    T_scaled = T_delta*MULT_MOVE*run;
 
     bool moving = false;
     if (im.GetInputState(IC_MoveForward))
     {
-        DefaultCamera->Move (deltaTmp, 0.0f, 0.0f);
+        MainCamera->Move (T_scaled, 0.0f, 0.0f);
         moving = true;
     }
     if (im.GetInputState(IC_MoveBack))
     {
-        DefaultCamera->Move (-deltaTmp, 0.0f, 0.0f);
+        MainCamera->Move (-T_scaled, 0.0f, 0.0f);
         moving = true;
     }
     if (im.GetInputState(IC_MoveLeft))
     {
-        DefaultCamera->Move (0.0f, -deltaTmp, 0.0f);
+        MainCamera->Move (0.0f, -T_scaled, 0.0f);
         moving = true;
     }
     if (im.GetInputState(IC_MoveRight))
     {
-        DefaultCamera->Move (0.0f, deltaTmp, 0.0f);
+        MainCamera->Move (0.0f, T_scaled, 0.0f);
         moving = true;
     }
     if (im.GetInputState(IC_MoveUp))
-        DefaultCamera->Move (0.0f, 0.0f, deltaTmp);
+        MainCamera->Move (0.0f, 0.0f, T_scaled);
     if (im.GetInputState(IC_MoveDown))
-        DefaultCamera->Move (0.0f, 0.0f, -deltaTmp);
+        MainCamera->Move (0.0f, 0.0f, -T_scaled);
 
     if (im.GetInputStateAndClear(IC_LClick))
     {
-        RigidObj *obj = Select(g_InputMgr.mouseX, g_InputMgr.mouseY);
+        RigidObj *obj = Select(g_InputMgr.mouseX, Height-g_InputMgr.mouseY);
         if (obj)
             if (obj->ModelPh)
-                g_Application.SetCurrentScene(new SceneSkeleton(
+                g_Application.Scene_Set(* new SceneSkeleton(
                     obj->ModelGr->xModelP->FileName, obj->ModelPh->xModelP->FileName), false);
             else
-                g_Application.SetCurrentScene(new SceneSkeleton(
+                g_Application.Scene_Set(* new SceneSkeleton(
                     obj->ModelGr->xModelP->FileName, NULL), false);
         return true;
     }
 
-    world.FrameUpdate(deltaTime);
-    Cameras.Update(deltaTime);
+    Map.Update(T_delta);
+    Cameras.Update(T_delta);
 
     return true;
 }
 
-bool SceneGame :: FrameRender()
+bool SceneGame :: Render()
 {
-    world.FrameRender();
+    Map.Render();
 
     static xLight dayLight;
     static xColor skyColor;
@@ -394,24 +389,24 @@ bool SceneGame :: FrameRender()
     }
 
     WorldRenderGL renderer;
-    renderer.FreeIfNeeded(world);
+    renderer.FreeIfNeeded(Map);
 
     if (Config::EnableLighting)
         if (Config::EnableFullLighting)
-            renderer.RenderWorld(world, Cameras);
+            renderer.RenderWorld(Map, Cameras);
         else
-            renderer.RenderWorld(world, dayLight, skyColor, Cameras);
+            renderer.RenderWorld(Map, dayLight, skyColor, Cameras);
     else
-        renderer.RenderWorldNoLights(world, world.skyColor, Cameras);
+        renderer.RenderWorldNoLights(Map, Map.skyColor, Cameras);
 
     if (Config::DisplayCameras)
     {
         glDisable(GL_DEPTH_TEST);
         glColor3f(1.f,1.f,1.f);
         Math::Cameras::CameraSet::Vec_Camera::iterator
-            CAM_curr = Cameras.L_cameras.begin(),
+            CAM_curr  = Cameras.L_cameras.begin(),
             CAM_curr2 = Cameras.L_cameras.begin(),
-            CAM_last = Cameras.L_cameras.end();
+            CAM_last  = Cameras.L_cameras.end();
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDisable(GL_CULL_FACE);
 
@@ -447,7 +442,6 @@ bool SceneGame :: FrameRender()
         }
     }
 
-    //////////////////// WORLD - END
     glFlush(); //glFinish();
     return true;
 }
@@ -457,17 +451,18 @@ bool SceneGame :: FrameRender()
 void SceneGame :: RenderSelect(const Math::Cameras::FieldOfView &FOV)
 {
     RendererGL renderer;
-    int objectID = -1;
-    World::Vec_Object::iterator iter = world.objects.begin(), end = world.objects.end();
-    for ( ; iter != end ; ++iter ) {
-        glLoadName(++objectID);
-        RigidObj &mdl = *(RigidObj*)*iter;
+    int ID_object = 0;
+    World::Vec_Object::iterator OB_curr = Map.objects.begin(),
+                                OB_last = Map.objects.end();
+    for ( ; OB_curr != OB_last ; ++OB_curr, ++ID_object ) {
+        glLoadName(ID_object);
+        RigidObj &mdl = *(RigidObj*)*OB_curr;
         renderer.RenderVertices(*mdl.ModelGr->xModelP, mdl.ModelGr->instance, Renderer::smModel);
     }
 }
 RigidObj *SceneGame :: Select(int X, int Y)
 {
-    if (!DefaultCamera->FOV.ViewportContains(X,Height-Y)) return NULL;
-    std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(*DefaultCamera, X, Height-Y);
-    return objectIDs == NULL ? NULL : (RigidObj*) world.objects[objectIDs->back()];
+    if (!MainCamera->FOV.ViewportContains(X,Y)) return NULL;
+    std::vector<xDWORD> *objectIDs = ISelectionProvider::Select(*MainCamera, X, Y);
+    return objectIDs == NULL ? NULL : (RigidObj*) Map.objects[objectIDs->back()];
 }

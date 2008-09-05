@@ -20,16 +20,19 @@ void InputMgr::LoadMap(const char *fileName)
         {
             in.getline(buff, 255);
             if (buff[0] == '[')
+            {
                 _InputMap = &_ScenesMap[buff];
+                if (!_InputMap->InputCode2Index) _InputMap->Create(_iCodeCount);
+            }
             else
             {
                 if (_InputMap)
                 {
-                    int keyCode;
-                    int inputCode;
+                    int kCode;
+                    int iCode;
 
-                    sscanf(buff, "%d\t%d", &keyCode, &inputCode);
-                    (*_InputMap)[keyCode] = inputCode;
+                    sscanf(buff, "%d\t%d", &kCode, &iCode);
+                    Key2InputCode_Set(kCode, iCode);
                 }
             }
         }
@@ -49,9 +52,15 @@ void InputMgr::SaveMap(const char *fileName)
         {
             out << iter->first << '\n';
 
-            TInputMap::iterator iter2;
-            for (iter2 = iter->second.begin(); iter2 != iter->second.end(); ++iter2)
-                out << iter2->first << '\t' << iter2->second << '\n';
+            for (int kCode = 0; kCode < NUM_KEYS; ++kCode)
+            {
+                int index = KeyCode2Index(kCode);
+                if (index)
+                {
+                    int iCode = Index2InputCode(index);
+                    out << kCode << '\t' << iCode << '\n';
+                }
+            }
         }
         out.close();
     }

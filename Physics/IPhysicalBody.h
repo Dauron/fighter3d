@@ -16,7 +16,7 @@ namespace Physics {
     {
     private:
         bool         FL_defaults_applied;
-        bool         FL_initialized;
+        bool         FL_created;
         bool         FL_modified;
 
     protected:
@@ -24,7 +24,7 @@ namespace Physics {
         bool         IsModified()        const { return FL_modified; }
 
     public:
-        bool         IsInitialized()     const { return FL_initialized; }
+        bool         IsCreated()     const { return FL_created; }
 
         bool         FL_stationary; // no movement
         bool         FL_phantom;    // no collisions
@@ -59,7 +59,7 @@ namespace Physics {
         virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time) = 0;
         virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time, const CollisionPoint &CP_point) = 0;
 
-        IPhysicalBody() : FL_defaults_applied(false), FL_initialized(false) { BVHierarchy.zero(); }
+        IPhysicalBody() : FL_defaults_applied(false), FL_created(false) { BVHierarchy.zero(); }
 
         virtual void     ApplyDefaults() {
             FL_defaults_applied = true;
@@ -74,17 +74,17 @@ namespace Physics {
             TrackedObject::MX_LocalToWorld_Set().identity();
             BVHierarchy.zero();
         }
-        virtual void     Initialize()
+        virtual void     Create()
         {
             if (!IsDefaultsApplied()) ApplyDefaults();
-            FL_initialized = true;
+            FL_created = true;
             FL_modified = true;
         }
-        virtual void     FrameStart()               {}
-        virtual void     FrameUpdate(xFLOAT T_time) { if  (IsModified()) P_center_Trfm = MX_LocalToWorld_Get().preTransformP(P_center); }
-        virtual void     FrameRender()              {}
-        virtual void     FrameEnd()                 { FL_modified = false; }
-        virtual void     Finalize()                 { FL_initialized = false; BVHierarchy.free(); BVHierarchy.zero(); }
+        virtual void     FrameStart()          {}
+        virtual void     Update(xFLOAT T_time) { if  (IsModified()) P_center_Trfm = MX_LocalToWorld_Get().preTransformP(P_center); }
+        virtual void     Render()              {}
+        virtual void     FrameEnd()            { FL_modified = false; }
+        virtual void     Destroy()             { FL_created = false; BVHierarchy.free(); BVHierarchy.zero(); }
     };
 
 } // namespace Physics

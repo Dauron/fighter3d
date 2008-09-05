@@ -59,14 +59,14 @@ namespace Physics {
         {
             Stop();
             MX_LocalToWorld_Set() *= xMatrixTranslateT(x,y,z);
-            if (IsInitialized()) LocationChanged();
+            if (IsCreated()) LocationChanged();
         }
 
         void Rotate(xFLOAT rotX, xFLOAT rotY, xFLOAT rotZ)
         {
             Stop();
             MX_LocalToWorld_Set() *= xMatrixRotateRad(DegToRad(rotX), DegToRad(rotY), DegToRad(rotZ));
-            if (IsInitialized()) LocationChanged();
+            if (IsCreated()) LocationChanged();
         }
 
     public:
@@ -76,7 +76,7 @@ namespace Physics {
             M_mass      = FL_stationary ? xFLOAT_HUGE_POSITIVE : 10.f;
             Stop();
         }
-        virtual void FrameUpdate(xFLOAT T_time);
+        virtual void Update(xFLOAT T_time);
     };
 
 } // namespace Physics

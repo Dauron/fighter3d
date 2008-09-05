@@ -27,11 +27,11 @@ struct ShaderProgram
     void Load(const char *vShaderFile, const char *fShaderFile);
     void Unload();
 
-    GLenum IsInitialized() { return program; }
+    GLenum IsCreated() { return program; }
     bool IsCurrent() { return program == currProgram; }
 
-    virtual GLenum Initialize();
-    virtual void   Terminate();
+    virtual GLenum Create();
+    virtual void   Destroy();
     virtual void   Invalidate()
     {
         program = vertex_shader = fragment_shader = 0; FL_invalid = true;
@@ -49,7 +49,7 @@ struct ShaderSkeletal : public ShaderProgram
     ShaderSkeletal();
     virtual ~ShaderSkeletal() {}
 
-    virtual GLenum Initialize();
+    virtual GLenum Create();
 };
 
 struct ShaderLighting
@@ -59,8 +59,8 @@ struct ShaderLighting
     ShaderSkeletal PlainSkeletal;
     ShaderSkeletal TexturedSkeletal;
 
-    void Initialize();
-    void Terminate();
+    void Create();
+    void Destroy();
     void Invalidate();
 };
 
@@ -103,8 +103,8 @@ public:
 
     static void Load();
     static void Unload();
-    static void Initialize();
-    static void Terminate();
+    static void Create();
+    static void Destroy();
     static void Invalidate();
 
     static bool Start();

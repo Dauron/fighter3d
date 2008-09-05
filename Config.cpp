@@ -39,24 +39,24 @@ bool  State::RenderingShadows    = false;
 
 _Performance Performance;
 
-void _Performance :: Reset()
+void _Performance :: Clear()
 {
     memset (this, 0, sizeof(_Performance));
     FPSmin = 1000.f;
-    _timeCounter = 500.f; // force init snaps at first frame
+    _timeCounter = 0.5f; // force init snaps at first frame
 }
 
-void _Performance :: NextFrame(float ticks)
+void _Performance :: Update(float T_delta)
 {
-    if (ticks == 0.f)
-        ticks = 1.f;
+    if (T_delta == 0.f)
+        T_delta = 0.001f;
 
-    FPS = 1000.f / ticks;
-    _timeCounter += ticks;
+    FPS = 1.f / T_delta;
+    _timeCounter += T_delta;
 
-    if (_timeCounter > 500.f)
+    if (_timeCounter > 0.5f)
     {
-        _timeCounter -= 500.f;
+        _timeCounter -= 0.5f;
         snapCollisionDataFillMS      = CollisionDataFillMS_max;
         snapCollisionDeterminationMS = CollisionDeterminationMS_max;
         CollisionDataFillMS_max      = 0.f;
@@ -85,8 +85,8 @@ void _Performance :: NextFrame(float ticks)
     CollisionDataFillMS      = 0.f;
     CollisionDeterminationMS = 0.f;
 
-    FPSmeanAccum += ticks*FPS;
-    FPSmeanCount += ticks;
+    FPSmeanAccum += T_delta*FPS;
+    FPSmeanCount += T_delta;
 
     if (FPS > FPSmax)
         FPSmax = FPS;

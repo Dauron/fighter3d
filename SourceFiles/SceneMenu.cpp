@@ -10,55 +10,35 @@ using namespace Scenes;
 
 Menu::BaseState* Menu::BaseState::Current = NULL;
 
-bool SceneMenu :: Initialize(int left, int top, unsigned int width, unsigned int height)
+bool SceneMenu :: Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene)
 {
-    Scene::Initialize(left, top, width, height);
+    Scene::Create(left, top, width, height, prevScene);
     InitInputMgr();
 
-    if (!root)
-    {
-        root = new Menu::MainState();
-        root->Init(NULL);
-        Menu::BaseState::SwitchState(*root);
-    }
+    root = new Menu::MainState();
+    root->Init(NULL);
+    Menu::BaseState::SwitchState(*root);
 
     GLExtensions::SetVSync(Config::VSync);
 
     return true;
 }
 
-void SceneMenu :: Resize(int left, int top, unsigned int width, unsigned int height)
-{
-    if (Initialized)
-    {
-        Scene::Resize(left, top, width, height);
-
-        g_FontMgr.DeleteReference(font03);
-        font03 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.03f));
-        g_FontMgr.DeleteReference(font04);
-        font04 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.04f));
-        g_FontMgr.DeleteReference(font05);
-        font05 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.05f));
-        g_FontMgr.DeleteReference(font10);
-        font10 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.10f));
-    }
-}
-
 void SceneMenu :: InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
-    im.SetScene(SceneName);
+    im.SetScene(Name);
 
-    im.SetInputCodeIfKeyIsFree(VK_RETURN,  IC_Accept);
-    im.SetInputCodeIfKeyIsFree(VK_ESCAPE,  IC_Reject);
-    im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
-    im.SetInputCodeIfKeyIsFree(VK_UP,      IC_MoveUp);
-    im.SetInputCodeIfKeyIsFree(VK_DOWN,    IC_MoveDown);
-    im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
-    im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
+    im.Key2InputCode_SetIfKeyFree(VK_RETURN,  IC_Accept);
+    im.Key2InputCode_SetIfKeyFree(VK_ESCAPE,  IC_Reject);
+    im.Key2InputCode_SetIfKeyFree(VK_F11,     IC_FullScreen);
+    im.Key2InputCode_SetIfKeyFree(VK_UP,      IC_MoveUp);
+    im.Key2InputCode_SetIfKeyFree(VK_DOWN,    IC_MoveDown);
+    im.Key2InputCode_SetIfKeyFree(VK_LBUTTON, IC_LClick);
+    im.Key2InputCode_SetIfKeyFree(VK_F11,     IC_FullScreen);
 }
 
-void SceneMenu :: Terminate()
+void SceneMenu :: Destroy()
 {
     g_FontMgr.DeleteReference(font03);
     g_FontMgr.DeleteReference(font04);
@@ -73,7 +53,7 @@ void SceneMenu :: Terminate()
         root = NULL;
     }
 
-    Scene::Terminate();
+    Scene::Destroy();
 }
 
 bool SceneMenu :: Invalidate()
@@ -83,18 +63,35 @@ bool SceneMenu :: Invalidate()
     return true;
 }
 
-bool SceneMenu :: FrameUpdate(float deltaTime)
+void SceneMenu :: Resize(int left, int top, unsigned int width, unsigned int height)
+{
+    Scene::Resize(left, top, width, height);
+
+    g_FontMgr.DeleteReference(font03);
+    font03 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.03f));
+    g_FontMgr.DeleteReference(font04);
+    font04 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.04f));
+    g_FontMgr.DeleteReference(font05);
+    font05 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.05f));
+    g_FontMgr.DeleteReference(font10);
+    font10 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.10f));
+}
+
+bool SceneMenu :: Update(float deltaTime)
 {
     if (g_InputMgr.GetInputStateAndClear(IC_FullScreen))
     {
-        g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
+        if (g_Application.MainWindow_Get().IsFullScreen())
+            g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
+        else
+            g_Application.MainWindow_Get().FullScreen_Set(Config::FullScreenX, Config::FullScreenY, true);
         return true;
     }
 
     return Menu::BaseState::Current_Get()->Update(deltaTime);
 }
 
-bool SceneMenu :: FrameRender()
+bool SceneMenu :: Render()
 {
     glClearColor( 0.f, 0.f, 0.f, 0.f );
     glColorMask(1,1,1,1);

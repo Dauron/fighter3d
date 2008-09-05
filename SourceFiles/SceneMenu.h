@@ -11,18 +11,19 @@ namespace Scenes {
     {
     public:
         SceneMenu() {
-            SceneName="[Menu]";
+            Name="[Menu]";
             font03 = font04 = font05 = font10 = HFont();
             root = NULL;
         };
 
-        virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
-        virtual void Resize(int left, int top, unsigned int width, unsigned int height);
-        virtual bool Invalidate();
-        virtual void Terminate();
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene = NULL);
+        virtual void Destroy();
 
-        virtual bool FrameUpdate(float deltaTime);
-        virtual bool FrameRender();
+        virtual bool Invalidate();
+        virtual void Resize(int left, int top, unsigned int width, unsigned int height);
+
+        virtual bool Update(float deltaTime);
+        virtual bool Render();
 
         HFont    font03; // 0.03 Window Height
         HFont    font04; // 0.04 Window Height

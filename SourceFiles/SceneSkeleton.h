@@ -22,12 +22,17 @@ namespace Scenes {
       public:
         SceneSkeleton(const char *gr_modelName, const char *ph_modelName);
 
-        virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
-        virtual void Resize(int left, int top, unsigned int width, unsigned int height);
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *scene = NULL);
+        virtual void Destroy();
+
+        virtual void Enter()
+        { Scene::Enter(); g_InputMgr.mouseWheel = 0; InputState.MouseLIsDown = false; InputState.MouseRIsDown = false; }
+
         virtual bool Invalidate();
-        virtual void Terminate();
-        virtual bool FrameUpdate(float deltaTime);
-        virtual bool FrameRender();
+        virtual void Resize(int left, int top, unsigned int width, unsigned int height);
+
+        virtual bool Update(float deltaTime);
+        virtual bool Render();
 
       private:
         void InitInputMgr();

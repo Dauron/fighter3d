@@ -7,7 +7,7 @@
 
 const xFLOAT TIME_STEP = 0.02f;
 
-void World:: FrameUpdate(float T_delta)
+void World:: Update(float T_delta)
 {
     if (T_delta > 0.05f) T_delta = 0.05f;
     T_delta *= Config::Speed;
@@ -27,7 +27,7 @@ void World:: FrameUpdate(float T_delta)
         else
             FrameStart();
 
-        if (skyBox) skyBox->FrameUpdate(T_step);
+        if (skyBox) skyBox->Update(T_step);
         Interact(T_step, objects);
 
         if (T_delta > EPSILON)
@@ -41,8 +41,9 @@ void World:: FrameUpdate(float T_delta)
         LT_curr->update();
 }
 
-void World:: Initialize(std::string MapFileName)
+void World:: Create(std::string MapFileName)
 {
+    g_NetworkInput.Finalize();
     g_CaptureInput.Finalize();
     if (!MapFileName.size())
         MapFileName = "Data/models/level_" + itos( Config::TestCase ) + ".map";
@@ -50,11 +51,11 @@ void World:: Initialize(std::string MapFileName)
 }
 
 
-void World:: Finalize()
+void World:: Destroy()
 {
     if (skyBox)
     {
-        skyBox->Finalize();
+        skyBox->Destroy();
         delete skyBox;
         skyBox = NULL;
     }
@@ -62,7 +63,7 @@ void World:: Finalize()
     Vec_Object::iterator i, begin = objects.begin(), end = objects.end();
     for ( i = begin ; i != end ; ++i )
     {
-        (**i).Finalize();
+        (**i).Destroy();
         delete *i;
     }
     objects.clear();
@@ -124,13 +125,13 @@ void World:: Load(const char *mapFileName)
                     {
                         if (model->modelFile.size() && model->fastModelFile.size())
                         {
-                            model->Initialize(model->modelFile.c_str(), model->fastModelFile.c_str());
+                            model->Create(model->modelFile.c_str(), model->fastModelFile.c_str());
                             objects.push_back(model);
                         }
                         else
                         if (model->modelFile.size())
                         {
-                            model->Initialize(model->modelFile.c_str());
+                            model->Create(model->modelFile.c_str());
                             objects.push_back(model);
                         }
                         else
@@ -166,7 +167,7 @@ void World:: Load(const char *mapFileName)
                     sscanf(buffer+6, "%s", file);
                     std::string modelFile = Filesystem::GetFullPath(dir + "/" + file);
                     skyBox = new RigidObj();
-                    skyBox->Initialize(modelFile.c_str());
+                    skyBox->Create(modelFile.c_str());
                     continue;
                 }
                 if (StartsWith(buffer, "skycolor"))
@@ -298,13 +299,13 @@ void World:: Load(const char *mapFileName)
         {
             if (model->modelFile.size() && model->fastModelFile.size())
             {
-                model->Initialize(model->modelFile.c_str(), model->fastModelFile.c_str());
+                model->Create(model->modelFile.c_str(), model->fastModelFile.c_str());
                 objects.push_back(model);
             }
             else
             if (model->modelFile.size())
             {
-                model->Initialize(model->modelFile.c_str());
+                model->Create(model->modelFile.c_str());
                 objects.push_back(model);
             }
             else

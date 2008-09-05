@@ -86,8 +86,8 @@ public:
 
     float T_world;
 
-    void Reset();
-    void NextFrame(float ticks);
+    void Clear();
+    void Update(float T_delta);
 };
 extern _Performance Performance;
 

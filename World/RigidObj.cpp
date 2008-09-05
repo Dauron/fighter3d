@@ -21,9 +21,9 @@ void RigidObj :: ApplyDefaults()
     modelFile.clear();
 }
 
-void RigidObj :: Initialize ()
+void RigidObj :: Create ()
 {
-    PhysicalBody::Initialize();
+    PhysicalBody::Create();
 
     if (M_mass == 0.f)
         M_mass = BVHierarchy.Figure->W_Volume_Get();
@@ -39,7 +39,7 @@ void RigidObj :: Initialize ()
     Type = FL_stationary ? AI::ObjectType::Structure : AI::ObjectType::Physical;
 }
 
-void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
+void RigidObj :: Create (const char *gr_filename, const char *ph_filename)
 {
     UpdateMatrices();
 
@@ -75,10 +75,10 @@ void RigidObj :: Initialize (const char *gr_filename, const char *ph_filename)
 
     smap.texId = 0;
 
-    Initialize();
+    Create();
 }
 
-void RigidObj :: Finalize ()
+void RigidObj :: Destroy ()
 {
     if (ModelGr) { delete ModelGr; ModelGr = NULL; }
     if (ModelPh)
@@ -92,7 +92,7 @@ void RigidObj :: Finalize ()
         ModelPh = NULL;
     }
 
-    PhysicalBody::Finalize();
+    PhysicalBody::Destroy();
 
     if (MeshData)
         delete[] MeshData;

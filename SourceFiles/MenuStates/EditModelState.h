@@ -75,10 +75,10 @@ namespace Scenes { namespace Menu {
                                     ModelPhFile = CurrentDirectory + "/" + button.Text;
 
                                     if (ModelPhFile != ModelGrFile)
-                                        g_Application.SetCurrentScene(
+                                        g_Application.Scene_Set(*
                                         new SceneSkeleton(ModelGrFile.c_str(), ModelPhFile.c_str()), false);
                                     else
-                                        g_Application.SetCurrentScene(
+                                        g_Application.Scene_Set(*
                                           new SceneSkeleton(ModelGrFile.c_str(), NULL), false);
 
                                     ModelGrFile.clear();

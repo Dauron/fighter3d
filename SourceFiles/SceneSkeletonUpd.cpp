@@ -90,7 +90,7 @@ void SceneSkeleton::UpdateCustomBVH()
 }
 
 /************************** INPUT **************************************/
-bool SceneSkeleton::FrameUpdate(float deltaTime)
+bool SceneSkeleton::Update(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
@@ -101,7 +101,10 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
         { UpdateButton(*begin); return true; }
 
     if (im.GetInputStateAndClear(IC_FullScreen)) {
-        g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
+        if (g_Application.MainWindow_Get().IsFullScreen())
+            g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
+        else
+            g_Application.MainWindow_Get().FullScreen_Set(Config::FullScreenX, Config::FullScreenY, true);
         return true;
     }
 
@@ -161,9 +164,9 @@ bool SceneSkeleton::FrameUpdate(float deltaTime)
             EditMode = emEditAnimation;
         }
         else {
-            Scene *tmp = PrevScene;
+            Scene &tmp = *PrevScene;
             PrevScene = NULL;
-            g_Application.SetCurrentScene(tmp);
+            g_Application.Scene_Set(tmp);
         }
         return true;
     }

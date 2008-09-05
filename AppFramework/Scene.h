@@ -6,59 +6,47 @@
 #endif
 
 #include <string>
+#include "Input/InputMgr.h"
 
 class Scene
 {
 public:
+    const char  * Name;
     Scene       * PrevScene;
-    const char  * SceneName;
 
-    virtual bool Initialize(int left, int top, unsigned int width, unsigned int height)
-    {
-        Initialized = true;
-        Resize (left, top, width, height);
-        return true;
-    }
+    Scene() { Name = NULL; FL_terminated = true; PrevScene = NULL; }
+
+    virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene = NULL);
+    virtual void Destroy();
+
+    virtual void Enter() { Resize (Left, Top, Width, Height); g_InputMgr.SetScene(Name); }
+    virtual void Exit()  {}
+
+    // Invalidates scene data (OpenGL data, etc.)
+    // returns: true on success
     virtual bool Invalidate()
     { return PrevScene ? PrevScene->Invalidate() : true; }
-    virtual void Terminate()
-    {
-        Initialized = false;
-        if (PrevScene)
-        {
-            PrevScene->Terminate();
-            delete PrevScene;
-            PrevScene = NULL;
-        }
-    }
+    virtual void Resize(int left, int top, unsigned int width, unsigned int height);
 
-    virtual void FrameStart() {}
-    virtual bool FrameUpdate(float deltaTime) = 0;
-    virtual bool FrameRender() = 0;
-    virtual void FrameEnd() {}
+    virtual void FrameStart()          {}
+    virtual bool Update(float T_delta) = 0;
+    virtual bool Render()              = 0;
+    virtual void FrameEnd()            {}
 
+    // Processes given text command
+    // returns: true on correct command
     virtual bool ShellCommand(std::string &cmd, std::string &output) { return false; }
-    virtual Scene *SetCurrentScene(Scene* scene, bool destroyPrev = true);
 
-    virtual void Resize(int left, int top, unsigned int width, unsigned int height)
-    {
-        Left        = left;
-        Top         = top;
-        Width       = width;
-        Height      = height;
-        AspectRatio = ((float)width)/height;
-    }
+    virtual Scene &Scene_Set(Scene& scene, bool fl_destroyPrevious = true);
 
-    Scene() { SceneName = NULL; Initialized = false; PrevScene = NULL; }
-    virtual ~Scene() {}
+    bool IsTerminated() { return FL_terminated; }
 
 protected:
-    int          Left;
-    int          Top;
+    signed   int Left;
+    signed   int Top;
     unsigned int Width;
     unsigned int Height;
-    float        AspectRatio;
-    bool         Initialized;
+    bool         FL_terminated;
 };
 
 #endif

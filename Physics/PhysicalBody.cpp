@@ -43,7 +43,7 @@ void PhysicalBody :: ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time, 
     QT_velocity_new = xQuaternion::Product(QT_velocity_new, QT_now);
 }
 
-void PhysicalBody :: FrameUpdate(xFLOAT T_time)
+void PhysicalBody :: Update(xFLOAT T_time)
 {
     if (!FL_stationary)
     {

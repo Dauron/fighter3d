@@ -3,7 +3,7 @@
 
 class GLWindow : public IWindow
 {
-  private:
+private:
     int                  screen;
     Window               win;
     GLXContext           glctx;
@@ -13,12 +13,13 @@ class GLWindow : public IWindow
 
     int x, y;
 
-  public:
-     GLWindow() : glctx(NULL) {}
-    virtual ~GLWindow() {}
+public:
+    GLWindow() { Clear(); }
 
-    bool Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen);
-    void Terminate();
+    void Clear() { IWindow::Clear(); glctx = NULL; }
+
+    bool Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen);
+    void Destroy();
 
     virtual void SwapBuffers(){ glXSwapBuffers(hDC,win); }
 

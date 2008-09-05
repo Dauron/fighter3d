@@ -60,10 +60,10 @@ public:
     virtual void LoadLine(char *buffer, std::string &dir);
 
     virtual void ApplyDefaults();
-    virtual void Initialize ();
-    virtual void Finalize   ();
+    virtual void Create  ();
+    virtual void Destroy ();
 
-    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL);
+    virtual void Create (const char *gr_filename, const char *ph_filename = NULL);
     /********* LIFETIME : END *********/
 
     /******** PHYSICS : BEGIN ********/
@@ -73,8 +73,8 @@ public:
     void UpdateCustomBVH();
     void UpdateGeneratedBVH();
 
-    virtual void FrameRender() {
-        PhysicalBody::FrameRender();
+    virtual void Render() {
+        PhysicalBody::Render();
         if (ModelGr) ModelGr->instance.MX_LocalToWorld = MX_LocalToWorld_Get();
         if (ModelPh) ModelPh->instance.MX_LocalToWorld = MX_LocalToWorld_Get();
     }

@@ -40,7 +40,7 @@ namespace Scenes { namespace Menu {
 
         virtual void Enter()
         {
-            g_Application.Terminate();
+            g_Application.Destroy();
         }
     };
 

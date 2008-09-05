@@ -11,15 +11,20 @@ namespace Physics {
     {
     public:
 
-        PhysicalFigure(xIFigure3d *figure)
+        void Create(xIFigure3d *figure)
         {
             BVHierarchy.init(*figure);
         }
 
-        virtual void FrameUpdate(xFLOAT T_time)
+        virtual void Create()
+        {
+            PhysicalBody::Create();
+        }
+
+        virtual void Update(xFLOAT T_time)
         {
             P_center = BVHierarchy.Figure->P_center;
-            PhysicalBody::FrameUpdate(T_time);
+            PhysicalBody::Update(T_time);
 
             if (IsModified())
                 BVHierarchy.GetTransformed(MX_LocalToWorld_Get());

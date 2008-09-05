@@ -16,66 +16,74 @@ using namespace Physics::Colliders;
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
 
-bool SceneTest::Initialize(int left, int top, unsigned int width, unsigned int height)
+bool SceneTest::Create(int left, int top, unsigned int width, unsigned int height, Scene* scene)
 {
-    Scene::Initialize(left, top, width, height);
+    Scene::Create(left, top, width, height, scene);
 
-    if (DefaultCamera != &Camera)
-    {
-        figures[0].clear();
-        figures[0].push_back(&pf_sphere1);
-        figures[0].push_back(&pf_sphere2);
+    pf_sphere1.Create (new xSphere() );
+    pf_sphere2.Create (new xSphere() );
+    pf_capsule1.Create(new xCapsule());
+    pf_capsule2.Create(new xCapsule());
+    pf_cube1.Create(new xBoxO());
+    pf_cube2.Create(new xBoxO());
+    pf_mesh1.Create(new xMesh());
+    pf_mesh2.Create(new xMesh());
+    InitObjects();
 
-        figures[1].clear();
-        figures[1].push_back(&pf_sphere1);
-        figures[1].push_back(&pf_capsule1);
+    figures[0].clear();
+    figures[0].push_back(&pf_sphere1);
+    figures[0].push_back(&pf_sphere2);
 
-        figures[2].clear();
-        figures[2].push_back(&pf_capsule1);
-        figures[2].push_back(&pf_capsule2);
+    figures[1].clear();
+    figures[1].push_back(&pf_sphere1);
+    figures[1].push_back(&pf_capsule1);
 
-        figures[3].clear();
-        figures[3].push_back(&pf_cube1);
-        figures[3].push_back(&pf_cube2);
+    figures[2].clear();
+    figures[2].push_back(&pf_capsule1);
+    figures[2].push_back(&pf_capsule2);
 
-        figures[4].clear();
-        figures[4].push_back(&pf_cube1);
-        figures[4].push_back(&pf_sphere2);
+    figures[3].clear();
+    figures[3].push_back(&pf_cube1);
+    figures[3].push_back(&pf_cube2);
 
-        figures[5].clear();
-        figures[5].push_back(&pf_cube1);
-        figures[5].push_back(&pf_capsule1);
+    figures[4].clear();
+    figures[4].push_back(&pf_cube1);
+    figures[4].push_back(&pf_sphere2);
 
-        figures[6].clear();
-        figures[6].push_back(&pf_mesh1);
-        figures[6].push_back(&pf_sphere2);
+    figures[5].clear();
+    figures[5].push_back(&pf_cube1);
+    figures[5].push_back(&pf_capsule1);
 
-        figures[7].clear();
-        figures[7].push_back(&pf_mesh1);
-        figures[7].push_back(&pf_cube2);
+    figures[6].clear();
+    figures[6].push_back(&pf_mesh1);
+    figures[6].push_back(&pf_sphere2);
 
-        figures[8].clear();
-        figures[8].push_back(&pf_mesh1);
-        figures[8].push_back(&pf_capsule1);
+    figures[7].clear();
+    figures[7].push_back(&pf_mesh1);
+    figures[7].push_back(&pf_cube2);
 
-        figures[9].clear();
-        figures[9].push_back(&pf_mesh1);
-        figures[9].push_back(&pf_mesh2);
+    figures[8].clear();
+    figures[8].push_back(&pf_mesh1);
+    figures[8].push_back(&pf_capsule1);
 
-        Camera.Init(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
+    figures[9].clear();
+    figures[9].push_back(&pf_mesh1);
+    figures[9].push_back(&pf_mesh2);
 
-        DefaultCamera = &Camera;
-        InitObjects();
-        selected = -1;
-        FL_pause = false;
-    }
-    InitInputMgr();
-
-    FL_mouse_down = false;
-
+    Camera.Init(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
     Camera.FOV.InitPerspective();
     Camera.FOV.InitViewport(Left,Top,Width,Height);
-    return InitGL();
+    DefaultCamera = &Camera;
+
+    selected = -1;
+    FL_pause = false;
+    FL_mouse_down = false;
+
+    InitInputMgr();
+
+    GLExtensions::SetVSync(Config::VSync);
+
+    return true;
 }
 
 void SceneTest::InitObjects()
@@ -85,13 +93,13 @@ void SceneTest::InitObjects()
     pf_sphere1.FL_physical = false;
     sphere1.P_center.init(-3,-5,2);
     sphere1.S_radius = 1.f;
-    pf_sphere1.Initialize();
+    pf_sphere1.Create();
     xSphere &sphere2 = *(xSphere*) pf_sphere2.BVHierarchy.Figure;
     pf_sphere2.ApplyDefaults();
     pf_sphere2.FL_physical = false;
     sphere2.P_center.init(3,-5,0);
     sphere2.S_radius = 2.f;
-    pf_sphere2.Initialize();
+    pf_sphere2.Create();
 
     xCapsule &capsule1 = *(xCapsule*) pf_capsule1.BVHierarchy.Figure;
     pf_capsule1.ApplyDefaults();
@@ -100,7 +108,7 @@ void SceneTest::InitObjects()
     capsule1.N_top.init(1,0,0);
     capsule1.S_radius = 0.5f;
     capsule1.S_top    = 2.f;
-    pf_capsule1.Initialize();
+    pf_capsule1.Create();
     xCapsule &capsule2 = *(xCapsule*) pf_capsule2.BVHierarchy.Figure;
     pf_capsule2.ApplyDefaults();
     pf_capsule2.FL_physical = false;
@@ -108,7 +116,7 @@ void SceneTest::InitObjects()
     capsule2.N_top.init(0,0,1);
     capsule2.S_radius = 1.5f;
     capsule2.S_top    = 1.f;
-    pf_capsule2.Initialize();
+    pf_capsule2.Create();
 
     xBoxO &cube1 = *(xBoxO*) pf_cube1.BVHierarchy.Figure;
     pf_cube1.ApplyDefaults();
@@ -120,7 +128,7 @@ void SceneTest::InitObjects()
     cube1.N_top.init(0,0,1);
     cube1.N_side.init(1,0,0);
     cube1.N_front = xVector3::CrossProduct(cube1.N_top, cube1.N_side);
-    pf_cube1.Initialize();
+    pf_cube1.Create();
     xBoxO &cube2 = *(xBoxO*) pf_cube2.BVHierarchy.Figure;
     pf_cube2.ApplyDefaults();
     pf_cube2.FL_physical = false;
@@ -131,7 +139,7 @@ void SceneTest::InitObjects()
     cube2.N_top.init(0,0,1);
     cube2.N_side.init(1,0,0);
     cube2.N_front = xVector3::CrossProduct(cube2.N_top, cube2.N_side);
-    pf_cube2.Initialize();
+    pf_cube2.Create();
 
     xMesh &mesh1 = *(xMesh*) pf_mesh1.BVHierarchy.Figure;
     if (!mesh1.MeshData)
@@ -180,7 +188,7 @@ void SceneTest::InitObjects()
     pf_mesh1.ApplyDefaults();
     pf_mesh1.FL_physical = false;
     mesh1.P_center = mesh1.MeshData->P_center;
-    pf_mesh1.Initialize();
+    pf_mesh1.Create();
 
     xMesh &mesh2 = *(xMesh*) pf_mesh2.BVHierarchy.Figure;
     if (!mesh2.MeshData)
@@ -229,93 +237,65 @@ void SceneTest::InitObjects()
     pf_mesh2.ApplyDefaults();
     pf_mesh2.FL_physical = false;
     mesh2.P_center = mesh2.MeshData->P_center;
-    pf_mesh2.Initialize();
+    pf_mesh2.Create();
 
     if (Config::TestCase < 0) Config::TestCase = 0;
     if (Config::TestCase > 9) Config::TestCase = 9;
 
-    figures[Config::TestCase][0]->FrameUpdate(0);
-    figures[Config::TestCase][1]->FrameUpdate(0);
-}
-
-bool SceneTest::InitGL()
-{
-    glClearDepth(1.f);                      // Mapped draw distance ([0-1])
-    glDepthFunc(GL_LEQUAL);                 // Depth testing function
-
-    glDisable(GL_CULL_FACE);                // Do not draw hidden faces
-    glCullFace (GL_BACK);                   // Hide back faces
-    glFrontFace(GL_CCW);                    // Front faces are drawn in counter-clockwise direction
-
-    glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
-    glEnable (GL_POINT_SMOOTH);
-
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Nice perspective calculations
-
-    GLExtensions::SetVSync(Config::VSync);
-
-    return true;
-}
-
-bool SceneTest::Invalidate()
-{
-    return true;
+    figures[Config::TestCase][0]->Update(0);
+    figures[Config::TestCase][1]->Update(0);
 }
 
 void SceneTest::InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
-    im.SetScene(SceneName);
+    im.SetScene(Name);
 
-    im.SetInputCodeIfKeyIsFree(VK_F11,     IC_FullScreen);
-    im.SetInputCodeIfKeyIsFree(VK_RETURN,  IC_Accept);
-    im.SetInputCodeIfKeyIsFree(VK_ESCAPE,  IC_Reject);
-    im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
+    im.Key2InputCode_SetIfKeyFree(VK_F11,     IC_FullScreen);
+    im.Key2InputCode_SetIfKeyFree(VK_RETURN,  IC_Accept);
+    im.Key2InputCode_SetIfKeyFree(VK_ESCAPE,  IC_Reject);
+    im.Key2InputCode_SetIfKeyFree(VK_LBUTTON, IC_LClick);
 
-    im.SetInputCodeIfKeyIsFree(VK_UP, IC_TurnUp);
-    im.SetInputCodeIfKeyIsFree(VK_DOWN, IC_TurnDown);
-    im.SetInputCodeIfKeyIsFree(VK_LEFT, IC_TurnLeft);
-    im.SetInputCodeIfKeyIsFree(VK_RIGHT, IC_TurnRight);
-    im.SetInputCodeIfKeyIsFree('Q', IC_RollLeft);
-    im.SetInputCodeIfKeyIsFree('E', IC_RollRight);
+    im.Key2InputCode_SetIfKeyFree(VK_UP, IC_TurnUp);
+    im.Key2InputCode_SetIfKeyFree(VK_DOWN, IC_TurnDown);
+    im.Key2InputCode_SetIfKeyFree(VK_LEFT, IC_TurnLeft);
+    im.Key2InputCode_SetIfKeyFree(VK_RIGHT, IC_TurnRight);
+    im.Key2InputCode_SetIfKeyFree('Q', IC_RollLeft);
+    im.Key2InputCode_SetIfKeyFree('E', IC_RollRight);
 
-    im.SetInputCodeIfKeyIsFree('U', IC_OrbitUp);
-    im.SetInputCodeIfKeyIsFree('J', IC_OrbitDown);
-    im.SetInputCodeIfKeyIsFree('H', IC_OrbitLeft);
-    im.SetInputCodeIfKeyIsFree('K', IC_OrbitRight);
+    im.Key2InputCode_SetIfKeyFree('U', IC_OrbitUp);
+    im.Key2InputCode_SetIfKeyFree('J', IC_OrbitDown);
+    im.Key2InputCode_SetIfKeyFree('H', IC_OrbitLeft);
+    im.Key2InputCode_SetIfKeyFree('K', IC_OrbitRight);
 
-    im.SetInputCodeIfKeyIsFree('W', IC_MoveForward);
-    im.SetInputCodeIfKeyIsFree('S', IC_MoveBack);
-    im.SetInputCodeIfKeyIsFree('A', IC_MoveLeft);
-    im.SetInputCodeIfKeyIsFree('D', IC_MoveRight);
-    im.SetInputCodeIfKeyIsFree('R', IC_MoveUp);
-    im.SetInputCodeIfKeyIsFree('F', IC_MoveDown);
-    im.SetInputCodeIfKeyIsFree(VK_LSHIFT, IC_RunModifier);
+    im.Key2InputCode_SetIfKeyFree('W', IC_MoveForward);
+    im.Key2InputCode_SetIfKeyFree('S', IC_MoveBack);
+    im.Key2InputCode_SetIfKeyFree('A', IC_MoveLeft);
+    im.Key2InputCode_SetIfKeyFree('D', IC_MoveRight);
+    im.Key2InputCode_SetIfKeyFree('R', IC_MoveUp);
+    im.Key2InputCode_SetIfKeyFree('F', IC_MoveDown);
+    im.Key2InputCode_SetIfKeyFree(VK_LSHIFT, IC_RunModifier);
 
-    im.SetInputCodeIfKeyIsFree(VK_SPACE,  IC_TS_Pause);
-    im.SetInputCodeIfKeyIsFree(VK_TAB,    IC_CameraReset);
-    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_TS_Stop);
-    im.SetInputCodeIfKeyIsFree('0', IC_TS_Test0);
-    im.SetInputCodeIfKeyIsFree('1', IC_TS_Test1);
-    im.SetInputCodeIfKeyIsFree('2', IC_TS_Test2);
-    im.SetInputCodeIfKeyIsFree('3', IC_TS_Test3);
-    im.SetInputCodeIfKeyIsFree('4', IC_TS_Test4);
-    im.SetInputCodeIfKeyIsFree('5', IC_TS_Test5);
-    im.SetInputCodeIfKeyIsFree('6', IC_TS_Test6);
-    im.SetInputCodeIfKeyIsFree('7', IC_TS_Test7);
-    im.SetInputCodeIfKeyIsFree('8', IC_TS_Test8);
-    im.SetInputCodeIfKeyIsFree('9', IC_TS_Test9);
+    im.Key2InputCode_SetIfKeyFree(VK_SPACE,  IC_TS_Pause);
+    im.Key2InputCode_SetIfKeyFree(VK_TAB,    IC_CameraReset);
+    im.Key2InputCode_SetIfKeyFree(VK_RETURN, IC_TS_Stop);
+    im.Key2InputCode_SetIfKeyFree('0', IC_TS_Test0);
+    im.Key2InputCode_SetIfKeyFree('1', IC_TS_Test1);
+    im.Key2InputCode_SetIfKeyFree('2', IC_TS_Test2);
+    im.Key2InputCode_SetIfKeyFree('3', IC_TS_Test3);
+    im.Key2InputCode_SetIfKeyFree('4', IC_TS_Test4);
+    im.Key2InputCode_SetIfKeyFree('5', IC_TS_Test5);
+    im.Key2InputCode_SetIfKeyFree('6', IC_TS_Test6);
+    im.Key2InputCode_SetIfKeyFree('7', IC_TS_Test7);
+    im.Key2InputCode_SetIfKeyFree('8', IC_TS_Test8);
+    im.Key2InputCode_SetIfKeyFree('9', IC_TS_Test9);
 }
 
-void SceneTest::Terminate()
+void SceneTest::Destroy()
 {
     DefaultCamera = NULL;
-    Scene::Terminate();
+    Scene::Destroy();
 }
-
 
 bool SceneTest :: ShellCommand (std::string &cmd, std::string &output)
 {
@@ -352,18 +332,24 @@ bool SceneTest :: ShellCommand (std::string &cmd, std::string &output)
     return false;
 }
 
-bool SceneTest::FrameUpdate(float deltaTime)
+bool SceneTest::Update(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
     if (im.GetInputStateAndClear(IC_Reject))
     {
-        g_Application.MainWindow().Terminate();
+        g_Application.Destroy();
         return true;
     }
 
     if (im.GetInputStateAndClear(IC_FullScreen))
-        g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
+    {
+        if (g_Application.MainWindow_Get().IsFullScreen())
+            g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
+        else
+            g_Application.MainWindow_Get().FullScreen_Set(Config::FullScreenX, Config::FullScreenY, true);
+        return true;
+    }
 
     float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
     float deltaTmp = deltaTime*MULT_ROT*run;
@@ -575,8 +561,8 @@ bool SceneTest::FrameUpdate(float deltaTime)
                 }
             }
         }
-        figures[Config::TestCase][0]->FrameUpdate(0);
-        figures[Config::TestCase][1]->FrameUpdate(0);
+        figures[Config::TestCase][0]->Update(0);
+        figures[Config::TestCase][1]->Update(0);
     }
 
     T_total += deltaTime;
@@ -604,8 +590,8 @@ bool SceneTest::FrameUpdate(float deltaTime)
                 figures[Config::TestCase][1]->MX_LocalToWorld_Set().postTranslateT(-NW_fix_1);
             else
                 figures[Config::TestCase][0]->MX_LocalToWorld_Set().postTranslateT(NW_fix_1);
-            figures[Config::TestCase][0]->FrameUpdate(0);
-            figures[Config::TestCase][1]->FrameUpdate(0);
+            figures[Config::TestCase][0]->Update(0);
+            figures[Config::TestCase][1]->Update(0);
         }
         if (false && FigureCollider().Collide(NULL, NULL, figures[Config::TestCase][0]->BVHierarchy.GetTransformed(), figures[Config::TestCase][1]->BVHierarchy.GetTransformed(), cs2))
         {
@@ -616,8 +602,8 @@ bool SceneTest::FrameUpdate(float deltaTime)
             //    figures[Config::TestCase][1]->MX_LocalToWorld.postTranslateT(-NW_fix_1);
             //else
             //    figures[Config::TestCase][0]->MX_LocalToWorld.postTranslateT(+NW_fix_1);
-            figures[Config::TestCase][0]->FrameUpdate(0);
-            figures[Config::TestCase][1]->FrameUpdate(0);
+            figures[Config::TestCase][0]->Update(0);
+            figures[Config::TestCase][1]->Update(0);
         }
     }
 
@@ -629,8 +615,23 @@ bool SceneTest::FrameUpdate(float deltaTime)
 
 
 
-bool SceneTest::FrameRender()
+bool SceneTest::Render()
 {
+    glClearDepth(1.f);                      // Mapped draw distance ([0-1])
+    glDepthFunc(GL_LEQUAL);                 // Depth testing function
+
+    glDisable(GL_CULL_FACE);                // Do not draw hidden faces
+    glCullFace (GL_BACK);                   // Hide back faces
+    glFrontFace(GL_CCW);                    // Front faces are drawn in counter-clockwise direction
+
+    glShadeModel(GL_SMOOTH);                // GL_SMOOTH - enable smooth shading, GL_FLAT - no gradient on faces
+    glEnable (GL_POINT_SMOOTH);
+
+    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); // Nice perspective calculations
+
     glDisable (GL_LINE_SMOOTH);
     glDisable (GL_POLYGON_SMOOTH);                    // produces errors on many cards... use FSAA!
     glDisable(GL_LIGHT0); glDisable(GL_LIGHT1); glDisable(GL_LIGHT2); glDisable(GL_LIGHT3);

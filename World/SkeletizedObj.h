@@ -67,13 +67,13 @@ public:
     virtual void LoadLine(char *buffer, std::string &dir);
 
     virtual void ApplyDefaults();
-    virtual void Initialize ();
-    virtual void Finalize ();
+    virtual void Create  ();
+    virtual void Destroy ();
 
-    virtual void Initialize (const char *gr_filename, const char *ph_filename = NULL);
+    virtual void Create (const char *gr_filename, const char *ph_filename = NULL);
 
     virtual void FrameStart();
-    virtual void FrameUpdate(float T_time);
+    virtual void Update(float T_time);
 
     xVector3 MergeCollisions();
 

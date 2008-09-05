@@ -126,7 +126,7 @@ void ShaderProgram :: Unload()
     fragmentShaderSrc = NULL;
 }
 
-GLenum ShaderProgram :: Initialize()
+GLenum ShaderProgram :: Create()
 {
     assert(!program);
     assert(!vertex_shader);
@@ -163,7 +163,7 @@ GLenum ShaderProgram :: Initialize()
         if (vertexShaderSrc) {
             vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
             if (CheckForGLError("Cannot create vertex shader")) {
-                Terminate();
+                Destroy();
                 break;
             }
             glShaderSourceARB(vertex_shader, 1, (const char **)&vertexShaderSrc, NULL);
@@ -174,7 +174,7 @@ GLenum ShaderProgram :: Initialize()
         if (fragmentShaderSrc) {
             fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
             if (CheckForGLError("Cannot create fragment shader")) {
-                Terminate();
+                Destroy();
                 break;
             }
             glShaderSourceARB(fragment_shader, 1, (const char **)&fragmentShaderSrc, NULL);
@@ -206,7 +206,7 @@ GLenum ShaderProgram :: Initialize()
             {
                 LOG(1, "%s,%s\n%s", vertexShaderFile, fragmentShaderFile, linker_log);
                 delete[] linker_log;
-                Terminate();
+                Destroy();
                 return 0;
             }
             if (!strstr(linker_log, "successful"))
@@ -218,7 +218,7 @@ GLenum ShaderProgram :: Initialize()
     return program;
 }
 
-void ShaderProgram :: Terminate()
+void ShaderProgram :: Destroy()
 {
     if (vertex_shader)
         glDeleteObjectARB(vertex_shader);
@@ -237,9 +237,9 @@ ShaderSkeletal :: ShaderSkeletal() : ShaderProgram()
     aBoneIdxWghts = 0;
 }
 
-GLenum ShaderSkeletal :: Initialize()
+GLenum ShaderSkeletal :: Create()
 {
-    ShaderProgram::Initialize();
+    ShaderProgram::Create();
     if (program)
     {
         uQuats        = glGetUniformLocationARB(program, "quats");
@@ -250,20 +250,20 @@ GLenum ShaderSkeletal :: Initialize()
     return program;
 }
 
-void ShaderLighting :: Initialize()
+void ShaderLighting :: Create()
 {
-    Plain.Initialize();
-    Textured.Initialize();
-    PlainSkeletal.Initialize();
-    TexturedSkeletal.Initialize();
+    Plain.Create();
+    Textured.Create();
+    PlainSkeletal.Create();
+    TexturedSkeletal.Create();
 }
 
-void ShaderLighting :: Terminate()
+void ShaderLighting :: Destroy()
 {
-    Plain.Terminate();
-    Textured.Terminate();
-    PlainSkeletal.Terminate();
-    TexturedSkeletal.Terminate();
+    Plain.Destroy();
+    Textured.Destroy();
+    PlainSkeletal.Destroy();
+    TexturedSkeletal.Destroy();
 }
 
 void ShaderLighting :: Invalidate()
@@ -392,34 +392,34 @@ void GLShader :: Unload()
     slSpotADS.TexturedSkeletal.Unload();
 }
 
-void GLShader :: Initialize()
+void GLShader :: Create()
 {
-    slNoLighting.Initialize();
-    slGlobalA.Initialize();
-    slInfiniteA.Initialize();
-    slInfiniteDS.Initialize();
-    slInfiniteADS.Initialize();
-    slPointA.Initialize();
-    slPointDS.Initialize();
-    slPointADS.Initialize();
-    slSpotA.Initialize();
-    slSpotDS.Initialize();
-    slSpotADS.Initialize();
+    slNoLighting.Create();
+    slGlobalA.Create();
+    slInfiniteA.Create();
+    slInfiniteDS.Create();
+    slInfiniteADS.Create();
+    slPointA.Create();
+    slPointDS.Create();
+    slPointADS.Create();
+    slSpotA.Create();
+    slSpotDS.Create();
+    slSpotADS.Create();
 }
 
-void GLShader :: Terminate()
+void GLShader :: Destroy()
 {
-    slNoLighting.Terminate();
-    slGlobalA.Terminate();
-    slInfiniteA.Terminate();
-    slInfiniteDS.Terminate();
-    slInfiniteADS.Terminate();
-    slPointA.Terminate();
-    slPointDS.Terminate();
-    slPointADS.Terminate();
-    slSpotA.Terminate();
-    slSpotDS.Terminate();
-    slSpotADS.Terminate();
+    slNoLighting.Destroy();
+    slGlobalA.Destroy();
+    slInfiniteA.Destroy();
+    slInfiniteDS.Destroy();
+    slInfiniteADS.Destroy();
+    slPointA.Destroy();
+    slPointDS.Destroy();
+    slPointADS.Destroy();
+    slSpotA.Destroy();
+    slSpotDS.Destroy();
+    slSpotADS.Destroy();
 }
 
 void GLShader :: Invalidate()
@@ -512,7 +512,7 @@ bool GLShader :: Start()
     else
         currShader = & slShader->Plain;
 
-    if (currShader->FL_invalid) currShader->Initialize();
+    if (currShader->FL_invalid) currShader->Create();
     if (!currShader->program) return false;
 
     if (ShaderProgram::currProgram != currShader->program)

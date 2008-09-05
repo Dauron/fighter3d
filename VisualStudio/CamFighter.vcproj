@@ -573,6 +573,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Utils\Delegate.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Utils\Filesystem.cpp"
 				>
 			</File>
@@ -625,6 +629,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\App Framework\IWindow.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\App Framework\IWindow.h"
+				>
+			</File>
+			<File
 				RelativePath="..\App Framework\Scene.cpp"
 				>
 			</File>
@@ -634,14 +646,6 @@
 			</File>
 			<File
 				RelativePath="..\App Framework\System.h"
-				>
-			</File>
-			<File
-				RelativePath="..\App Framework\Window.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\App Framework\Window.h"
 				>
 			</File>
 			<File

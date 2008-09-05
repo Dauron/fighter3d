@@ -23,7 +23,7 @@ template <typename T> class Singleton
 {
     static T* ms_Singleton;
 
-public:
+protected:
     Singleton( void )
     {
         assert( !ms_Singleton );
@@ -32,10 +32,17 @@ public:
     }
    ~Singleton( void )
         {  assert( ms_Singleton );  ms_Singleton = 0;  }
+
+public:
     static T& GetSingleton( void )
         {  assert( ms_Singleton );  return ( *ms_Singleton );  }
     static T* GetSingletonPtr( void )
         {  return ( ms_Singleton );  }
+
+    static void Create()
+       { new T(); }
+    static void Destroy()
+       { assert( ms_Singleton ); delete ms_Singleton; }
 };
 
 template <typename T> T* Singleton <T>::ms_Singleton = 0;

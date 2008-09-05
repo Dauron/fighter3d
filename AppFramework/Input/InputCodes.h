@@ -1,7 +1,7 @@
 #ifndef __incl_InputCodes_h
 #define __incl_InputCodes_h
 
-#define IC_Undefined     256
+#define IC_Undefined     0
 
 #define IC_Accept        IC_Undefined+1
 #define IC_Reject        IC_Undefined+2
@@ -107,6 +107,6 @@
 #define IC_TS_Test8           IC_TS_Test0+8
 #define IC_TS_Test9           IC_TS_Test0+9
 
-#define IC_LAST_CODE         IC_TS_Test9
+#define IC_CODE_COUNT         IC_TS_Test9+1
 
 #endif

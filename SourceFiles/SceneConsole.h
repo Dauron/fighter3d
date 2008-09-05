@@ -11,28 +11,31 @@ namespace Scenes {
     class SceneConsole : public Scene
     {
       public:
-        SceneConsole(Scene *prevScene)
+        SceneConsole() { Name = "[Console]"; Clear(); }
+
+        void Clear()
         {
-            PrevScene = prevScene;
-            carretTick = 0;
+            T_carretTick = 0;
             font = font15 = HFont();
-            overlayInput = false;
-            overlayClock = false;
-            visible      = !PrevScene;
-            SceneName    = "[Console]";
+            FL_overlayInput = false;
+            FL_overlayClock = false;
         }
 
-        virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene = NULL);
+        virtual void Destroy();
+
+        virtual void Enter();
+        virtual void Exit();
         virtual void Resize(int left, int top, unsigned int width, unsigned int height);
-        virtual void Terminate();
 
         virtual void FrameStart() { if (PrevScene) PrevScene->FrameStart(); }
-        virtual bool FrameUpdate(float deltaTime);
-        virtual bool FrameRender();
-        virtual void FrameEnd() { if (PrevScene) PrevScene->FrameEnd(); }
+        virtual bool Update(float T_delta);
+        virtual bool Render();
+        virtual void FrameEnd()   { if (PrevScene) PrevScene->FrameEnd(); }
 
-        virtual Scene *SetCurrentScene(Scene* scene, bool destroyPrev = true);
         virtual bool   ShellCommand(std::string &cmd, std::string &output);
+
+        virtual Scene &Scene_Set(Scene& scene, bool fl_destroyPrevious = true);
 
       private:
         void InitInputMgr();
@@ -41,16 +44,16 @@ namespace Scenes {
         HFont    font;
         HFont    font15;
 
-        float    carretTick;
-        bool     carretVisible;
+        float    T_carretTick;
+        bool     FL_carretVisible;
 
         int      scroll_v;
         int      pageSize;
 
-        bool     justOpened;   // skip the key that has opened the console
-        bool     visible;
-        bool     overlayInput; // send keys to subscene
-        bool     overlayClock; // send ticks to subscene
+        bool     FL_justOpened;   // skip the key that has opened the console
+        bool     FL_visible;
+        bool     FL_overlayInput; // send keys to subscene
+        bool     FL_overlayClock; // send ticks to subscene
 
         std::string history;    // console history
         int         histLines;  // no of lines in history

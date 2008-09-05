@@ -12,112 +12,135 @@
 
 using namespace Scenes;
 
-Scene * SceneConsole :: SetCurrentScene(Scene* scene, bool destroyPrev)
- {
-    if (!scene)
-        throw "The scene cannot be null";
-
-    scene->Initialize(0,0,g_Application.MainWindow().Width(), g_Application.MainWindow().Height());
-
-    if (PrevScene && destroyPrev)
-    {
-        PrevScene->Terminate();
-        delete PrevScene;
-    }
-    else
-        scene->PrevScene = PrevScene;
-    PrevScene = scene;
-
-    g_InputMgr.SetScene(PrevScene->SceneName);
-#ifdef WIN32
-    g_InputMgr.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
-#else
-    g_InputMgr.SetInputCodeIfKeyIsFree('`',       IC_Console);
-#endif
-
-    return this;
-}
-
-bool SceneConsole::Initialize(int left, int top, unsigned int width, unsigned int height)
+bool SceneConsole :: Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene)
 {
-    if (PrevScene) PrevScene->Initialize(left, top, width, height);
-    Scene::Initialize(left, top, width, height);
+    Scene::Create(left, top, width, height, prevScene);
 
     InitInputMgr();
-    g_InputMgr.Buffer.clear();
-    justOpened = true;
 
     history = '>';
     histLines = 1;
     scroll_v = 0;
 
-    if (!visible)
-        g_InputMgr.SetScene(PrevScene->SceneName);
-    else
-        g_InputMgr.SetScene(SceneName);
+    FL_visible = !PrevScene;
 
     return true;
 }
 
-void SceneConsole::Resize(int left, int top, unsigned int width, unsigned int height)
+void SceneConsole :: InitInputMgr()
 {
-    if (Initialized)
+    InputMgr &im = g_InputMgr;
+    im.SetScene(Name);
+
+    im.Key2InputCode_SetIfKeyFree(VK_RETURN, IC_Accept);
+    im.Key2InputCode_SetIfKeyFree(VK_ESCAPE, IC_Reject);
+    im.Key2InputCode_SetIfKeyFree(VK_F11,    IC_FullScreen);
+    im.Key2InputCode_SetIfKeyFree(VK_BACK,   IC_Con_BackSpace);
+#ifdef WIN32
+    im.Key2InputCode_SetIfKeyFree(VK_OEM_3,  IC_Console);
+#else
+    im.Key2InputCode_SetIfKeyFree('`',       IC_Console);
+#endif
+    im.Key2InputCode_SetIfKeyFree(VK_UP,    IC_Con_LineUp);
+    im.Key2InputCode_SetIfKeyFree(VK_DOWN,  IC_Con_LineDown);
+    im.Key2InputCode_SetIfKeyFree(VK_PRIOR, IC_Con_PageUp);
+    im.Key2InputCode_SetIfKeyFree(VK_NEXT,  IC_Con_PageDown);
+    im.Key2InputCode_SetIfKeyFree(VK_HOME,  IC_Con_FirstPage);
+    im.Key2InputCode_SetIfKeyFree(VK_END,   IC_Con_LastPage);
+
+    im.SetScene(PrevScene->Name);
+#ifdef WIN32
+    im.Key2InputCode_SetIfKeyFree(VK_OEM_3,  IC_Console);
+#else
+    im.Key2InputCode_SetIfKeyFree('`',       IC_Console);
+#endif
+}
+
+void SceneConsole :: Destroy()
+{
+    Scene::Destroy();
+    g_FontMgr.DeleteReference(font);
+    g_FontMgr.DeleteReference(font15);
+    font = font15 = HFont();
+}
+
+void SceneConsole :: Enter()
+{
+    Scene::Enter();
+
+    FL_justOpened = true;
+    g_InputMgr.Buffer.clear();
+    g_InputMgr.mouseWheel = 0;
+
+    if (FL_visible)
     {
-        if (PrevScene) PrevScene->Resize(left, top, width, height);
-        Scene::Resize(left, top, width, height);
-
-        if (!g_FontMgr.IsHandleValid(font))
-            font = g_FontMgr.GetFont("Courier New", 12);
-        if (!g_FontMgr.IsHandleValid(font15))
-            font15 = g_FontMgr.GetFont("Courier New", 15);
-        const GLFont* pFont = g_FontMgr.GetFont(font);
-
-        pageSize = (int)(height/2.0f/pFont->LineH()) - 3;
-        if (scroll_v > histLines-1-pageSize) scroll_v = histLines-1-pageSize;
+        FL_overlayInput = false;
+        FL_overlayClock = false;
+    }
+    else
+    {
+        FL_overlayInput = true;
+        FL_overlayClock = true;
+        PrevScene->Enter();
     }
 }
 
-void SceneConsole::InitInputMgr()
+void SceneConsole :: Exit()
 {
-    InputMgr &im = g_InputMgr;
-    im.SetScene(SceneName);
-
-    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
-    im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
-    im.SetInputCodeIfKeyIsFree(VK_F11,    IC_FullScreen);
-    im.SetInputCodeIfKeyIsFree(VK_BACK,   IC_Con_BackSpace);
-#ifdef WIN32
-    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
-#else
-    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
-#endif
-    im.SetInputCodeIfKeyIsFree(VK_UP,    IC_Con_LineUp);
-    im.SetInputCodeIfKeyIsFree(VK_DOWN,  IC_Con_LineDown);
-    im.SetInputCodeIfKeyIsFree(VK_PRIOR, IC_Con_PageUp);
-    im.SetInputCodeIfKeyIsFree(VK_NEXT,  IC_Con_PageDown);
-    im.SetInputCodeIfKeyIsFree(VK_HOME,  IC_Con_FirstPage);
-    im.SetInputCodeIfKeyIsFree(VK_END,   IC_Con_LastPage);
-
-    im.SetScene(PrevScene->SceneName);
-#ifdef WIN32
-    im.SetInputCodeIfKeyIsFree(VK_OEM_3,  IC_Console);
-#else
-    im.SetInputCodeIfKeyIsFree('`',       IC_Console);
-#endif
+    if (PrevScene) PrevScene->Exit();
 }
 
-void SceneConsole::Terminate()
+void SceneConsole :: Resize(int left, int top, unsigned int width, unsigned int height)
 {
-    g_FontMgr.DeleteReference(font);
-    font = HFont();
-    g_FontMgr.DeleteReference(font15);
-    font15 = HFont();
+    if (PrevScene) PrevScene->Resize(left, top, width, height);
+    Scene::Resize(left, top, width, height);
 
-    Scene::Terminate();
+    if (!g_FontMgr.IsHandleValid(font))
+        font = g_FontMgr.GetFont("Courier New", 12);
+    if (!g_FontMgr.IsHandleValid(font15))
+        font15 = g_FontMgr.GetFont("Courier New", 15);
+    const GLFont* pFont = g_FontMgr.GetFont(font);
+
+    pageSize = (int)(height/2.0f/pFont->LineH()) - 3;
+    if (scroll_v > histLines-1-pageSize) scroll_v = histLines-1-pageSize;
+}
+
+Scene & SceneConsole :: Scene_Set(Scene& scene, bool fl_destroyPrevious)
+{
+    if (PrevScene && fl_destroyPrevious)
+     {
+        if (!scene.IsTerminated() || scene.Create(0, 0, Width, Height))
+        {
+            PrevScene->Exit();
+            PrevScene->Destroy();
+            delete PrevScene;
+            PrevScene = &scene;
+            scene.Enter();
+        }
+     }
+     else
+     if (!scene.IsTerminated() || scene.Create(0, 0, Width, Height, PrevScene))
+     {
+         if (PrevScene) PrevScene->Exit();
+         PrevScene = &scene;
+         scene.Enter();
+     }
+
+    if (PrevScene)
+    {
+        g_InputMgr.SetScene(PrevScene->Name);
+#ifdef WIN32
+        g_InputMgr.Key2InputCode_SetIfKeyFree(VK_OEM_3, IC_Console);
+#else
+        g_InputMgr.Key2InputCode_SetIfKeyFree('`',      IC_Console);
+#endif
+    }
+
+    return *this;
 }
 
 
-void SceneConsole::AppendConsole(std::string text)
+void SceneConsole :: AppendConsole(std::string text)
 {
     history += text;
 
@@ -132,81 +155,78 @@ void SceneConsole::AppendConsole(std::string text)
     if (scroll_v < histLines -1-pageSize) scroll_v = histLines-1-pageSize;
 }
 
-bool SceneConsole :: FrameUpdate(float deltaTime)
+bool SceneConsole :: Update(float T_delta)
 {
-    float curTick = GetTick();
-    if (curTick - carretTick > 500.f)
+    float T_tick = GetTick();
+    if (T_tick - T_carretTick > 500.f)
     {
-        carretTick = curTick;
-        carretVisible = !carretVisible;
+        T_carretTick = T_tick;
+        FL_carretVisible = !FL_carretVisible;
     }
 
     InputMgr &im = g_InputMgr;
-    im.SetScene(SceneName, false);
 
     if (im.GetInputStateAndClear(IC_Console))
     {
-        if (visible && !overlayInput && PrevScene)
+        if (FL_visible && !FL_overlayInput && PrevScene)
         {
-            overlayInput = true;
-            overlayClock = true;
+            FL_overlayInput = true;
+            FL_overlayClock = true;
+            PrevScene->Enter();
         }
         else
         {
-            overlayInput = false;
-            overlayClock = false;
-            visible = true;
-            justOpened = true;
+            FL_visible = true;
+            Enter();
         }
         return true;
     }
     else
     if (im.GetInputStateAndClear(IC_Reject))
     {
-        if (visible && PrevScene)
-            visible = false;
-        else
-        //if (PrevScene->PrevScene)
-        {
-            im.SetScene(PrevScene->SceneName);
-            im.SetInputState(IC_Reject, true);
-            PrevScene->FrameUpdate(0.f);
-        }
-        //else
-            //g_Application.MainWindow().Terminate();
-        /*
         if (PrevScene)
         {
-            Scene *tmp = PrevScene;
-            PrevScene = NULL;
-            g_Application.SetCurrentScene(tmp);
+            if (FL_visible)
+            {
+                FL_visible = false;
+                PrevScene->Enter();
+            }
+            else
+            {
+                im.SetInputState(IC_Reject, true);
+                return PrevScene->Update(0.f);
+            }
         }
         else
-            g_Application.MainWindow().Terminate();
-        */
+            g_Application.Destroy();
         return true;
     }
 
-    if (!visible)
+    if (!FL_visible)
     {
-        im.SetScene(PrevScene->SceneName, false);
-        PrevScene->FrameUpdate(deltaTime);
+        im.SetScene(PrevScene->Name);
+        PrevScene->Update(T_delta);
         return true;
     }
 
-    if (overlayClock)
+    if (FL_overlayClock)
     {
-        im.SetScene(PrevScene->SceneName, false);
-        im.enable = overlayInput;
-        bool res = PrevScene->FrameUpdate(deltaTime);
-        if (overlayInput)
+        im.SetScene(PrevScene->Name, !FL_overlayInput);
+        bool res = PrevScene->Update(T_delta);
+        if (FL_overlayInput)
             return res;
+        im.SetScene(Name, false);
     }
 
-    im.SetScene(SceneName, false);
-
+    im.SetScene(Name);
     if (im.GetInputStateAndClear(IC_FullScreen))
-        g_Application.MainWindow().SetFullScreen(!g_Application.MainWindow().FullScreen());
+    {
+        if (g_Application.MainWindow_Get().IsFullScreen())
+            g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
+        else
+            g_Application.MainWindow_Get().FullScreen_Set(Config::FullScreenX, Config::FullScreenY, true);
+        return true;
+    }
     else
     if (im.GetInputStateAndClear(IC_Accept))
     {
@@ -267,16 +287,11 @@ bool SceneConsole :: FrameUpdate(float deltaTime)
     }
     else if (g_InputMgr.Buffer.length())
     {
-        if (justOpened) // skip the key that has opened the console
-        {
-            g_InputMgr.Buffer.clear();
-            justOpened = false;
-        }
+        if (FL_justOpened) // skip the key that has opened the console
+            FL_justOpened = false;
         else
-        {
             currCmd += g_InputMgr.Buffer;
-            g_InputMgr.Buffer.clear();
-        }
+        g_InputMgr.Buffer.clear();
         if (scroll_v < histLines -1-pageSize) scroll_v = histLines-1-pageSize;
     }
 
@@ -317,13 +332,13 @@ bool SceneConsole :: ShellCommand(std::string &cmd, std::string &output)
     }
     if (cmd == "qqq" || cmd == "terminate")
     {
-        g_Application.MainWindow().Terminate();
+        g_Application.Destroy();
         return true;
     }
     if (cmd == "tcl" || cmd == "toggle_clock")
     {
-        overlayClock = !overlayClock;
-        if (overlayClock)
+        FL_overlayClock = !FL_overlayClock;
+        if (FL_overlayClock)
             output.append("\nThe clock is ON.\n");
         else
             output.append("\nThe clock is OFF.\n");
@@ -332,7 +347,7 @@ bool SceneConsole :: ShellCommand(std::string &cmd, std::string &output)
     if (cmd == "gml" || cmd == "graphical_mode_list")
     {
 #ifdef WIN32
-        GraphicsModes gm(g_Application.MainWindow().HDC());
+        GraphicsModes gm(g_Application.MainWindow_Get().HDC());
 
         int gm_count = gm.CountModes();
         PIXELFORMATDESCRIPTOR* pfds = gm.ListModes();
@@ -411,7 +426,7 @@ test  = ";
     {
         if (PrevScene)
         {
-            PrevScene->Terminate();
+            PrevScene->Destroy();
             delete PrevScene;
             PrevScene = NULL;
         }
@@ -420,22 +435,22 @@ test  = ";
         if (cmd == "scene game") PrevScene = new SceneGame();
         else
         if (cmd == "scene menu") PrevScene = new SceneMenu();
-        PrevScene->Initialize(Left, Top, Width, Height);
-        if (visible)
+        PrevScene->Create(Left, Top, Width, Height);
+        if (FL_visible)
         {
-            overlayClock = false;
-            overlayInput = false;
-            g_InputMgr.SetScene(SceneName);
+            FL_overlayClock = false;
+            FL_overlayInput = false;
+            g_InputMgr.SetScene(Name);
         }
         return true;
     }
     return false;
 }
 
-bool SceneConsole::FrameRender()
+bool SceneConsole::Render()
 {
-    if (PrevScene) PrevScene->FrameRender();
-    if (!visible) return true;
+    if (PrevScene) PrevScene->Render();
+    if (!FL_visible) return true;
 
     GLint cHeight = Height/2;
 
@@ -485,7 +500,7 @@ bool SceneConsole::FrameRender()
 
     pFont->Print(0.0f, cHeight-3*lineHeight, 0.0f, cHeight-3*lineHeight, scroll_v, history.c_str());
     pFont->Print(currCmd.c_str());
-    if (carretVisible && scroll_v >= histLines -1-pageSize)
+    if (FL_carretVisible && scroll_v >= histLines -1-pageSize)
         pFont->Print("_");
 
     glDisable(GL_SCISSOR_TEST);                            // Disable Scissor Testing
@@ -520,4 +535,3 @@ bool SceneConsole::FrameRender()
 
     return true;
 }
-

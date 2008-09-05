@@ -1,7 +1,7 @@
 #ifndef __incl_GLWindow_h
 #define __incl_GLWindow_h
 
-#include "../Window.h"
+#include "../IWindow.h"
 #include <GL/gl.h>
 
 #ifndef WIN32
@@ -12,7 +12,7 @@
 
 class GLWindow : public IWindow
 {
-  private:
+private:
     HWND       hWnd;
     HGLRC      hRC;
     HINSTANCE  hInstance;
@@ -20,15 +20,24 @@ class GLWindow : public IWindow
 
     int                   PixelFormat;
     PIXELFORMATDESCRIPTOR pfd;
-    bool                  queryForMultisample;
-    bool                  multisampleAviable;
+    bool                  FL_queryForMultisample;
+    bool                  FL_multisampleAviable;
 
-  public:
-     GLWindow() : hWnd(NULL), hRC(NULL), hInstance(NULL), queryForMultisample(true), multisampleAviable(false) {}
-    virtual ~GLWindow() {}
+public:
+    GLWindow() { Clear(); }
 
-    virtual bool Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen);
-    virtual void Terminate();
+    void Clear()
+    {
+        IWindow::Clear();
+        hWnd      = NULL;
+        hRC       = NULL;
+        hInstance = NULL;
+        FL_queryForMultisample = true;
+        FL_multisampleAviable  = false;
+    }
+
+    virtual bool Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen);
+    virtual void Destroy();
 
     virtual void SwapBuffers() { ::SwapBuffers(hDC); }
 

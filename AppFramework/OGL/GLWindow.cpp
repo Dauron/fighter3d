@@ -1,6 +1,6 @@
 #include "GLWindow.h"
-#include "../Application.h"
 #include "../../Utils/Debug.h"
+#include <cassert>
 
 #ifdef WIN32
 
@@ -8,9 +8,9 @@
 
 #include "../../Graphics/OGL/Extensions/wglext.h"
 
-bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen)
+bool GLWindow::Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen)
 {
-    if (!terminated) this->Terminate();
+    assert (FL_destroyed);
 
     // Register window class
     WNDCLASS wc;
@@ -31,7 +31,7 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
         return false;
     }
 
-    if (fullscreen)
+    if (fl_fullscreen)
     {
         DEVMODE dmScreenSettings;                                // Device Mode
         memset(&dmScreenSettings,0,sizeof(dmScreenSettings));    // Makes Sure Memory's Cleared
@@ -47,11 +47,11 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
         {
             // If The Mode Fails, Offer Two Options.  Quit Or Use Windowed Mode.
             if (MessageBox(NULL,"The requested fullscreen mode is not supported by\nyour video card. Use windowed mode instead?",title,MB_YESNO|MB_ICONEXCLAMATION)==IDYES)
-                fullscreen = false;
+                fl_fullscreen = false;
             else
             {
                 MessageBox(NULL,"Program will now close.","ERROR",MB_OK|MB_ICONSTOP);
-                this->Terminate();
+                this->Destroy();
                 return false;
             }
         }
@@ -59,7 +59,7 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
 
     DWORD        dwExStyle;                                      // Window Extended Style
     DWORD        dwStyle;                                        // Window Style
-    if (fullscreen)                                              // Are We Still In Fullscreen Mode?
+    if (fl_fullscreen)                                           // Are We Still In Fullscreen Mode?
     {
         dwExStyle=WS_EX_APPWINDOW;                               // Window Extended Style
         dwStyle=WS_POPUP;                                        // Windows Style
@@ -93,7 +93,7 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
                                 hInstance,                          // Instance
                                 NULL)))                             // Dont Pass Anything To WM_CREATE
     {
-        this->Terminate();
+        this->Destroy();
         MessageBox(NULL,"Window creation error.","ERROR",MB_OK|MB_ICONEXCLAMATION);
         return false;
     }
@@ -102,14 +102,14 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
     SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG)this);
     if (GetLastError())
     {
-        this->Terminate();
+        this->Destroy();
         MessageBox(NULL,"Window creation error - cannot associate GLWindow with hWnd.","ERROR",MB_OK|MB_ICONEXCLAMATION);
         return false;
     }
 
     if (!(hDC=GetDC(hWnd)))                            // Did We Get A Device Context?
     {
-        this->Terminate();
+        this->Destroy();
         MessageBox(NULL,"Can't create a OpenGL device context.","ERROR",MB_OK|MB_ICONEXCLAMATION);
         return false;
     }
@@ -127,46 +127,46 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
     pfd.cStencilBits = 8;                              // Use Stencil Buffer
     pfd.iLayerType = PFD_MAIN_PLANE;                   // Main Drawing Layer
 
-    if (queryForMultisample || !multisampleAviable)
+    if (FL_queryForMultisample || !FL_multisampleAviable)
         if(!(PixelFormat = ChoosePixelFormat(hDC, &pfd)))
         {
-            this->Terminate();
+            this->Destroy();
             MessageBox(hWnd, "Can't find a suitable PixelFormat.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
             return false;
         }
 
     if(!SetPixelFormat(hDC, PixelFormat, &pfd))
     {
-        this->Terminate();
+        this->Destroy();
         MessageBox(hWnd, "Failed to set pixel format.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
         return false;
     }
 
     if(!(hRC = wglCreateContext(hDC)))
     {
-        this->Terminate();
+        this->Destroy();
         MessageBox(hWnd, "Failed to create the OpenGL rendering context.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
         return false;
     }
 
     if(!wglMakeCurrent(hDC, hRC))
     {
-        this->Terminate();
+        this->Destroy();
         MessageBox(hWnd, "Failed to make current the OpenGL rendering context.", "ERROR", MB_OK|MB_ICONEXCLAMATION);
         return false;
     }
     CheckForGLError("wglMakeCurrent");
 
-    terminated = false;
+    FL_destroyed = false;
 
-    if (queryForMultisample && Config::MultisamplingLevel > 0)
+    if (FL_queryForMultisample && Config::MultisamplingLevel > 0)
     {
         PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB =
             (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
-        multisampleAviable = false;
+        FL_multisampleAviable = false;
         if (wglChoosePixelFormatARB)
         {
-            multisampleAviable = true;
+            FL_multisampleAviable = true;
             int iAttributes[] = { WGL_DRAW_TO_WINDOW_ARB,GL_TRUE,
                 WGL_SUPPORT_OPENGL_ARB,GL_TRUE,
                 WGL_ACCELERATION_ARB,WGL_FULL_ACCELERATION_ARB,
@@ -192,32 +192,33 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
             }
 
             if (Config::MultisamplingLevel == 0)
-                multisampleAviable = false;
+                FL_multisampleAviable = false;
         }
-        queryForMultisample = false;
-        if (multisampleAviable)
-            return Initialize(title, width, height, fullscreen);
+        if (FL_multisampleAviable)
+        {
+            Destroy();
+            FL_multisampleAviable  = true;
+            FL_queryForMultisample = false;
+            return Create(title, width, height, fl_fullscreen);
+        }
+        FL_queryForMultisample = false;
     }
 
     ShowWindow(hWnd, SW_SHOW);
     SetForegroundWindow(hWnd);
     SetFocus(hWnd);
-    Config::FullScreen = this->fullscreen = fullscreen;
-    this->OnResized(width, height);
 
-    if (this->title != title)
-    {
-        if (this->title) delete[] this->title;
-        this->title = new char[strlen(title)+1];
-        strcpy (this->title, title);
-    }
+    this->Title = strdup(title);
+    this->FL_fullscreen = fl_fullscreen;
+    this->Resize(width, height);
 
+    OnCreate();
     return true;
 }
 
-void GLWindow::Terminate()
+void GLWindow::Destroy()
 {
-    g_Application.Invalidate();
+    FL_destroyed = true;
 
     if (hRC)                                             // Do We Have A Rendering Context?
     {
@@ -227,27 +228,25 @@ void GLWindow::Terminate()
         if (!wglDeleteContext(hRC))                      // Are We Able To Delete The RC?
             MessageBox(NULL,"Release rendering context failed.","SHUTDOWN ERROR",MB_OK|MB_ICONINFORMATION);
     }
-    hRC = NULL;                                          // Set RC To NULL
 
     if (hDC && !ReleaseDC(hWnd,hDC))                     // Are We Able To Release The DC
         MessageBox(NULL,"Release device context failed.","SHUTDOWN ERROR",MB_OK|MB_ICONINFORMATION);
-    hDC = NULL;                                          // Set DC To NULL
 
     if (hWnd && !DestroyWindow(hWnd))                    // Are We Able To Destroy The Window?
         MessageBox(NULL,"Could not release hWnd.","SHUTDOWN ERROR",MB_OK|MB_ICONINFORMATION);
-    hWnd = NULL;                                         // Set hWnd To NULL
 
     if (hInstance && !UnregisterClass(CLASS_NAME,hInstance)) // Are We Able To Unregister Class
         MessageBox(NULL,"Could not unregister class.","SHUTDOWN ERROR",MB_OK|MB_ICONINFORMATION);
-    hInstance = NULL;                                    // Set hInstance To NULL
 
-    if (fullscreen)                                      // Are We In Fullscreen Mode?
+    if (FL_fullscreen)                                   // Are We In Fullscreen Mode?
     {
         ChangeDisplaySettings(NULL,0);                   // If So Switch Back To The Desktop
         ShowCursor(TRUE);                                // Show Mouse Pointer
     }
 
-    terminated = true;
+    if (this->Title) delete[] this->Title;
+
+    Clear();
 }
 
 #endif

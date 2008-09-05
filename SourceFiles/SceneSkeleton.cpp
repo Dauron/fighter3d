@@ -9,6 +9,20 @@ using namespace Scenes;
 
 SceneSkeleton::SceneSkeleton(const char *gr_modelName, const char *ph_modelName)
 {
+    Name            = "[Skeleton]";
+
+    Model.modelFile     = gr_modelName ? gr_modelName : "";
+    Model.fastModelFile = ph_modelName ? ph_modelName : "";
+}
+
+bool SceneSkeleton::Create(int left, int top, unsigned int width, unsigned int height, Scene *scene)
+{
+    if (!Model.modelFile.size()) return false;
+
+    Scene::Create(left, top, width, height, scene);
+
+    InitInputMgr();
+
     EditMode = emMain;
 
     State.CurrentAction   = 0;
@@ -16,120 +30,94 @@ SceneSkeleton::SceneSkeleton(const char *gr_modelName, const char *ph_modelName)
     State.HideBonesOnAnim = false;
     State.ShowBonesAlways = false;
     State.PlayAnimation   = false;
-
     Animation.Instance    = NULL;
-
     Selection.Bone        = NULL;
     Selection.Element     = NULL;
     Selection.ElementId   = xWORD_MAX;
     Selection.Vertices.clear();
     HoveredVert           = xDWORD_MAX;
-
-    InputState.MouseLIsDown = false;
-    InputState.MouseRIsDown = false;
     InputState.String.clear();
-    KeyName_Modify = NULL;
-    KeyName_Accept = NULL;
 
-    SceneName = "[Skeleton]";
-    Font      = HFont();
-    Cameras.Current = NULL;
-
-    Model.modelFile     = gr_modelName ? gr_modelName : "";
-    Model.fastModelFile = ph_modelName ? ph_modelName : "";
+    KeyName_Modify  = strdup(g_InputMgr.GetKeyName(g_InputMgr.Input2KeyCode(IC_BE_Modifier)).c_str());
+    KeyName_Accept  = strdup(g_InputMgr.GetKeyName(g_InputMgr.Input2KeyCode(IC_Accept)).c_str());
+    Font            = g_FontMgr.GetFont("Courier New", 15);
+    const GLFont* pFont = g_FontMgr.GetFont(Font);
 
     CurrentDirectory = Filesystem::GetFullPath("Data/models");
-}
-bool SceneSkeleton::Initialize(int left, int top, unsigned int width, unsigned int height)
-{
-    Scene::Initialize(left, top, width, height);
-    InitInputMgr();
-    g_InputMgr.mouseWheel = 0;
-    if (!KeyName_Modify) {
-        KeyName_Modify = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_BE_Modifier)).c_str());
-        KeyName_Accept = strdup(g_InputMgr.GetKeyName(g_InputMgr.GetKeyCode(IC_Accept)).c_str());
-    }
-
-    if (!g_FontMgr.IsHandleValid(Font))
-        Font = g_FontMgr.GetFont("Courier New", 15);
 
     // Init buttons
-    if (!Buttons.size())
-    {
-        const GLFont* pFont = g_FontMgr.GetFont(Font);
+    Buttons.resize(emLast);
+    std::vector<GLButton> &menu1 = Buttons[emMain];
+    menu1.push_back(GLButton("Create Skeleton", 10,              Height-20.f, pFont, IC_BE_ModeSkeletize));
+    menu1.push_back(GLButton("Edit BVH",        menu1[0].X2 + 5, Height-20.f, pFont, IC_BE_ModeBVH));
+    menu1.push_back(GLButton("Skinning",        menu1[1].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkin));
+    menu1.push_back(GLButton("Animating",       menu1[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeAnimate));
+    menu1.push_back(GLButton("Graph/Phys",      menu1[3].X2 + 5, Height-20.f, pFont, IC_BE_Select));
+    menu1.push_back(GLButton("Save",            menu1[4].X2 + 5, Height-20.f, pFont, IC_BE_Save));
 
-        Buttons.resize(emLast);
-        std::vector<GLButton> &menu1 = Buttons[emMain];
-        menu1.push_back(GLButton("Create Skeleton", 10,              Height-20.f, pFont, IC_BE_ModeSkeletize));
-        menu1.push_back(GLButton("Edit BVH",        menu1[0].X2 + 5, Height-20.f, pFont, IC_BE_ModeBVH));
-        menu1.push_back(GLButton("Skinning",        menu1[1].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkin));
-        menu1.push_back(GLButton("Animating",       menu1[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeAnimate));
-        menu1.push_back(GLButton("Graph/Phys",      menu1[3].X2 + 5, Height-20.f, pFont, IC_BE_Select));
-        menu1.push_back(GLButton("Save",            menu1[4].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+    std::vector<GLButton> &menu2 = Buttons[emCreateBone];
+    menu2.push_back(GLButton("Select",        100,             Height-20.f, pFont, IC_BE_Select, true, true));
+    menu2.push_back(GLButton("Create",        menu2[0].X2 + 5, Height-20.f, pFont, IC_BE_Create, true));
+    menu2.push_back(GLButton("Move",          menu2[1].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
+    menu2.push_back(GLButton("Delete",        menu2[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+    menu2.push_back(GLButton("Create constr", menu2[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstr));
+    menu2.push_back(GLButton("Delete constr", menu2[4].X2 + 5, Height-20.f, pFont, IC_BE_DeleteConstr, true));
 
-        std::vector<GLButton> &menu2 = Buttons[emCreateBone];
-        menu2.push_back(GLButton("Select",        100,             Height-20.f, pFont, IC_BE_Select, true, true));
-        menu2.push_back(GLButton("Create",        menu2[0].X2 + 5, Height-20.f, pFont, IC_BE_Create, true));
-        menu2.push_back(GLButton("Move",          menu2[1].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
-        menu2.push_back(GLButton("Delete",        menu2[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
-        menu2.push_back(GLButton("Create constr", menu2[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstr));
-        menu2.push_back(GLButton("Delete constr", menu2[4].X2 + 5, Height-20.f, pFont, IC_BE_DeleteConstr, true));
+    std::vector<GLButton> &menu3 = Buttons[emCreateConstraint_Type];
+    menu3.push_back(GLButton("Max",    205,             Height-20.f, pFont, IC_BE_CreateConstrMax));
+    menu3.push_back(GLButton("Min",    menu3[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrMin));
+    menu3.push_back(GLButton("Const",  menu3[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrEql));
+    menu3.push_back(GLButton("Ang",    menu3[2].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrAng));
+    menu3.push_back(GLButton("Weight", menu3[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrWeight));
 
-        std::vector<GLButton> &menu3 = Buttons[emCreateConstraint_Type];
-        menu3.push_back(GLButton("Max",    205,             Height-20.f, pFont, IC_BE_CreateConstrMax));
-        menu3.push_back(GLButton("Min",    menu3[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrMin));
-        menu3.push_back(GLButton("Const",  menu3[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrEql));
-        menu3.push_back(GLButton("Ang",    menu3[2].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrAng));
-        menu3.push_back(GLButton("Weight", menu3[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrWeight));
+    std::vector<GLButton> &menu4 = Buttons[emEditBVH];
+    menu4.push_back(GLButton("Create", 120,             Height-20.f, pFont, IC_BE_Create));
+    menu4.push_back(GLButton("Edit",   menu4[0].X2 + 5, Height-20.f, pFont, IC_BE_Edit, true, true));
+    menu4.push_back(GLButton("Clone",  menu4[1].X2 + 5, Height-20.f, pFont, IC_BE_Clone, true));
+    menu4.push_back(GLButton("Delete", menu4[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete, true));
 
-        std::vector<GLButton> &menu4 = Buttons[emEditBVH];
-        menu4.push_back(GLButton("Create", 120,             Height-20.f, pFont, IC_BE_Create));
-        menu4.push_back(GLButton("Edit",   menu4[0].X2 + 5, Height-20.f, pFont, IC_BE_Edit, true, true));
-        menu4.push_back(GLButton("Clone",  menu4[1].X2 + 5, Height-20.f, pFont, IC_BE_Clone, true));
-        menu4.push_back(GLButton("Delete", menu4[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete, true));
+    std::vector<GLButton> &menu5 = Buttons[emCreateBVH];
+    menu5.push_back(GLButton("Sphere",  120,             Height-20.f, pFont, IC_BE_CreateSphere));
+    menu5.push_back(GLButton("Capsule", menu5[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateCapsule));
+    menu5.push_back(GLButton("Box",     menu5[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateBox));
 
-        std::vector<GLButton> &menu5 = Buttons[emCreateBVH];
-        menu5.push_back(GLButton("Sphere",  120,             Height-20.f, pFont, IC_BE_CreateSphere));
-        menu5.push_back(GLButton("Capsule", menu5[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateCapsule));
-        menu5.push_back(GLButton("Box",     menu5[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateBox));
+    std::vector<GLButton> &menu6 = Buttons[emSelectAnimation];
+    menu6.push_back(GLButton("New",  110,             Height-20.f, pFont, IC_BE_Create));
+    menu6.push_back(GLButton("Load", menu6[0].X2 + 5, Height-20.f, pFont, IC_BE_Select));
 
-        std::vector<GLButton> &menu6 = Buttons[emSelectAnimation];
-        menu6.push_back(GLButton("New",  110,             Height-20.f, pFont, IC_BE_Create));
-        menu6.push_back(GLButton("Load", menu6[0].X2 + 5, Height-20.f, pFont, IC_BE_Select));
+    std::vector<GLButton> &menu7 = Buttons[emEditAnimation];
+    menu7.push_back(GLButton("Play",      110,             Height-20.f, pFont, IC_BE_Play));
+    menu7.push_back(GLButton("Insert KF", menu7[0].X2 + 5, Height-20.f, pFont, IC_BE_Create));
+    menu7.push_back(GLButton("Edit KF",   menu7[1].X2 + 5, Height-20.f, pFont, IC_BE_Edit));
+    menu7.push_back(GLButton("KF Time",   menu7[2].X2 + 5, Height-20.f, pFont, IC_BE_Move));
+    menu7.push_back(GLButton("Delete KF", menu7[3].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+    menu7.push_back(GLButton("Loop",      menu7[4].X2 + 5, Height-20.f, pFont, IC_BE_Loop));
+    menu7.push_back(GLButton("Save",      menu7[5].X2 + 5, Height-20.f, pFont, IC_BE_Save));
 
-        std::vector<GLButton> &menu7 = Buttons[emEditAnimation];
-        menu7.push_back(GLButton("Play",      110,             Height-20.f, pFont, IC_BE_Play));
-        menu7.push_back(GLButton("Insert KF", menu7[0].X2 + 5, Height-20.f, pFont, IC_BE_Create));
-        menu7.push_back(GLButton("Edit KF",   menu7[1].X2 + 5, Height-20.f, pFont, IC_BE_Edit));
-        menu7.push_back(GLButton("KF Time",   menu7[2].X2 + 5, Height-20.f, pFont, IC_BE_Move));
-        menu7.push_back(GLButton("Delete KF", menu7[3].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
-        menu7.push_back(GLButton("Loop",      menu7[4].X2 + 5, Height-20.f, pFont, IC_BE_Loop));
-        menu7.push_back(GLButton("Save",      menu7[5].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+    std::vector<GLButton> &menu8 = Buttons[emAnimateBones];
+    menu8.push_back(GLButton("Select",     110,             Height-20.f, pFont, IC_BE_Select, true, true));
+    menu8.push_back(GLButton("Move",       menu8[0].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
+    menu8.push_back(GLButton("Reset Bone", menu8[1].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+    menu8.push_back(GLButton("Tgl.Bones",  menu8[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkeletize));
+    menu8.push_back(GLButton("Accept",     menu8[3].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+    menu8.push_back(GLButton("Reject",     menu8[4].X2 + 5, Height-20.f, pFont, IC_Reject));
 
-        std::vector<GLButton> &menu8 = Buttons[emAnimateBones];
-        menu8.push_back(GLButton("Select",     110,             Height-20.f, pFont, IC_BE_Select, true, true));
-        menu8.push_back(GLButton("Move",       menu8[0].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
-        menu8.push_back(GLButton("Reset Bone", menu8[1].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
-        menu8.push_back(GLButton("Tgl.Bones",  menu8[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkeletize));
-        menu8.push_back(GLButton("Accept",     menu8[3].X2 + 5, Height-20.f, pFont, IC_BE_Save));
-        menu8.push_back(GLButton("Reject",     menu8[4].X2 + 5, Height-20.f, pFont, IC_Reject));
+    Buttons[emLoadAnimation].push_back(GLButton("Reject", 110, Height-20.f, pFont, IC_Reject));
 
-        Buttons[emLoadAnimation].push_back(GLButton("Reject", 110, Height-20.f, pFont, IC_Reject));
+    std::vector<GLButton> &menu9 = Buttons[emSaveAnimation];
+    menu9.push_back(GLButton("Accept", 110,             Height-20.f, pFont, IC_Accept));
+    menu9.push_back(GLButton("Reject", menu9[0].X2 + 5, Height-20.f, pFont, IC_Reject));
 
-        std::vector<GLButton> &menu9 = Buttons[emSaveAnimation];
-        menu9.push_back(GLButton("Accept", 110,             Height-20.f, pFont, IC_Accept));
-        menu9.push_back(GLButton("Reject", menu9[0].X2 + 5, Height-20.f, pFont, IC_Reject));
-
-        std::vector<GLButton> &menu10 = Buttons[emSaveModel];
-        menu10.push_back(GLButton("Accept", 110,              Height-20.f, pFont, IC_Accept));
-        menu10.push_back(GLButton("Reject", menu10[0].X2 + 5, Height-20.f, pFont, IC_Reject));
-    }
+    std::vector<GLButton> &menu10 = Buttons[emSaveModel];
+    menu10.push_back(GLButton("Accept", 110,              Height-20.f, pFont, IC_Accept));
+    menu10.push_back(GLButton("Reject", menu10[0].X2 + 5, Height-20.f, pFont, IC_Reject));
 
     // Init cameras
-    InitCameras(!Cameras.Current);
+    Cameras.Current = NULL;
+    InitCameras(false);
 
     // Init model
-    Model.Initialize(Model.modelFile.c_str(), Model.fastModelFile.size() ? Model.fastModelFile.c_str() : NULL);
+    Model.Create(Model.modelFile.c_str(), Model.fastModelFile.size() ? Model.fastModelFile.c_str() : NULL);
     xModel *modelGr = Model.ModelGr_Get().xModelP;
     if (Model.ModelPh)
     {
@@ -207,54 +195,54 @@ void SceneSkeleton::InitCameras(bool FL_reposition)
 void SceneSkeleton::InitInputMgr()
 {
     InputMgr &im = g_InputMgr;
-    im.SetScene(SceneName);
+    im.SetScene(Name);
 
-    im.SetInputCodeIfKeyIsFree(VK_F11,    IC_FullScreen);
-    im.SetInputCodeIfKeyIsFree(VK_RETURN, IC_Accept);
-    im.SetInputCodeIfKeyIsFree(VK_ESCAPE, IC_Reject);
-    im.SetInputCodeIfKeyIsFree(VK_BACK,   IC_Con_BackSpace);
+    im.Key2InputCode_SetIfKeyFree(VK_F11,    IC_FullScreen);
+    im.Key2InputCode_SetIfKeyFree(VK_RETURN, IC_Accept);
+    im.Key2InputCode_SetIfKeyFree(VK_ESCAPE, IC_Reject);
+    im.Key2InputCode_SetIfKeyFree(VK_BACK,   IC_Con_BackSpace);
 
-    im.SetInputCodeIfKeyIsFree('C',       IC_CameraChange);
-    im.SetInputCodeIfKeyIsFree(VK_TAB,    IC_CameraReset);
-    im.SetInputCodeIfKeyIsFree('1',       IC_CameraFront);
-    im.SetInputCodeIfKeyIsFree('2',       IC_CameraBack);
-    im.SetInputCodeIfKeyIsFree('3',       IC_CameraLeft);
-    im.SetInputCodeIfKeyIsFree('4',       IC_CameraRight);
-    im.SetInputCodeIfKeyIsFree('5',       IC_CameraTop);
-    im.SetInputCodeIfKeyIsFree('6',       IC_CameraBottom);
-    im.SetInputCodeIfKeyIsFree('7',       IC_CameraPerspective);
+    im.Key2InputCode_SetIfKeyFree('C',       IC_CameraChange);
+    im.Key2InputCode_SetIfKeyFree(VK_TAB,    IC_CameraReset);
+    im.Key2InputCode_SetIfKeyFree('1',       IC_CameraFront);
+    im.Key2InputCode_SetIfKeyFree('2',       IC_CameraBack);
+    im.Key2InputCode_SetIfKeyFree('3',       IC_CameraLeft);
+    im.Key2InputCode_SetIfKeyFree('4',       IC_CameraRight);
+    im.Key2InputCode_SetIfKeyFree('5',       IC_CameraTop);
+    im.Key2InputCode_SetIfKeyFree('6',       IC_CameraBottom);
+    im.Key2InputCode_SetIfKeyFree('7',       IC_CameraPerspective);
 
-    im.SetInputCodeIfKeyIsFree('V',       IC_PolyModeChange);
-    im.SetInputCodeIfKeyIsFree('B',       IC_ShowBonesAlways);
-    im.SetInputCodeIfKeyIsFree('F',       IC_ViewPhysicalModel);
+    im.Key2InputCode_SetIfKeyFree('V',       IC_PolyModeChange);
+    im.Key2InputCode_SetIfKeyFree('B',       IC_ShowBonesAlways);
+    im.Key2InputCode_SetIfKeyFree('F',       IC_ViewPhysicalModel);
 
-    im.SetInputCodeIfKeyIsFree(VK_LBUTTON, IC_LClick);
-    im.SetInputCodeIfKeyIsFree(VK_RBUTTON, IC_RClick);
-    im.SetInputCodeIfKeyIsFree(VK_SHIFT,   IC_RunModifier);
-    im.SetInputCodeIfKeyIsFree(VK_CONTROL, IC_BE_Modifier);
-    im.SetInputCodeIfKeyIsFree(VK_DELETE,  IC_BE_Delete);
-    im.SetInputCodeIfKeyIsFree('N', IC_BE_Select);
-    im.SetInputCodeIfKeyIsFree('M', IC_BE_Move);
-    im.SetInputCodeIfKeyIsFree('P', IC_BE_Play);
+    im.Key2InputCode_SetIfKeyFree(VK_LBUTTON, IC_LClick);
+    im.Key2InputCode_SetIfKeyFree(VK_RBUTTON, IC_RClick);
+    im.Key2InputCode_SetIfKeyFree(VK_SHIFT,   IC_RunModifier);
+    im.Key2InputCode_SetIfKeyFree(VK_CONTROL, IC_BE_Modifier);
+    im.Key2InputCode_SetIfKeyFree(VK_DELETE,  IC_BE_Delete);
+    im.Key2InputCode_SetIfKeyFree('N', IC_BE_Select);
+    im.Key2InputCode_SetIfKeyFree('M', IC_BE_Move);
+    im.Key2InputCode_SetIfKeyFree('P', IC_BE_Play);
 
-    im.SetInputCodeIfKeyIsFree(VK_PRIOR,  IC_MoveForward);
-    im.SetInputCodeIfKeyIsFree(VK_NEXT,   IC_MoveBack);
-    im.SetInputCodeIfKeyIsFree(VK_LEFT,   IC_MoveLeft);
-    im.SetInputCodeIfKeyIsFree(VK_RIGHT,  IC_MoveRight);
-    im.SetInputCodeIfKeyIsFree(VK_UP,     IC_MoveUp);
-    im.SetInputCodeIfKeyIsFree(VK_DOWN,   IC_MoveDown);
+    im.Key2InputCode_SetIfKeyFree(VK_PRIOR,  IC_MoveForward);
+    im.Key2InputCode_SetIfKeyFree(VK_NEXT,   IC_MoveBack);
+    im.Key2InputCode_SetIfKeyFree(VK_LEFT,   IC_MoveLeft);
+    im.Key2InputCode_SetIfKeyFree(VK_RIGHT,  IC_MoveRight);
+    im.Key2InputCode_SetIfKeyFree(VK_UP,     IC_MoveUp);
+    im.Key2InputCode_SetIfKeyFree(VK_DOWN,   IC_MoveDown);
 
-    im.SetInputCodeIfKeyIsFree('W', IC_TurnUp);
-    im.SetInputCodeIfKeyIsFree('S', IC_TurnDown);
-    im.SetInputCodeIfKeyIsFree('D', IC_TurnLeft);
-    im.SetInputCodeIfKeyIsFree('A', IC_TurnRight);
-    im.SetInputCodeIfKeyIsFree('Q', IC_RollLeft);
-    im.SetInputCodeIfKeyIsFree('E', IC_RollRight);
+    im.Key2InputCode_SetIfKeyFree('W', IC_TurnUp);
+    im.Key2InputCode_SetIfKeyFree('S', IC_TurnDown);
+    im.Key2InputCode_SetIfKeyFree('D', IC_TurnLeft);
+    im.Key2InputCode_SetIfKeyFree('A', IC_TurnRight);
+    im.Key2InputCode_SetIfKeyFree('Q', IC_RollLeft);
+    im.Key2InputCode_SetIfKeyFree('E', IC_RollRight);
 
-    im.SetInputCodeIfKeyIsFree('U', IC_OrbitUp);
-    im.SetInputCodeIfKeyIsFree('J', IC_OrbitDown);
-    im.SetInputCodeIfKeyIsFree('H', IC_OrbitLeft);
-    im.SetInputCodeIfKeyIsFree('K', IC_OrbitRight);
+    im.Key2InputCode_SetIfKeyFree('U', IC_OrbitUp);
+    im.Key2InputCode_SetIfKeyFree('J', IC_OrbitDown);
+    im.Key2InputCode_SetIfKeyFree('H', IC_OrbitLeft);
+    im.Key2InputCode_SetIfKeyFree('K', IC_OrbitRight);
 }
 
 void SceneSkeleton::Resize(int left, int top, unsigned int width, unsigned int height)
@@ -273,12 +261,11 @@ void SceneSkeleton::Resize(int left, int top, unsigned int width, unsigned int h
 
 bool SceneSkeleton::Invalidate()
 {
-    WorldRenderGL renderer;
-    renderer.Invalidate(Model);
+    WorldRenderGL().Invalidate(Model);
     return Scene::Invalidate();
 }
 
-void SceneSkeleton::Terminate()
+void SceneSkeleton::Destroy()
 {
     Cameras.Current = NULL;
     if (KeyName_Modify) {
@@ -296,16 +283,16 @@ void SceneSkeleton::Terminate()
     Font = HFont();
 
     Directories.clear();
+    Buttons.clear();
 
-    WorldRenderGL renderer;
-    renderer.Free(Model);
-    Model.Finalize();
+    WorldRenderGL().Free(Model);
+    Model.Destroy();
 }
 
 #define fractf(a)    ((a)-floorf(a))
 
 /************************** RENDER *************************************/
-bool SceneSkeleton::FrameRender()
+bool SceneSkeleton::Render()
 {
     glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
@@ -366,7 +353,7 @@ bool SceneSkeleton::FrameRender()
     RendererGL   &render = wRender.renderModel;
 
     if (Model.FL_renderNeedsUpdate) wRender.Free(Model);
-    Model.FrameRender();
+    Model.Render();
 
     xModel         &model         = *Model.ModelGr->xModelP;
     xModelInstance &modelInstance = Model.ModelGr->instance;

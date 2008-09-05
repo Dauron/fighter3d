@@ -37,7 +37,8 @@ namespace Scenes { namespace Menu {
             if (!BaseState::Update(T_time))
             {
                 bool res = false;
-                if (g_InputMgr.GetInputStateAndClear(IC_MoveUp))
+                InputMgr &im = g_InputMgr;
+                if (im.GetInputStateAndClear(IC_MoveUp))
                 {
                     res = true;
                     do {
@@ -46,7 +47,7 @@ namespace Scenes { namespace Menu {
                     }
                     while (!SubStates[selected]->FL_enabled);
                 }
-                if (g_InputMgr.GetInputStateAndClear(IC_MoveDown))
+                if (im.GetInputStateAndClear(IC_MoveDown))
                 {
                     res = true;
                     do {
@@ -55,16 +56,16 @@ namespace Scenes { namespace Menu {
                     }
                     while (!SubStates[selected]->FL_enabled);
                 }
-                if (g_InputMgr.GetInputStateAndClear(IC_Accept))
+                if (im.GetInputStateAndClear(IC_Accept))
                 {
                     SwitchState(*SubStates[selected]);
                     return true;
                 }
 
-                if (g_InputMgr.GetInputStateAndClear(IC_LClick))
+                if (im.GetInputStateAndClear(IC_LClick))
                 {
-                    int mouseX = g_InputMgr.mouseX;
-                    int mouseY = g_InputMgr.mouseY;
+                    int mouseX = im.mouseX;
+                    int mouseY = im.mouseY;
 
                     for (size_t i = 0; i < buttons.size(); ++i)
                         if (buttons[i].Contains(mouseX, mouseY))

@@ -23,24 +23,10 @@ namespace Scenes {
     public:
         Math::Cameras::Camera *DefaultCamera;
 
-        SceneTest() : DefaultCamera(NULL)
-            , pf_sphere1(new ::Math::Figures::xSphere())
-            , pf_sphere2(new ::Math::Figures::xSphere())
-            , pf_capsule1(new ::Math::Figures::xCapsule())
-            , pf_capsule2(new ::Math::Figures::xCapsule())
-            , pf_cube1(new ::Math::Figures::xBoxO())
-            , pf_cube2(new ::Math::Figures::xBoxO())
-            , pf_mesh1(new ::Math::Figures::xMesh())
-            , pf_mesh2(new ::Math::Figures::xMesh())
-        { SceneName="[Test]"; };
+        SceneTest() { Name="[Test]"; }
 
-        virtual bool Initialize(int left, int top, unsigned int width, unsigned int height);
-        virtual bool Invalidate();
-        virtual void Terminate();
-        virtual bool FrameUpdate(float deltaTime);
-        virtual bool FrameRender();
-
-        virtual bool ShellCommand(std::string &cmd, std::string &output);
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *scene = NULL);
+        virtual void Destroy();
 
         virtual void Resize(int left, int top, unsigned int width, unsigned int height)
         {
@@ -48,6 +34,11 @@ namespace Scenes {
             Camera.FOV.InitPerspective();
             Camera.FOV.InitViewport(left,top,width,height);
         }
+
+        virtual bool Update(float deltaTime);
+        virtual bool Render();
+
+        virtual bool ShellCommand(std::string &cmd, std::string &output);
 
     private:
 
@@ -71,7 +62,6 @@ namespace Scenes {
         xFLOAT   T_total;
 
         void InitObjects();
-        bool InitGL();
         void InitInputMgr();
 
         Math::Cameras::CameraHuman Camera;

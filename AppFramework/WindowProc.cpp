@@ -1,6 +1,6 @@
 #ifdef WIN32
 
-#include "Window.h"
+#include "IWindow.h"
 #include "Input/InputMgr.h"
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -103,15 +103,15 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_SIZE:
             if (thisWnd)
-                thisWnd->OnResized (LOWORD(lParam), HIWORD(lParam));
+                thisWnd->Resize (LOWORD(lParam), HIWORD(lParam));
             break;
 
         case WM_ACTIVATE:                            // Watch For Window Activate Message
             if (thisWnd)
                 if (!HIWORD(wParam))                 // Check Minimization State
-                    thisWnd->SetActive(TRUE);        // Program Is Active
+                    thisWnd->Active_Set(TRUE);        // Program Is Active
                 else
-                    thisWnd->SetActive(FALSE);       // Program Is No Longer Active
+                    thisWnd->Active_Set(FALSE);       // Program Is No Longer Active
             break;
 
         case WM_SYSCOMMAND:                          // Intercept System Commands

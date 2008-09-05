@@ -20,15 +20,15 @@ public:
 
     World( void ) : skyBox(NULL) { skyColor.init(0.f,0.f,0.f,0.f); }
 
-    void Initialize (std::string MapFileName);
-    void Finalize   ();
+    void Create  (std::string MapFileName);
+    void Destroy ();
 
     void InitialUpdate()
     {
-        if (skyBox) skyBox->FrameUpdate(0.f);
+        if (skyBox) skyBox->Update(0.f);
         Vec_Object::iterator model, beginM = objects.begin(), endM = objects.end();
         for (model=beginM; model!=endM; ++model)
-            (**model).FrameUpdate(0.f);
+            (**model).Update(0.f);
 
         Vec_xLight::iterator LT_curr = lights.begin(),
                              LT_last = lights.end();
@@ -43,13 +43,13 @@ public:
         for (model=beginM; model!=endM; ++model)
             (**model).FrameStart();
     }
-    void FrameUpdate (float T_delta);
-    void FrameRender()
+    void Update (float T_delta);
+    void Render()
     {
-        if (skyBox) skyBox->FrameRender();
+        if (skyBox) skyBox->Render();
         Vec_Object::iterator model, beginM = objects.begin(), endM = objects.end();
         for (model=beginM; model!=endM; ++model)
-            (**model).FrameRender();
+            (**model).Render();
     }
     void FrameEnd()
     {

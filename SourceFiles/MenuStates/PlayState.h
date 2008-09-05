@@ -47,7 +47,7 @@ namespace Scenes { namespace Menu {
             WorldRenderGL renderer;
             for (int i = 0; i < 2; ++i)
                 for (size_t j = 0; j < players[i].size(); ++j)
-                    if (players[i][j].IsInitialized())
+                    if (players[i][j].IsCreated())
                         renderer.Invalidate(players[i][j]);
         }
         virtual void Clear()
@@ -57,10 +57,10 @@ namespace Scenes { namespace Menu {
             for (int i = 0; i < 2; ++i)
             {
                 for (size_t j = 0; j < players[i].size(); ++j)
-                    if (players[i][j].IsInitialized())
+                    if (players[i][j].IsCreated())
                     {
                         renderer.Free(players[i][j]);
-                        players[i][j].Finalize();
+                        players[i][j].Destroy();
                     }
                 players[i].clear();
             }
@@ -69,15 +69,15 @@ namespace Scenes { namespace Menu {
         void ChoosePlayer(xBYTE player, SkeletizedObj &model)
         {
             choosen[player] = &model;
-            if (!model.IsInitialized())
+            if (!model.IsCreated())
             {
                 if (model.modelFile.size() && model.fastModelFile.size())
-                    model.Initialize(model.modelFile.c_str(), model.fastModelFile.c_str());
+                    model.Create(model.modelFile.c_str(), model.fastModelFile.c_str());
                 else
                 if (model.modelFile.size())
-                    model.Initialize(model.modelFile.c_str());
+                    model.Create(model.modelFile.c_str());
                 model.ControlType = SkeletizedObj::Control_ComBoardInput;
-                model.FrameUpdate(0.1f);
+                model.Update(0.1f);
             }
         }
 
@@ -147,14 +147,18 @@ namespace Scenes { namespace Menu {
 
                     *choosen[0] = SkeletizedObj();
                     *choosen[1] = SkeletizedObj();
-                    std::string map = MapFile;
+
+                    SceneGame *scene = new SceneGame();
+                    scene->Player1 = player1;
+                    scene->Player2 = player2;
+                    scene->MapFileName = MapFile;
 
                     // reload players
                     this->Clear();
                     SwitchState(*Parent);
                     this->Init(Parent);
 
-                    g_Application.SetCurrentScene(new SceneGame(player1,player2,map), false);
+                    g_Application.Scene_Set(*scene, false);
 
                     return true;
                 }
@@ -167,7 +171,7 @@ namespace Scenes { namespace Menu {
                         player.comBoard.ID_action_cur = (xBYTE) (rand() % player.comBoard.L_actions.size());
                         player.comBoard.T_progress = 0.f;
                     }
-                    player.FrameUpdate(T_time*0.5f);
+                    player.Update(T_time*0.5f);
                     player.MX_LocalToWorld_Set().row3.init(0,0,0,1);
                 }
             }
@@ -247,9 +251,9 @@ namespace Scenes { namespace Menu {
             RendererGL   &render = wRender.renderModel;
 
             if (choosen[0]->FL_renderNeedsUpdate) wRender.Free(*choosen[0]);
-            choosen[0]->FrameRender();
+            choosen[0]->Render();
             if (choosen[1]->FL_renderNeedsUpdate) wRender.Free(*choosen[1]);
-            choosen[1]->FrameRender();
+            choosen[1]->Render();
 
             render.RenderModel(*choosen[0]->ModelGr->xModelP, choosen[0]->ModelGr->instance, false, Front.FOV);
             render.RenderModel(*choosen[0]->ModelGr->xModelP, choosen[0]->ModelGr->instance, true,  Front.FOV);

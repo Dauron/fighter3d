@@ -21,9 +21,9 @@ void SkeletizedObj :: ApplyDefaults()
     comBoard.Init();
 }
 
-void SkeletizedObj :: Initialize ()
+void SkeletizedObj :: Create ()
 {
-    RigidObj::Initialize();
+    RigidObj::Create();
     Type = AI::ObjectType::Human;
 
     T_verlet     = 0.f; // 1000.f;
@@ -48,18 +48,18 @@ void SkeletizedObj :: Initialize ()
     }
 }
 
-void SkeletizedObj :: Initialize (const char *gr_filename, const char *ph_filename)
+void SkeletizedObj :: Create (const char *gr_filename, const char *ph_filename)
 {
-    RigidObj::Initialize(gr_filename, ph_filename);
+    RigidObj::Create(gr_filename, ph_filename);
     CreateVerletSystem();
     QT_verlet = new xQuaternion[verletSystem.I_particles];
 
     comBoard.Load(comBoard.FileName.c_str());
 }
 
-void SkeletizedObj :: Finalize ()
+void SkeletizedObj :: Destroy ()
 {
-    RigidObj::Finalize();
+    RigidObj::Destroy();
 
     DestroyVerletSystem();
     delete[] QT_verlet;
@@ -291,9 +291,9 @@ xVector3 SkeletizedObj :: MergeCollisions()
     return NW_fix;
 }
 
-void SkeletizedObj :: FrameUpdate(float T_time)
+void SkeletizedObj :: Update(float T_time)
 {
-    //RigidObj::FrameUpdate(T_time);
+    //RigidObj::Update(T_time);
 
     //////////////////////////////////////////////////////// Update Verlets
 

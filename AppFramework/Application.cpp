@@ -1,103 +1,118 @@
 #include "Application.h"
 
-bool Application::Initialize(const char *title, unsigned int width, unsigned int height,
-                             bool fullscreen, Scene* scene)
-{
-    m_Terminating = false;
+void MainWindow_OnCreate(IWindow &window, void* reciever)
+{ g_Application.MainWindow_OnCreate(window); }
+void MainWindow_OnResize(IWindow &window, void* reciever, unsigned int &width, unsigned int &height)
+{ g_Application.MainWindow_OnResize(window, width, height); }
 
-    if (scene != NULL)
+int Application::Create(const char *title, unsigned int width, unsigned int height,
+                                           bool fl_fullscreen, Scene &scene)
+{
+    assert( !MainWindow );
+
+    if (FL_OpenGL)
+        MainWindow = new GLWindow();
+    //else
+    //  MainWindow = new DXWindow();
+
+    if (! MainWindow->Create(title, width, height, fl_fullscreen) )
     {
-        if (m_scene) m_scene->Terminate();
-        m_scene = scene;
+        Destroy();
+        return WINDOW_ERROR;
     }
-    if (!m_scene)
-        throw "The scene cannot be null";
-
-    bool success = m_window->Initialize(title, width, height, fullscreen);
-    if (OnApplicationInitialize) OnApplicationInitialize(this);
-    success |= m_scene->Initialize(0, 0, width, height);
-    return success;
-}
-
-bool Application::SetCurrentScene(Scene* scene, bool destroyPrev)
-{
-    if (!scene)
-        throw "The scene cannot be null";
-
-    if (m_scene)
+    bool res = true; OnApplicationCreate(res);
+    if (!res)
     {
-        m_scene = m_scene->SetCurrentScene(scene, destroyPrev);
-        return m_scene == scene;
+        Destroy();
+        return EVENT_ERROR;
     }
+    SceneCur = &scene;
+    MainWindow->OnCreate.Set((void*)this, ::MainWindow_OnCreate);
+    MainWindow->OnResize.Set((void*)this, ::MainWindow_OnResize);
+    if (! SceneCur->Create(0, 0, width, height) )
+    {
+        Destroy();
+        return SCENE_ERROR;
+    }
+    SceneCur->Enter();
 
-    m_scene = scene;
-    return m_scene->Initialize(0,0,m_window->Width(), m_window->Height());
+    return SUCCESS;
 }
 
-bool Application::Invalidate()
+int Application::Invalidate()
 {
-    if (m_Terminating) return true;
+    if (!MainWindow || MainWindow->IsDestroyed()) return SUCCESS;
 
-    m_scene->Invalidate();
-    if (OnApplicationInvalidate) OnApplicationInvalidate(this);
-    return true;
+    int result = SUCCESS;
+
+    bool res = true; OnApplicationInvalidate(res);
+    if (!res)
+        result |= EVENT_ERROR;
+
+    if (! SceneCur->Invalidate() )
+        result |= SCENE_ERROR;
+
+    return result;
 }
 
-void Application::Terminate()
+void Application::Destroy()
 {
-    m_Terminating = true;
-    if (m_window) { m_window->Terminate(); }
-    if (m_scene)  { m_scene->Terminate(); delete m_scene; m_scene = NULL; }
-    if (OnApplicationTerminate) OnApplicationTerminate(this);
+    if (MainWindow) { MainWindow->Destroy(); delete MainWindow; }
+    if (SceneCur)   { SceneCur->Exit(); SceneCur->Destroy(); delete SceneCur; }
+    bool res = true; OnApplicationDestroy(res);
+
+    Clear();
 }
 
 int Application::Run()
 {
-    float preRenderTick, prevTick, curTick = GetTick();
-    preRenderTick = curTick;
-    Performance.Reset();
+    float T_currrent  = GetTick();
+    float T_preRender = T_currrent;
+    float T_prev;
+    Performance.Clear();
 
-    while (!m_window->Terminated())
+    while (MainWindow && !MainWindow->IsDestroyed())
     {
-        if (!m_window->ProcessMessages()) break;
+        if (!MainWindow->ProcessMessages()) break;
 
-        m_scene->FrameStart();
+        T_prev     = T_currrent;
+        T_currrent = GetTick();
+        float T_total  = T_currrent - T_prev;
+        float T_render = T_currrent - T_preRender;
 
-        prevTick = curTick;
-        curTick = GetTick();
-        float realTicks   = curTick - prevTick;
-        float renderTicks = curTick - preRenderTick;
+        SceneCur->FrameStart();
 
-        Performance.NextFrame(realTicks);
-        this->Update(renderTicks * 0.001f);
-        if (m_window->Terminated()) break;
+        Update(T_render * 0.001f);
 
-        preRenderTick = GetTick();
-        this->Render();
+        T_preRender = GetTick();
+        Render();
 
-        m_scene->FrameEnd();
+        if (!MainWindow || MainWindow->IsDestroyed()) return 0;
+        SceneCur->FrameEnd();
     }
     return 0;
 }
 
-bool Application::Update(float deltaTime)
+bool Application::Update(float T_delta)
 {
-    if (m_window->Terminated()) return false;
+    if (!MainWindow || MainWindow->IsDestroyed()) return false;
 
-    if (m_window->Active())
-        return m_scene->FrameUpdate(deltaTime);
-
+    if (MainWindow->IsActive())
+    {
+        Performance.Update(T_delta);
+        return SceneCur->Update(T_delta);
+    }
     return true;
 }
 
 bool Application::Render()
 {
-    if (m_window->Terminated()) return false;
+    if (!MainWindow || MainWindow->IsDestroyed()) return false;
 
-    if (m_window->Active())
+    if (MainWindow->IsActive())
     {
-        bool res = m_scene->FrameRender();
-        m_window->SwapBuffers();
+        bool res = SceneCur->Render();
+        MainWindow->SwapBuffers();
         return res;
     }
     return true;

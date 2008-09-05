@@ -5,56 +5,77 @@
 #include "../Utils/Singleton.h"
 #include "Scene.h"
 
-#define g_Application Application::GetSingleton()
+class Application;
 
+#define g_Application Application::GetSingleton()
 class Application : public Singleton<Application>
 {
-  public:
-    // Initializes application with given scene... the scene should be a dynamical object
+public:
+    enum AppResult {
+        SUCCESS      = 0,
+        WINDOW_ERROR = 1,
+        EVENT_ERROR  = 2,
+        SCENE_ERROR  = 4
+    };
+
+    Application()  { Clear(); }
+
+    void Clear()
+    {
+        FL_terminated           = true;
+        OnApplicationCreate     = ApplicationEvent(*this);
+        OnApplicationInvalidate = ApplicationEvent(*this);
+        OnApplicationDestroy    = ApplicationEvent(*this);
+        SceneCur                = NULL;
+        Title                   = NULL;
+        FL_OpenGL               = true;
+        MainWindow              = NULL;
+    }
+
+    // Creates application with given scene... the scene should be a dynamical object
     // (it will be deleted by this class automaticaly on application termination)
-    bool Initialize(const char* title, unsigned int width, unsigned int height,
-                    bool fullscreen, Scene* scene = NULL);
-    bool Invalidate();
-    void Terminate();
+    int  Create(const char* title, unsigned int width, unsigned int height,
+                     bool fl_fullscreen, Scene &scene);
+    void Destroy();
+
+    int  Invalidate();
 
     int  Run();
-    bool Update(float deltaTime);
+    bool Update(float T_delta);
     bool Render();
 
-    IWindow&  MainWindow()   { return *m_window; }
-    Scene&    CurrentScene() { return *m_scene; }
-    bool      SetCurrentScene(Scene* scene, bool destroyPrev = true);
-
-    Application() : OnApplicationInitialize(NULL),
-                    OnApplicationInvalidate(NULL),
-                    OnApplicationTerminate(NULL),
-                    m_scene(NULL), m_title(NULL), m_OpenGL(true)
+    IWindow&  MainWindow_Get() { return *MainWindow; }
+    Scene&    Scene_Get()      { return *SceneCur; }
+    bool      Scene_Set(Scene& scene, bool fl_destroyPrevious = true)
     {
-        if (m_OpenGL)
-            m_window = new GLWindow();
-        //else
-        //  m_window = new DXWindow();
+        SceneCur = &SceneCur->Scene_Set(scene, fl_destroyPrevious);
+        return SceneCur == &scene;
     }
-    ~Application() { delete m_window; }
 
-    bool OpenGL()  { return m_OpenGL; }
-    bool DirectX() { return !m_OpenGL; }
+    bool IsOpenGL()  { return FL_OpenGL; }
+    bool IsDirectX() { return !FL_OpenGL; }
 
-    void (*OnApplicationInitialize)(Application* sender);
-    void (*OnApplicationInvalidate)(Application* sender);
-    void (*OnApplicationTerminate) (Application* sender);
+    typedef Delegate<Application, bool> ApplicationEvent;
+    ApplicationEvent OnApplicationCreate;
+    ApplicationEvent OnApplicationInvalidate;
+    ApplicationEvent OnApplicationDestroy;
 
-  private:
+    void MainWindow_OnCreate(IWindow &window)
+    { Invalidate(); }
+    void MainWindow_OnResize(IWindow &window, unsigned int width, unsigned int height)
+    { if (SceneCur) SceneCur->Resize(0,0,width,height); }
+
+private:
      // copy constructor
     Application(const Application&) {}
      // assignment operator
     Application& operator=(const Application&) { return *this; }
 
-    IWindow *m_window;
-    Scene   *m_scene;
-    char    *m_title;
-    bool     m_OpenGL;
-    bool     m_Terminating;
+    IWindow *MainWindow;
+    Scene   *SceneCur;
+    char    *Title;
+    bool     FL_OpenGL;
+    bool     FL_terminated;
 };
 
 #endif

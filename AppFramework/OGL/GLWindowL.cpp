@@ -1,9 +1,9 @@
 #ifndef WIN32
 
 #include "GLWindow.h"
-#include "../Application.h"
 #include <cstdio>
 #include <cstring>
+#include <cassert>
 
 /* attributes for a single buffered visual in RGBA format with at least
  *  * 4 bits per color and a 16 bit depth buffer */
@@ -25,9 +25,9 @@ static int attrListDbl[] = { GLX_RGBA, GLX_DOUBLEBUFFER,
     GLX_STENCIL_SIZE, 8,
     None };
 
-bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int height, bool fullscreen)
+bool GLWindow::Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen)
 {
-    if (!terminated) this->Terminate();
+    assert ( FL_destroyed );
 
     XVisualInfo *vi;
     Colormap cmap;
@@ -76,7 +76,7 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
     attr.colormap = cmap;
     attr.border_pixel = 0;
 
-    if (fullscreen)
+    if (fl_fullscreen)
     {
         XF86VidModeSwitchToMode(hDC, screen, modes[bestMode]);
         XF86VidModeSetViewPort(hDC, screen, 0, 0);
@@ -94,7 +94,7 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
             CWBorderPixel | CWColormap | CWEventMask | CWOverrideRedirect,
             &attr);
         XWarpPointer(hDC, None, win, 0, 0, 0, 0, 0, 0);
-    XMapRaised(hDC, win);
+        XMapRaised(hDC, win);
         XGrabKeyboard(hDC, win, True, GrabModeAsync,
             GrabModeAsync, CurrentTime);
         XGrabPointer(hDC, win, True, ButtonPressMask,
@@ -125,44 +125,37 @@ bool GLWindow::Initialize(const char *title, unsigned int width, unsigned int he
     else
         printf("Sorry, no Direct Rendering possible!\n");
 
-    terminated = false;
+    FL_destroyed = false;
 
-    Config::FullScreen = this->fullscreen = fullscreen;
-    this->OnResized(width, height);
+    this->Title = strdup (title);
+    this->fullscreen = fl_fullscreen;
+    this->Resize(width, height);
 
-    if (this->title != title)
-    {
-        if (this->title) delete[] this->title;
-        this->title = new char[strlen(title)+1];
-        strcpy (this->title, title);
-    }
-
+    OnCreate();
     return true;
 }
 
-void GLWindow::Terminate()
+void GLWindow::Destroy()
 {
-    g_Application.Invalidate();
+    FL_destroyed = true;
 
     if (glctx)
     {
         if (!glXMakeCurrent(hDC, None, NULL))
             printf("Could not release drawing context.\n");
         glXDestroyContext(hDC, glctx);
-        glctx = NULL;
     }
     /* switch back to original desktop resolution if we were in fs */
-    if (fullscreen)
+    if (FL_fullscreen)
     {
         XF86VidModeSwitchToMode(hDC, screen, &deskMode);
         XF86VidModeSetViewPort(hDC, screen, 0, 0);
     }
-    if (hDC)
-    {
-        XCloseDisplay(hDC);
-        hDC = NULL;
-    }
-    terminated = true;
+    if (hDC) XCloseDisplay(hDC);
+
+    if (this->Title) delete[] this->Title;
+
+    Clear();
 }
 
 #endif

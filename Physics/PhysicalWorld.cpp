@@ -128,6 +128,6 @@ void PhysicalWorld :: Interact(xFLOAT T_time, Vec_Object &L_objects)
         IPhysicalBody &pBody1 = **Object_1;
         if (pBody1.FL_physical && !pBody1.FL_stationary)
             pBody1.ApplyAcceleration(Gravity_Get(pBody1), T_time);
-        pBody1.FrameUpdate(T_time);
+        pBody1.Update(T_time);
     }
 }
