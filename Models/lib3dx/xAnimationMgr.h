@@ -3,7 +3,7 @@
 
 #include "../../Utils/Singleton.h"
 #include "../../Utils/Manager.h"
-#include "../../Utils/HandleDst.h"
+#include "../../Utils/Resource.h"
 #include "xAnimation.h"
 
 #define g_AnimationMgr xAnimationMgr::GetSingleton()
@@ -11,26 +11,42 @@
 class xAnimationMgr;
 typedef Handle<xAnimationMgr> HAnimation;
 
-struct xAnimationH : public xAnimation, public HandleDst
+struct xAnimationH : public xAnimation, public Resource
 {
-    virtual const std::string &GetId() { return Name; }
+private:
+    std::string Id;
 
-    bool ReLoad()
-    {
-        assert(Name.size());
-        std::string l_name = Name;
-        Unload();
-        return Load(l_name.c_str());
+public:
+    xAnimationH() { Clear(); }
+
+    void Clear() {
+        Id.clear();
+        xAnimation::Clear();
     }
 
-    void Invalidate()    { I_bones = 0; }
-    bool IsValid() const { return I_bones; }
+    virtual bool Create()
+    {
+        assert( Name.size() );
+        return Load( Name.c_str() );
+    }
+    virtual bool Create( const std::string& name )
+    {
+        Id = Name = name;
+        return Create();
+    }
+
+    virtual void Dispose()
+    {
+        xAnimation::Destroy();
+    }
+    virtual bool IsDisposed()
+    { return !I_bones; }
+
+    virtual const std::string &Identifier() { return Id; }
 };
 
 class xAnimationMgr : public Singleton<xAnimationMgr>, public Manager<xAnimationH, HAnimation>
 {
-    typedef std::pair <NameIndex::iterator, bool> NameIndexInsertRc;
-
 public:
 
 // Lifetime.

@@ -10,7 +10,7 @@ HModel ModelMgr :: GetModel( const char* name )
     {
         // this is a new insertion
         Model3dx* mod = m_HandleMgr.Acquire( rc.first->second );
-        if ( !mod->Load( rc.first->first.c_str() ) )
+        if ( !mod->Create( rc.first->first.c_str() ) )
         {
             m_HandleMgr.Release( rc.first->second );
             m_NameIndex.erase( rc.first );
@@ -20,7 +20,7 @@ HModel ModelMgr :: GetModel( const char* name )
             return HModel();
         }
     }
-    IncReferences(rc.first->second);
+    Lock(rc.first->second);
 
     if (IsHandleValid(rc.first->second))
         return ( rc.first->second );

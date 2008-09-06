@@ -97,9 +97,7 @@ void CameraSet :: Load(const char *fileName)
 
                 if (StartsWith(buffer, "name"))
                 {
-                    char name[255];
-                    sscanf(buffer+4, "%s", name);
-                    camera->SN_name = name;
+                    camera->SN_name = ReadSubstring(buffer+4);
                     continue;
                 }
                 if (StartsWith(buffer, "eye"))
@@ -127,8 +125,7 @@ void CameraSet :: Load(const char *fileName)
             {
                 if (StartsWith(buffer, "mode"))
                 {
-                    char name[255];
-                    sscanf(buffer+4, "%s", name);
+                    const char *name = ReadSubstring(buffer+4);
                     if (StartsWith(name, "nothing"))    tracker->Mode = ObjectTracker::TRACK_NOTHING;
                     else
                     if (StartsWith(name, "object"))     tracker->Mode = ObjectTracker::TRACK_OBJECT;

@@ -156,15 +156,13 @@ void World:: Load(const char *mapFileName)
             {
                 if (StartsWith(buffer, "import"))
                 {
-                    char file[255];
-                    sscanf(buffer+6, "%s", file);
+                    const char *file = ReadSubstring(buffer+6);
                     Load(Filesystem::GetFullPath(dir + "/" + file).c_str());
                     continue;
                 }
                 if (StartsWith(buffer, "skybox"))
                 {
-                    char file[255];
-                    sscanf(buffer+6, "%s", file);
+                    const char *file = ReadSubstring(buffer+6);
                     std::string modelFile = Filesystem::GetFullPath(dir + "/" + file);
                     skyBox = new RigidObj();
                     skyBox->Create(modelFile.c_str());

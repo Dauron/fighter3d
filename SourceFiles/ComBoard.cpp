@@ -5,7 +5,7 @@
 
 #include "ComBoard.h"
 
-void ComBoard :: Init()
+void ComBoard :: Destroy()
 {
     FileName = Filesystem::GetFullPath("Data/models/anims/karate.txt");
 
@@ -14,7 +14,7 @@ void ComBoard :: Init()
         Vec_Action::iterator A_curr = L_actions.begin(),
                              A_last = L_actions.end();
         for (; A_curr != A_last; ++A_curr)
-            A_curr->Free();
+            A_curr->Destroy();
         L_actions.clear();
     }
     ID_action_cur = 0;
@@ -26,7 +26,7 @@ void ComBoard :: Init()
 
     for (int i = 0; i < AutoHint::HINT_COUNT; ++i)
         L_hint[i].clear();
-    StopAction.Init();
+    StopAction.Clear();
     AutoAction = AutoHint::HINT_NONE;
 }
 
@@ -297,7 +297,7 @@ void ComBoard :: UpdateIDs()
 
 void ComBoard :: Load(const char *fileName)
 {
-    Init();
+    Destroy();
     FileName = Filesystem::GetFullPath(fileName);
 
     std::ifstream in;
@@ -311,8 +311,8 @@ void ComBoard :: Load(const char *fileName)
         AutoHint hint;
         Action   action;
         Combo    combo;
-        action.Init();
-        combo.Init();
+        action.Clear();
+        combo.Clear();
 
         enum LoadMode
         {
@@ -339,9 +339,9 @@ void ComBoard :: Load(const char *fileName)
                     if (action.SN_name.length())
                         L_actions.push_back(action);
                     else
-                        action.Free();
-                    action.Init();
-                    combo.Init();
+                        action.Destroy();
+                    action.Clear();
+                    combo.Clear();
                     mode = LoadMode_Action;
                     continue;
                 }
@@ -366,7 +366,7 @@ void ComBoard :: Load(const char *fileName)
                     {
                         if (combo.SN_action.length())
                             action.L_combos.push_back(combo);
-                        combo.Init();
+                        combo.Clear();
                         mode = LoadMode_Combo;
                         continue;
                     }
@@ -377,50 +377,58 @@ void ComBoard :: Load(const char *fileName)
             {
                 if (StartsWith(buffer, "stop"))
                 {
-                    char name[255];
-                    sscanf(buffer+4, "%s", name);
-                    StopAction.SN_action = name;
+                    StopAction.SN_action = ReadSubstring(buffer+4);
                     continue;
                 }
                 if (StartsWith(buffer, "step"))
                 {
-                    char name[255];
-                    int flag = 1;
-                    sscanf(buffer+4, "%s %f %d", name, &hint.S_max_change, &flag);
-                    hint.SN_action = name;
-                    hint.FL_breakable = flag;
+                    const char* params = NULL;
+                    hint.SN_action = ReadSubstring(buffer+4, params);
+                    if (params)
+                    {
+                        int flag = 1;
+                        sscanf(params, "%f %d", &hint.S_max_change, &flag);
+                        hint.FL_breakable = flag;
+                    }
                     L_hint[AutoHint::HINT_STEP].push_back(hint);
                     continue;
                 }
                 if (StartsWith(buffer, "back"))
                 {
-                    char name[255];
-                    int flag = 1;
-                    sscanf(buffer+4, "%s %f %d", name, &hint.S_max_change, &flag);
-                    hint.SN_action = name;
-                    hint.FL_breakable = flag;
+                    const char* params = NULL;
+                    hint.SN_action = ReadSubstring(buffer+4, params);
+                    if (params)
+                    {
+                        int flag = 1;
+                        sscanf(params, "%f %d", &hint.S_max_change, &flag);
+                        hint.FL_breakable = flag;
+                    }
                     L_hint[AutoHint::HINT_BACK].push_back(hint);
                     continue;
                 }
                 if (StartsWith(buffer, "left"))
                 {
-                    char name[255];
-                    int flag = 1;
-                    sscanf(buffer+4, "%s %f %d", name, &hint.S_max_change, &flag);
-                    hint.SN_action = name;
-                    hint.FL_breakable = flag;
-                    hint.S_max_change = DegToRad(hint.S_max_change);
+                    const char* params = NULL;
+                    hint.SN_action = ReadSubstring(buffer+4, params);
+                    if (params)
+                    {
+                        int flag = 1;
+                        sscanf(params, "%f %d", &hint.S_max_change, &flag);
+                        hint.FL_breakable = flag;
+                    }
                     L_hint[AutoHint::HINT_LEFT].push_back(hint);
                     continue;
                 }
                 if (StartsWith(buffer, "right"))
                 {
-                    char name[255];
-                    int flag = 1;
-                    sscanf(buffer+5, "%s %f %d", name, &hint.S_max_change, &flag);
-                    hint.SN_action = name;
-                    hint.FL_breakable = flag;
-                    hint.S_max_change = DegToRad(hint.S_max_change);
+                    const char* params = NULL;
+                    hint.SN_action = ReadSubstring(buffer+5, params);
+                    if (params)
+                    {
+                        int flag = 1;
+                        sscanf(params, "%f %d", &hint.S_max_change, &flag);
+                        hint.FL_breakable = flag;
+                    }
                     L_hint[AutoHint::HINT_RIGHT].push_back(hint);
                     continue;
                 }
@@ -430,7 +438,7 @@ void ComBoard :: Load(const char *fileName)
                 if (StartsWith(buffer, "bones"))
                 {
                     int b1, b2;
-                    sscanf(buffer+5, "%d\t%d", &b1, &b2);
+                    sscanf(buffer+5, "%d %d", &b1, &b2);
                     Mirror mirror;
                     mirror.ID_bone1 = b1;
                     mirror.ID_bone2 = b2;
@@ -442,17 +450,18 @@ void ComBoard :: Load(const char *fileName)
             {
                 if (StartsWith(buffer, "name"))
                 {
-                    char name[255];
-                    sscanf(buffer+4, "%s", name);
-                    action.SN_name = name;
+                    action.SN_name = ReadSubstring(buffer+4);
                     continue;
                 }
                 if (StartsWith(buffer, "anim"))
                 {
+                    const char* params = NULL;
+                    std::string animFile = Filesystem::GetFullPath(dir + "/" + ReadSubstring(buffer+4, params));
+
                     int start = 0, end = 0;
-                    char file[255];
-                    sscanf(buffer+4, "%s\t%d\t%d", file, &start, &end);
-                    std::string animFile = Filesystem::GetFullPath(dir + "/" + file);
+                    if (params)
+                        sscanf(params, "%d %d", &start, &end);
+
                     if (end <= start)
                         action.Anims.AddAnimation(animFile.c_str(), start);
                     else
@@ -468,9 +477,7 @@ void ComBoard :: Load(const char *fileName)
                 }
                 if (StartsWith(buffer, "post"))
                 {
-                    char name[255];
-                    sscanf(buffer+4, "%s", name);
-                    action.SN_next = name;
+                    action.SN_next = ReadSubstring(buffer+4);
                     continue;
                 }
                 if (StartsWith(buffer, "rotate"))
@@ -492,9 +499,7 @@ void ComBoard :: Load(const char *fileName)
             {
                 if (StartsWith(buffer, "action"))
                 {
-                    char name[255];
-                    sscanf(buffer+6, "%s", name);
-                    combo.SN_action = name;
+                    combo.SN_action = ReadSubstring(buffer+6);
                     continue;
                 }
                 if (StartsWith(buffer, "key"))
@@ -569,7 +574,7 @@ void ComBoard :: Load(const char *fileName)
         if (action.SN_name.length())
             L_actions.push_back(action);
         else
-            action.Free(); // Release animations
+            action.Destroy(); // Release animations
 
         in.close();
 

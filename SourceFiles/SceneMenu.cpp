@@ -40,10 +40,10 @@ void SceneMenu :: InitInputMgr()
 
 void SceneMenu :: Destroy()
 {
-    g_FontMgr.DeleteReference(font03);
-    g_FontMgr.DeleteReference(font04);
-    g_FontMgr.DeleteReference(font05);
-    g_FontMgr.DeleteReference(font10);
+    g_FontMgr.Release(font03);
+    g_FontMgr.Release(font04);
+    g_FontMgr.Release(font05);
+    g_FontMgr.Release(font10);
     font03 = font04 = font05 = font10 = HFont();
 
     if (root)
@@ -67,13 +67,13 @@ void SceneMenu :: Resize(int left, int top, unsigned int width, unsigned int hei
 {
     Scene::Resize(left, top, width, height);
 
-    g_FontMgr.DeleteReference(font03);
+    g_FontMgr.Release(font03);
     font03 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.03f));
-    g_FontMgr.DeleteReference(font04);
+    g_FontMgr.Release(font04);
     font04 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.04f));
-    g_FontMgr.DeleteReference(font05);
+    g_FontMgr.Release(font05);
     font05 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.05f));
-    g_FontMgr.DeleteReference(font10);
+    g_FontMgr.Release(font10);
     font10 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.10f));
 }
 

@@ -13,14 +13,15 @@
 #include <vector>
 #include <cassert>
 #include "Handle.h"
+#include "Resource.h"
 
-template <typename HANDLE_DST, typename HANDLE>
+template <class RESOURCE = Resource, class HANDLE = Handle<Resource> >
 class HandleMgr
 {
 private:
 
     // private types
-    typedef std::vector <HANDLE_DST>   UserVec;
+    typedef std::vector <RESOURCE>     UserVec;
     typedef std::vector <unsigned int> MagicVec;
     typedef std::vector <unsigned int> FreeVec;
 
@@ -39,16 +40,16 @@ public:
 // Handle methods.
 
     // acquisition
-    HANDLE_DST* Acquire( HANDLE &handle );
-    void        Release( HANDLE handle );
+    RESOURCE* Acquire( HANDLE &handle );
+    void      Release( HANDLE handle );
 
     // dereferencing
-    HANDLE_DST*       Dereference( HANDLE handle );
-    const HANDLE_DST* Dereference( HANDLE handle ) const;
-    HANDLE_DST*       DereferenceNoValidation( HANDLE handle );
-    const HANDLE_DST* DereferenceNoValidation( HANDLE handle ) const;
+    RESOURCE*       Dereference( HANDLE handle );
+    const RESOURCE* Dereference( HANDLE handle ) const;
+    RESOURCE*       DereferenceNoValidation( HANDLE handle );
+    const RESOURCE* DereferenceNoValidation( HANDLE handle ) const;
 
-    bool        IsHandleValid( HANDLE handle ) const
+    bool            IsHandleValid( HANDLE handle ) const
     {
         return ( handle.GetIndex() < m_UserData.size() )
             && ( m_MagicNumbers[ handle.GetIndex() ] == handle.GetMagic() );
@@ -61,8 +62,8 @@ public:
         {  return ( !!GetUsedHandleCount() );  }
 };
 
-template <typename HANDLE_DST, typename HANDLE>
-HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
+template <typename RESOURCE, typename HANDLE>
+RESOURCE* HandleMgr <RESOURCE, HANDLE>
 :: Acquire( HANDLE &handle )
 {
     // if free list is empty, add a new one otherwise use first one found
@@ -71,7 +72,7 @@ HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
     {
         index = (unsigned int)m_MagicNumbers.size();
         handle.Init( index );
-        m_UserData.push_back( HANDLE_DST() );
+        m_UserData.push_back( RESOURCE() );
         m_MagicNumbers.push_back( handle.GetMagic() );
     }
     else
@@ -84,8 +85,8 @@ HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
     return &*( m_UserData.begin() + index );
 }
 
-template <typename HANDLE_DST, typename HANDLE>
-void HandleMgr <HANDLE_DST, HANDLE>
+template <typename RESOURCE, typename HANDLE>
+void HandleMgr <RESOURCE, HANDLE>
 :: Release( HANDLE handle )
 {
     // which one?
@@ -100,8 +101,8 @@ void HandleMgr <HANDLE_DST, HANDLE>
     m_FreeSlots.push_back( index );
 }
 
-template <typename HANDLE_DST, typename HANDLE>
-inline HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
+template <typename RESOURCE, typename HANDLE>
+inline RESOURCE* HandleMgr <RESOURCE, HANDLE>
 :: DereferenceNoValidation( HANDLE handle )
 {
     if ( handle.IsNull() )  return ( 0 );
@@ -116,22 +117,22 @@ inline HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
         assert( 0 );
         return ( 0 );
     }
-    HANDLE_DST* res = &*( m_UserData.begin() + index );
+    RESOURCE* res = &*( m_UserData.begin() + index );
     return res;
 }
 
 
-template <typename HANDLE_DST, typename HANDLE>
-inline const HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
+template <typename RESOURCE, typename HANDLE>
+inline const RESOURCE* HandleMgr <RESOURCE, HANDLE>
 :: DereferenceNoValidation( HANDLE handle ) const
 {
     // this lazy cast is ok - non-const version does not modify anything
-    typedef HandleMgr <HANDLE_DST, HANDLE> ThisType;
+    typedef HandleMgr <RESOURCE, HANDLE> ThisType;
     return ( const_cast <ThisType*> ( this )->DereferenceNoValidation( handle ) );
 }
 
-template <typename HANDLE_DST, typename HANDLE>
-inline HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
+template <typename RESOURCE, typename HANDLE>
+inline RESOURCE* HandleMgr <RESOURCE, HANDLE>
 :: Dereference( HANDLE handle )
 {
     if ( handle.IsNull() )  return ( 0 );
@@ -146,18 +147,18 @@ inline HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
         assert( 0 );
         return ( 0 );
     }
-    HANDLE_DST* res = &*( m_UserData.begin() + index );
-    if (!res->IsValid())
-        res->ReLoad();
+    RESOURCE* res = &*( m_UserData.begin() + index );
+    if (res->IsDisposed())
+        res->Recreate();
     return res;
 }
 
-template <typename HANDLE_DST, typename HANDLE>
-inline const HANDLE_DST* HandleMgr <HANDLE_DST, HANDLE>
+template <typename RESOURCE, typename HANDLE>
+inline const RESOURCE* HandleMgr <RESOURCE, HANDLE>
 :: Dereference( HANDLE handle ) const
 {
     // this lazy cast is ok - non-const version does not modify anything
-    typedef HandleMgr <HANDLE_DST, HANDLE> ThisType;
+    typedef HandleMgr <RESOURCE, HANDLE> ThisType;
     return ( const_cast <ThisType*> ( this )->Dereference( handle ) );
 }
 

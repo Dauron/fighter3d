@@ -274,12 +274,12 @@ void SceneSkeleton::Destroy()
     }
     if (EditMode == emEditAnimation || EditMode == emAnimateBones || EditMode == emFrameParams)
         if (Animation.Instance) {
-            Animation.Instance->Unload();
+            Animation.Instance->Destroy();
             delete Animation.Instance;
             Animation.Instance = NULL;
         }
 
-    g_FontMgr.DeleteReference(Font);
+    g_FontMgr.Release(Font);
     Font = HFont();
 
     Directories.clear();
@@ -352,7 +352,7 @@ bool SceneSkeleton::Render()
     WorldRenderGL wRender;
     RendererGL   &render = wRender.renderModel;
 
-    if (Model.FL_renderNeedsUpdate) wRender.Free(Model);
+    wRender.FreeIfNeeded(Model);
     Model.Render();
 
     xModel         &model         = *Model.ModelGr->xModelP;

@@ -12,20 +12,13 @@ typedef Handle<ModelMgr> HModel;
 
 class ModelMgr : public Singleton<ModelMgr>, public Manager<Model3dx, HModel>
 {
-    typedef std::pair <NameIndex::iterator, bool> NameIndexInsertRc;
-
 public:
-
-// Lifetime.
-    ModelMgr( void ) {  /* ... */  }
-   ~ModelMgr( void ) {  /* ... */  }
-
 // Model management.
     HModel GetModel   ( const char* name );
 
 // Model query.
     const std::string &GetName( HModel hmod ) const
-        {  return ( m_HandleMgr.Dereference( hmod )->m_Name );  }
+        {  return ( m_HandleMgr.Dereference( hmod )->Name );  }
     Model3dx          *GetModel( HModel hmod )
         {  return ( m_HandleMgr.Dereference( hmod ) );  }
 };

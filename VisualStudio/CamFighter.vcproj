@@ -593,15 +593,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Utils\HandleDst.h"
-				>
-			</File>
-			<File
 				RelativePath="..\Utils\HandleMgr.h"
 				>
 			</File>
 			<File
 				RelativePath="..\Utils\Manager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Utils\Resource.h"
 				>
 			</File>
 			<File
@@ -1563,14 +1563,6 @@
 					Name="Textures"
 					>
 					<File
-						RelativePath="..\Graphics\OGL\Textures\BMPFile.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Textures\ImageFile.h"
-						>
-					</File>
-					<File
 						RelativePath="..\Graphics\OGL\Textures\Texture.cpp"
 						>
 					</File>
@@ -1586,17 +1578,21 @@
 						RelativePath="..\Graphics\OGL\Textures\TextureMgr.h"
 						>
 					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Textures\TGAFile.cpp"
-						>
-					</File>
 				</Filter>
 			</Filter>
 			<Filter
-				Name="Filetypes"
+				Name="Images"
 				>
 				<File
-					RelativePath="..\Graphics\Filetypes\TGA.h"
+					RelativePath="..\Graphics\Images\BMPFile.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\Images\ImageFile.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\Images\TGAFile.cpp"
 					>
 				</File>
 			</Filter>

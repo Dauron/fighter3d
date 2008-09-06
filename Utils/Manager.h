@@ -5,29 +5,25 @@
 #include "Utils.h"
 #include "HandleMgr.h"
 
-template <typename HANDLE_DST, class HANDLE>
+template <class RESOURCE = Resource, class HANDLE = Handle<Resource> >
 class Manager
 {
 protected:
 // Handle manager data type.
-    typedef HandleMgr <HANDLE_DST, HANDLE> HHandleMgr;
+    typedef HandleMgr <RESOURCE, HANDLE> HHandleMgr;
 
 // Index by name into db.
     typedef std::map <std::string, HANDLE, istring_less > NameIndex;
+    typedef std::pair <typename NameIndex::iterator, bool> NameIndexInsertRc;
 
 // Private data.
     HHandleMgr m_HandleMgr;
     NameIndex  m_NameIndex;
 
-    void IncReferences( HANDLE hnd )
+    void Lock( HANDLE hnd )
     {
-        HANDLE_DST *dat = m_HandleMgr.DereferenceNoValidation( hnd );
-        if (dat) dat->IncReferences();
-    }
-    void DecReferences( HANDLE hnd )
-    {
-        HANDLE_DST *dat = m_HandleMgr.DereferenceNoValidation( hnd );
-        if (dat) dat->DecReferences();
+        RESOURCE *dat = m_HandleMgr.DereferenceNoValidation( hnd );
+        if (dat) dat->Lock();
     }
 
 public:
@@ -39,13 +35,13 @@ public:
         return m_HandleMgr.DereferenceNoValidation( hnd );
     }
 
-    void DeleteReference( HANDLE hnd );
+    void Release( HANDLE hnd );
 
     ~Manager(void);
 };
 
-template <typename HANDLE_DST, class HANDLE>
-void Manager <HANDLE_DST, HANDLE>
+template <typename RESOURCE, class HANDLE>
+void Manager <RESOURCE, HANDLE>
 :: InvalidateItems()
 {
     typename NameIndex::iterator i, begin = m_NameIndex.begin(), end = m_NameIndex.end();
@@ -53,33 +49,35 @@ void Manager <HANDLE_DST, HANDLE>
         m_HandleMgr.DereferenceNoValidation( i->second )->Invalidate();
 }
 
-template <typename HANDLE_DST, class HANDLE>
-void Manager <HANDLE_DST, HANDLE>
-:: DeleteReference( HANDLE hnd )
+template <typename RESOURCE, class HANDLE>
+void Manager <RESOURCE, HANDLE>
+:: Release( HANDLE hnd )
 {
-    HANDLE_DST* dst = m_HandleMgr.DereferenceNoValidation( hnd );
-    if ( dst != 0 )
+    RESOURCE* dst = m_HandleMgr.DereferenceNoValidation( hnd );
+    if ( dst )
     {
-        dst->DecReferences();
-        if (!dst->m_References)
+        dst->Release();
+        if (!dst->IsLocked())
         {
             // delete from index
-            m_NameIndex.erase( m_NameIndex.find( dst->GetId() ) );
+            m_NameIndex.erase( m_NameIndex.find( dst->Identifier() ) );
             // delete from db
-            dst->Unload();
+            ((Resource*)dst)->Destroy();
             m_HandleMgr.Release( hnd );
         }
     }
 }
 
-template <typename HANDLE_DST, class HANDLE>
-Manager <HANDLE_DST, HANDLE>
+template <typename RESOURCE, class HANDLE>
+Manager <RESOURCE, HANDLE>
 :: ~Manager( void )
 {
     // release all our remaining items before we go
-    typename NameIndex::iterator i, begin = m_NameIndex.begin(), end = m_NameIndex.end();
-    for ( i = begin ; i != end ; ++i )
-        m_HandleMgr.DereferenceNoValidation( i->second )->Unload();
+    typename NameIndex::iterator
+        NI_curr = m_NameIndex.begin(),
+        NI_last = m_NameIndex.end();
+    for ( ; NI_curr != NI_last ; ++NI_curr )
+        ((Resource*)m_HandleMgr.DereferenceNoValidation( NI_curr->second ))->Destroy();
 }
 
 // Sample usage:

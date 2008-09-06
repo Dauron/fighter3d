@@ -47,7 +47,7 @@ namespace Scenes { namespace Menu {
             for (size_t i = 0; i < L_maps.size(); ++i)
                 if (!L_maps[i].Texture.IsNull())
                 {
-                    g_TextureMgr.DeleteReference(L_maps[i].Texture);
+                    g_TextureMgr.Release(L_maps[i].Texture);
                     L_maps[i].Texture = HTexture();
                 }
             L_maps.clear();
@@ -188,13 +188,13 @@ namespace Scenes { namespace Menu {
 
                 glBegin(GL_QUADS);
                 {
-                    glTexCoord2f(0.f,1.f);
+                    glTexCoord2f(0.01f,0.99f);
                     glVertex2f(x, y);
-                    glTexCoord2f(1.f,1.f);
+                    glTexCoord2f(0.99f,0.99f);
                     glVertex2f(x+W, y);
-                    glTexCoord2f(1.f,0.f);
+                    glTexCoord2f(0.99f,0.01f);
                     glVertex2f(x+W, y+H);
-                    glTexCoord2f(0.f,0.f);
+                    glTexCoord2f(0.01f,0.01f);
                     glVertex2f(x, y+H);
                 }
                 glEnd();
@@ -246,25 +246,19 @@ namespace Scenes { namespace Menu {
                     {
                         if (StartsWith(buffer, "name"))
                         {
-                            char file[255];
-                            sscanf(buffer+4, "%s", file);
-                            map->Name = file;
+                            map->Name = ReadSubstring(buffer+4);
                             continue;
                         }
                         if (StartsWith(buffer, "file"))
                         {
-                            char file[255];
-                            sscanf(buffer+4, "%s", file);
                             map->File = "Data/";
-                            map->File = Filesystem::GetFullPath(map->File + file);
+                            map->File = Filesystem::GetFullPath( map->File + ReadSubstring(buffer+4) );
                             continue;
                         }
                         if (StartsWith(buffer, "img"))
                         {
-                            char file[255];
-                            sscanf(buffer+3, "%s", file);
                             map->Image = "Data/";
-                            map->Image = Filesystem::GetFullPath(map->Image + file);
+                            map->Image = Filesystem::GetFullPath( map->Image + ReadSubstring(buffer+3) );
                             map->Texture = g_TextureMgr.GetTexture(map->Image.c_str());
                             continue;
                         }

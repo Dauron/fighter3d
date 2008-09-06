@@ -59,8 +59,8 @@ void SceneConsole :: InitInputMgr()
 void SceneConsole :: Destroy()
 {
     Scene::Destroy();
-    g_FontMgr.DeleteReference(font);
-    g_FontMgr.DeleteReference(font15);
+    g_FontMgr.Release(font);
+    g_FontMgr.Release(font15);
     font = font15 = HFont();
 }
 

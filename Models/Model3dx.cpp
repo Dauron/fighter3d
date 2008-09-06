@@ -4,14 +4,13 @@
 #include "../Graphics/OGL/Textures/TextureMgr.h"
 #include "../Utils/Filesystem.h"
 
-bool Model3dx :: Load ( const char *name )
+bool Model3dx :: Create ()
 {
     assert (model == NULL);
+    assert (Name.size());
 
-    m_Name = name;
-
-    int size = m_Name.size();
-    if (!strcasecmp(name + size - 4, ".3dx"))
+    const char *name = Name.c_str();
+    if (!strcasecmp(name + Name.size() - 4, ".3dx"))
         model = xModel::Load(name);
     else
     {
@@ -23,7 +22,7 @@ bool Model3dx :: Load ( const char *name )
         }
         if (model && Config::Save3dsTo3dx) {
             // save
-            model->FileName = strdup (Filesystem::ChangeFileExt(m_Name, "3dx").c_str());
+            model->FileName = strdup (Filesystem::ChangeFileExt(Name, "3dx").c_str());
             model->Save();
         }
         else
@@ -33,7 +32,7 @@ bool Model3dx :: Load ( const char *name )
     return model;
 }
 
-void Model3dx :: Unload( void )
+void Model3dx :: Dispose()
 {
     if (model)
     {
@@ -43,12 +42,11 @@ void Model3dx :: Unload( void )
                 {
                     HTexture htex;
                     htex.SetHandle(mat->texture.htex);
-                    g_TextureMgr.DeleteReference(htex);
+                    g_TextureMgr.Release(htex);
                     mat->texture.htex = 0;
                 }
         model->FL_textures_loaded = false;
         model->Free();
         model = NULL;
     }
-    m_Name.clear();
 }

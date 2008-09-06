@@ -52,7 +52,7 @@ void RigidObj :: Create (const char *gr_filename, const char *ph_filename)
         if (hModelPh != hModelGr)
             ModelPh = new ModelInstance(hModelPh);
         else
-            g_ModelMgr.DeleteReference(hModelPh);
+            g_ModelMgr.Release(hModelPh);
     }
     FL_renderNeedsUpdate      = false;
     FL_renderNeedsUpdateBones = false;
@@ -232,23 +232,17 @@ void RigidObj :: LoadLine(char *buffer, std::string &dir)
 {
     if (StartsWith(buffer, "name"))
     {
-        char file[255];
-        sscanf(buffer+4, "%s", file);
-        Name = file;
+        Name = ReadSubstring(buffer+4);
         return;
     }
     if (StartsWith(buffer, "fastm"))
     {
-        char file[255];
-        sscanf(buffer+5, "%s", file);
-        fastModelFile = Filesystem::GetFullPath(dir + "/" + file);
+        fastModelFile = Filesystem::GetFullPath(dir + "/" + ReadSubstring(buffer+5));
         return;
     }
     if (StartsWith(buffer, "model"))
     {
-        char file[255];
-        sscanf(buffer+5, "%s", file);
-        modelFile = Filesystem::GetFullPath(dir + "/" + file);
+        modelFile = Filesystem::GetFullPath(dir + "/" + ReadSubstring(buffer+5));
         return;
     }
     if (StartsWith(buffer, "customBVH"))

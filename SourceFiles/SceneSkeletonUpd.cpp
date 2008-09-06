@@ -151,7 +151,7 @@ bool SceneSkeleton::Update(float deltaTime)
         else
         if (EditMode == emEditAnimation) {
             EditMode = emSelectAnimation;
-            Animation.Instance->Unload();
+            Animation.Instance->Destroy();
             delete Animation.Instance;
             Animation.Instance = NULL;
         }
@@ -485,7 +485,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         if (button.Action == IC_BE_Create)
         {
             Animation.Instance  = new xAnimation();
-            Animation.Instance->Reset(Model.ModelGr->xModelP->Spine.I_bones);
+            Animation.Instance->Create(Model.ModelGr->xModelP->Spine.I_bones);
             Animation.Instance->SaveToSkeleton(Model.ModelGr->xModelP->Spine);
             Model.CalculateSkeleton();
             UpdateCustomBVH();

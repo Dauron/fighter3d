@@ -13,17 +13,17 @@ HFont FontMgr :: GetFont( const char* name, int size )
     {
         // this is a new insertion
         GLFont* fnt = m_HandleMgr.Acquire( rc.first->second );
-        if ( !fnt->Load( name, size ) )
+        if ( !fnt->Create( name, size ) )
         {
             m_HandleMgr.Release( rc.first->second );
             m_NameIndex.erase( rc.first );
             //IncReferences( rc.first->second );
             //DeleteFont( rc.first->second );
-            assert (false);
+            //assert (false);
             return HFont();
         }
     }
-    IncReferences(rc.first->second);
+    Lock(rc.first->second);
 
     if (IsHandleValid(rc.first->second))
         return ( rc.first->second );

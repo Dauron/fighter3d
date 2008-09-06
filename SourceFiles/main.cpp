@@ -126,6 +126,7 @@ void Application_OnInvalidate(Application& sender, void *receiver, bool &res)
         g_TextureMgr.InvalidateItems();
 
     GLShader::Invalidate();
+    g_InputMgr.AllKeysUp();
 
     if (xAnimationMgr::GetSingletonPtr())
         g_AnimationMgr.InvalidateItems();

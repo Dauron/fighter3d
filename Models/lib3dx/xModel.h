@@ -18,6 +18,7 @@ struct xModel {
     xSkeleton  Spine;
 
     bool       FL_textures_loaded; // Are textures handles loaded from the TextureManager
+    bool       FL_save_rdata;      // Save render data info?
     bool       FL_save_binfo;      // Save bounding info?
     bool       FL_transparent;     // Are there any transparent faces?
     bool       FL_opaque;          // Are there any opaque faces?

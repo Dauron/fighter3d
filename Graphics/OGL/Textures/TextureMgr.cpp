@@ -10,7 +10,7 @@ HTexture TextureMgr :: GetTexture( const char* name )
     {
         // this is a new insertion
         Texture* tex = m_HandleMgr.Acquire( rc.first->second );
-        if ( !tex->Load( rc.first->first, true ) )
+        if ( !tex->Create( rc.first->first, true ) )
         {
             m_HandleMgr.Release( rc.first->second );
             m_NameIndex.erase( rc.first );
@@ -20,7 +20,7 @@ HTexture TextureMgr :: GetTexture( const char* name )
             return HTexture();
         }
     }
-    IncReferences(rc.first->second);
+    Lock(rc.first->second);
 
     if (IsHandleValid(rc.first->second))
         return ( rc.first->second );

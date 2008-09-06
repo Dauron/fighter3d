@@ -1,5 +1,5 @@
 [player]
-name        Male Text
+name        "Male Textured"
 fastm	    models/human1_fst.3dx
 model	    models/human1.3dx
 customBVH	0

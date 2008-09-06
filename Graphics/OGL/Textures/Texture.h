@@ -2,41 +2,39 @@
 #define __incl_Texture_h
 
 #include <string>
-#include "../../../Utils/HandleDst.h"
+#include "../../../Utils/Resource.h"
 
-struct Texture : public HandleDst
+struct Texture : public Resource
 {
-    std::string  m_Name;        // for reconstruction
-    bool         m_MipMap;      // generate mip maps?
-    unsigned int m_Width;       // width
-    unsigned int m_Height;      // height
-    unsigned int m_GLTexture;   // GL Texture identifier
+public:
+    std::string  Name;         // for reconstruction
+    bool         FL_MipMap;    // generate mip maps?
+    unsigned int Width;        // width
+    unsigned int Height;       // height
+    unsigned int ID_GLTexture; // GL Texture identifier
 
-    Texture()
-    {
-        Invalidate();
+    Texture() { Clear(); }
+
+    void Clear() {
+        Name.clear();
+        ID_GLTexture = 0;
     }
 
-    virtual const std::string &GetId() { return m_Name; }
-
-    bool Load  ( const std::string& name, bool mipmap );
-    void Unload( void );
-
-    bool ReLoad  ()
+    virtual bool Create();
+    virtual bool Create( const std::string& name, bool fl_mipmap )
     {
-        std::string name = m_Name;
-        Unload();
-        return Load (name, m_MipMap);
+        Name      = name;
+        FL_MipMap = fl_mipmap;
+        return Create();
     }
 
-    void Invalidate()
-    {
-        m_GLTexture = 0;
-    }
-    bool IsValid() const
-    {
-        return m_GLTexture != 0; // && glIsTexture( m_GLTexture ); // glIsTexture doesn't work to good :/
-    }
+    virtual void Dispose();
+    virtual void Invalidate()
+    { ID_GLTexture = 0; }
+    virtual bool IsDisposed()
+    { return ID_GLTexture == 0; }
+
+    virtual const std::string &Identifier() { return Name; }
 };
 
 #endif

@@ -1,31 +1,36 @@
 #ifndef __incl_Model3dx_h
 #define __incl_Model3dx_h
 
-#include "../Utils/HandleDst.h"
+#include "../Utils/Resource.h"
 #include "lib3dx/xModel.h"
 
-struct Model3dx : public HandleDst
+struct Model3dx : public Resource
 {
 public:
-    std::string m_Name;  // for reconstruction
+    std::string Name;  // for reconstruction
     xModel     *model;
 
-    Model3dx() : model(NULL) {}
+    Model3dx() { Clear(); }
 
-    virtual const std::string &GetId() { return m_Name; }
-
-    bool Load ( const char *name );
-    void Unload( void );
-    bool ReLoad()
-    {
-        assert(m_Name.size());
-        std::string name = m_Name;
-        Unload();
-        return Load(name.c_str());
+    void Clear() {
+        Name.clear();
+        model = 0;
     }
 
-    void Invalidate()    { model->FL_textures_loaded = false; }
-    bool IsValid() const { return model; }
+    virtual bool Create();
+    virtual bool Create( const std::string& name )
+    {
+        Name = name;
+        return Create();
+    }
+
+    virtual void Dispose();
+    virtual void Invalidate()
+    { /*model->FL_textures_loaded = 0;*/ }
+    virtual bool IsDisposed()
+    { return !model; }
+
+    virtual const std::string &Identifier() { return Name; }
 };
 
 #endif

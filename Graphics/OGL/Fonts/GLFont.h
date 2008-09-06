@@ -10,50 +10,53 @@
 #include <GL/gl.h>                      // Header File For The OpenGL32 Library
 #include <string>
 
-#include "../../../Utils/HandleDst.h"
+#include "../../../Utils/Resource.h"
+#include "../../../Utils/Utils.h"
 
-struct GLFont : public HandleDst
+struct GLFont : public Resource
 {
 private:
-    std::string m_Id;
+    std::string Id;
 
 public:
     static const float INTERLINE;
-    static const int FIRST_CHAR = 0;
-    static const int NUM_CHARS  = 32+96+128;
+    static const int   FIRST_CHAR = 0;
+    static const int   NUM_CHARS  = 32+96+128;
 
-    std::string m_Name;          // for reconstruction
-    int         m_Size;          // for reconstruction
-    int         m_GLFontBase;    // GL list identifier
+    std::string Name;          // for reconstruction
+    int         Size;          // for reconstruction
+    int         ID_GLFontBase; // GL list identifier
 
     float       LineH() const
-    {
-        return m_Size * (1+INTERLINE);
+    { return Size * (1+INTERLINE); }
+
+    GLFont() { Clear(); }
+
+    void Clear() {
+        Id.clear();
+        Name.clear();
+        ID_GLFontBase = -1;
     }
 
-    GLFont()
+    virtual bool Create();
+    virtual bool Create( const std::string& name, int size = 14)
     {
-        Invalidate();
+        Name = name;
+        Size = size;
+        Id   = Name + "|" + itos(Size);
+        return Create();
     }
 
-    virtual const std::string &GetId() { return m_Id; }
+    virtual void Dispose();
+    virtual void Invalidate()
+    { ID_GLFontBase = -1; }
+    virtual bool IsDisposed()
+    { return ID_GLFontBase == -1 || !glIsList( ID_GLFontBase ); }
 
-    bool Load(const std::string& name, int size = 14);
-    void Unload();
+    virtual const std::string &Identifier() { return Id; }
 
-    bool ReLoad  ()
-    {
-        std::string name = m_Name;
-        Unload();
-        return Load (name, m_Size);
-    }
 
-    void Invalidate()
-    {
-        m_GLFontBase   = -1;
-    }
-    bool IsValid() const
-        { return m_GLFontBase != -1 && glIsList( m_GLFontBase ); }
+    /////// font usage functions
 
     void Print   (float x, float y, float z, float maxHeight, int skipLines, const char *text) const;
     void PrintF  (float x, float y, float z, const char *fmt, ...) const;

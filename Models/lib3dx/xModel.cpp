@@ -242,16 +242,18 @@ xModel *xModel :: Load(const char *fileName, bool FL_create_CollisionInfo)
         if (xmodel)
         {
             xmodel->FL_textures_loaded = false;
-            xmodel->FL_transparent = false;
-            xmodel->FL_opaque = false;
-
-            bool FL_save_bvh = false;
+            xmodel->FL_transparent     = false;
+            xmodel->FL_opaque          = false;
+            xmodel->FL_save_rdata      = false;
+            bool FL_save_bvh           = false;
 
             xDWORD len;
             fread(&len, sizeof(len), 1, file);
             fread(&xmodel->FL_save_binfo, sizeof(xmodel->FL_save_binfo), 1, file);
             if (len > 1)
                 fread(&FL_save_bvh, sizeof(FL_save_bvh), 1, file);
+            if (len > 2)
+                fread(&xmodel->FL_save_rdata, sizeof(xmodel->FL_save_rdata), 1, file);
 
             xmodel->L_material = NULL;
             xmodel->L_kids = NULL;
@@ -325,11 +327,14 @@ void   xModel :: Save()
     if (file)
     {
         bool   FL_save_bvh = BVHierarchy != NULL;
+        bool   FL_save_smooth = true;
+        this->FL_save_rdata = true;
 
-        xDWORD len = 2;
+        xDWORD len = 3;
         fwrite(&len, sizeof(len), 1, file);
         fwrite(&this->FL_save_binfo, sizeof(this->FL_save_binfo), 1, file);
         fwrite(&FL_save_bvh, sizeof(FL_save_bvh), 1, file);
+        fwrite(&this->FL_save_rdata, sizeof(this->FL_save_rdata), 1, file);
 
         fwrite(&this->I_material, sizeof(xBYTE), 1, file);
         if (this->I_material)

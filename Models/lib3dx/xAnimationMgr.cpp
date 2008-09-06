@@ -10,7 +10,7 @@ HAnimation xAnimationMgr :: GetAnimation    ( const char* name )
     {
         // this is a new insertion
         xAnimationH* ani = m_HandleMgr.Acquire( rc.first->second );
-        if ( !ani->Load( rc.first->first.c_str() ) )
+        if ( !ani->Create( rc.first->first.c_str() ) )
         {
             m_HandleMgr.Release( rc.first->second );
             m_NameIndex.erase( rc.first );
@@ -20,7 +20,7 @@ HAnimation xAnimationMgr :: GetAnimation    ( const char* name )
             return HAnimation();
         }
     }
-    IncReferences(rc.first->second);
+    Lock(rc.first->second);
 
     if (IsHandleValid(rc.first->second))
         return ( rc.first->second );

@@ -129,9 +129,12 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
 
     this->Title = strdup (title);
     this->fullscreen = fl_fullscreen;
-    this->Resize(width, height);
+    this->Width  = width;
+    this->Height = height;
 
     OnCreate();
+    this->Resize(width, height);
+
     return true;
 }
 

@@ -551,52 +551,51 @@ bool           xAnimation::Load(const char *fileName)
 {
     FILE *file;
     file = fopen(fileName, "rb");
-    if (file)
-    {
-        xBYTE i;
-        fread(&i, sizeof(xBYTE), 1, file);
-        if (i) {
-            char *name = new char[i];
-            fread(name,        sizeof(char), i, file);
-            delete[] name;
-        }
-        this->Name = fileName; // overwrite name with path
+    if (!file) return false;
 
-        fread(&(this->I_bones),    sizeof(this->I_bones), 1, file);
-        fread(&(this->I_priority), sizeof(this->I_priority), 1, file);
-        fread(&(this->I_frames),   sizeof(this->I_frames), 1, file);
-        int frameNo;
-        fread(&frameNo,            sizeof(int), 1, file);
-        fread(&(this->T_progress), sizeof(this->T_progress), 1, file);
-
-        bool loop;
-        fread(&loop,               sizeof(bool), 1, file);
-
-        xKeyFrame *frame = NULL, *prevFrame = NULL;
-        for (int i=0; i<this->I_frames; ++i)
-        {
-            frame = new xKeyFrame();
-            if (i == 0) this->L_frames = frame;
-            frame->QT_bones = new xQuaternion[this->I_bones];
-            fread(frame->QT_bones, sizeof(xQuaternion), this->I_bones, file);
-            fread(&(frame->T_freeze),   sizeof(frame->T_freeze), 1, file);
-            fread(&(frame->T_duration), sizeof(frame->T_duration), 1, file);
-            if (i == frameNo-1) this->CurrentFrame = frame;
-            if (prevFrame) prevFrame->Next = frame;
-            frame->Prev = prevFrame;
-            prevFrame = frame;
-        }
-        if (frame)
-            if (loop)
-            {
-                frame->Next = this->L_frames;
-                this->L_frames->Prev = frame->Next;
-            }
-            else
-                frame->Next = NULL;
-
-        fclose(file);
-        return true;
+    xBYTE i;
+    fread(&i, sizeof(xBYTE), 1, file);
+    if (i) {
+        char *name = new char[i];
+        fread(name, sizeof(char), i, file);
+        this->Name = name;
+        delete[] name;
     }
-    return false;
+    //this->Name = fileName; // overwrite name with path
+
+    fread(&(this->I_bones),    sizeof(this->I_bones), 1, file);
+    fread(&(this->I_priority), sizeof(this->I_priority), 1, file);
+    fread(&(this->I_frames),   sizeof(this->I_frames), 1, file);
+    int frameNo;
+    fread(&frameNo,            sizeof(int), 1, file);
+    fread(&(this->T_progress), sizeof(this->T_progress), 1, file);
+
+    bool loop;
+    fread(&loop,               sizeof(bool), 1, file);
+
+    xKeyFrame *frame = NULL, *prevFrame = NULL;
+    for (int i=0; i<this->I_frames; ++i)
+    {
+        frame = new xKeyFrame();
+        if (i == 0) this->L_frames = frame;
+        frame->QT_bones = new xQuaternion[this->I_bones];
+        fread(frame->QT_bones, sizeof(xQuaternion), this->I_bones, file);
+        fread(&(frame->T_freeze),   sizeof(frame->T_freeze), 1, file);
+        fread(&(frame->T_duration), sizeof(frame->T_duration), 1, file);
+        if (i == frameNo-1) this->CurrentFrame = frame;
+        if (prevFrame) prevFrame->Next = frame;
+        frame->Prev = prevFrame;
+        prevFrame = frame;
+    }
+    if (frame)
+        if (loop)
+        {
+            frame->Next = this->L_frames;
+            this->L_frames->Prev = frame->Next;
+        }
+        else
+            frame->Next = NULL;
+
+    fclose(file);
+    return true;
 }

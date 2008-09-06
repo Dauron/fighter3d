@@ -250,9 +250,9 @@ namespace Scenes { namespace Menu {
             WorldRenderGL wRender;
             RendererGL   &render = wRender.renderModel;
 
-            if (choosen[0]->FL_renderNeedsUpdate) wRender.Free(*choosen[0]);
+            wRender.FreeIfNeeded(*choosen[0]);
             choosen[0]->Render();
-            if (choosen[1]->FL_renderNeedsUpdate) wRender.Free(*choosen[1]);
+            wRender.FreeIfNeeded(*choosen[1]);
             choosen[1]->Render();
 
             render.RenderModel(*choosen[0]->ModelGr->xModelP, choosen[0]->ModelGr->instance, false, Front.FOV);
@@ -328,12 +328,10 @@ namespace Scenes { namespace Menu {
                 ////// Control mode
                 xFLOAT y = HeightHalf + lineHeight03;
                 const char* controlType = i == 0 ? "Controls: ComBoard" : "Controls: Camera";
-                xFLOAT textLen = pFont03->Length(controlType);
                 pFont03->PrintF(WidthHalf * 0.1f, y, 0.0f, controlType);
                 y += lineHeight03*2;
 
                 ////// Fighters
-                textLen = pFont03->Length("Fighters:");
                 pFont03->PrintF(WidthHalf * 0.1f, y, 0.0f, "Fighters:");
                 fightersY = (xDWORD)y;
                 y += lineHeight03;
@@ -344,15 +342,13 @@ namespace Scenes { namespace Menu {
                     else
                         glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
                     const char *name = players[i][j].Name.c_str();
-                    textLen = pFont03->Length(name);
-                    pFont03->PrintF((WidthHalf - textLen) * 0.5f, y, 0.0f, name);
+                    pFont03->PrintF(WidthHalf * 0.2f, y, 0.0f, name);
                     y += lineHeight03;
                 }
                 y += lineHeight03;
 
                 ////// Fighting styles
                 glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                textLen = pFont03->Length("Fighting styles:");
                 pFont03->PrintF(WidthHalf * 0.1f, y, 0.0f, "Fighting styles:");
                 stylesY = (xDWORD)y;
                 y += lineHeight03;
@@ -363,8 +359,7 @@ namespace Scenes { namespace Menu {
                     else
                         glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
                     const char *name = choosen[i]->styles[j].Name.c_str();
-                    textLen = pFont03->Length(name);
-                    pFont03->PrintF((WidthHalf - textLen) * 0.5f, y, 0.0f, name);
+                    pFont03->PrintF(WidthHalf * 0.2f, y, 0.0f, name);
                     y += lineHeight03;
                 }
             }

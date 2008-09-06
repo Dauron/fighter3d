@@ -1,10 +1,5 @@
 #include "xAction.h"
 
-void       xActionSet :: Update(xDWORD T_delta)
-{
-    this->T_progress += T_delta;
-}
-
 xQuaternion xActionSet :: GetTransformation(xBYTE ID_bone)
 {
     std::vector<xAction>::iterator iterF = L_actions.begin(), iterE = L_actions.end();
@@ -15,6 +10,8 @@ xQuaternion xActionSet :: GetTransformation(xBYTE ID_bone)
         if (iterF->T_start <= T_progress && (!iterF->T_end || iterF->T_end > T_progress))
         {
             xAnimation *anim   = g_AnimationMgr.GetAnimation( iterF->hAnimation );
+            if (!anim) continue;
+
             anim->T_progress   = T_progress - iterF->T_start;
             anim->CurrentFrame = anim->L_frames;
             anim->UpdatePosition();
@@ -46,6 +43,8 @@ xQuaternion * xActionSet :: GetTransformations()
         if (iterF->T_start <= T_progress && (!iterF->T_end || iterF->T_end > T_progress))
         {
             xAnimation *anim   = g_AnimationMgr.GetAnimation( iterF->hAnimation );
+            if (!anim) continue;
+
             anim->T_progress   = T_progress - iterF->T_start;
             anim->CurrentFrame = anim->L_frames;
             anim->UpdatePosition();

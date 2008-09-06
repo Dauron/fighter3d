@@ -67,7 +67,7 @@ class GLButton
     {
         if (!Text) return;
 
-        int fHeight = pFont->m_Size;
+        int fHeight = pFont->Size;
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         if (Down)

@@ -19,9 +19,13 @@ bool IWindow::FullScreen_Set(unsigned width, unsigned height, bool fl_fullscreen
 {
     assert(!FL_destroyed);
 
+    WindowCreateEvent onCreate = OnCreate;
+    WindowResizeEvent onResize = OnResize;
     char *title = Title;
     Title = NULL;
     Destroy();
+    OnCreate = onCreate;
+    OnResize = onResize;
     if (!Create(title, width, height, fl_fullscreen))
     {
         delete[] title;

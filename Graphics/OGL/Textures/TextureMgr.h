@@ -13,28 +13,21 @@ typedef Handle <TextureMgr> HTexture;
 
 class TextureMgr : public Singleton<TextureMgr>, public Manager<Texture, HTexture>
 {
-    typedef std::pair <NameIndex::iterator, bool> NameIndexInsertRc;
-
 public:
-
-// Lifetime.
-    TextureMgr( void ) {  /* ... */  }
-   ~TextureMgr( void ) {  /* ... */  }
-
 // Texture management.
     HTexture GetTexture   ( const char* name );
 
 // Texture query.
     const std::string& GetName( HTexture htex ) const
-        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->m_Name );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->Name );  }
     int GetWidth( HTexture htex ) const
-        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->m_Width );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->Width );  }
     int GetHeight( HTexture htex ) const
-        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->m_Height );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( htex )->Height );  }
     GLuint GetTexture( HTexture htex )
-        {  return ( m_HandleMgr.Dereference( htex )->m_GLTexture );  }
+        {  return ( m_HandleMgr.Dereference( htex )->ID_GLTexture );  }
     void BindTexture( HTexture htex )
-        { glBindTexture(GL_TEXTURE_2D, m_HandleMgr.Dereference( htex )->m_GLTexture ); }
+        { glBindTexture(GL_TEXTURE_2D, m_HandleMgr.Dereference( htex )->ID_GLTexture ); }
 };
 
 #endif

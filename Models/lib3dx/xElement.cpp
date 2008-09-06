@@ -24,14 +24,8 @@ xBYTE      xElement :: CountAll ()
 
 void      xElement :: Free()
 {
-    if (this->renderData.L_faces && this->renderData.L_faces != this->L_faces)
-        delete[] this->renderData.L_faces;
-    if (this->renderData.L_vertices && this->renderData.L_vertices != this->L_vertices)
-        delete[] this->renderData.L_vertices;
-    if (this->renderData.L_normals)
-        delete[] this->renderData.L_normals;
-    if (this->renderData.L_face_normals)
-        delete[] this->renderData.L_face_normals;
+    this->renderData.Destroy(*this);
+
     if (this->Name)
         delete[] this->Name;
     if (this->L_vertices) {
@@ -98,7 +92,6 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
     //xWORD2     *L_edges;
     //xRenderData renderData;
 
-    memset(&(elem->renderData),   0, sizeof(elem->renderData));
     memset(&(elem->boundingData), 0, sizeof(elem->boundingData));
 
     elem->L_vertices  = NULL;
@@ -124,13 +117,7 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
     }
     if (elem->I_vertices)
     {
-        size_t stride = elem->FL_skeletized
-            ? elem->FL_textured
-            ? sizeof (xVertexTexSkel)
-            : sizeof (xVertexSkel)
-            : elem->FL_textured
-            ? sizeof (xVertexTex)
-            : sizeof (xVertex);
+        size_t stride = elem->GetVertexStride();
         elem->L_vertices = (xVertex*) new xBYTE[stride*elem->I_vertices];
         if (!elem->L_verticesTS ||
                 fread(elem->L_vertices, stride, elem->I_vertices, file)
@@ -142,9 +129,9 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
     }
     if (elem->I_faces)
     {
-        elem->L_faces = (xWORD(*)[3]) new xWORD[3*elem->I_faces];
+        elem->L_faces = new xFace[elem->I_faces];
         if (!elem->L_faces ||
-            fread(elem->L_faces, 3*sizeof(xWORD), elem->I_faces, file)
+            fread(elem->L_faces, sizeof(xFace), elem->I_faces, file)
                 != elem->I_faces)
         {
             elem->Free();
@@ -186,8 +173,11 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
             else
                 xmodel->FL_opaque = elem->FL_opaque = true;
         }
-        elem->CalculateSmoothVertices();
+        if (!xmodel->FL_save_rdata)
+            elem->CalculateSmoothVertices();
     }
+    if (xmodel->FL_save_rdata)
+        elem->renderData.Load(file, *elem);
 
     elem->FillShadowEdges();
     if (elem->I_kids)
@@ -231,27 +221,23 @@ void      xElement :: Save(FILE *file, const xModel *xmodel)
     fwrite(&this->I_kids,        sizeof(xBYTE), 1, file);
 
     //xWORD2     *L_edges;
-    //xRenderData renderData;
 
     if (name)
         fwrite(name, 1, (size_t)this->Name, file);
     if (this->I_vertices) {
-        size_t stride = this->FL_skeletized
-                ? this->FL_textured
-                ? sizeof (xVertexTexSkel)
-                : sizeof (xVertexSkel)
-                : this->FL_textured
-                ? sizeof (xVertexTex)
-                : sizeof (xVertex);
+        size_t stride = this->GetVertexStride();
         fwrite(this->L_vertices, stride, this->I_vertices, file);
     }
     if (this->I_faces)
     {
-        fwrite(this->L_faces, 3*sizeof(xWORD), this->I_faces, file);
+        fwrite(this->L_faces, sizeof(xFace), this->I_faces, file);
         fwrite(this->L_smooth, sizeof(xDWORD), this->I_faces, file);
     }
     if (this->I_faceLists)
         fwrite(this->L_faceLists, sizeof(xFaceList), this->I_faceLists, file);
+    if (xmodel->FL_save_rdata)
+        this->renderData.Save(file, *this);
+
     if (this->I_kids)
     {
         xElement *last = this->L_kids;

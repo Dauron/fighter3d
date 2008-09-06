@@ -1,13 +1,17 @@
 #include "ImageFile.h"
 #include <cstdio>
 #include <cstring>
-#include "../ogl.h"
-#include "../../../Utils/Debug.h"
+
 #ifdef WIN32
 #pragma warning(disable : 4996) // deprecated
 #endif
 
 #ifndef _WINGDI_
+
+typedef unsigned char  BYTE;
+typedef unsigned short WORD;
+typedef unsigned long DWORD;
+typedef long LONG;
 
 #define BI_RGB        0L
 #define BI_RLE8       1L
@@ -50,27 +54,24 @@ typedef struct tagBITMAPINFOHEADER{
 
 #endif
 
-inline void FreeData(FILE *file, ImageRec *texture)
+inline void FreeData(FILE *file, Image *texture)
 {
-    if(texture->data != NULL)       // Was Image Data Loaded
-        delete[] texture->data;     // If So, Release The Image Data
     delete texture;
     if (file)
         fclose(file);               // Close The File
 }
 
 // Loads A BMP File Into Memory
-ImageRec *LoadBMP(const char *filename)
+Image *LoadBMP(const char *filename)
 {
     BITMAPFILEHEADER bfh;
     BITMAPINFOHEADER bih;
     //ZeroMemory( &bfh, sizeof(BITMAPFILEHEADER) );
     //ZeroMemory( &bih, sizeof(BITMAPINFOHEADER) );
 
-    ImageRec *texture = new ImageRec();
-    texture->data = NULL;
-    texture->colororder = GL_BGR_EXT; // GL_RGB;
-    texture->type = GL_UNSIGNED_BYTE;
+    Image *texture      = new Image();
+    texture->colorOrder = Image::CO_BGR;
+    texture->type       = Image::TP_UNSIGNED_BYTE;
 
     FILE *file = fopen(filename, "rb");                        // Open The BMP File
     if( file == NULL ||                                        // Does File Even Exist?
@@ -86,10 +87,10 @@ ImageRec *LoadBMP(const char *filename)
     }
 
     if (bih.biHeight < 0) bih.biHeight = -bih.biHeight;
-    texture->sizeX = (unsigned int)bih.biWidth;                // Determine The BMP Width
-    texture->sizeY = (unsigned int)bih.biHeight;               // Determine The BMP Height
-    texture->bpp = bih.biBitCount;                             // Grab The BMP's Bits Per Pixel (24 or 32)
-    texture->format = GL_RGB8;                                 // Set The GL Mode To RGB (24 BPP) or RBGA (32 BPP)
+    texture->sizeX  = (unsigned int)bih.biWidth;               // Determine The BMP Width
+    texture->sizeY  = (unsigned int)bih.biHeight;              // Determine The BMP Height
+    texture->bpp    = bih.biBitCount;                          // Grab The BMP's Bits Per Pixel (24 or 32)
+    texture->format = (texture->bpp == 24) ? Image::FT_RGB8 : Image::FT_RGBA8;
     unsigned int imageSize = texture->sizeX * texture->sizeY * 3;
     texture->data = new unsigned char[imageSize];              // Reserve Memory To Hold The BMP Data
 
@@ -110,12 +111,12 @@ ImageRec *LoadBMP(const char *filename)
         fseek( file, fp, 0 );
     }
 
-    unsigned int Bpp = texture->bpp/8;                         // Holds Number Of Bytes Per Pixel Used In The BMP File
-    unsigned int dataPerLine = texture->sizeX * Bpp;
+    unsigned int Bpp = texture->bpp >> 3;              // Holds Number Of Bytes Per Pixel Used In The BMP File
+    unsigned int dataPerLine  = texture->sizeX * Bpp;
     unsigned int bytesPerLine = ((bih.biWidth * bih.biBitCount + 31) >> 5) << 2;
-    unsigned int spamPerLine = bytesPerLine - dataPerLine;
-    unsigned char *dataptr = texture->data;
-    unsigned char *dataend = texture->data + imageSize;
+    unsigned int spamPerLine  = bytesPerLine - dataPerLine;
+    unsigned char *dataptr    = texture->data;
+    unsigned char *dataend    = texture->data + imageSize;
 
     if (bih.biClrUsed == 0) // true color
     {

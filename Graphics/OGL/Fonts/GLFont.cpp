@@ -1,7 +1,5 @@
 #include "GLFont.h"
 #include "../../../AppFramework/Application.h"
-#include <cstdio>
-#include "../../../Utils/Utils.h"
 
 #ifdef WIN32
 #pragma warning(disable : 4996) // deprecated
@@ -11,43 +9,21 @@
 
 const float GLFont::INTERLINE = 0.2f;
 
-bool GLFont::Load(const std::string& name, int size)
+bool GLFont :: Create()
 {
-    assert (m_GLFontBase == -1);
-
-    m_Id   = name + "|" + itos(size);
-    m_Name = name;
-    m_Size = size;
-
-    Init();
-
-    return true;
-}
-
-void GLFont::Unload()
-{
-    if (m_GLFontBase != -1)
-    {
-        m_Name.erase();
-        glDeleteLists(m_GLFontBase, NUM_CHARS);   // Delete All Characters
-        m_GLFontBase = -1;
-    }
-}
-
-void GLFont::Init()
-{
-    assert(m_GLFontBase == -1);
+    assert (ID_GLFontBase == -1);
+    assert (Name.size());
 
     HDC hDC = g_Application.MainWindow_Get().HDC();
-    if (!hDC) return;
+    if (!hDC) return false;
 
-    m_GLFontBase = glGenLists(NUM_CHARS);           // Storage For 96 Characters
+    ID_GLFontBase = glGenLists(NUM_CHARS);          // Storage For 96 Characters
 
 #ifdef WIN32
     HFONT    font;                                  // Windows Font ID
     HFONT    oldfont;                               // Used For Good House Keeping
 
-    font = CreateFont( -m_Size,                     // Height Of Font
+    font = CreateFont( -Size,                     // Height Of Font
                         0,                          // Width Of Font
                         0,                          // Angle Of Escapement
                         0,                          // Orientation Angle
@@ -60,13 +36,13 @@ void GLFont::Init()
                         CLIP_DEFAULT_PRECIS,        // Clipping Precision
                         ANTIALIASED_QUALITY,        // Output Quality
                         FF_DONTCARE|DEFAULT_PITCH,  // Family And Pitch
-                        m_Name.c_str());             // Font Name
+                        Name.c_str());              // Font Name
 
     oldfont = (HFONT)SelectObject(hDC, font);       // Selects The Font We Want
 
     // BUG: call it 2 times, cause sometimes 1 time is not enought
-    //wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, m_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
-    wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, m_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
+    //wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, ID_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
+    wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, ID_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
 
     ABCFLOAT metrics[NUM_CHARS]; // Storage For Information About Our Font
     GetCharABCWidthsFloat(hDC, FIRST_CHAR, FIRST_CHAR+NUM_CHARS-1, metrics);
@@ -105,7 +81,7 @@ void GLFont::Init()
  *  swdth  = { normal, condensed, double wide, narrow, semicondensed, wide }
  *  adstyl = { *, sans, serif }
 */
-    std::string sfont = "-*-helvetica-*-r-normal--" + itos(m_Size) + "-*-*-*-*-*-*-*";
+    std::string sfont = "-*-helvetica-*-r-normal--" + itos(Size) + "-*-*-*-*-*-*-*";
     XFontStruct *font = XLoadQueryFont(hDC, sfont.c_str());
     if (font == NULL)
     {
@@ -125,15 +101,26 @@ void GLFont::Init()
     XFreeFont(hDC, font);
 #endif
 
-    glNewList(m_GLFontBase+'\t',GL_COMPILE);        // Tab is 8 spaces
+    glNewList(ID_GLFontBase+'\t',GL_COMPILE);        // Tab is 8 spaces
         glCallLists(8, GL_UNSIGNED_BYTE, "        "); // Draws The Display List Text
     glEndList();
+
+    return true;
 }
 
-void GLFont::Print (float x, float y, float z, float maxHeight, int skipLines, const char *text) const
+void GLFont :: Dispose()
 {
-    assert(m_GLFontBase != -1);
-    //if (m_GLFontBase == -1) Init();
+    if (ID_GLFontBase != -1)
+    {
+        glDeleteLists(ID_GLFontBase, NUM_CHARS);   // Delete All Characters
+        ID_GLFontBase = -1;
+    }
+}
+
+void  GLFont :: Print  (float x, float y, float z, float maxHeight, int skipLines, const char *text) const
+{
+    assert(ID_GLFontBase != -1);
+
     glRasterPos3f(x, y, z);            // Position The Text On The Screen
 
     if (text == NULL)                  // If There's No Text
@@ -146,7 +133,7 @@ void GLFont::Print (float x, float y, float z, float maxHeight, int skipLines, c
     float lineH = LineH();
 
     glPushAttrib(GL_LIST_BIT);         // Pushes The Display List Bits
-    glListBase(m_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
+    glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     while ( (end = strchr(start, '\n')) )
     {
         if (skipLines)
@@ -167,10 +154,10 @@ void GLFont::Print (float x, float y, float z, float maxHeight, int skipLines, c
     glPopAttrib();                     // Pops The Display List Bits
 }
 
-void GLFont::PrintF (float x, float y, float z, const char *fmt, ...) const
+void  GLFont :: PrintF (float x, float y, float z, const char *fmt, ...) const
 {
-    assert(m_GLFontBase != -1);
-    //if (m_GLFontBase == -1) Init();
+    assert(ID_GLFontBase != -1);
+
     glRasterPos3f(x, y, z);            // Position The Text On The Screen
 
     char    text[256];                 // Holds Our String
@@ -189,7 +176,7 @@ void GLFont::PrintF (float x, float y, float z, const char *fmt, ...) const
     char *end;
 
     glPushAttrib(GL_LIST_BIT);         // Pushes The Display List Bits
-    glListBase(m_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
+    glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     while ( (end = strchr(start, '\n')) )
     {
         glCallLists((GLsizei)(end-start), GL_UNSIGNED_BYTE, start); // Draws The Display List Text
@@ -202,24 +189,23 @@ void GLFont::PrintF (float x, float y, float z, const char *fmt, ...) const
     glPopAttrib();                     // Pops The Display List Bits
 }
 
-void GLFont::Print (const char *text) const
+void  GLFont :: Print  (const char *text) const
 {
-    assert(m_GLFontBase != -1);
-    //if (m_GLFontBase == -1) Init();
+    assert(ID_GLFontBase != -1);
 
     if (text == NULL)                   // If There's No Text
         return;                        // Do Nothing
 
     glPushAttrib(GL_LIST_BIT);         // Pushes The Display List Bits
-    glListBase(m_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
+    glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     glCallLists((GLsizei)strlen(text), GL_UNSIGNED_BYTE, text);    // Draws The Display List Text
     glPopAttrib();                     // Pops The Display List Bits
 }
 
-void GLFont::PrintF (const char *fmt, ...) const
+void  GLFont :: PrintF (const char *fmt, ...) const
 {
-    assert(m_GLFontBase != -1);
-    //if (m_GLFontBase == -1) Init();
+    assert(ID_GLFontBase != -1);
+
     char        text[256];             // Holds Our String
     va_list        ap;                 // Pointer To List Of Arguments
 
@@ -231,15 +217,13 @@ void GLFont::PrintF (const char *fmt, ...) const
     va_end(ap);                        // Results Are Stored In Text
 
     glPushAttrib(GL_LIST_BIT);         // Pushes The Display List Bits
-    glListBase(m_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
+    glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     glCallLists((GLsizei)strlen(text), GL_UNSIGNED_BYTE, text);    // Draws The Display List Text
     glPopAttrib();                     // Pops The Display List Bits
 }
 
-float GLFont::Length (const char *text) const
+float GLFont :: Length (const char *text) const
 {
-    assert(m_GLFontBase != -1);
-    //if (m_GLFontBase == -1) Init();
     float length = 0.0f;
 
     for (; *text; ++text)    // Loop To Find Text Length

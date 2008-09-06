@@ -18,7 +18,7 @@ void SkeletizedObj :: ApplyDefaults()
 
     Tracker.Init();
     styles.clear();
-    comBoard.Init();
+    comBoard.Destroy();
 }
 
 void SkeletizedObj :: Create ()
@@ -64,7 +64,7 @@ void SkeletizedObj :: Destroy ()
     DestroyVerletSystem();
     delete[] QT_verlet;
 
-    actions.Free();
+    actions.Destroy();
 
     if (NW_VerletVelocity)
     {
@@ -73,7 +73,7 @@ void SkeletizedObj :: Destroy ()
         delete[] NW_VerletVelocity_total; NW_VerletVelocity_total = NULL;
     }
 
-    comBoard.Init();
+    comBoard.Destroy();
 }
 
 
@@ -537,10 +537,13 @@ void SkeletizedObj :: LoadLine(char *buffer, std::string &dir)
 {
     if (StartsWith(buffer, "animation"))
     {
-        int start = 0, end = -1;
-        char file[255];
-        sscanf(buffer+9, "%s\t%d\t%d", file, &start, &end);
-        std::string animFile = Filesystem::GetFullPath(dir + "/" + file);
+        const char* params = NULL;
+        std::string animFile = Filesystem::GetFullPath(dir + "/" + ReadSubstring(buffer+9, params));
+
+        int start = 0, end = 0;
+        if (params)
+            sscanf(params, "%d %d", &start, &end);
+
         if (end <= start)
             actions.AddAnimation(animFile.c_str(), start);
         else
@@ -550,13 +553,15 @@ void SkeletizedObj :: LoadLine(char *buffer, std::string &dir)
 
     if (StartsWith(buffer, "style"))
     {
-        char file[255], name[255];
-        sscanf(buffer+5, "%s\t%s", name, file);
+        const char* params = NULL;
         FightingStyle style;
-        style.Name = name;
-        style.FileName = Filesystem::GetFullPath(dir + "/" + file);
-        styles.push_back(style);
-        comBoard.FileName = style.FileName;
+        style.Name = ReadSubstring(buffer+5, params);
+        if (params)
+        {
+            style.FileName = Filesystem::GetFullPath(dir + "/" + ReadSubstring(params));
+            styles.push_back(style);
+            comBoard.FileName = style.FileName;
+        }
         return;
     }
     if (StartsWith(buffer, "control"))

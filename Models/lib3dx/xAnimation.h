@@ -35,29 +35,36 @@ struct xAnimation
     xKeyFrame  *CurrentFrame; // current frame pointer
     xLONG       T_progress;   // ms of progress of the current frame
 
-    void Reset(xWORD I_bones)
+    xAnimation() { Clear(); }
+
+    void Clear()
     {
-        this->I_bones  = I_bones;
         Name.clear();
+        I_bones        = 0;
         L_frames       = NULL;
         I_frames       = 0;
         CurrentFrame   = NULL;
         T_progress     = 0;
+    }
+
+    void Create(xWORD I_bones)
+    {
+        assert ( Name.size() );
+        this->I_bones  = I_bones;
         InsertKeyFrame();
     }
-    void Unload()
+
+    void Destroy()
     {
-        Name.clear();
-        xKeyFrame *kfCur = L_frames;
-        xWORD cnt = I_frames;
-        while (kfCur && cnt)
+        while (L_frames && I_frames)
         {
-            L_frames = kfCur->Next;
-            if (kfCur->QT_bones) delete[] kfCur->QT_bones;
-            delete kfCur;
-            kfCur = L_frames;
-            --cnt;
+            xKeyFrame *KF_next = L_frames->Next;
+            if (L_frames->QT_bones) delete[] L_frames->QT_bones;
+            delete L_frames;
+            L_frames = KF_next;
+            --I_frames;
         }
+        Clear();
     }
 
     xAnimationInfo GetInfo();

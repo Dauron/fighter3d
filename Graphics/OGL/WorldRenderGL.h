@@ -48,8 +48,8 @@ public:
 
     void Free(RigidObj &obj)
     {
-        if (obj.ModelGr) renderModel.FreeGraphics(*obj.ModelGr->xModelP, obj.ModelGr->instance, obj.ModelGr->GetReferences() == 1);
-        if (obj.ModelPh) renderModel.FreeGraphics(*obj.ModelPh->xModelP, obj.ModelPh->instance, obj.ModelPh->GetReferences() == 1);
+        if (obj.ModelGr) renderModel.FreeGraphics(*obj.ModelGr->xModelP, obj.ModelGr->instance, obj.ModelGr->GetReferences() <= 1);
+        if (obj.ModelPh) renderModel.FreeGraphics(*obj.ModelPh->xModelP, obj.ModelPh->instance, obj.ModelPh->GetReferences() <= 1);
 
         xShadowMap &smap = obj.GetShadowMap();
         if (smap.texId)
@@ -62,22 +62,6 @@ public:
         obj.FL_renderNeedsUpdateBones = false;
     }
 
-    void FreeIfNeeded(World &world)
-    {
-        if (world.skyBox && world.skyBox->FL_renderNeedsUpdate) Free(*world.skyBox);
-
-        World::Vec_Object::iterator MD_curr = world.objects.begin(),
-                                    MD_last = world.objects.end();
-
-        for (; MD_curr != MD_last ; ++MD_curr )
-        {
-            RigidObj &obj = *(RigidObj*)*MD_curr;
-            if (obj.FL_renderNeedsUpdate) Free(obj);
-            else
-            if (obj.FL_renderNeedsUpdateBones) InvalidateBones(obj);
-        }
-    }
-
     void Free(World &world)
     {
         if (world.skyBox) Free(*world.skyBox);
@@ -87,6 +71,24 @@ public:
 
         for (; MD_curr != MD_last ; ++MD_curr )
             Free(*(RigidObj*)*MD_curr);
+    }
+
+    void FreeIfNeeded(RigidObj &obj)
+    {
+        if (obj.FL_renderNeedsUpdate) Free(obj);
+        else
+        if (obj.FL_renderNeedsUpdateBones) InvalidateBones(obj);
+    }
+
+    void FreeIfNeeded(World &world)
+    {
+        if (world.skyBox && world.skyBox->FL_renderNeedsUpdate) Free(*world.skyBox);
+
+        World::Vec_Object::iterator MD_curr = world.objects.begin(),
+                                    MD_last = world.objects.end();
+
+        for (; MD_curr != MD_last ; ++MD_curr )
+            FreeIfNeeded(*(RigidObj*)*MD_curr);
     }
 };
 

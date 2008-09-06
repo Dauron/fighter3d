@@ -231,10 +231,11 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
     xmodel->I_material = 0;
     xmodel->FL_textures_loaded = false;
     xmodel->FL_transparent = false;
-    xmodel->FL_opaque = false;
-    xmodel->Spine.I_bones = 0;
-    xmodel->Spine.L_bones = NULL;
-    xmodel->FL_save_binfo = true;
+    xmodel->FL_opaque      = false;
+    xmodel->Spine.I_bones  = 0;
+    xmodel->Spine.L_bones  = NULL;
+    xmodel->FL_save_binfo  = true;
+    xmodel->FL_save_rdata  = true;
     xmodel->FileName = 0;
 
     xMaterial *lastm = NULL;

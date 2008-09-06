@@ -27,13 +27,13 @@ struct ModelInstance
     }
 
     ~ModelInstance()
-    { g_ModelMgr.DeleteReference(hModel); instance.Clear(); }
+    { g_ModelMgr.Release(hModel); instance.Clear(); }
 
     void Update()
     { xModelP = g_ModelMgr.GetModel(hModel)->model; }
 
     int GetReferences()
-    { return g_ModelMgr.GetModel(hModel)->m_References; }
+    { return g_ModelMgr.GetModel(hModel)->CountReferences(); }
 };
 
 class RigidObj : public Physics::PhysicalBody

@@ -1,16 +1,13 @@
 #include "ImageFile.h"
 #include <cstdio>
 #include <cstring>
-#include "../ogl.h"
-#include "../../../Utils/Debug.h"
+
 #ifdef WIN32
 #pragma warning(disable : 4996) // deprecated
 #endif
 
-inline void FreeData(FILE *file, ImageRec *texture)
+inline void FreeData(FILE *file, Image *texture)
 {
-    if(texture->data != NULL)       // Was Image Data Loaded
-        delete[] texture->data;     // If So, Release The Image Data
     delete texture;
     if (file)
         fclose(file);               // Close The File
@@ -37,15 +34,17 @@ BYTE    ITEM         SIZE    DESCRIPTION
 + optional 26 byte footer
 */
 
+/*
+ * Based on http://nehe.gamedev.net/data/lessons/lesson.asp?lesson=24
+ */
 // Loads A TGA File Into Memory
-ImageRec *LoadTGA(const char *filename)
+Image *LoadTGA(const char *filename)
 {
     unsigned char  TGAheader[12] = {1,0,2,0,0,0,0,0,0,0,0,0};  // Uncompressed TGA Header
     unsigned char  TGAcompare[12];                             // Used To Compare TGA Header
     unsigned char  header[6+256];                                  // First 6 Useful Bytes From The Header
-    ImageRec *texture = new ImageRec();
-    texture->data = NULL;
-    texture->type = GL_UNSIGNED_BYTE;
+    Image *texture = new Image();
+    texture->type  = Image::TP_UNSIGNED_BYTE;
 
     FILE *file = fopen(filename, "rb");                         // Open The TGA File
     if( file == NULL ||                                         // Does File Even Exist?
@@ -69,8 +68,8 @@ ImageRec *LoadTGA(const char *filename)
         return NULL;                                           // Return False
     }
 
-    texture->format = (texture->bpp == 24) ? GL_RGB8 : GL_RGBA8;  // Set The GL Mode To RGB (24 BPP) or RBGA (32 BPP)
-    texture->colororder = (texture->bpp == 24) ? GL_BGR_EXT : GL_BGRA_EXT; // GL_RGB : GL_RGBA;
+    texture->format     = (texture->bpp == 24) ? Image::FT_RGB8 : Image::FT_RGBA8;
+    texture->colorOrder = (texture->bpp == 24) ? Image::CO_BGR  : Image::CO_BGRA;
     unsigned int Bpp = texture->bpp >> 3;                      // Holds Number Of Bytes Per Pixel Used In The TGA File
     unsigned int imageSize = texture->sizeX * texture->sizeY * Bpp;  // Calculate The Memory Required For The TGA Data
     texture->data = new unsigned char[imageSize];              // Reserve Memory To Hold The TGA Data

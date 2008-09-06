@@ -12,22 +12,15 @@ typedef Handle <FontMgr> HFont;
 
 class FontMgr : public Singleton<FontMgr>, public Manager<GLFont, HFont>
 {
-    typedef std::pair <NameIndex::iterator, bool> NameIndexInsertRc;
-
 public:
-
-// Lifetime.
-    FontMgr( void ) {  /* ... */  }
-   ~FontMgr( void ) {  /* ... */  }
-
 // Font management.
     HFont GetFont   ( const char* name, int size );
 
 // Font query.
     const std::string& GetName( HFont hfnt ) const
-        {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->m_Name );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->Name );  }
     int GetSize( HFont hfnt ) const
-        {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->m_Size );  }
+        {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->Size );  }
     const GLFont* GetFont( HFont hfnt ) const
         {  return ( m_HandleMgr.Dereference( hfnt ) );  }
 };

@@ -253,9 +253,7 @@ void Config :: Load(const char *fileName)
                 }
                 if (StartsWith(buffer, "scene"))
                 {
-                    char name[255];
-                    sscanf(buffer+5, "%s", name);
-                    Config::Scene = strdup(name);
+                    Config::Scene = strdup( ReadSubstring(buffer+5) );
                     continue;
                 }
                 if (StartsWith(buffer, "level"))

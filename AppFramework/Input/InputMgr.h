@@ -133,6 +133,11 @@ public:
             if (_KeysState[kCode])
                 _IndexState[ KeyCode2Index(kCode) ] = true;
     }
+    void AllKeysUp()
+    {
+        memset(g_InputMgr._KeysState, 0, NUM_KEYS * sizeof(bool));
+        memset(_IndexState, 0, _InputMap->Indices * sizeof(bool));
+    }
 
     // Get / Set the keyCode to inputCode mapping
     int Key2InputCode(byte kCode)

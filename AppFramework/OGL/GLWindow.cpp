@@ -204,15 +204,17 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
         FL_queryForMultisample = false;
     }
 
+    this->Title = strdup(title);
+    this->FL_fullscreen = fl_fullscreen;
+    this->Width  = width;
+    this->Height = height;
+
+    OnCreate();
     ShowWindow(hWnd, SW_SHOW);
     SetForegroundWindow(hWnd);
     SetFocus(hWnd);
-
-    this->Title = strdup(title);
-    this->FL_fullscreen = fl_fullscreen;
     this->Resize(width, height);
 
-    OnCreate();
     return true;
 }
 

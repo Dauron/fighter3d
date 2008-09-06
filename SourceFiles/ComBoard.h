@@ -24,7 +24,7 @@ public:
         xFLOAT      S_max_change;
         bool        FL_breakable;
 
-        void Init ()
+        void Clear ()
         {
             ID_action = 0;
             SN_action.clear();
@@ -65,7 +65,7 @@ public:
         bool        FL_time_shift;
         bool        FL_pos_shift;
 
-        void Init ()
+        void Clear ()
         {
             ID_action = 0;
             Key       = Keys::Undefined;
@@ -89,7 +89,7 @@ public:
 
         std::vector<Combo> L_combos;
 
-        void Init ()
+        void Clear ()
         {
             SN_name.clear();
             SN_next.clear();
@@ -101,9 +101,9 @@ public:
             FL_mirror = false;
         }
 
-        void Free ()
+        void Destroy ()
         {
-            Anims.Free();
+            Anims.Destroy();
         }
     };
 
@@ -131,7 +131,7 @@ public:
 
     xMatrix        MX_shift;
 
-    void Init();
+    void Destroy();
 
     xMatrix GetActionRotation()
     {

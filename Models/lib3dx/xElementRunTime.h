@@ -138,6 +138,17 @@ struct xRenderData
 
     xGPUPointers::Mode mode;
     xGPUPointers       gpuMain;
+
+    xRenderData() { Clear(); }
+
+    void Clear()
+    {
+        memset(this, 0, sizeof(xRenderData));
+    }
+    void Destroy(const xElement &elem);
+
+    void Load( FILE *file, xElement &elem );
+    void Save( FILE *file, const xElement &elem ) const;
 };
 
 struct xSkinnedData

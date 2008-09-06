@@ -39,4 +39,7 @@ inline char *MakeLowerCase(char *buff)
     return buff;
 }
 
+const char *ReadSubstring(const char *buff);
+const char *ReadSubstring(const char *buff, const char *&last);
+
 #endif
