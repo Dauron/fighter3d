@@ -52,7 +52,7 @@ namespace Scenes { namespace Menu {
             {
                 if (Parent)           SwitchState(*Parent);
                 else
-                if (SubStates.size()) SwitchState(**SubStates.rbegin());
+                if (SubStates.size()) SwitchState(*SubStates.back());
                 //else                  SwitchState(*this);
                 return true;
             }

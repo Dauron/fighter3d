@@ -10,6 +10,12 @@
 
 union xGPUPointers
 {
+    typedef enum {
+        NONE = 0,
+        VBO  = 1,
+        LIST = 2
+    } Mode;
+
     struct {
         xDWORD vertexB;
         xDWORD normalB;
@@ -87,17 +93,9 @@ struct xShadowData
 
 typedef std::vector<xShadowData> xShadowDataVector;
 
-struct xGPURender {
-    typedef enum {
-        NONE = 0,
-        VBO  = 1,
-        LIST = 2
-    } Mode;
-};
-
 struct xElementInstance
 {
-    xGPURender::Mode  mode;
+    xGPUPointers::Mode mode;
 
     xGPUPointers      gpuMain;
     xShadowDataVector gpuShadows;
@@ -138,7 +136,7 @@ struct xRenderData
 
     xVector3          *L_face_normals;
 
-    xGPURender::Mode   mode;
+    xGPUPointers::Mode mode;
     xGPUPointers       gpuMain;
 };
 

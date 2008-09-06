@@ -8,9 +8,9 @@
 #include "SceneTest.h"
 #include "SceneMenu.h"
 
-void Application_OnCreate     (Application& sender, void *reciever, bool &res);
-void Application_OnInvalidate (Application& sender, void *reciever, bool &res);
-void Application_OnDestroy    (Application& sender, void *reciever, bool &res);
+void Application_OnCreate     (Application& sender, void *receiver, bool &res);
+void Application_OnInvalidate (Application& sender, void *receiver, bool &res);
+void Application_OnDestroy    (Application& sender, void *receiver, bool &res);
 
 int main( int argc, char **argv )
 {
@@ -102,7 +102,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #include "../Models/ModelMgr.h"
 #include "../Models/lib3dx/xAnimationMgr.h"
 
-void Application_OnCreate(Application& sender, void *reciever, bool &res)
+void Application_OnCreate(Application& sender, void *receiver, bool &res)
 {
     GLExtensions   ::Create();
     InputMgr       ::Create(IC_CODE_COUNT);
@@ -117,7 +117,7 @@ void Application_OnCreate(Application& sender, void *reciever, bool &res)
     res = true;
 }
 
-void Application_OnInvalidate(Application& sender, void *reciever, bool &res)
+void Application_OnInvalidate(Application& sender, void *receiver, bool &res)
 {
     if (FontMgr::GetSingletonPtr())
         g_FontMgr.InvalidateItems();
@@ -136,7 +136,7 @@ void Application_OnInvalidate(Application& sender, void *reciever, bool &res)
     res = true;
 }
 
-void Application_OnDestroy(Application& sender, void *reciever, bool &res)
+void Application_OnDestroy(Application& sender, void *receiver, bool &res)
 {
     ModelMgr       ::Destroy();
     xAnimationMgr  ::Destroy();

@@ -41,8 +41,8 @@ struct xElement {
     xElement  *L_kids; // first kid
     xBYTE      I_kids; // no of kids
 
-    xCollisionData    collisionData;
-    xRenderData       renderData;
+    xBoundingData  boundingData; // used to generate BVH
+    xRenderData    renderData;
 
     xElement  *ById     ( xBYTE eid );
     xBYTE      CountAll ();
@@ -62,12 +62,12 @@ struct xElement {
     xSkinnedData GetSkinnedVertices(const xMatrix     *bones) const;
     xSkinnedData GetSkinnedVertices(const xQuaternion *bones, const xPoint3 *roots, const xPoint3 *trans) const;
 
-    void                 FillCollisionInfo (xModel &xmodel);
+    void                 FillBoundingData (xModel &xmodel);
     Math::Figures::xBoxA FillBVH  ( Math::Figures::xBVHierarchy *L_BVH, Math::Figures::xMeshData *MeshData );
     Math::Figures::xBoxA ReFillBVH( Math::Figures::xBVHierarchy *L_BVH, Math::Figures::xMeshData *MeshData, const xMatrix &MX_LocalToWorld );
 
 private:
-    Math::Figures::xBoxA FillBVHNode(xCollisionHierarchy            &CH_node,
+    Math::Figures::xBoxA FillBVHNode(xBoundingHierarchy             &BH_node,
                                      Math::Figures::xBVHierarchy    &BVH_node,
                                      Math::Figures::xMeshData       &MeshData);
     Math::Figures::xBoxA ReFillBVHNode(Math::Figures::xBVHierarchy    &BVH_node,

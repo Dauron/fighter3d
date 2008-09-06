@@ -26,12 +26,12 @@ struct xEdge {
 
 struct xModel;
 struct xElement;
-struct xCollisionHierarchy;
+struct xBoundingHierarchy;
 
-struct xCollisionData
+struct xBoundingData
 {
-    xWORD                I_kids;
-    xCollisionHierarchy *L_kids;
+    xWORD               I_kids;
+    xBoundingHierarchy *L_kids;
 
     void Load( FILE *file, xElement *elem );
     void Save( FILE *file, xElement *elem );
@@ -42,7 +42,7 @@ struct xCollisionData
     static const xBYTE MAX_HIERARCHY_DEPTH = 10;
 };
 
-struct xCollisionHierarchy : xCollisionData
+struct xBoundingHierarchy : xBoundingData
 {
     xWORD    I_faces;
     xFace ** L_faces;

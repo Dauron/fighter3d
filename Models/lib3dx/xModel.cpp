@@ -249,7 +249,7 @@ xModel *xModel :: Load(const char *fileName, bool FL_create_CollisionInfo)
 
             xDWORD len;
             fread(&len, sizeof(len), 1, file);
-            fread(&xmodel->FL_save_cinfo, sizeof(xmodel->FL_save_cinfo), 1, file);
+            fread(&xmodel->FL_save_binfo, sizeof(xmodel->FL_save_binfo), 1, file);
             if (len > 1)
                 fread(&FL_save_bvh, sizeof(FL_save_bvh), 1, file);
 
@@ -309,8 +309,8 @@ xModel *xModel :: Load(const char *fileName, bool FL_create_CollisionInfo)
                 xmodel->BVHierarchy->Load(file);
             }
 
-            if (xmodel->I_kids && FL_create_CollisionInfo && !xmodel->FL_save_cinfo)
-                xmodel->L_kids->FillCollisionInfo(*xmodel);
+            if (xmodel->I_kids && FL_create_CollisionInfo && !xmodel->FL_save_binfo)
+                xmodel->L_kids->FillBoundingData(*xmodel);
         }
         fclose(file);
         return xmodel;
@@ -328,7 +328,7 @@ void   xModel :: Save()
 
         xDWORD len = 2;
         fwrite(&len, sizeof(len), 1, file);
-        fwrite(&this->FL_save_cinfo, sizeof(this->FL_save_cinfo), 1, file);
+        fwrite(&this->FL_save_binfo, sizeof(this->FL_save_binfo), 1, file);
         fwrite(&FL_save_bvh, sizeof(FL_save_bvh), 1, file);
 
         fwrite(&this->I_material, sizeof(xBYTE), 1, file);

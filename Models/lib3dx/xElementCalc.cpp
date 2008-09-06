@@ -385,7 +385,7 @@ xBoxA xElement :: ReFillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData,
     if (BVH_node.I_items)
     {
         xBVHierarchy *BVH_kid = BVH_node.L_items;
-        for (int i = collisionData.I_kids; i; --i, ++BVH_kid)
+        for (int i = boundingData.I_kids; i; --i, ++BVH_kid)
         {
             boxAc = ReFillBVHNode(*BVH_kid, Mesh_node, MX_LocalToWorld);
             if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
@@ -422,27 +422,27 @@ xBoxA xElement :: ReFillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData,
     return boxA;
 }
 
-xBoxA xElement :: FillBVHNode(xCollisionHierarchy &CH_node,
+xBoxA xElement :: FillBVHNode(xBoundingHierarchy  &BH_node,
                               xBVHierarchy        &BVH_node,
                               xMeshData           &MeshData)
 {
     xBoxA boxA;
     BVH_node.init(*new xBoxO());
 
-    if (CH_node.I_kids)
+    if (BH_node.I_kids)
     {
         boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
         boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
 
-        BVH_node.I_items = CH_node.I_kids;
+        BVH_node.I_items = BH_node.I_kids;
         BVH_node.L_items = new xBVHierarchy[BVH_node.I_items];
 
         xBoxA boxAc;
-        xCollisionHierarchy *CH_kid  = CH_node.L_kids;
-        xBVHierarchy        *BVH_kid = BVH_node.L_items;
-        for (int i = CH_node.I_kids; i; --i, ++CH_kid, ++BVH_kid)
+        xBoundingHierarchy *BH_kid  = BH_node.L_kids;
+        xBVHierarchy       *BVH_kid = BVH_node.L_items;
+        for (int i = BH_node.I_kids; i; --i, ++BH_kid, ++BVH_kid)
         {
-            boxAc = FillBVHNode(*CH_kid, *BVH_kid, MeshData);
+            boxAc = FillBVHNode(*BH_kid, *BVH_kid, MeshData);
             if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;
             if (boxAc.P_min.y < boxA.P_min.y) boxA.P_min.y = boxAc.P_min.y;
             if (boxAc.P_min.z < boxA.P_min.z) boxA.P_min.z = boxAc.P_min.z;
@@ -459,19 +459,19 @@ xBoxA xElement :: FillBVHNode(xCollisionHierarchy &CH_node,
         BVH_node.L_items[0].init(*new xMesh());
         xMesh &mesh   = *(xMesh*) BVH_node.L_items[0].Figure;
         mesh.MeshData = &MeshData;
-        mesh.I_FaceIndices = CH_node.I_faces;
+        mesh.I_FaceIndices = BH_node.I_faces;
         mesh.L_FaceIndices = new xDWORD[mesh.I_FaceIndices];
         xDWORD *MF_iter = mesh.L_FaceIndices;
-        xFace **CF_iter = CH_node.L_faces;
+        xFace **CF_iter = BH_node.L_faces;
         for (xDWORD i = mesh.I_FaceIndices; i; --i, ++MF_iter, ++CF_iter)
             *MF_iter = (*CF_iter - L_faces);// % MeshData->I_FaceStride;
 
-        boxA.P_max = boxA.P_min = MeshData.GetVertex(CH_node.L_vertices[0]);
+        boxA.P_max = boxA.P_min = MeshData.GetVertex(BH_node.L_vertices[0]);
 
-        mesh.I_VertexIndices = CH_node.I_vertices;
+        mesh.I_VertexIndices = BH_node.I_vertices;
         mesh.L_VertexIndices = new xDWORD[mesh.I_VertexIndices];
         xDWORD *MV_iter = mesh.L_VertexIndices;
-        xWORD  *CV_iter = CH_node.L_vertices;
+        xWORD  *CV_iter = BH_node.L_vertices;
         for (xDWORD i = mesh.I_VertexIndices; i; --i, ++MV_iter, ++CV_iter)
         {
             xPoint3 &P_tmp = MeshData.GetVertex(*MV_iter = *CV_iter);
@@ -509,10 +509,10 @@ xBoxA xElement :: FillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData  )
     boxA.P_min.init(xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE, xFLOAT_HUGE_POSITIVE);
     boxA.P_max.init(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
 
-    if (collisionData.I_kids)
+    if (boundingData.I_kids)
     {
         BVH_node.init(*new xBoxO());
-        BVH_node.I_items = collisionData.I_kids;
+        BVH_node.I_items = boundingData.I_kids;
         BVH_node.L_items = new xBVHierarchy[BVH_node.I_items];
 
         //xMeshData *MeshData = new xMeshData();
@@ -530,9 +530,9 @@ xBoxA xElement :: FillBVH  ( xBVHierarchy *L_BVH, xMeshData *MeshData  )
             Mesh_node.I_BoneStride = Mesh_node.I_VertexStride;
         }
 
-        xCollisionHierarchy *CH_kid  = collisionData.L_kids;
-        xBVHierarchy        *BVH_kid = BVH_node.L_items;
-        for (int i = collisionData.I_kids; i; --i, ++CH_kid, ++BVH_kid)
+        xBoundingHierarchy *CH_kid  = boundingData.L_kids;
+        xBVHierarchy       *BVH_kid = BVH_node.L_items;
+        for (int i = boundingData.I_kids; i; --i, ++CH_kid, ++BVH_kid)
         {
             boxAc = FillBVHNode(*CH_kid, *BVH_kid, Mesh_node);
             if (boxAc.P_min.x < boxA.P_min.x) boxA.P_min.x = boxAc.P_min.x;

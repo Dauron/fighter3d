@@ -34,7 +34,7 @@ void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView 
     xDWORD &listIDTex = elem->FL_skeletized
         ? transparent ? instance.gpuMain.listIDTexTransp : instance.gpuMain.listIDTex
         : transparent ? elem->renderData.gpuMain.listIDTexTransp : elem->renderData.gpuMain.listIDTex;
-    xGPURender::Mode &mode = elem->FL_skeletized ? instance.mode : elem->renderData.mode;
+    xGPUPointers::Mode &mode = elem->FL_skeletized ? instance.mode : elem->renderData.mode;
     bool textured = false;
 
     if (elem->FL_skeletized)
@@ -42,7 +42,7 @@ void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView 
 
     if (!listID)
     {
-        mode = xGPURender::LIST;
+        mode = xGPUPointers::LIST;
         glNewList(listID = glGenLists(1), GL_COMPILE);
 
         if (elem->FL_skeletized) {
@@ -173,7 +173,7 @@ void RenderElementDiffuseVBO(bool transparent, const Math::Cameras::FieldOfView 
     }
 
     /************************* INIT VBO ****************************/
-    if (elem->renderData.mode == xGPURender::NONE)
+    if (elem->renderData.mode == xGPUPointers::NONE)
         RendererGL::InitVBO(elem);
 
     /************************* LOAD VERTICES ****************************/

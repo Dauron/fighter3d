@@ -30,7 +30,7 @@ class IWindow
     //typedef void (*WindowResizeEvent) (IWindow &window, unsigned int width, unsigned int height);
 
     typedef Delegate<IWindow> WindowCreateEvent;
-    typedef Delegate<IWindow, unsigned int, unsigned int> WindowResizeEvent;
+    typedef Delegate<IWindow, unsigned int /*Width*/, unsigned int /*Height*/> WindowResizeEvent;
 
     WindowCreateEvent OnCreate;
     WindowResizeEvent OnResize;

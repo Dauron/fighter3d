@@ -134,8 +134,10 @@ bool   FigureCollider :: Test (const xIFigure3d *figure1, const xIFigure3d *figu
 
 inline xDWORD CSInvert (xDWORD I_lastCount, CollisionSet &cset)
 {
-    CollisionSet::CollisionVec::reverse_iterator iter = cset.collisions.rbegin();
-    for (int i = I_lastCount; i; --i, ++iter) iter->invert();
+    CollisionSet::CollisionVec::reverse_iterator
+        CS_curr = cset.collisions.rbegin(),
+        CS_last = cset.collisions.rend();
+    for (; CS_curr != CS_last; ++CS_curr) CS_curr->invert();
     return I_lastCount;
 }
 

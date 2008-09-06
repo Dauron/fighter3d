@@ -60,7 +60,7 @@ class RendererGL : public Renderer
             for (xElementInstance *iter = instance.L_elements; cnt; --cnt, ++iter)
             {
                 iter->gpuMain.Invalidate();
-                iter->mode = xGPURender::NONE;
+                iter->mode = xGPUPointers::NONE;
 
                 xShadowDataVector::iterator iterS = iter->gpuShadows.begin(), iterE = iter->gpuShadows.end();
                 for (; iterS != iterE; ++iterS)
@@ -107,14 +107,14 @@ class RendererGL : public Renderer
     void InvalidateElementGraphics(xElement *elem)
     {
         elem->renderData.gpuMain.Invalidate();
-        elem->renderData.mode = xGPURender::NONE;
+        elem->renderData.mode = xGPUPointers::NONE;
         for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
             InvalidateElementGraphics(celem);
     }
 
     void FreeElementGraphics(xElement *elem)
     {
-        if (elem->renderData.mode == xGPURender::VBO)
+        if (elem->renderData.mode == xGPUPointers::VBO)
         {
             GLuint p = elem->renderData.gpuMain.vertexB;
             if (p) glDeleteBuffersARB(1, &p);
@@ -123,16 +123,16 @@ class RendererGL : public Renderer
             p = elem->renderData.gpuMain.normalB;
             if (p) glDeleteBuffersARB(1, &p);
             elem->renderData.gpuMain.Invalidate();
-            elem->renderData.mode = xGPURender::NONE;
+            elem->renderData.mode = xGPUPointers::NONE;
         }
-        if (elem->renderData.mode == xGPURender::LIST)
+        if (elem->renderData.mode == xGPUPointers::LIST)
         {
             if (elem->renderData.gpuMain.listID)          glDeleteLists(elem->renderData.gpuMain.listID, 1);
             if (elem->renderData.gpuMain.listIDTex)       glDeleteLists(elem->renderData.gpuMain.listIDTex, 1);
             if (elem->renderData.gpuMain.listIDTransp)    glDeleteLists(elem->renderData.gpuMain.listIDTransp, 1);
             if (elem->renderData.gpuMain.listIDTexTransp) glDeleteLists(elem->renderData.gpuMain.listIDTexTransp, 1);
             elem->renderData.gpuMain.Invalidate();
-            elem->renderData.mode = xGPURender::NONE;
+            elem->renderData.mode = xGPUPointers::NONE;
         }
 
         for (xElement *celem = elem->L_kids; celem; celem = celem->Next)
@@ -145,14 +145,14 @@ class RendererGL : public Renderer
         {
             xElementInstance *iter = instanceDataP;
             for (int i = instanceDataC; i; --i, ++iter)
-                if (iter->mode == xGPURender::LIST)
+                if (iter->mode == xGPUPointers::LIST)
                 {
                     if (iter->gpuMain.listID)       glDeleteLists(iter->gpuMain.listID, 1);
                     if (iter->gpuMain.listIDTex)    glDeleteLists(iter->gpuMain.listIDTex, 1);
                     if (iter->gpuMain.listIDTransp) glDeleteLists(iter->gpuMain.listIDTransp, 1);
                     if (iter->gpuMain.listIDTexTransp) glDeleteLists(iter->gpuMain.listIDTexTransp, 1);
                     iter->gpuMain.Invalidate();
-                    iter->mode = xGPURender::NONE;
+                    iter->mode = xGPUPointers::NONE;
 
                     xShadowDataVector::iterator iterS = iter->gpuShadows.begin(), iterE = iter->gpuShadows.end();
                     for (; iterS != iterE; ++iterS)
@@ -176,7 +176,7 @@ class RendererGL : public Renderer
         {
             xElementInstance *iter = instanceDataP;
             for (int i = instanceDataC; i; --i, ++iter)
-                if (iter->mode == xGPURender::VBO)
+                if (iter->mode == xGPUPointers::VBO)
                 {
                     GLuint p = iter->gpuMain.vertexB;
                     if (p) glDeleteBuffersARB(1, &p);
@@ -185,7 +185,7 @@ class RendererGL : public Renderer
                     p = iter->gpuMain.normalB;
                     if (p) glDeleteBuffersARB(1, &p);
                     iter->gpuMain.Invalidate();
-                    iter->mode = xGPURender::NONE;
+                    iter->mode = xGPUPointers::NONE;
 
                     xShadowDataVector::iterator iterS = iter->gpuShadows.begin(), iterE = iter->gpuShadows.end();
                     for (; iterS != iterE; ++iterS)

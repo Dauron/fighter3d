@@ -17,12 +17,12 @@ xShadowData & xElementInstance :: GetShadowData(xLight &light, xShadowData::xSha
     newData.ID_light = light.id;
     newData.zDataLevel = zLevel;
     gpuShadows.push_back(newData);
-    return *gpuShadows.rbegin();
+    return gpuShadows.back();
 }
 
 void xElementInstance :: Zero()
 {
-    mode = xGPURender::NONE;
+    mode = xGPUPointers::NONE;
 
     memset (&gpuMain, 0, sizeof(xGPUPointers));
     gpuShadows.clear();

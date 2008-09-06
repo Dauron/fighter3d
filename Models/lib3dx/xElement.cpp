@@ -62,20 +62,20 @@ void      xElement :: Free()
         curr = next;
     }
 
-    this->collisionData.FreeKids();
+    this->boundingData.FreeKids();
 
     delete this;
 }
 
 #include "xModel.h"
 
-void xElement :: FillCollisionInfo (xModel &xmodel)
+void xElement :: FillBoundingData (xModel &xmodel)
 {
     for (xElement *elem = this; elem; elem = elem->Next)
     {
-        elem->collisionData.Fill(xmodel, *elem);
+        elem->boundingData.Fill(xmodel, *elem);
         if ( elem->L_kids )
-            elem->L_kids->FillCollisionInfo(xmodel);
+            elem->L_kids->FillBoundingData(xmodel);
     }
 }
 
@@ -98,8 +98,8 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
     //xWORD2     *L_edges;
     //xRenderData renderData;
 
-    memset(&(elem->renderData),    0, sizeof(elem->renderData));
-    memset(&(elem->collisionData), 0, sizeof(elem->collisionData));
+    memset(&(elem->renderData),   0, sizeof(elem->renderData));
+    memset(&(elem->boundingData), 0, sizeof(elem->boundingData));
 
     elem->L_vertices  = NULL;
     elem->L_smooth    = NULL;
@@ -207,8 +207,8 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
         }
     }
 
-    if (xmodel->FL_save_cinfo)
-        elem->collisionData.Load(file, elem);
+    if (xmodel->FL_save_binfo)
+        elem->boundingData.Load(file, elem);
 
     return elem;
 }
@@ -261,8 +261,8 @@ void      xElement :: Save(FILE *file, const xModel *xmodel)
 
     this->Name = name;
 
-    if (xmodel->FL_save_cinfo)
-        this->collisionData.Save(file, this);
+    if (xmodel->FL_save_binfo)
+        this->boundingData.Save(file, this);
 }
 
 /////// SKIN VERTICES

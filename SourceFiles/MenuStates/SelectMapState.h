@@ -237,7 +237,7 @@ namespace Scenes { namespace Menu {
                         {
                             mode = LoadMode_Map;
                             L_maps.push_back(Map());
-                            map = &*L_maps.rbegin();
+                            map = &L_maps.back();
                             continue;
                         }
                         mode = LoadMode_None;

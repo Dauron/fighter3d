@@ -83,8 +83,8 @@ namespace Scenes { namespace Menu {
 
         virtual void Enter()
         {
-            ChoosePlayer(0, *players[0].begin());
-            ChoosePlayer(1, *players[1].rbegin());
+            ChoosePlayer(0, players[0].front());
+            ChoosePlayer(1, players[1].back());
         }
 
         virtual void Exit()
@@ -409,8 +409,8 @@ namespace Scenes { namespace Menu {
                             mode = LoadMode_Player;
                             players[0].push_back(SkeletizedObj());
                             players[1].push_back(SkeletizedObj());
-                            player1 = &*players[0].rbegin();
-                            player2 = &*players[1].rbegin();
+                            player1 = &players[0].back();
+                            player2 = &players[1].back();
                             player1->ApplyDefaults();
                             player2->ApplyDefaults();
                             continue;

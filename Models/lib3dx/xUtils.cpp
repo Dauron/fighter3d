@@ -230,7 +230,7 @@ xVector3 xModel_GetBounds(const xModel &model, xModelInstance &instance)
 
 #include <vector>
 #include <algorithm>
-
+/*
 void xElement_FreeCollisionHierarchyBounds(xCollisionData *pcData, xCollisionHierarchyBounds *hierarchyBP)
 {
     if (pcData->L_kids && hierarchyBP)
@@ -462,3 +462,4 @@ void xElement_CalcCollisionHierarchyBox(const xVector4* vertices,
     pBound->center   = (res.P_min + res.P_max) * 0.5f;
     pBound->radius   = (res.P_min - pBound->center).length();
 }
+*/

@@ -39,7 +39,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
     elem->I_kids = 0;
 
     memset(&(elem->renderData), 0, sizeof(elem->renderData));
-    memset(&(elem->collisionData), 0, sizeof(elem->collisionData));
+    memset(&(elem->boundingData), 0, sizeof(elem->boundingData));
     memcpy(elem->MX_MeshToLocal.matrix, node->matrix, sizeof(elem->MX_MeshToLocal));
 
     int mirrorFaces = 0;
@@ -207,7 +207,7 @@ xElement *xImportElementFrom3ds(Lib3dsFile *model, xModel *xmodel, Lib3dsNode *n
         }
     }
 
-    elem->collisionData.Fill(*xmodel, *elem);
+    elem->boundingData.Fill(*xmodel, *elem);
 
     xElement *laste = NULL;
     for (Lib3dsNode *snode = node->childs; snode != NULL; snode = snode->next)
@@ -234,7 +234,7 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
     xmodel->FL_opaque = false;
     xmodel->Spine.I_bones = 0;
     xmodel->Spine.L_bones = NULL;
-    xmodel->FL_save_cinfo = true;
+    xmodel->FL_save_binfo = true;
     xmodel->FileName = 0;
 
     xMaterial *lastm = NULL;

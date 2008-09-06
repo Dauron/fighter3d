@@ -1,9 +1,9 @@
 #include "xModel.h"
 
-////////////////////// xCollisionHierarchy
-void xCollisionHierarchy :: Load ( FILE *file, xElement *elem )
+////////////////////// xBoundingHierarchy
+void xBoundingHierarchy :: Load ( FILE *file, xElement *elem )
 {
-    xCollisionData::Load(file, elem);
+    xBoundingData::Load(file, elem);
 
     fread(&this->I_faces, sizeof(this->I_faces), 1, file);
     if (this->I_faces && !this->I_kids)
@@ -30,9 +30,9 @@ void xCollisionHierarchy :: Load ( FILE *file, xElement *elem )
         this->L_vertices = 0;
 }
 
-void xCollisionHierarchy :: Save ( FILE *file, xElement *elem )
+void xBoundingHierarchy :: Save ( FILE *file, xElement *elem )
 {
-    xCollisionData::Save(file, elem);
+    xBoundingData::Save(file, elem);
 
     fwrite(&this->I_faces, sizeof(this->I_faces), 1, file);
     if (this->I_faces && !this->I_kids && this->L_faces)
@@ -51,15 +51,15 @@ void xCollisionHierarchy :: Save ( FILE *file, xElement *elem )
         fwrite(this->L_vertices, sizeof(xWORD), this->I_vertices, file);
 }
 
-////////////////////// xCollisionData
+////////////////////// xBoundingData
 
-void xCollisionData :: Load (FILE *file, xElement *elem)
+void xBoundingData :: Load (FILE *file, xElement *elem)
 {
     fread(&this->I_kids, sizeof(this->I_kids), 1, file);
     if (this->I_kids)
     {
-        this->L_kids = new xCollisionHierarchy[this->I_kids];
-        xCollisionHierarchy *iter = this->L_kids;
+        this->L_kids = new xBoundingHierarchy[this->I_kids];
+        xBoundingHierarchy *iter = this->L_kids;
         for (int i = this->I_kids; i; --i, ++iter)
             iter->Load(file, elem);
     }
@@ -67,22 +67,22 @@ void xCollisionData :: Load (FILE *file, xElement *elem)
         this->L_kids = NULL;
 }
 
-void xCollisionData :: Save (FILE *file, xElement *elem)
+void xBoundingData :: Save (FILE *file, xElement *elem)
 {
     fwrite(&this->I_kids, sizeof(this->I_kids), 1, file);
     if (this->I_kids)
     {
-        xCollisionHierarchy *iter = this->L_kids;
+        xBoundingHierarchy *iter = this->L_kids;
         for (int i = this->I_kids; i; --i, ++iter)
             iter->Save(file, elem);
     }
 }
 
-void xCollisionData :: FreeKids()
+void xBoundingData :: FreeKids()
 {
     if (this->L_kids)
     {
-        xCollisionHierarchy *ch = this->L_kids;
+        xBoundingHierarchy *ch = this->L_kids;
         for (int i = this->I_kids; i; --i, ++ch)
         {
             if (ch->L_faces)    delete[] ch->L_faces;
@@ -99,15 +99,15 @@ void xCollisionData :: FreeKids()
 #include <algorithm>
 
 void CreateHierarchyFromVertices(const xElement                   &elem,
-                                 xCollisionHierarchy              *baseHierarchy,
+                                 xBoundingHierarchy               *baseHierarchy,
                                  std::vector<xBoxA>               &cBoundings,
-                                 std::vector<xCollisionHierarchy> &cHierarchy);
+                                 std::vector<xBoundingHierarchy>  &cHierarchy);
 void CreateHierarchyFromVertices(const xElement                   &elem,
-                                 xCollisionHierarchy              *baseHierarchy,
+                                 xBoundingHierarchy               *baseHierarchy,
                                  std::vector<std::vector<xWORD> > &bVertices,
-                                 std::vector<xCollisionHierarchy> &cHierarchy);
+                                 std::vector<xBoundingHierarchy>  &cHierarchy);
 
-void xCollisionData :: Fill (xModel &xmodel, xElement &elem)
+void xBoundingData :: Fill (xModel &xmodel, xElement &elem)
 {
     if (this->L_kids) // force Octree recalculation
         this->FreeKids();
@@ -121,7 +121,7 @@ void xCollisionData :: Fill (xModel &xmodel, xElement &elem)
         }
         if (elem.I_faces < 20)
         {
-            this->L_kids = new xCollisionHierarchy[1];
+            this->L_kids = new xBoundingHierarchy[1];
             this->I_kids = 1;
             this->L_kids->I_faces = elem.I_faces;
             this->L_kids->L_faces = new xFace*[elem.I_faces];
@@ -143,11 +143,11 @@ void xCollisionData :: Fill (xModel &xmodel, xElement &elem)
 
         xBYTE *src    = (xBYTE *) elem.L_vertices;
         xDWORD stride = elem.GetVertexStride();
-        std::vector<xCollisionHierarchy> cHierarchy;
+        std::vector<xBoundingHierarchy> cHierarchy;
 
         if (!elem.FL_skeletized || !xmodel.Spine.I_bones)
         {
-            xCollisionHierarchy hierarchy;
+            xBoundingHierarchy hierarchy;
             hierarchy.I_kids = 0;
             hierarchy.L_kids = NULL;
             hierarchy.I_faces    = elem.I_faces;
@@ -243,17 +243,17 @@ void xCollisionData :: Fill (xModel &xmodel, xElement &elem)
         for (size_t i = 0; i<cHierarchy.size(); ++i)
             if (cHierarchy[i].I_faces == 0)
             {
-                cHierarchy[i--] = *cHierarchy.rbegin();
+                cHierarchy[i--] = cHierarchy.back();
                 cHierarchy.resize(cHierarchy.size()-1);
             }
         this->I_kids = cHierarchy.size();
-        this->L_kids = new xCollisionHierarchy[cHierarchy.size()];
+        this->L_kids = new xBoundingHierarchy[cHierarchy.size()];
         for (size_t i = 0; i<cHierarchy.size(); ++i)
             this->L_kids[i] = cHierarchy[i];
     }
 }
 
-void xCollisionHierarchy :: Subdivide(const xElement &elem, float scale, int depth, const xBoxA &bounding)
+void xBoundingHierarchy :: Subdivide(const xElement &elem, float scale, int depth, const xBoxA &bounding)
 {
     float dx = bounding.P_max.x - bounding.P_min.x;
     float dy = bounding.P_max.y - bounding.P_min.y;
@@ -285,7 +285,7 @@ void xCollisionHierarchy :: Subdivide(const xElement &elem, float scale, int dep
             }
 
     // create subhierarchies for given grid
-    std::vector<xCollisionHierarchy> cHierarchy;
+    std::vector<xBoundingHierarchy> cHierarchy;
     CreateHierarchyFromVertices(elem, this, cBoundings, cHierarchy);
 
     // subdivide subhierarchies
@@ -303,7 +303,7 @@ void xCollisionHierarchy :: Subdivide(const xElement &elem, float scale, int dep
     for (size_t i = 0; i<cHierarchy.size(); ++i)
         if (cHierarchy[i].I_faces == 0)
         {
-            cHierarchy[i--] = *cHierarchy.rbegin();
+            cHierarchy[i--] = cHierarchy.back();
             cHierarchy.resize(cHierarchy.size()-1);
         }
 
@@ -327,16 +327,16 @@ void xCollisionHierarchy :: Subdivide(const xElement &elem, float scale, int dep
     else
     {
         this->I_kids = cHierarchy.size();
-        this->L_kids = new xCollisionHierarchy[cHierarchy.size()];
+        this->L_kids = new xBoundingHierarchy[cHierarchy.size()];
         for (size_t i = 0; i<cHierarchy.size(); ++i)
             this->L_kids[i] = cHierarchy[i];
     }
 }
 
 void CreateHierarchyFromVertices(const xElement                   &elem,
-                                 xCollisionHierarchy              *baseHierarchy,
+                                 xBoundingHierarchy               *baseHierarchy,
                                  std::vector<xBoxA>               &cBoundings,
-                                 std::vector<xCollisionHierarchy> &cHierarchy)
+                                 std::vector<xBoundingHierarchy>  &cHierarchy)
 {
     std::vector<std::vector<xFace*> > cFaces;
     std::vector<std::vector<xWORD> >  cVerts;
@@ -411,7 +411,7 @@ void CreateHierarchyFromVertices(const xElement                   &elem,
     size_t size = cFaces.size();
     for (size_t j = 0; j < size; ++j)
     {
-        xCollisionHierarchy hierarchy;
+        xBoundingHierarchy hierarchy;
         hierarchy.I_kids = 0;
         hierarchy.L_kids = NULL;
         hierarchy.I_faces = cFaces[j].size();
@@ -444,9 +444,9 @@ void CreateHierarchyFromVertices(const xElement                   &elem,
 }
 
 void CreateHierarchyFromVertices(const xElement                   &elem,
-                                 xCollisionHierarchy              *baseHierarchy,
+                                 xBoundingHierarchy               *baseHierarchy,
                                  std::vector<std::vector<xWORD> > &bVertices,
-                                 std::vector<xCollisionHierarchy> &cHierarchy)
+                                 std::vector<xBoundingHierarchy>  &cHierarchy)
 {
     std::vector<std::vector<xFace*> > cFaces;
     std::vector<std::vector<xWORD> >  cVerts;
@@ -522,7 +522,7 @@ void CreateHierarchyFromVertices(const xElement                   &elem,
     size_t size = cFaces.size();
     for (size_t j = 0; j < size; ++j)
     {
-        xCollisionHierarchy hierarchy;
+        xBoundingHierarchy hierarchy;
         hierarchy.I_kids = 0;
         hierarchy.L_kids = NULL;
         hierarchy.I_faces = cFaces[j].size();

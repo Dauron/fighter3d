@@ -18,7 +18,7 @@ struct xModel {
     xSkeleton  Spine;
 
     bool       FL_textures_loaded; // Are textures handles loaded from the TextureManager
-    bool       FL_save_cinfo;      // Save collision info?
+    bool       FL_save_binfo;      // Save bounding info?
     bool       FL_transparent;     // Are there any transparent faces?
     bool       FL_opaque;          // Are there any opaque faces?
 
@@ -47,6 +47,7 @@ struct xModelInstance {
     xPoint3     * P_bone_trans;
     bool        * FL_modified;
 
+    // flattened hierarchy indexed by element ID
     xElementInstance  *L_elements;
     xBYTE              I_elements;
 

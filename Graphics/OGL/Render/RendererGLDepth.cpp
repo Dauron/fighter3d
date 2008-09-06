@@ -79,7 +79,7 @@ void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
     }
 
     /************************* INIT VBO ****************************/
-    if (instance.mode == xGPURender::NONE)
+    if (instance.mode == xGPUPointers::NONE)
         RendererGL::InitVBO(elem);
 
     /************************* LOAD VERTICES ****************************/

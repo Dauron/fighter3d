@@ -1,8 +1,8 @@
 #include "Application.h"
 
-void MainWindow_OnCreate(IWindow &window, void* reciever)
+void MainWindow_OnCreate(IWindow &window, void* receiver)
 { g_Application.MainWindow_OnCreate(window); }
-void MainWindow_OnResize(IWindow &window, void* reciever, unsigned int &width, unsigned int &height)
+void MainWindow_OnResize(IWindow &window, void* receiver, unsigned int &width, unsigned int &height)
 { g_Application.MainWindow_OnResize(window, width, height); }
 
 int Application::Create(const char *title, unsigned int width, unsigned int height,
@@ -15,20 +15,27 @@ int Application::Create(const char *title, unsigned int width, unsigned int heig
     //else
     //  MainWindow = new DXWindow();
 
+    // Create window
     if (! MainWindow->Create(title, width, height, fl_fullscreen) )
     {
         Destroy();
         return WINDOW_ERROR;
     }
+
+    // Call event
     bool res = true; OnApplicationCreate(res);
     if (!res)
     {
         Destroy();
         return EVENT_ERROR;
     }
+
+    // Init window events
     SceneCur = &scene;
-    MainWindow->OnCreate.Set((void*)this, ::MainWindow_OnCreate);
-    MainWindow->OnResize.Set((void*)this, ::MainWindow_OnResize);
+    MainWindow->OnCreate.Set(this, ::MainWindow_OnCreate);
+    MainWindow->OnResize.Set(this, ::MainWindow_OnResize);
+
+    // Create scene
     if (! SceneCur->Create(0, 0, width, height) )
     {
         Destroy();

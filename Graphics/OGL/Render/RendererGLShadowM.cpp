@@ -65,7 +65,7 @@ void RenderShadowMapVBO(xElement *elem, xModelInstance &modelInstance,
         return;
     }
 
-    if (instance.mode == xGPURender::NONE)
+    if (instance.mode == xGPUPointers::NONE)
         RendererGL::InitVBO(elem);
 
     glPushMatrix();
@@ -204,7 +204,7 @@ void RenderShadowMapTextureVBO(xElement *elem, xModelInstance &modelInstance, bo
     xElementInstance &instance = modelInstance.L_elements[elem->ID];
 
     /************************* INIT VBO ****************************/
-    if (instance.mode == xGPURender::NONE)
+    if (instance.mode == xGPUPointers::NONE)
         RendererGL::InitVBO(elem);
 
     /************************* LOAD VERTICES ****************************/
