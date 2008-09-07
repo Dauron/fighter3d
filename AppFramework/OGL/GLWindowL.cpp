@@ -25,9 +25,10 @@ static int attrListDbl[] = { GLX_RGBA, GLX_DOUBLEBUFFER,
     GLX_STENCIL_SIZE, 8,
     None };
 
-bool GLWindow::Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen)
+bool GLWindow::Create()
 {
-    assert ( FL_destroyed );
+    assert ( !IsDestroyed() );
+    assert ( IsDisposed() );
 
     XVisualInfo *vi;
     Colormap cmap;
@@ -76,7 +77,7 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
     attr.colormap = cmap;
     attr.border_pixel = 0;
 
-    if (fl_fullscreen)
+    if (FL_fullscreen)
     {
         XF86VidModeSwitchToMode(hDC, screen, modes[bestMode]);
         XF86VidModeSetViewPort(hDC, screen, 0, 0);
@@ -111,26 +112,19 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
         /* only set window title and handle wm_delete_events if in windowed mode */
         wmDelete = XInternAtom(hDC, "WM_DELETE_WINDOW", True);
         XSetWMProtocols(hDC, win, &wmDelete, 1);
-        XSetStandardProperties(hDC, win, title,
-            title, None, NULL, 0, NULL);
+        XSetStandardProperties(hDC, win, Title,
+            Title, None, NULL, 0, NULL);
         XMapRaised(hDC, win);
     }
     /* connect the glx-context to the window */
     glXMakeCurrent(hDC, win, glctx);
     XGetGeometry(hDC, win, &winDummy, &x, &y,
-        &width, &height, &borderDummy, &depth);
+        &Width, &Height, &borderDummy, &depth);
     printf("Depth %d\n", depth);
     if (glXIsDirect(hDC, glctx))
         printf("Congrats, you have Direct Rendering!\n");
     else
         printf("Sorry, no Direct Rendering possible!\n");
-
-    FL_destroyed = false;
-
-    this->Title = strdup (title);
-    this->fullscreen = fl_fullscreen;
-    this->Width  = width;
-    this->Height = height;
 
     OnCreate();
     this->Resize(width, height);
@@ -138,10 +132,8 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
     return true;
 }
 
-void GLWindow::Destroy()
+void GLWindow::Dispose()
 {
-    FL_destroyed = true;
-
     if (glctx)
     {
         if (!glXMakeCurrent(hDC, None, NULL))
@@ -155,10 +147,6 @@ void GLWindow::Destroy()
         XF86VidModeSetViewPort(hDC, screen, 0, 0);
     }
     if (hDC) XCloseDisplay(hDC);
-
-    if (this->Title) delete[] this->Title;
-
-    Clear();
 }
 
 #endif

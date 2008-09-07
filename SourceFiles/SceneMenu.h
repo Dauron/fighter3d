@@ -1,13 +1,13 @@
 #ifndef __incl_SceneMenu_h
 #define __incl_SceneMenu_h
 
-#include "../AppFramework/Scene.h"
+#include "../AppFramework/IScene.h"
 #include "../Graphics/OGL/Fonts/FontMgr.h"
 #include "MenuStates/BaseState.h"
 
 namespace Scenes {
 
-    class SceneMenu : public Scene
+    class SceneMenu : public IScene
     {
     public:
         SceneMenu() {
@@ -16,7 +16,7 @@ namespace Scenes {
             root = NULL;
         };
 
-        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene = NULL);
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene = NULL);
         virtual void Destroy();
 
         virtual bool Invalidate();

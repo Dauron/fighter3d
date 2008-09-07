@@ -189,6 +189,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Source Files\InputCodes.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Source Files\main.cpp"
 				>
 			</File>
@@ -629,19 +633,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\App Framework\IScene.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\App Framework\IScene.h"
+				>
+			</File>
+			<File
 				RelativePath="..\App Framework\IWindow.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\App Framework\IWindow.h"
-				>
-			</File>
-			<File
-				RelativePath="..\App Framework\Scene.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\App Framework\Scene.h"
 				>
 			</File>
 			<File
@@ -659,10 +663,6 @@
 			<Filter
 				Name="Input"
 				>
-				<File
-					RelativePath="..\App Framework\Input\InputCodes.h"
-					>
-				</File>
 				<File
 					RelativePath="..\App Framework\Input\InputMgr.cpp"
 					>

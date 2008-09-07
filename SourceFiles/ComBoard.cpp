@@ -2,6 +2,7 @@
 #include <map>
 #include "../Utils/Filesystem.h"
 #include "../AppFramework/Input/InputMgr.h"
+#include "InputCodes.h"
 
 #include "ComBoard.h"
 

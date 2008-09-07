@@ -13,7 +13,7 @@ public:
     Resource()          { Clear(); }
     //virtual ~Resource() { Destroy(); }
 
-    void Clear() { m_References = 0; }
+    virtual void Clear() { m_References = 0; }
 
     virtual bool Create()  { return false; }
     virtual void Destroy() { Dispose(); Clear(); }

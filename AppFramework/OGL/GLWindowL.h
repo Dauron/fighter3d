@@ -16,10 +16,10 @@ private:
 public:
     GLWindow() { Clear(); }
 
-    void Clear() { IWindow::Clear(); glctx = NULL; }
+    virtual void Clear() { IWindow::Clear(); glctx = NULL; }
 
-    bool Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen);
-    void Destroy();
+    bool Create();
+    void Dispose();
 
     virtual void SwapBuffers(){ glXSwapBuffers(hDC,win); }
 

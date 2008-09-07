@@ -5,6 +5,7 @@
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
+#include "InputCodes.h"
 #include "../Graphics/OGL/GLAnimSkeletal.h"
 
 #include "../Utils/Debug.h"
@@ -12,9 +13,9 @@
 
 using namespace Scenes;
 
-bool SceneConsole :: Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene)
+bool SceneConsole :: Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene)
 {
-    Scene::Create(left, top, width, height, prevScene);
+    IScene::Create(left, top, width, height, prevScene);
 
     InitInputMgr();
 
@@ -23,6 +24,8 @@ bool SceneConsole :: Create(int left, int top, unsigned int width, unsigned int 
     scroll_v = 0;
 
     FL_visible = !PrevScene;
+
+    Performance.Clear();
 
     return true;
 }
@@ -58,7 +61,7 @@ void SceneConsole :: InitInputMgr()
 
 void SceneConsole :: Destroy()
 {
-    Scene::Destroy();
+    IScene::Destroy();
     g_FontMgr.Release(font);
     g_FontMgr.Release(font15);
     font = font15 = HFont();
@@ -66,7 +69,7 @@ void SceneConsole :: Destroy()
 
 void SceneConsole :: Enter()
 {
-    Scene::Enter();
+    IScene::Enter();
 
     FL_justOpened = true;
     g_InputMgr.Buffer.clear();
@@ -93,7 +96,7 @@ void SceneConsole :: Exit()
 void SceneConsole :: Resize(int left, int top, unsigned int width, unsigned int height)
 {
     if (PrevScene) PrevScene->Resize(left, top, width, height);
-    Scene::Resize(left, top, width, height);
+    IScene::Resize(left, top, width, height);
 
     if (!g_FontMgr.IsHandleValid(font))
         font = g_FontMgr.GetFont("Courier New", 12);
@@ -105,11 +108,11 @@ void SceneConsole :: Resize(int left, int top, unsigned int width, unsigned int 
     if (scroll_v > histLines-1-pageSize) scroll_v = histLines-1-pageSize;
 }
 
-Scene & SceneConsole :: Scene_Set(Scene& scene, bool fl_destroyPrevious)
+IScene & SceneConsole :: Scene_Set(IScene& scene, bool fl_destroyPrevious)
 {
     if (PrevScene && fl_destroyPrevious)
      {
-        if (!scene.IsTerminated() || scene.Create(0, 0, Width, Height))
+        if (!scene.IsDestroyed() || scene.Create(0, 0, Width, Height))
         {
             PrevScene->Exit();
             PrevScene->Destroy();
@@ -119,7 +122,7 @@ Scene & SceneConsole :: Scene_Set(Scene& scene, bool fl_destroyPrevious)
         }
      }
      else
-     if (!scene.IsTerminated() || scene.Create(0, 0, Width, Height, PrevScene))
+     if (!scene.IsDestroyed() || scene.Create(0, 0, Width, Height, PrevScene))
      {
          if (PrevScene) PrevScene->Exit();
          PrevScene = &scene;
@@ -157,6 +160,8 @@ void SceneConsole :: AppendConsole(std::string text)
 
 bool SceneConsole :: Update(float T_delta)
 {
+    Performance.Update(T_delta);
+
     float T_tick = GetTick();
     if (T_tick - T_carretTick > 500.f)
     {
@@ -293,6 +298,7 @@ bool SceneConsole :: Update(float T_delta)
             currCmd += g_InputMgr.Buffer;
         g_InputMgr.Buffer.clear();
         if (scroll_v < histLines -1-pageSize) scroll_v = histLines-1-pageSize;
+        if (scroll_v < 0) scroll_v = 0;
     }
 
     return true;

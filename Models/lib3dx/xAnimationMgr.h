@@ -19,9 +19,10 @@ private:
 public:
     xAnimationH() { Clear(); }
 
-    void Clear() {
-        Id.clear();
+    virtual void Clear() {
+        Resource::Clear();
         xAnimation::Clear();
+        Id.clear();
     }
 
     virtual bool Create()

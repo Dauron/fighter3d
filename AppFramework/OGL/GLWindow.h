@@ -36,8 +36,8 @@ public:
         FL_multisampleAviable  = false;
     }
 
-    virtual bool Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen);
-    virtual void Destroy();
+    virtual bool Create();
+    virtual void Dispose();
 
     virtual void SwapBuffers() { ::SwapBuffers(hDC); }
 

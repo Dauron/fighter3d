@@ -1,7 +1,7 @@
 #ifndef __incl_SceneTest_h
 #define __incl_SceneTest_h
 
-#include "../AppFramework/Scene.h"
+#include "../AppFramework/IScene.h"
 #include "../Math/Cameras/CameraFree.h"
 #include "../Math/Cameras/CameraHuman.h"
 #include "../Graphics/OGL/Fonts/FontMgr.h"
@@ -18,19 +18,19 @@
 
 namespace Scenes {
 
-    class SceneTest : public Scene, private ISelectionProvider
+    class SceneTest : public IScene, private ISelectionProvider
     {
     public:
         Math::Cameras::Camera *DefaultCamera;
 
         SceneTest() { Name="[Test]"; }
 
-        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *scene = NULL);
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, IScene *scene = NULL);
         virtual void Destroy();
 
         virtual void Resize(int left, int top, unsigned int width, unsigned int height)
         {
-            Scene::Resize(left, top, width, height);
+            IScene::Resize(left, top, width, height);
             Camera.FOV.InitPerspective();
             Camera.FOV.InitViewport(left,top,width,height);
         }

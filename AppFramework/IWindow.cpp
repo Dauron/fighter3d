@@ -1,5 +1,4 @@
 #include "IWindow.h"
-#include <cassert>
 
 const char *IWindow::CLASS_NAME = "OMFW_GL";
 
@@ -26,11 +25,7 @@ bool IWindow::FullScreen_Set(unsigned width, unsigned height, bool fl_fullscreen
     Destroy();
     OnCreate = onCreate;
     OnResize = onResize;
-    if (!Create(title, width, height, fl_fullscreen))
-    {
-        delete[] title;
-        return false;
-    }
+    bool result = Create(title, width, height, fl_fullscreen);
     delete[] title;
-    return true;
+    return result;
 }

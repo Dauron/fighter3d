@@ -32,7 +32,8 @@ public:
 
     GLFont() { Clear(); }
 
-    void Clear() {
+    virtual void Clear() {
+        Resource::Clear();
         Id.clear();
         Name.clear();
         ID_GLFontBase = -1;

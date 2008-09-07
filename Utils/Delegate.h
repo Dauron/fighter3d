@@ -1,3 +1,5 @@
+#ifndef __incl_Utils_Delegate_h
+#define __incl_Utils_Delegate_h
 
 template <typename SENDER, typename METHODT>
 class BaseDelegate
@@ -126,3 +128,5 @@ void AnyClass_OnResize(Window &window, void* receiver,
   ((AnyClass*)receiver)->OnResize(window, width, height);
 }
 */
+
+#endif

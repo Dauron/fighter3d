@@ -101,7 +101,7 @@ bool GLFont :: Create()
     XFreeFont(hDC, font);
 #endif
 
-    glNewList(ID_GLFontBase+'\t',GL_COMPILE);        // Tab is 8 spaces
+    glNewList(ID_GLFontBase+'\t',GL_COMPILE);         // Tab is 8 spaces
         glCallLists(8, GL_UNSIGNED_BYTE, "        "); // Draws The Display List Text
     glEndList();
 

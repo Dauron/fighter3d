@@ -8,9 +8,10 @@
 
 #include "../../Graphics/OGL/Extensions/wglext.h"
 
-bool GLWindow::Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen)
+bool GLWindow::Create()
 {
-    assert (FL_destroyed);
+    assert ( !IsDestroyed() );
+    assert ( IsDisposed() );
 
     // Register window class
     WNDCLASS wc;
@@ -31,14 +32,14 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
         return false;
     }
 
-    if (fl_fullscreen)
+    if (FL_fullscreen)
     {
         DEVMODE dmScreenSettings;                                // Device Mode
         memset(&dmScreenSettings,0,sizeof(dmScreenSettings));    // Makes Sure Memory's Cleared
         //EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dmScreenSettings);
         dmScreenSettings.dmSize=sizeof(dmScreenSettings);        // Size Of The Devmode Structure
-        dmScreenSettings.dmPelsWidth    = width;                 // Selected Screen Width
-        dmScreenSettings.dmPelsHeight   = height;                // Selected Screen Height
+        dmScreenSettings.dmPelsWidth    = Width;                 // Selected Screen Width
+        dmScreenSettings.dmPelsHeight   = Height;                // Selected Screen Height
         dmScreenSettings.dmBitsPerPel   = 32;                    // Selected Bits Per Pixel
         dmScreenSettings.dmFields       = DM_BITSPERPEL|DM_PELSWIDTH|DM_PELSHEIGHT;
 
@@ -46,8 +47,8 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
         if (ChangeDisplaySettings(&dmScreenSettings,CDS_FULLSCREEN)!=DISP_CHANGE_SUCCESSFUL)
         {
             // If The Mode Fails, Offer Two Options.  Quit Or Use Windowed Mode.
-            if (MessageBox(NULL,"The requested fullscreen mode is not supported by\nyour video card. Use windowed mode instead?",title,MB_YESNO|MB_ICONEXCLAMATION)==IDYES)
-                fl_fullscreen = false;
+            if (MessageBox(NULL,"The requested fullscreen mode is not supported by\nyour video card. Use windowed mode instead?",Title,MB_YESNO|MB_ICONEXCLAMATION)==IDYES)
+                FL_fullscreen = false;
             else
             {
                 MessageBox(NULL,"Program will now close.","ERROR",MB_OK|MB_ICONSTOP);
@@ -59,7 +60,7 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
 
     DWORD        dwExStyle;                                      // Window Extended Style
     DWORD        dwStyle;                                        // Window Style
-    if (fl_fullscreen)                                           // Are We Still In Fullscreen Mode?
+    if (FL_fullscreen)                                           // Are We Still In Fullscreen Mode?
     {
         dwExStyle=WS_EX_APPWINDOW;                               // Window Extended Style
         dwStyle=WS_POPUP;                                        // Windows Style
@@ -73,15 +74,15 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
 
     RECT WindowRect;
     WindowRect.left   = 0;
-    WindowRect.right  = width;
+    WindowRect.right  = Width;
     WindowRect.top    = 0;
-    WindowRect.bottom = height;
+    WindowRect.bottom = Height;
     AdjustWindowRectEx(&WindowRect, dwStyle, FALSE, dwExStyle);     // Adjust Window To True Requested Size
 
     // Create The Window
     if (!(hWnd=CreateWindowEx(  dwExStyle,                          // Extended Style For The Window
                                 CLASS_NAME,                         // Class Name
-                                title,                              // Window Title
+                                Title,                              // Window Title
                                 dwStyle |                           // Defined Window Style
                                 WS_CLIPSIBLINGS |                   // Required Window Style
                                 WS_CLIPCHILDREN,                    // Required Window Style
@@ -157,8 +158,6 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
     }
     CheckForGLError("wglMakeCurrent");
 
-    FL_destroyed = false;
-
     if (FL_queryForMultisample && Config::MultisamplingLevel > 0)
     {
         PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB =
@@ -194,34 +193,25 @@ bool GLWindow::Create(const char *title, unsigned int width, unsigned int height
             if (Config::MultisamplingLevel == 0)
                 FL_multisampleAviable = false;
         }
+        FL_queryForMultisample = false;
         if (FL_multisampleAviable)
         {
-            Destroy();
-            FL_multisampleAviable  = true;
-            FL_queryForMultisample = false;
-            return Create(title, width, height, fl_fullscreen);
+            Dispose();
+            return Create();
         }
-        FL_queryForMultisample = false;
     }
-
-    this->Title = strdup(title);
-    this->FL_fullscreen = fl_fullscreen;
-    this->Width  = width;
-    this->Height = height;
 
     OnCreate();
     ShowWindow(hWnd, SW_SHOW);
     SetForegroundWindow(hWnd);
     SetFocus(hWnd);
-    this->Resize(width, height);
+    this->Resize(Width, Height);
 
     return true;
 }
 
-void GLWindow::Destroy()
+void GLWindow::Dispose()
 {
-    FL_destroyed = true;
-
     if (hRC)                                             // Do We Have A Rendering Context?
     {
         if (!wglMakeCurrent(NULL,NULL))                  // Are We Able To Release The DC And RC Contexts?
@@ -245,10 +235,6 @@ void GLWindow::Destroy()
         ChangeDisplaySettings(NULL,0);                   // If So Switch Back To The Desktop
         ShowCursor(TRUE);                                // Show Mouse Pointer
     }
-
-    if (this->Title) delete[] this->Title;
-
-    Clear();
 }
 
 #endif

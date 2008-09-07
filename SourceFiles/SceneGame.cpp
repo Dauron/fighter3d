@@ -4,6 +4,7 @@
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
+#include "InputCodes.h"
 #include "../Math/Cameras/CameraHuman.h"
 #include "../Math/Cameras/CameraFree.h"
 
@@ -18,9 +19,9 @@ using namespace Scenes;
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
 
-bool SceneGame :: Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene)
+bool SceneGame :: Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene)
 {
-    Scene::Create(left, top, width, height, prevScene);
+    IScene::Create(left, top, width, height, prevScene);
 
     InitInputMgr(); // inside -> InitCameras();
     InitMap();
@@ -157,7 +158,7 @@ bool SceneGame :: Invalidate()
 
 void SceneGame :: Destroy()
 {
-    Scene::Destroy();
+    IScene::Destroy();
     Cameras.Free();
     FreeMap();
     Clear();
@@ -275,7 +276,7 @@ bool SceneGame :: Update(float T_delta)
     {
         if (PrevScene)
         {
-            Scene &tmp = *PrevScene;
+            IScene &tmp = *PrevScene;
             PrevScene = NULL;
             g_Application.Scene_Set(tmp);
         }

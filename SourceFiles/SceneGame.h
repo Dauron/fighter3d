@@ -1,7 +1,7 @@
 #ifndef __incl_SceneGame_h
 #define __incl_SceneGame_h
 
-#include "../AppFramework/Scene.h"
+#include "../AppFramework/IScene.h"
 #include "../Math/Cameras/CameraSet.h"
 #include "../Graphics/OGL/Fonts/FontMgr.h"
 #include "../Graphics/OGL/ISelectionProvider.h"
@@ -10,7 +10,7 @@
 
 namespace Scenes {
 
-    class SceneGame : public Scene, private ISelectionProvider
+    class SceneGame : public IScene, private ISelectionProvider
     {
     public:
         SkeletizedObj              *Player1;
@@ -28,13 +28,13 @@ namespace Scenes {
             Targets.L_objects.clear();
         }
 
-        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene = NULL);
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene = NULL);
         virtual void Destroy();
 
         virtual bool Invalidate();
         virtual void Resize(int left, int top, unsigned int width, unsigned int height)
         {
-            Scene::Resize(left, top, width, height);
+            IScene::Resize(left, top, width, height);
             InitCameras();
         }
 

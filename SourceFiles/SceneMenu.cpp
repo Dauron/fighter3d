@@ -10,9 +10,9 @@ using namespace Scenes;
 
 Menu::BaseState* Menu::BaseState::Current = NULL;
 
-bool SceneMenu :: Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene)
+bool SceneMenu :: Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene)
 {
-    Scene::Create(left, top, width, height, prevScene);
+    IScene::Create(left, top, width, height, prevScene);
     InitInputMgr();
 
     root = new Menu::MainState();
@@ -53,7 +53,7 @@ void SceneMenu :: Destroy()
         root = NULL;
     }
 
-    Scene::Destroy();
+    IScene::Destroy();
 }
 
 bool SceneMenu :: Invalidate()
@@ -65,7 +65,7 @@ bool SceneMenu :: Invalidate()
 
 void SceneMenu :: Resize(int left, int top, unsigned int width, unsigned int height)
 {
-    Scene::Resize(left, top, width, height);
+    IScene::Resize(left, top, width, height);
 
     g_FontMgr.Release(font03);
     font03 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.03f));

@@ -8,16 +8,17 @@
 #include <string>
 #include "Input/InputMgr.h"
 
-class Scene
+class IScene
 {
 public:
     const char  * Name;
-    Scene       * PrevScene;
+    IScene      * PrevScene;
 
-    Scene() { Name = NULL; FL_terminated = true; PrevScene = NULL; }
+    IScene() { Name = NULL; FL_destroyed = true; PrevScene = NULL; }
 
-    virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene = NULL);
+    virtual bool Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene = NULL);
     virtual void Destroy();
+    bool IsDestroyed() { return FL_destroyed; }
 
     virtual void Enter() { Resize (Left, Top, Width, Height); g_InputMgr.SetScene(Name); }
     virtual void Exit()  {}
@@ -37,16 +38,14 @@ public:
     // returns: true on correct command
     virtual bool ShellCommand(std::string &cmd, std::string &output) { return false; }
 
-    virtual Scene &Scene_Set(Scene& scene, bool fl_destroyPrevious = true);
-
-    bool IsTerminated() { return FL_terminated; }
+    virtual IScene &Scene_Set(IScene& scene, bool fl_destroyPrevious = true);
 
 protected:
     signed   int Left;
     signed   int Top;
     unsigned int Width;
     unsigned int Height;
-    bool         FL_terminated;
+    bool         FL_destroyed;
 };
 
 #endif

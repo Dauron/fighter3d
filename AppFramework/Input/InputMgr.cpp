@@ -5,7 +5,65 @@
 #pragma warning(disable : 4996) // deprecated
 #endif
 
-void InputMgr::LoadMap(const char *fileName)
+void InputMgr :: Key2InputCode_Set(byte kCode, int iCode)
+{
+    int kIndex = KeyCode2Index(kCode);
+    int iIndex = InputCode2Index(iCode);
+
+    // replace existing key mapping
+    if (kIndex)
+    {
+        if (iIndex == kIndex)
+            return;
+
+        _InputMap->KeyCode2Index[kCode] = 0;         // remove this kCode from search results
+        byte kIndexOld = Index2FirstKeyCode(kIndex); // were there more mappings for this old Input Code?
+        int  iCodeOld  = Index2InputCode(kIndex);    // get old mapped Input Code
+        assert (iCodeOld && iCode != iCodeOld);
+
+        // it was the only keyCode->oldInputCode mapping
+        if (!kIndexOld)
+        {
+            // so we may reuse its index
+            if (!iIndex)
+            {
+                _InputMap->KeyCode2Index[kCode]   = kIndex;
+                _InputMap->InputCode2Index[iCode] = kIndex;
+                _IndexState[kIndex]   = false;
+                return;
+            }
+            // we already have our own index, we must free the unused one
+            if (iIndex)
+            {
+                _InputMap->KeyCode2Index[kCode] = iIndex;
+
+                int lastIndex = _InputMap->LastIndex;
+                --_InputMap->LastIndex;
+                _IndexState[kIndex] = _IndexState[lastIndex];
+                _InputMap->InputCode2Index[ Index2InputCode(lastIndex) ] = kIndex;
+                for (int kCode = 0; kCode < NUM_KEYS; ++kCode)
+                    if (KeyCode2Index(kCode) == lastIndex)
+                        _InputMap->KeyCode2Index[kCode] = kIndex;
+            }
+        }
+
+        // the index is still occupied, we may zero kIndex and proceed normal path
+        kIndex = 0;
+    }
+
+    if (!iIndex)
+    {
+        ++_InputMap->LastIndex;
+        _InputMap->KeyCode2Index[kCode]   = _InputMap->LastIndex;
+        _InputMap->InputCode2Index[iCode] = _InputMap->LastIndex;
+        _IndexState[_InputMap->LastIndex]   = false;
+        return;
+    }
+
+    _InputMap->KeyCode2Index[kCode] = iIndex;
+}
+
+void InputMgr :: LoadMap(const char *fileName)
 {
     std::ifstream in;
 
@@ -40,7 +98,7 @@ void InputMgr::LoadMap(const char *fileName)
     }
 }
 
-void InputMgr::SaveMap(const char *fileName)
+void InputMgr :: SaveMap(const char *fileName)
 {
     std::ofstream out;
 
@@ -66,7 +124,7 @@ void InputMgr::SaveMap(const char *fileName)
     }
 }
 
-void InputMgr::LoadKeyCodeMap(const char *fileName)
+void InputMgr :: LoadKeyCodeMap(const char *fileName)
 {
     std::ifstream in;
 

@@ -2,6 +2,7 @@
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
+#include "InputCodes.h"
 #include "../Graphics/OGL/Utils.h"
 #include "../Graphics/OGL/Extensions/GLExtensions.h"
 #include "../Graphics/OGL/Render/RendererGL.h"
@@ -16,9 +17,9 @@ using namespace Physics::Colliders;
 #define MULT_ROT    80.0f
 #define MULT_STEP   60.0f
 
-bool SceneTest::Create(int left, int top, unsigned int width, unsigned int height, Scene* scene)
+bool SceneTest::Create(int left, int top, unsigned int width, unsigned int height, IScene* scene)
 {
-    Scene::Create(left, top, width, height, scene);
+    IScene::Create(left, top, width, height, scene);
 
     pf_sphere1.Create (new xSphere() );
     pf_sphere2.Create (new xSphere() );
@@ -294,7 +295,7 @@ void SceneTest::InitInputMgr()
 void SceneTest::Destroy()
 {
     DefaultCamera = NULL;
-    Scene::Destroy();
+    IScene::Destroy();
 }
 
 bool SceneTest :: ShellCommand (std::string &cmd, std::string &output)

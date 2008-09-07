@@ -1,7 +1,7 @@
 #ifndef __incl_SceneSkeleton_h
 #define __incl_SceneSkeleton_h
 
-#include "../AppFramework/Scene.h"
+#include "../AppFramework/IScene.h"
 
 #include "../Graphics/OGL/ISelectionProvider.h"
 #include "../Graphics/OGL/GLButton.h"
@@ -17,16 +17,16 @@
 
 namespace Scenes {
 
-    class SceneSkeleton : public Scene, public ISelectionProvider
+    class SceneSkeleton : public IScene, public ISelectionProvider
     {
       public:
         SceneSkeleton(const char *gr_modelName, const char *ph_modelName);
 
-        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *scene = NULL);
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, IScene *scene = NULL);
         virtual void Destroy();
 
         virtual void Enter()
-        { Scene::Enter(); g_InputMgr.mouseWheel = 0; InputState.MouseLIsDown = false; InputState.MouseRIsDown = false; }
+        { IScene::Enter(); g_InputMgr.mouseWheel = 0; InputState.MouseLIsDown = false; InputState.MouseRIsDown = false; }
 
         virtual bool Invalidate();
         virtual void Resize(int left, int top, unsigned int width, unsigned int height);

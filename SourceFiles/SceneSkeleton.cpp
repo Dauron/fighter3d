@@ -1,6 +1,7 @@
 #include "SceneSkeleton.h"
 
 #include "../AppFramework/Input/InputMgr.h"
+#include "InputCodes.h"
 #include "../Utils/Filesystem.h"
 #include "../Graphics/OGL/GLShader.h"
 #include "../Graphics/OGL/WorldRenderGL.h"
@@ -15,11 +16,11 @@ SceneSkeleton::SceneSkeleton(const char *gr_modelName, const char *ph_modelName)
     Model.fastModelFile = ph_modelName ? ph_modelName : "";
 }
 
-bool SceneSkeleton::Create(int left, int top, unsigned int width, unsigned int height, Scene *scene)
+bool SceneSkeleton::Create(int left, int top, unsigned int width, unsigned int height, IScene *scene)
 {
     if (!Model.modelFile.size()) return false;
 
-    Scene::Create(left, top, width, height, scene);
+    IScene::Create(left, top, width, height, scene);
 
     InitInputMgr();
 
@@ -247,7 +248,7 @@ void SceneSkeleton::InitInputMgr()
 
 void SceneSkeleton::Resize(int left, int top, unsigned int width, unsigned int height)
 {
-    Scene::Resize(left, top, width, height);
+    IScene::Resize(left, top, width, height);
     InitCameras(false);
 
     const GLFont* pFont = g_FontMgr.GetFont(Font);
@@ -262,7 +263,7 @@ void SceneSkeleton::Resize(int left, int top, unsigned int width, unsigned int h
 bool SceneSkeleton::Invalidate()
 {
     WorldRenderGL().Invalidate(Model);
-    return Scene::Invalidate();
+    return IScene::Invalidate();
 }
 
 void SceneSkeleton::Destroy()

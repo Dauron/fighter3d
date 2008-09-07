@@ -3,6 +3,7 @@
 
 #include "System.h"
 #include "../Utils/Delegate.h"
+#include <cassert>
 
 #ifndef WIN32
 #include <GL/glx.h>
@@ -12,7 +13,13 @@ typedef ::Display *HDC;
 
 class IWindow
 {
-  protected:
+#ifdef WIN32
+    friend LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#else
+    friend bool WindowProc(IWindow *thisWnd, XEvent &event);
+#endif
+
+protected:
     static const char *CLASS_NAME;
 
     ::HDC        hDC;
@@ -25,10 +32,7 @@ class IWindow
 
     void Resize(unsigned int width, unsigned int height);
 
-  public:
-    //typedef void (*WindowCreateEvent) (IWindow &window);
-    //typedef void (*WindowResizeEvent) (IWindow &window, unsigned int width, unsigned int height);
-
+public:
     typedef Delegate<IWindow> WindowCreateEvent;
     typedef Delegate<IWindow, unsigned int /*Width*/, unsigned int /*Height*/> WindowResizeEvent;
 
@@ -37,7 +41,7 @@ class IWindow
 
     IWindow() { Clear(); }
 
-    void Clear()
+    virtual void Clear()
     {
         hDC          = NULL;
         Title        = NULL;
@@ -49,15 +53,36 @@ class IWindow
 
     ::HDC  HDC()                                 { return hDC; }
 
-    virtual bool Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen) = 0;
-    virtual void Destroy() = 0;
+    virtual void PreCreate(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen)
+    {
+        assert (IsDestroyed());
+        FL_destroyed  = false;
+        Title         = strdup(title);
+        Width         = width;
+        Height        = height;
+        FL_fullscreen = fl_fullscreen;
+    }
+    virtual bool Create() = 0;
+    bool Create(const char *title, unsigned int width, unsigned int height, bool fl_fullscreen)
+    {
+        PreCreate(title, width, height, fl_fullscreen);
+        return Create();
+    }
+    virtual void Dispose() = 0;
+    virtual void Destroy()
+    {
+        Dispose();
+        if (Title) delete[] Title;
+        Clear();
+    }
+    bool IsDisposed()                            { return !hDC; }
     bool IsDestroyed()                           { return FL_destroyed; }
 
     virtual bool ProcessMessages() = 0;
 
     bool  IsFullScreen()                         { return FL_fullscreen; }
     bool  FullScreen_Set(unsigned int width, unsigned int height, bool fl_fullscreen);
-    //bool  FullScreen_Switch()                    { return FullScreen_Set(Width, Height, !FL_fullscreen); }
+    bool  FullScreen_Switch()                    { return FullScreen_Set(Width, Height, !FL_fullscreen); }
 
     bool  IsActive()                             { return FL_active; }
     void  Active_Set(bool isActive)              { FL_active = isActive; }
@@ -66,12 +91,6 @@ class IWindow
     int   Width_Get()                            { return Width; }
 
     virtual void SwapBuffers() = 0;
-
-#ifdef WIN32
-    friend LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#else
-    friend bool WindowProc(IWindow *thisWnd, XEvent &event);
-#endif
 };
 
 #endif

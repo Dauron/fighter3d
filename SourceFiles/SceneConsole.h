@@ -3,12 +3,12 @@
 
 #include <string>
 #include "../Math/xMath.h"
-#include "../AppFramework/Scene.h"
+#include "../AppFramework/IScene.h"
 #include "../Graphics/OGL/Fonts/FontMgr.h"
 
 namespace Scenes {
 
-    class SceneConsole : public Scene
+    class SceneConsole : public IScene
     {
       public:
         SceneConsole() { Name = "[Console]"; Clear(); }
@@ -21,7 +21,7 @@ namespace Scenes {
             FL_overlayClock = false;
         }
 
-        virtual bool Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene = NULL);
+        virtual bool Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene = NULL);
         virtual void Destroy();
 
         virtual void Enter();
@@ -35,7 +35,7 @@ namespace Scenes {
 
         virtual bool   ShellCommand(std::string &cmd, std::string &output);
 
-        virtual Scene &Scene_Set(Scene& scene, bool fl_destroyPrevious = true);
+        virtual IScene &Scene_Set(IScene& scene, bool fl_destroyPrevious = true);
 
       private:
         void InitInputMgr();

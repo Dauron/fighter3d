@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "OGL/GLWindow.h"
 
 void MainWindow_OnCreate(IWindow &window, void* receiver)
 { g_Application.MainWindow_OnCreate(window); }
@@ -6,7 +7,7 @@ void MainWindow_OnResize(IWindow &window, void* receiver, unsigned int &width, u
 { g_Application.MainWindow_OnResize(window, width, height); }
 
 int Application::Create(const char *title, unsigned int width, unsigned int height,
-                                           bool fl_fullscreen, Scene &scene)
+                                           bool fl_fullscreen, IScene &scene)
 {
     assert( !MainWindow );
 
@@ -15,8 +16,19 @@ int Application::Create(const char *title, unsigned int width, unsigned int heig
     //else
     //  MainWindow = new DXWindow();
 
-    // Create window
-    if (! MainWindow->Create(title, width, height, fl_fullscreen) )
+    MainWindow->PreCreate(title, width, height, fl_fullscreen);
+
+    return Create( *MainWindow, scene );
+}
+
+int Application::Create(IWindow &window, IScene &scene)
+{
+    assert( !MainWindow || MainWindow == &window );
+
+    MainWindow = &window;
+
+    // Create window - assume that window has been precreated
+    if (! window.Create() )
     {
         Destroy();
         return WINDOW_ERROR;
@@ -32,11 +44,11 @@ int Application::Create(const char *title, unsigned int width, unsigned int heig
 
     // Init window events
     SceneCur = &scene;
-    MainWindow->OnCreate.Set(this, ::MainWindow_OnCreate);
-    MainWindow->OnResize.Set(this, ::MainWindow_OnResize);
+    window.OnCreate.Set(this, ::MainWindow_OnCreate);
+    window.OnResize.Set(this, ::MainWindow_OnResize);
 
     // Create scene
-    if (! SceneCur->Create(0, 0, width, height) )
+    if (! SceneCur->Create(0, 0, window.Width_Get(), window.Height_Get()) )
     {
         Destroy();
         return SCENE_ERROR;
@@ -76,7 +88,6 @@ int Application::Run()
     float T_currrent  = GetTick();
     float T_preRender = T_currrent;
     float T_prev;
-    Performance.Clear();
 
     while (MainWindow && !MainWindow->IsDestroyed())
     {
@@ -105,16 +116,13 @@ bool Application::Update(float T_delta)
     if (!MainWindow || MainWindow->IsDestroyed()) return false;
 
     if (MainWindow->IsActive())
-    {
-        Performance.Update(T_delta);
         return SceneCur->Update(T_delta);
-    }
     return true;
 }
 
 bool Application::Render()
 {
-    if (!MainWindow || MainWindow->IsDestroyed()) return false;
+    if (!MainWindow || MainWindow->IsDisposed()) return false;
 
     if (MainWindow->IsActive())
     {

@@ -23,14 +23,14 @@ int main( int argc, char **argv )
     Config::Load("Data/config.txt");
     GLShader::Load();
 
-    Scene *scene = NULL;
+    IScene *scene = NULL;
     if (!strcmp(Config::Scene, "test")) scene = new Scenes::SceneTest();
     else
     if (!strcmp(Config::Scene, "game")) scene = new Scenes::SceneGame();
     else                                scene = new Scenes::SceneMenu();
     if (Config::EnableConsole)
     {
-        Scene *prev = scene;
+        IScene *prev = scene;
         scene = new Scenes::SceneConsole();
         scene->PrevScene = prev;
     }
@@ -94,6 +94,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #endif
 
 #include "../AppFramework/Input/InputMgr.h"
+#include "InputCodes.h"
 #include "../MotionCapture/CaptureInput.h"
 #include "../Multiplayer/NetworkInput.h"
 #include "../Graphics/OGL/Textures/TextureMgr.h"

@@ -1,9 +1,9 @@
-#include "Scene.h"
+#include "IScene.h"
 
-bool Scene :: Create(int left, int top, unsigned int width, unsigned int height, Scene *prevScene)
+bool IScene :: Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene)
 {
-    assert ( FL_terminated );
-    FL_terminated = false;
+    assert ( FL_destroyed );
+    FL_destroyed = false;
     Left          = left;
     Top           = top;
     Width         = width;
@@ -16,11 +16,11 @@ bool Scene :: Create(int left, int top, unsigned int width, unsigned int height,
     return true;
 }
 
-void Scene :: Destroy()
+void IScene :: Destroy()
 {
-    if (FL_terminated) return;
+    if (FL_destroyed) return;
 
-    FL_terminated = true;
+    FL_destroyed = true;
     if (PrevScene)
     {
         PrevScene->Destroy();
@@ -28,7 +28,7 @@ void Scene :: Destroy()
         PrevScene = NULL;
     }
 }
-void Scene :: Resize(int left, int top, unsigned int width, unsigned int height)
+void IScene :: Resize(int left, int top, unsigned int width, unsigned int height)
 {
     Left   = left;
     Top    = top;
@@ -36,11 +36,11 @@ void Scene :: Resize(int left, int top, unsigned int width, unsigned int height)
     Height = height;
 }
 
-Scene & Scene :: Scene_Set(Scene& scene, bool fl_destroyPrevious)
+IScene & IScene :: Scene_Set(IScene& scene, bool fl_destroyPrevious)
  {
      if (fl_destroyPrevious)
      {
-        if (!scene.FL_terminated || scene.Create(0, 0, Width, Height))
+        if (!scene.FL_destroyed || scene.Create(0, 0, Width, Height))
         {
             this->Exit();
             this->Destroy();
@@ -50,7 +50,7 @@ Scene & Scene :: Scene_Set(Scene& scene, bool fl_destroyPrevious)
         }
      }
      else
-     if (!scene.FL_terminated || scene.Create(0, 0, Width, Height, this))
+     if (!scene.FL_destroyed || scene.Create(0, 0, Width, Height, this))
      {
          this->Exit();
          scene.Enter();

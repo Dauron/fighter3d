@@ -2,6 +2,7 @@
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
+#include "InputCodes.h"
 #include "../Utils/Filesystem.h"
 #include "../Physics/Verlet/VConstraintLengthEql.h"
 #include "../Physics/Verlet/VConstraintLengthMin.h"
@@ -164,7 +165,7 @@ bool SceneSkeleton::Update(float deltaTime)
             EditMode = emEditAnimation;
         }
         else {
-            Scene &tmp = *PrevScene;
+            IScene &tmp = *PrevScene;
             PrevScene = NULL;
             g_Application.Scene_Set(tmp);
         }

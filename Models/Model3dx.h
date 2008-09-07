@@ -12,7 +12,8 @@ public:
 
     Model3dx() { Clear(); }
 
-    void Clear() {
+    virtual void Clear() {
+        Resource::Clear();
         Name.clear();
         model = 0;
     }

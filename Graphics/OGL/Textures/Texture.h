@@ -15,7 +15,8 @@ public:
 
     Texture() { Clear(); }
 
-    void Clear() {
+    virtual void Clear() {
+        Resource::Clear();
         Name.clear();
         ID_GLTexture = 0;
     }
