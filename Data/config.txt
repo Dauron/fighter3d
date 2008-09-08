@@ -1,6 +1,6 @@
 [Graphics]
 # 0 = none, 1 = basic, 2 = full
-Lighting        1
+Lighting        2
 Shadows         1
 Shaders         1
 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...

@@ -39,6 +39,14 @@ position	0.0	0.0	-0.68
 physical	0
 phantom	0
 #
+[model]
+model	../3ds/dojo/altar.3ds
+rotation	0 0 90
+position	0	-19.7	-0.21
+physical	0
+phantom	0
+shadows 0
+#
 [skip model]
 model	wall_entrance.3dx
 position	0.0	0.0	-0.21
