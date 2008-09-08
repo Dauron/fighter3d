@@ -296,8 +296,23 @@ void RendererGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWO
 
             glColor4f(1.0f,1.0f,0.0f,1.0f);
             glBegin(GL_TRIANGLES);
-            RenderBone(model.Spine.L_bones, 0, ID_selBone);
+                RenderBone(model.Spine.L_bones, 0, ID_selBone);
             glEnd();
+
+            if (ID_selBone == 0)
+                glColor4f(1.0f,0.0f,1.0f,1.0f);
+            else
+                glColor4f(1.0f,1.0f,0.0f,1.0f);
+
+            glPushAttrib(GL_POINT);
+
+            glPointSize(10.f);
+
+            glBegin(GL_POINTS);
+                glVertex3fv(model.Spine.L_bones[0].P_begin.xyz);
+            glEnd();
+
+            glPopAttrib();
 
             g_AnimSkeletal.EndAnimation();
 

@@ -392,7 +392,7 @@ void GLShader :: Unload()
     slSpotADS.TexturedSkeletal.Unload();
 }
 
-void GLShader :: Create()
+void GLShader :: CreateS()
 {
     slNoLighting.Create();
     slGlobalA.Create();
@@ -407,7 +407,7 @@ void GLShader :: Create()
     slSpotADS.Create();
 }
 
-void GLShader :: Destroy()
+void GLShader :: DestroyS()
 {
     slNoLighting.Destroy();
     slGlobalA.Destroy();

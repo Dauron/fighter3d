@@ -272,7 +272,7 @@ bool SceneGame :: Update(float T_delta)
 {
     InputMgr &im = g_InputMgr;
 
-    if (im.GetInputStateAndClear(IC_Reject))
+    if (im.InputDown_GetAndRaise(IC_Reject))
     {
         if (PrevScene)
         {
@@ -285,7 +285,7 @@ bool SceneGame :: Update(float T_delta)
         return true;
     }
 
-    if (im.GetInputStateAndClear(IC_FullScreen))
+    if (im.InputDown_GetAndRaise(IC_FullScreen))
     {
         if (g_Application.MainWindow_Get().IsFullScreen())
             g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
@@ -294,60 +294,60 @@ bool SceneGame :: Update(float T_delta)
         return true;
     }
 
-    float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
+    float run = (im.InputDown_Get(IC_RunModifier)) ? MULT_RUN : 1.0f;
     float T_scaled = T_delta*MULT_ROT*run;
 
-    if (im.GetInputState(IC_TurnLeft))
+    if (im.InputDown_Get(IC_TurnLeft))
         MainCamera->Rotate (T_scaled, 0.0f, 0.0f);
-    if (im.GetInputState(IC_TurnRight))
+    if (im.InputDown_Get(IC_TurnRight))
         MainCamera->Rotate (-T_scaled, 0.0f, 0.0f);
-    if (im.GetInputState(IC_TurnUp))
+    if (im.InputDown_Get(IC_TurnUp))
         MainCamera->Rotate (0.0f, T_scaled, 0.0f);
-    if (im.GetInputState(IC_TurnDown))
+    if (im.InputDown_Get(IC_TurnDown))
         MainCamera->Rotate (0.0f, -T_scaled, 0.0f);
-    if (im.GetInputState(IC_RollLeft))
+    if (im.InputDown_Get(IC_RollLeft))
         MainCamera->Rotate (0.0f, 0.0f, -T_scaled);
-    if (im.GetInputState(IC_RollRight))
+    if (im.InputDown_Get(IC_RollRight))
         MainCamera->Rotate (0.0f, 0.0f, T_scaled);
 
-    if (im.GetInputState(IC_OrbitLeft))
-        MainCamera->Orbit (T_scaled, 0.0f);
-    if (im.GetInputState(IC_OrbitRight))
+    if (im.InputDown_Get(IC_OrbitLeft))
         MainCamera->Orbit (-T_scaled, 0.0f);
-    if (im.GetInputState(IC_OrbitUp))
+    if (im.InputDown_Get(IC_OrbitRight))
+        MainCamera->Orbit (T_scaled, 0.0f);
+    if (im.InputDown_Get(IC_OrbitUp))
         MainCamera->Orbit (0.0f, T_scaled);
-    if (im.GetInputState(IC_OrbitDown))
+    if (im.InputDown_Get(IC_OrbitDown))
         MainCamera->Orbit (0.0f, -T_scaled);
 
     T_scaled = T_delta*MULT_MOVE*run;
 
     bool moving = false;
-    if (im.GetInputState(IC_MoveForward))
+    if (im.InputDown_Get(IC_MoveForward))
     {
         MainCamera->Move (T_scaled, 0.0f, 0.0f);
         moving = true;
     }
-    if (im.GetInputState(IC_MoveBack))
+    if (im.InputDown_Get(IC_MoveBack))
     {
         MainCamera->Move (-T_scaled, 0.0f, 0.0f);
         moving = true;
     }
-    if (im.GetInputState(IC_MoveLeft))
+    if (im.InputDown_Get(IC_MoveLeft))
     {
         MainCamera->Move (0.0f, -T_scaled, 0.0f);
         moving = true;
     }
-    if (im.GetInputState(IC_MoveRight))
+    if (im.InputDown_Get(IC_MoveRight))
     {
         MainCamera->Move (0.0f, T_scaled, 0.0f);
         moving = true;
     }
-    if (im.GetInputState(IC_MoveUp))
+    if (im.InputDown_Get(IC_MoveUp))
         MainCamera->Move (0.0f, 0.0f, T_scaled);
-    if (im.GetInputState(IC_MoveDown))
+    if (im.InputDown_Get(IC_MoveDown))
         MainCamera->Move (0.0f, 0.0f, -T_scaled);
 
-    if (im.GetInputStateAndClear(IC_LClick))
+    if (im.InputDown_GetAndRaise(IC_LClick))
     {
         RigidObj *obj = Select(g_InputMgr.mouseX, Height-g_InputMgr.mouseY);
         if (obj)

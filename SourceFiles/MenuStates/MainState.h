@@ -38,7 +38,7 @@ namespace Scenes { namespace Menu {
             {
                 bool res = false;
                 InputMgr &im = g_InputMgr;
-                if (im.GetInputStateAndClear(IC_MoveUp))
+                if (im.InputDown_GetAndRaise(IC_MoveUp))
                 {
                     res = true;
                     do {
@@ -47,7 +47,7 @@ namespace Scenes { namespace Menu {
                     }
                     while (!SubStates[selected]->FL_enabled);
                 }
-                if (im.GetInputStateAndClear(IC_MoveDown))
+                if (im.InputDown_GetAndRaise(IC_MoveDown))
                 {
                     res = true;
                     do {
@@ -56,13 +56,13 @@ namespace Scenes { namespace Menu {
                     }
                     while (!SubStates[selected]->FL_enabled);
                 }
-                if (im.GetInputStateAndClear(IC_Accept))
+                if (im.InputDown_GetAndRaise(IC_Accept))
                 {
                     SwitchState(*SubStates[selected]);
                     return true;
                 }
 
-                if (im.GetInputStateAndClear(IC_LClick))
+                if (im.InputDown_GetAndRaise(IC_LClick))
                 {
                     int mouseX = im.mouseX;
                     int mouseY = im.mouseY;

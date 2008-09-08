@@ -337,13 +337,13 @@ bool SceneTest::Update(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
-    if (im.GetInputStateAndClear(IC_Reject))
+    if (im.InputDown_GetAndRaise(IC_Reject))
     {
         g_Application.Destroy();
         return true;
     }
 
-    if (im.GetInputStateAndClear(IC_FullScreen))
+    if (im.InputDown_GetAndRaise(IC_FullScreen))
     {
         if (g_Application.MainWindow_Get().IsFullScreen())
             g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
@@ -352,63 +352,63 @@ bool SceneTest::Update(float deltaTime)
         return true;
     }
 
-    float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
+    float run = (im.InputDown_Get(IC_RunModifier)) ? MULT_RUN : 1.0f;
     float deltaTmp = deltaTime*MULT_ROT*run;
 
-    if (im.GetInputState(IC_TurnLeft))
+    if (im.InputDown_Get(IC_TurnLeft))
         DefaultCamera->Rotate (deltaTmp, 0.0f, 0.0f);
-    if (im.GetInputState(IC_TurnRight))
+    if (im.InputDown_Get(IC_TurnRight))
         DefaultCamera->Rotate (-deltaTmp, 0.0f, 0.0f);
-    if (im.GetInputState(IC_TurnUp))
+    if (im.InputDown_Get(IC_TurnUp))
         DefaultCamera->Rotate (0.0f, deltaTmp, 0.0f);
-    if (im.GetInputState(IC_TurnDown))
+    if (im.InputDown_Get(IC_TurnDown))
         DefaultCamera->Rotate (0.0f, -deltaTmp, 0.0f);
-    if (im.GetInputState(IC_RollLeft))
+    if (im.InputDown_Get(IC_RollLeft))
         DefaultCamera->Rotate (0.0f, 0.0f, -deltaTmp);
-    if (im.GetInputState(IC_RollRight))
+    if (im.InputDown_Get(IC_RollRight))
         DefaultCamera->Rotate (0.0f, 0.0f, deltaTmp);
 
-    if (im.GetInputState(IC_OrbitLeft))
+    if (im.InputDown_Get(IC_OrbitLeft))
         DefaultCamera->Orbit (deltaTmp, 0.0f);
-    if (im.GetInputState(IC_OrbitRight))
+    if (im.InputDown_Get(IC_OrbitRight))
         DefaultCamera->Orbit (-deltaTmp, 0.0f);
-    if (im.GetInputState(IC_OrbitUp))
+    if (im.InputDown_Get(IC_OrbitUp))
         DefaultCamera->Orbit (0.0f, deltaTmp);
-    if (im.GetInputState(IC_OrbitDown))
+    if (im.InputDown_Get(IC_OrbitDown))
         DefaultCamera->Orbit (0.0f, -deltaTmp);
 
     deltaTmp = deltaTime*MULT_MOVE*run;
 
-    if (im.GetInputState(IC_MoveForward))
+    if (im.InputDown_Get(IC_MoveForward))
         DefaultCamera->Move (deltaTmp, 0.0f, 0.0f);
-    if (im.GetInputState(IC_MoveBack))
+    if (im.InputDown_Get(IC_MoveBack))
         DefaultCamera->Move (-deltaTmp, 0.0f, 0.0f);
-    if (im.GetInputState(IC_MoveLeft))
+    if (im.InputDown_Get(IC_MoveLeft))
         DefaultCamera->Move (0.0f, -deltaTmp, 0.0f);
-    if (im.GetInputState(IC_MoveRight))
+    if (im.InputDown_Get(IC_MoveRight))
         DefaultCamera->Move (0.0f, deltaTmp, 0.0f);
-    if (im.GetInputState(IC_MoveUp))
+    if (im.InputDown_Get(IC_MoveUp))
         DefaultCamera->Move (0.0f, 0.0f, deltaTmp);
-    if (im.GetInputState(IC_MoveDown))
+    if (im.InputDown_Get(IC_MoveDown))
         DefaultCamera->Move (0.0f, 0.0f, -deltaTmp);
 
-    if (im.GetInputStateAndClear(IC_CameraReset))
+    if (im.InputDown_GetAndRaise(IC_CameraReset))
     {
         Camera.Init(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
         DefaultCamera = &Camera;
     }
-    if (im.GetInputStateAndClear(IC_TS_Stop))
+    if (im.InputDown_GetAndRaise(IC_TS_Stop))
     {
         figures[Config::TestCase][0]->Stop();
         figures[Config::TestCase][1]->Stop();
     }
-    if (im.GetInputStateAndClear(IC_TS_Pause))
+    if (im.InputDown_GetAndRaise(IC_TS_Pause))
         FL_pause = !FL_pause;
     for (int i = 0; i < 10; ++i)
-        if (im.GetInputStateAndClear(IC_TS_Test0+i))
+        if (im.InputDown_GetAndRaise(IC_TS_Test0+i))
         { Config::TestCase = i; InitObjects(); }
 
-    if (im.GetInputState(IC_LClick))
+    if (im.InputDown_Get(IC_LClick))
     {
         if (FL_mouse_down)
         {
@@ -570,7 +570,7 @@ bool SceneTest::Update(float deltaTime)
     if (!FL_mouse_down && !FL_pause && deltaTime*Config::Speed < 2.f)
         Physics::PhysicalWorld().Interact(deltaTime*Config::Speed, figures[Config::TestCase]);
 
-    if (!im.GetInputState(IC_LClick) && FL_mouse_down)
+    if (!im.InputDown_Get(IC_LClick) && FL_mouse_down)
     {
         FL_mouse_down = false;
 

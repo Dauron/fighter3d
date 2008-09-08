@@ -49,7 +49,7 @@ namespace Scenes { namespace Menu {
 
         virtual bool Update(xFLOAT T_time)
         {
-            if (g_InputMgr.GetInputStateAndClear(IC_Reject))
+            if (g_InputMgr.InputDown_GetAndRaise(IC_Reject))
             {
                 if (Parent)           SwitchState(*Parent);
                 else

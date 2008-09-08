@@ -19,7 +19,7 @@ bool GLExtensions::Exists_EXT_StencilWrap        = false;
 bool GLExtensions::Exists_EXT_StencilTwoSide     = false;
 bool GLExtensions::Exists_ARB_Multisample        = false;
 
-bool GLExtensions::Create ()
+bool GLExtensions::Initialize ()
 {
     GLExtensions::Exists_ARB_ShaderObjects  = GL_init_ARB_shader_objects();
     GLExtensions::Exists_ARB_VertexShader   = GL_init_ARB_vertex_shader();

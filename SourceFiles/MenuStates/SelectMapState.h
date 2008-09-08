@@ -57,7 +57,7 @@ namespace Scenes { namespace Menu {
         {
             if (!BaseState::Update(T_time))
             {
-                if (g_InputMgr.GetInputStateAndClear(IC_LClick))
+                if (g_InputMgr.InputDown_GetAndRaise(IC_LClick))
                 {
                     xDWORD x = (xDWORD)g_InputMgr.mouseX, y = (xDWORD)g_InputMgr.mouseY;
 
@@ -66,27 +66,27 @@ namespace Scenes { namespace Menu {
                     else
                     if (BackButton.Contains(x,y))
                     {
-                        g_InputMgr.SetInputState(IC_Reject, true);
+                        g_InputMgr.InputDown_Set(IC_Reject, true);
                         BaseState::Update(0.f);
                         return true;
                     }
                     else
                     if (NextButton.Contains(x,y))
-                        g_InputMgr.SetInputState(IC_Accept, true);
+                        g_InputMgr.InputDown_Set(IC_Accept, true);
                 }
-                if (g_InputMgr.GetInputStateAndClear(IC_Accept))
+                if (g_InputMgr.InputDown_GetAndRaise(IC_Accept))
                 {
                     ((PlayState*)SubStates[0])->MapFile = L_maps[selected].File;
                     SwitchState(*SubStates[0]);
                     return true;
                 }
-                if (g_InputMgr.GetInputStateAndClear(IC_MoveUp))
+                if (g_InputMgr.InputDown_GetAndRaise(IC_MoveUp))
                 {
                     --selected;
                     if (selected == xBYTE_MAX) selected = L_maps.size()-1;
                     return true;
                 }
-                if (g_InputMgr.GetInputStateAndClear(IC_MoveDown))
+                if (g_InputMgr.InputDown_GetAndRaise(IC_MoveDown))
                 {
                     ++selected;
                     if (selected >= L_maps.size()) selected = 0;

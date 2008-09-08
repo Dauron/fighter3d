@@ -22,7 +22,7 @@ struct GLExtensions
     static bool Exists_EXT_StencilTwoSide;
     static bool Exists_ARB_Multisample;
 
-    static bool Create();
+    static bool Initialize();
     static bool Exists(const char *extensionName);
 
     static void SetVSync(bool enable);

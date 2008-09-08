@@ -95,7 +95,7 @@ void SceneConsole :: Exit()
 
 void SceneConsole :: Resize(int left, int top, unsigned int width, unsigned int height)
 {
-    if (PrevScene) PrevScene->Resize(left, top, width, height);
+    //if (PrevScene) PrevScene->Resize(left, top, width, height);
     IScene::Resize(left, top, width, height);
 
     if (!g_FontMgr.IsHandleValid(font))
@@ -171,7 +171,7 @@ bool SceneConsole :: Update(float T_delta)
 
     InputMgr &im = g_InputMgr;
 
-    if (im.GetInputStateAndClear(IC_Console))
+    if (im.InputDown_GetAndRaise(IC_Console))
     {
         if (FL_visible && !FL_overlayInput && PrevScene)
         {
@@ -187,7 +187,7 @@ bool SceneConsole :: Update(float T_delta)
         return true;
     }
     else
-    if (im.GetInputStateAndClear(IC_Reject))
+    if (im.InputDown_GetAndRaise(IC_Reject))
     {
         if (PrevScene)
         {
@@ -198,7 +198,7 @@ bool SceneConsole :: Update(float T_delta)
             }
             else
             {
-                im.SetInputState(IC_Reject, true);
+                im.InputDown_Set(IC_Reject, true);
                 return PrevScene->Update(0.f);
             }
         }
@@ -224,7 +224,7 @@ bool SceneConsole :: Update(float T_delta)
     }
 
     im.SetScene(Name);
-    if (im.GetInputStateAndClear(IC_FullScreen))
+    if (im.InputDown_GetAndRaise(IC_FullScreen))
     {
         if (g_Application.MainWindow_Get().IsFullScreen())
             g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
@@ -233,7 +233,7 @@ bool SceneConsole :: Update(float T_delta)
         return true;
     }
     else
-    if (im.GetInputStateAndClear(IC_Accept))
+    if (im.InputDown_GetAndRaise(IC_Accept))
     {
         AppendConsole(currCmd);
         std::string output;
@@ -252,7 +252,7 @@ bool SceneConsole :: Update(float T_delta)
         currCmd.clear();
     }
     else
-    if (im.GetInputState(IC_Con_LineUp) || im.mouseWheel > 0)
+    if (im.InputDown_Get(IC_Con_LineUp) || im.mouseWheel > 0)
     {
         if (im.mouseWheel > 100) im.mouseWheel -= 100;
         else                     im.mouseWheel = 0;
@@ -260,7 +260,7 @@ bool SceneConsole :: Update(float T_delta)
         else          im.mouseWheel = 0;
     }
     else
-    if (im.GetInputState(IC_Con_LineDown) || im.mouseWheel < 0)
+    if (im.InputDown_Get(IC_Con_LineDown) || im.mouseWheel < 0)
     {
         if (im.mouseWheel < -100) im.mouseWheel += 100;
         else                      im.mouseWheel = 0;
@@ -268,24 +268,24 @@ bool SceneConsole :: Update(float T_delta)
         else                                   im.mouseWheel = 0;
     }
     else
-    if (im.GetInputStateAndClear(IC_Con_PageUp))
+    if (im.InputDown_GetAndRaise(IC_Con_PageUp))
     {
         if (scroll_v > pageSize) scroll_v -= pageSize;
         else                     scroll_v = 0;
     }
     else
-    if (im.GetInputStateAndClear(IC_Con_PageDown))
+    if (im.InputDown_GetAndRaise(IC_Con_PageDown))
     {
         if (scroll_v < histLines -1 -2*pageSize) scroll_v += pageSize;
         else                                     scroll_v = histLines-1-pageSize;
     }
     else
-    if (im.GetInputStateAndClear(IC_Con_FirstPage))
+    if (im.InputDown_GetAndRaise(IC_Con_FirstPage))
         scroll_v = 0;
     else
-    if (im.GetInputStateAndClear(IC_Con_LastPage))
+    if (im.InputDown_GetAndRaise(IC_Con_LastPage))
         scroll_v = histLines-1-pageSize;
-    else if (im.GetInputStateAndClear(IC_Con_BackSpace))
+    else if (im.InputDown_GetAndRaise(IC_Con_BackSpace))
     {
         if (currCmd.length())
             currCmd.erase(currCmd.end()-1);

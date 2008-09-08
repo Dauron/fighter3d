@@ -228,11 +228,11 @@ float GLFont :: Length (const char *text) const
 
     for (; *text; ++text)    // Loop To Find Text Length
 #if FIRST_CHAR
-        if ((unsigned char)*text >= FIRST_CHAR && (unsigned char)*text < FIRST_CHAR+NUM_CHARS)
+        if ((byte)*text >= FIRST_CHAR && (byte)*text < FIRST_CHAR+NUM_CHARS)
 #elseif FIRST_CHAR+NUM_CHARS < 255
-        if ((unsigned char)*text < FIRST_CHAR+NUM_CHARS)
+        if ((byte)*text < FIRST_CHAR+NUM_CHARS)
 #endif
-            length += LWidth[(unsigned char)*text-FIRST_CHAR]; // Increase Length By Each Characters Width
+            length += LWidth[(byte)*text-FIRST_CHAR]; // Increase Length By Each Characters Width
     return length;
 }
 

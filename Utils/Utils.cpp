@@ -7,6 +7,15 @@ void itos(int in, std::string &out)
     ss >> out;
 }
 
+int stoi(const std::string &in)
+{
+    std::stringstream ss;
+    int out;
+    ss << in;
+    ss >> out;
+    return out;
+}
+
 std::string itos(int in)
 {
     std::stringstream ss;

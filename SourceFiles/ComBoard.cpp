@@ -109,7 +109,7 @@ void ComBoard :: Update(xFLOAT T_delta, bool FL_keyboard_on)
             if (key == Combo::Keys::Left)  key = Combo::Keys::Right;
             else
             if (key == Combo::Keys::Right) key = Combo::Keys::Left;
-        if (g_InputMgr.GetInputStateAndClear(IC_CB_LeftPunch + key - Combo::Keys::LeftPunch))
+        if (g_InputMgr.InputDown_GetAndRaise(IC_CB_LeftPunch + key - Combo::Keys::LeftPunch))
         {
             AutoAction = AutoHint::HINT_NONE;
             PostActionTransformation(*action, combo.FL_pos_shift);

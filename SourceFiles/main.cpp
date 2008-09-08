@@ -105,16 +105,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 void Application_OnCreate(Application& sender, void *receiver, bool &res)
 {
-    GLExtensions   ::Create();
-    InputMgr       ::Create(IC_CODE_COUNT);
-    NetworkInput   ::Create();
-    CaptureInput   ::Create();
-    FontMgr        ::Create();
-    TextureMgr     ::Create();
-    GLShader       ::Create();
-    GLAnimSkeletal ::Create();
-    xAnimationMgr  ::Create();
-    ModelMgr       ::Create();
+    GLExtensions   ::Initialize();
+    InputMgr       ::CreateS();
+    g_InputMgr.Create(IC_CODE_COUNT);
+    g_InputMgr.LoadKeyCodeMap("Data/keys.txt");
+    g_InputMgr.LoadMap("Data/keyboard.txt");
+    NetworkInput   ::CreateS();
+    CaptureInput   ::CreateS();
+    FontMgr        ::CreateS();
+    TextureMgr     ::CreateS();
+    GLShader       ::CreateS();
+    GLAnimSkeletal ::CreateS();
+    xAnimationMgr  ::CreateS();
+    ModelMgr       ::CreateS();
     res = true;
 }
 
@@ -140,14 +143,15 @@ void Application_OnInvalidate(Application& sender, void *receiver, bool &res)
 
 void Application_OnDestroy(Application& sender, void *receiver, bool &res)
 {
-    ModelMgr       ::Destroy();
-    xAnimationMgr  ::Destroy();
-    GLAnimSkeletal ::Destroy();
-    GLShader       ::Destroy();
-    TextureMgr     ::Destroy();
-    FontMgr        ::Destroy();
-    CaptureInput   ::Destroy();
-    NetworkInput   ::Destroy();
-    InputMgr       ::Destroy();
+    ModelMgr       ::DestroyS();
+    xAnimationMgr  ::DestroyS();
+    GLAnimSkeletal ::DestroyS();
+    GLShader       ::DestroyS();
+    TextureMgr     ::DestroyS();
+    FontMgr        ::DestroyS();
+    CaptureInput   ::DestroyS();
+    NetworkInput   ::DestroyS();
+    g_InputMgr.SaveMap("Data/keyboard.txt");
+    InputMgr       ::DestroyS();
     res = true;
 }

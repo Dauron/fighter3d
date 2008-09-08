@@ -95,7 +95,7 @@ namespace Scenes { namespace Menu {
         {
             if (!BaseState::Update(T_time))
             {
-                if (g_InputMgr.GetInputStateAndClear(IC_LClick))
+                if (g_InputMgr.InputDown_GetAndRaise(IC_LClick))
                 {
                     xDWORD x = (xDWORD)g_InputMgr.mouseX, y = (xDWORD)g_InputMgr.mouseY;
                     xDWORD i = (x < widthHalf) ? 0 : 1;
@@ -114,15 +114,15 @@ namespace Scenes { namespace Menu {
                     else
                     if (MenuButton.Contains(x,y))
                     {
-                        g_InputMgr.SetInputState(IC_Reject, true);
+                        g_InputMgr.InputDown_Set(IC_Reject, true);
                         BaseState::Update(0.f);
                         return true;
                     }
                     else
                     if (PlayButton.Contains(x,y))
-                        g_InputMgr.SetInputState(IC_Accept, true);
+                        g_InputMgr.InputDown_Set(IC_Accept, true);
                 }
-                if (g_InputMgr.GetInputStateAndClear(IC_Accept))
+                if (g_InputMgr.InputDown_GetAndRaise(IC_Accept))
                 {
                     SkeletizedObj *player1 = new SkeletizedObj(),
                                   *player2 = new SkeletizedObj();
@@ -229,13 +229,12 @@ namespace Scenes { namespace Menu {
             Front.Update(0.f);
             ViewportSet_GL(Front);
 
-            // lights at viewer position
             GLfloat light_global_amb_color[]  = { 0.2f, 0.2f, 0.2f, 1.0f };
             glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_global_amb_color);
-            GLfloat light_position[]   = { -10.0f, -10.0f, 10.0f, 0.0f };
-            GLfloat light_amb_color[]  = { 0.8f, 0.8f, 1.f, 1.f };
-            GLfloat light_dif_color[]  = { 0.8f, 0.8f, 1.f, 1.f };
-            GLfloat light_spec_color[] = { 0.8f, 0.8f, 1.f, 1.f };
+            GLfloat light_position[]   = { 10.0f, -10.0f, 10.0f, 0.0f };
+            GLfloat light_amb_color[]  = { 0.1f, 0.1f, 0.1f, 1.0f };
+            GLfloat light_dif_color[]  = { 0.9f, 0.9f, 0.9f, 1.0f };
+            GLfloat light_spec_color[] = { 0.9f, 0.9f, 0.9f, 1.0f };
             glLightfv(GL_LIGHT0, GL_POSITION, light_position);
             glLightfv(GL_LIGHT0, GL_AMBIENT,  light_amb_color);  // environment
             glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_dif_color);  // direct light

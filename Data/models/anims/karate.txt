@@ -21,7 +21,7 @@
 # LeftPunch,     RightPunch,
 # LeftKick,      RightKick,
 # LeftHandGuard, RightHandGuard,
-# LeftLegGuard,  LeftLegGuard
+# LeftLegGuard,  RightLegGuard
 #
 #[auto] - hints automatic movement, breakable says if action may be stoped
 #stop  action - resting action

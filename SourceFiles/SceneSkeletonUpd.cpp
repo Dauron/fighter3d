@@ -98,10 +98,10 @@ bool SceneSkeleton::Update(float deltaTime)
     std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
     std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
-        if (im.GetInputStateAndClear(begin->Action))
+        if (im.InputDown_GetAndRaise(begin->Action))
         { UpdateButton(*begin); return true; }
 
-    if (im.GetInputStateAndClear(IC_FullScreen)) {
+    if (im.InputDown_GetAndRaise(IC_FullScreen)) {
         if (g_Application.MainWindow_Get().IsFullScreen())
             g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);
         else
@@ -109,7 +109,7 @@ bool SceneSkeleton::Update(float deltaTime)
         return true;
     }
 
-    if (im.GetInputStateAndClear(IC_Reject))
+    if (im.InputDown_GetAndRaise(IC_Reject))
     {
         if (EditMode == emSelectElement || EditMode == emCreateBone || EditMode == emSelectAnimation)
             EditMode = emMain;
@@ -174,7 +174,7 @@ bool SceneSkeleton::Update(float deltaTime)
 
     UpdateMouse(deltaTime);
 
-    if (EditMode == emSelectVertex && im.GetInputStateAndClear(IC_Accept)) {
+    if (EditMode == emSelectVertex && im.InputDown_GetAndRaise(IC_Accept)) {
         if (Selection.Vertices.size()) {
             EditMode = emSelectBone;
             Selection.Bone = NULL;
@@ -185,10 +185,10 @@ bool SceneSkeleton::Update(float deltaTime)
     if (EditMode != emSaveModel && EditMode != emSaveAnimation && EditMode != emFrameParams &&
         EditMode != emInputWght && EditMode != emCreateConstraint_Params)
     {
-        if (im.GetInputStateAndClear(IC_ShowBonesAlways))
+        if (im.InputDown_GetAndRaise(IC_ShowBonesAlways))
             State.ShowBonesAlways = !State.ShowBonesAlways;
         if (EditMode != emSelectVertex && EditMode != emSelectBone &&
-            im.GetInputStateAndClear(IC_ViewPhysicalModel))
+            im.InputDown_GetAndRaise(IC_ViewPhysicalModel))
         {
             SwitchDisplayedModel();
             return true;
@@ -216,7 +216,7 @@ bool SceneSkeleton::Update(float deltaTime)
     }
     if (EditMode == emEditAnimation && State.PlayAnimation)
     {
-        if (im.GetInputState(IC_BE_Modifier))
+        if (im.InputDown_Get(IC_BE_Modifier))
             Animation.Instance->T_progress += (xWORD)(deltaTime*100);
         else
             Animation.Instance->T_progress += (xWORD)(deltaTime*1000);
@@ -231,16 +231,16 @@ bool SceneSkeleton::Update(float deltaTime)
 
     if (EditMode == emEditAnimation)
     {
-        if (im.GetInputState(IC_BE_Modifier))
+        if (im.InputDown_Get(IC_BE_Modifier))
         {
             bool update = false;
             if (! Animation.Instance->CurrentFrame)
                 Animation.Instance->CurrentFrame = Animation.Instance->L_frames;
-            if (im.GetInputState(IC_MoveLeft))
+            if (im.InputDown_Get(IC_MoveLeft))
             { Animation.Instance->T_progress -= 1; update = true; }
-            if (im.GetInputState(IC_MoveRight))
+            if (im.InputDown_Get(IC_MoveRight))
             { Animation.Instance->T_progress += 1; update = true; }
-            if (im.GetInputStateAndClear(IC_MoveUp))
+            if (im.InputDown_GetAndRaise(IC_MoveUp))
             {
                 if (Animation.Instance->CurrentFrame->Next)
                 {
@@ -251,7 +251,7 @@ bool SceneSkeleton::Update(float deltaTime)
                     Animation.Instance->T_progress = Animation.Instance->CurrentFrame->T_freeze + Animation.Instance->CurrentFrame->T_duration;
                 update = true;
             }
-            if (im.GetInputStateAndClear(IC_MoveDown))
+            if (im.InputDown_GetAndRaise(IC_MoveDown))
             {
                 if (Animation.Instance->T_progress)
                     Animation.Instance->T_progress = 0;
@@ -319,7 +319,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
                     root->L_items[i].MX_RawToLocal_Set(xMatrix::Identity());
         }
         else // must be skeletized to perform skinning
-        if (button.Action == IC_BE_ModeSkin /*&& Model.ModelGr->xModelP->Spine.L_bones*/)
+        if (button.Action == IC_BE_ModeSkin && Model.ModelGr->xModelP->Spine.L_bones)
             EditMode = emSelectElement;
         else
         if (button.Action == IC_BE_ModeAnimate)
@@ -735,24 +735,24 @@ void SceneSkeleton::UpdateMouse(float deltaTime)
     if (InputState.LastX != im.mouseX || InputState.LastY != im.mouseY)
         MouseMove(im.mouseX, im.mouseY);
 
-    if (!InputState.MouseLIsDown && im.GetInputState(IC_LClick)) {
+    if (!InputState.MouseLIsDown && im.InputDown_Get(IC_LClick)) {
         InputState.MouseLIsDown = true;
         MouseLDown(im.mouseX, im.mouseY);
         return;
     }
 
-    if (InputState.MouseLIsDown && !im.GetInputState(IC_LClick)) {
+    if (InputState.MouseLIsDown && !im.InputDown_Get(IC_LClick)) {
         InputState.MouseLIsDown = false;
         MouseLUp(im.mouseX, im.mouseY);
     }
 
-    if (!InputState.MouseRIsDown && im.GetInputState(IC_RClick)) {
+    if (!InputState.MouseRIsDown && im.InputDown_Get(IC_RClick)) {
         InputState.MouseRIsDown = true;
         MouseRDown(im.mouseX, im.mouseY);
         return;
     }
 
-    if (InputState.MouseRIsDown && !im.GetInputState(IC_RClick)) {
+    if (InputState.MouseRIsDown && !im.InputDown_Get(IC_RClick)) {
         InputState.MouseRIsDown = false;
         MouseRUp(im.mouseX, im.mouseY);
     }
@@ -951,7 +951,7 @@ void SceneSkeleton::MouseLUp   (int X, int Y)
                 found = std::find<std::vector<xDWORD>::iterator, xDWORD> // check if vertex is selected
                                         (Selection.Vertices.begin(), Selection.Vertices.end(), *iter);
 
-                if (!g_InputMgr.GetInputState(IC_BE_Modifier)) // if selecting
+                if (!g_InputMgr.InputDown_Get(IC_BE_Modifier)) // if selecting
                 {
                     if (found == Selection.Vertices.end())       //   if not selected yet
                         Selection.Vertices.push_back(*iter);     //     add vertex to selection
@@ -1025,6 +1025,8 @@ void SceneSkeleton::MouseMove  (int X, int Y)
         InputState.MouseLIsDown && State.CurrentAction == IC_BE_Move)
     {
         Selection.Bone->P_end = Cameras.Current->FOV.Get3dPos(X, Height-Y, Selection.Bone->P_end);
+        if (Selection.Bone->ID == 0)
+            Selection.Bone->P_begin = Selection.Bone->P_end;
         Selection.Bone->S_lengthSqr = (Selection.Bone->P_end-Selection.Bone->P_begin).lengthSqr();
         Selection.Bone->S_length    = sqrt(Selection.Bone->S_lengthSqr);
         xSkeleton &spine = Model.ModelGr->xModelP->Spine;
@@ -1155,7 +1157,7 @@ xVector3 SceneSkeleton::CastPoint(xPoint3 P_pointToCast, xPoint3 P_onPlane)
 void SceneSkeleton::GetConstraintParams()
 {
     InputMgr &im = g_InputMgr;
-    if (im.GetInputStateAndClear(IC_Accept))
+    if (im.InputDown_GetAndRaise(IC_Accept))
     {
         float len = 0.f;
         if (InputState.String.length())
@@ -1275,7 +1277,7 @@ void SceneSkeleton::GetConstraintParams()
 void SceneSkeleton::GetBoneIdAndWeight()
 {
     InputMgr &im = g_InputMgr;
-    if (im.GetInputStateAndClear(IC_Accept))
+    if (im.InputDown_GetAndRaise(IC_Accept))
     {
         int wght = 100;
         if (InputState.String.length())
@@ -1328,7 +1330,7 @@ void SceneSkeleton::GetBoneIdAndWeight()
 void SceneSkeleton::GetFrameParams()
 {
     InputMgr &im = g_InputMgr;
-    if (im.GetInputStateAndClear(IC_Accept))
+    if (im.InputDown_GetAndRaise(IC_Accept))
     {
         xLONG &wght = Animation.KeyFrame.step == 1 ? Animation.KeyFrame.freeze : Animation.KeyFrame.duration;
         if (InputState.String.length())
@@ -1348,7 +1350,7 @@ void SceneSkeleton::GetFrameParams()
 void SceneSkeleton::GetCommand()
 {
     InputMgr &im = g_InputMgr;
-    if (im.GetInputStateAndClear(IC_Con_BackSpace))
+    if (im.InputDown_GetAndRaise(IC_Con_BackSpace))
     {
         if (InputState.String.length())
             InputState.String.erase(InputState.String.end()-1);
@@ -1389,10 +1391,10 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
-    if (im.GetInputStateAndClear(IC_PolyModeChange))
+    if (im.InputDown_GetAndRaise(IC_PolyModeChange))
         Config::PolygonMode = (Config::PolygonMode == GL_FILL) ? GL_LINE : GL_FILL;
 
-    if (im.GetInputStateAndClear(IC_CameraChange))
+    if (im.InputDown_GetAndRaise(IC_CameraChange))
     {
         if (Cameras.Current == &Cameras.Front) Cameras.Current = &Cameras.Right;
         else
@@ -1408,38 +1410,38 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
         else
         if (Cameras.Current == &Cameras.Perspective) Cameras.Current = &Cameras.Front;
     }
-    if (im.GetInputStateAndClear(IC_CameraReset))
+    if (im.InputDown_GetAndRaise(IC_CameraReset))
         InitCameras(true);
-    if (im.GetInputStateAndClear(IC_CameraFront))
+    if (im.InputDown_GetAndRaise(IC_CameraFront))
         Cameras.Current = &Cameras.Front;
-    if (im.GetInputStateAndClear(IC_CameraBack))
+    if (im.InputDown_GetAndRaise(IC_CameraBack))
         Cameras.Current = &Cameras.Back;
-    if (im.GetInputStateAndClear(IC_CameraLeft))
+    if (im.InputDown_GetAndRaise(IC_CameraLeft))
         Cameras.Current = &Cameras.Left;
-    if (im.GetInputStateAndClear(IC_CameraRight))
+    if (im.InputDown_GetAndRaise(IC_CameraRight))
         Cameras.Current = &Cameras.Right;
-    if (im.GetInputStateAndClear(IC_CameraTop))
+    if (im.InputDown_GetAndRaise(IC_CameraTop))
         Cameras.Current = &Cameras.Top;
-    if (im.GetInputStateAndClear(IC_CameraBottom))
+    if (im.InputDown_GetAndRaise(IC_CameraBottom))
         Cameras.Current = &Cameras.Bottom;
-    if (im.GetInputStateAndClear(IC_CameraPerspective))
+    if (im.InputDown_GetAndRaise(IC_CameraPerspective))
         Cameras.Current = &Cameras.Perspective;
 
     float scale = (Cameras.Current->P_eye - Cameras.Current->P_center).length();
-    float run = (im.GetInputState(IC_RunModifier)) ? MULT_RUN : 1.0f;
+    float run = (im.InputDown_Get(IC_RunModifier)) ? MULT_RUN : 1.0f;
     float deltaTmp = deltaTime * scale * run;
 
-    if (im.GetInputState(IC_MoveForward))
+    if (im.InputDown_Get(IC_MoveForward))
         Cameras.Current->Move (deltaTmp, 0.0f, 0.0f);
-    if (im.GetInputState(IC_MoveBack))
+    if (im.InputDown_Get(IC_MoveBack))
         Cameras.Current->Move (-deltaTmp, 0.0f, 0.0f);
-    if (im.GetInputState(IC_MoveLeft))
+    if (im.InputDown_Get(IC_MoveLeft))
         Cameras.Current->Move (0.0f, -deltaTmp, 0.0f);
-    if (im.GetInputState(IC_MoveRight))
+    if (im.InputDown_Get(IC_MoveRight))
         Cameras.Current->Move (0.0f, deltaTmp, 0.0f);
-    if (im.GetInputState(IC_MoveUp))
+    if (im.InputDown_Get(IC_MoveUp))
         Cameras.Current->Move (0.0f, 0.0f, deltaTmp);
-    if (im.GetInputState(IC_MoveDown))
+    if (im.InputDown_Get(IC_MoveDown))
         Cameras.Current->Move (0.0f, 0.0f, -deltaTmp);
     if (im.mouseWheel != 0)
     {
@@ -1454,32 +1456,32 @@ void SceneSkeleton::UpdateDisplay(float deltaTime)
         deltaTmp = deltaTime*MULT_ROT*run;
         xVector3 center = Cameras.Current->P_center;
 
-        if (im.GetInputState(IC_TurnLeft))
+        if (im.InputDown_Get(IC_TurnLeft))
             Cameras.Current->Rotate (deltaTmp, 0.0f, 0.0f);
-        if (im.GetInputState(IC_TurnRight))
+        if (im.InputDown_Get(IC_TurnRight))
             Cameras.Current->Rotate (-deltaTmp, 0.0f, 0.0f);
-        if (im.GetInputState(IC_TurnUp))
+        if (im.InputDown_Get(IC_TurnUp))
             Cameras.Current->Rotate (0.0f, deltaTmp, 0.0f);
-        if (im.GetInputState(IC_TurnDown))
+        if (im.InputDown_Get(IC_TurnDown))
             Cameras.Current->Rotate (0.0f, -deltaTmp, 0.0f);
-        if (im.GetInputState(IC_RollLeft))
+        if (im.InputDown_Get(IC_RollLeft))
             Cameras.Current->Rotate (0.0f, 0.0f, -deltaTmp);
-        if (im.GetInputState(IC_RollRight))
+        if (im.InputDown_Get(IC_RollRight))
             Cameras.Current->Rotate (0.0f, 0.0f, deltaTmp);
 
-        if (im.GetInputState(IC_OrbitLeft)) {
+        if (im.InputDown_Get(IC_OrbitLeft)) {
             Cameras.Current->P_center = center;
             Cameras.Current->Orbit (deltaTmp, 0.0f);
         }
-        if (im.GetInputState(IC_OrbitRight)) {
+        if (im.InputDown_Get(IC_OrbitRight)) {
             Cameras.Current->P_center = center;
             Cameras.Current->Orbit (-deltaTmp, 0.0f);
         }
-        if (im.GetInputState(IC_OrbitUp)) {
+        if (im.InputDown_Get(IC_OrbitUp)) {
             Cameras.Current->P_center = center;
             Cameras.Current->Orbit (0.0f, deltaTmp);
         }
-        if (im.GetInputState(IC_OrbitDown)) {
+        if (im.InputDown_Get(IC_OrbitDown)) {
             Cameras.Current->P_center = center;
             Cameras.Current->Orbit (0.0f, -deltaTmp);
         }
@@ -1495,7 +1497,7 @@ void SceneSkeleton::MouseLDown_BVH(int X, int Y)
     xFLOAT S_dist = (BVH.P_prevMouse - Selection.BVHNode->Figure->P_center).lengthSqr();
     Selection.FigureDim = 0;
 
-    if (g_InputMgr.GetInputState(IC_BE_Modifier))
+    if (g_InputMgr.InputDown_Get(IC_BE_Modifier))
         return;
 
     if (Selection.BVHNode->Figure->Type == xIFigure3d::Sphere)
@@ -1594,7 +1596,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
             xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
             xVector3 NW_shift = P_mouse2 - object.P_center;
             object.S_top = NW_shift.length();
-            if (g_InputMgr.GetInputState(IC_RunModifier))
+            if (g_InputMgr.InputDown_Get(IC_RunModifier))
                 object.N_top = NW_shift / object.S_top;
         }
         else
@@ -1604,7 +1606,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
             xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
             xVector3 NW_shift = object.P_center - P_mouse2;
             object.S_top = NW_shift.length();
-            if (g_InputMgr.GetInputState(IC_RunModifier))
+            if (g_InputMgr.InputDown_Get(IC_RunModifier))
                 object.N_top = NW_shift / object.S_top;
         }
         else
@@ -1624,7 +1626,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
         {
             xPoint3 P_topCap = object.P_center + object.S_front * object.N_front;
             xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
-            if (g_InputMgr.GetInputState(IC_RunModifier))
+            if (g_InputMgr.InputDown_Get(IC_RunModifier))
                 QT_rotation = xQuaternion::GetRotation(object.N_front, P_mouse2-object.P_center);
             object.S_front = (P_mouse2 - object.P_center).length();
         }
@@ -1633,7 +1635,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
         {
             xPoint3 P_topCap = object.P_center + object.S_side * object.N_side;
             xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
-            if (g_InputMgr.GetInputState(IC_RunModifier))
+            if (g_InputMgr.InputDown_Get(IC_RunModifier))
                 QT_rotation = xQuaternion::GetRotation(object.N_side, P_mouse2-object.P_center);
             object.S_side = (P_mouse2 - object.P_center).length();
         }
@@ -1641,7 +1643,7 @@ void SceneSkeleton::MouseLMove_BVH(int X, int Y)
         {
             xPoint3 P_topCap = object.P_center + object.S_top * object.N_top;
             xPoint3 P_mouse2 = Cameras.Current->FOV.Get3dPos(X, Height-Y, P_topCap);
-            if (g_InputMgr.GetInputState(IC_RunModifier))
+            if (g_InputMgr.InputDown_Get(IC_RunModifier))
                 QT_rotation = xQuaternion::GetRotation(object.N_top, P_mouse2-object.P_center);
             object.S_top = (P_mouse2 - object.P_center).length();
         }

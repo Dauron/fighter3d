@@ -13,6 +13,7 @@ bool IScene :: Create(int left, int top, unsigned int width, unsigned int height
     else
     if (PrevScene)
         PrevScene->Create(left, top, width, height);
+
     return true;
 }
 
@@ -34,6 +35,7 @@ void IScene :: Resize(int left, int top, unsigned int width, unsigned int height
     Top    = top;
     Width  = width;
     Height = height;
+    if (PrevScene) PrevScene->Resize(left, top, width, height);
 }
 
 IScene & IScene :: Scene_Set(IScene& scene, bool fl_destroyPrevious)

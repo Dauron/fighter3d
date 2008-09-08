@@ -27,28 +27,28 @@ bool WindowProc(IWindow *thisWnd, XEvent &event)
             key = XLookupKeysym(&event.xkey, 0);
             if (key < 256)
             {
-                g_InputMgr.SetKeyState((unsigned char)toupper(key), true);
+                g_InputMgr.KeyDown_Set((byte)toupper(key), true);
                 XLookupString(&event.xkey, buff, 10, &key, NULL);
-                g_InputMgr.AppendBuffer((unsigned char)buff[0]);       // Add it to buffer
+                g_InputMgr.AppendBuffer((byte)buff[0]);       // Add it to buffer
             }
             else
-                g_InputMgr.SetKeyState((unsigned char)TranslateXKeyToVKey(key), true);
+                g_InputMgr.KeyDown_Set((byte)TranslateXKeyToVKey(key), true);
             break;
         case KeyRelease:
             key = XLookupKeysym(&event.xkey, 0);
             if (key < 256)
-                g_InputMgr.SetKeyState((unsigned char)toupper(key), false);
+                g_InputMgr.KeyDown_Set((byte)toupper(key), false);
             else
-                g_InputMgr.SetKeyState((unsigned char)TranslateXKeyToVKey(key), false);
+                g_InputMgr.KeyDown_Set((byte)TranslateXKeyToVKey(key), false);
             break;
 
         case ButtonPress:
             if (event.xbutton.button == Button1)
-                g_InputMgr.SetKeyState(VK_LBUTTON, true);
+                g_InputMgr.KeyDown_Set(VK_LBUTTON, true);
             if (event.xbutton.button == Button2)
-                g_InputMgr.SetKeyState(VK_RBUTTON, true);
+                g_InputMgr.KeyDown_Set(VK_RBUTTON, true);
             if (event.xbutton.button == Button3)
-                g_InputMgr.SetKeyState(VK_MBUTTON, true);
+                g_InputMgr.KeyDown_Set(VK_MBUTTON, true);
             if (event.xbutton.button == Button4)
                 g_InputMgr.mouseWheel += 120;
             if (event.xbutton.button == Button5)
@@ -56,11 +56,11 @@ bool WindowProc(IWindow *thisWnd, XEvent &event)
             break;
         case ButtonRelease:
             if (event.xbutton.button == Button1)
-                g_InputMgr.SetKeyState(VK_LBUTTON, false);
+                g_InputMgr.KeyDown_Set(VK_LBUTTON, false);
             if (event.xbutton.button == Button2)
-                g_InputMgr.SetKeyState(VK_RBUTTON, false);
+                g_InputMgr.KeyDown_Set(VK_RBUTTON, false);
             if (event.xbutton.button == Button3)
-                g_InputMgr.SetKeyState(VK_MBUTTON, false);
+                g_InputMgr.KeyDown_Set(VK_MBUTTON, false);
             break;
         case MotionNotify:
             g_InputMgr.mouseX = event.xmotion.x;

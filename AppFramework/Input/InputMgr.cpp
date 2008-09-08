@@ -16,7 +16,7 @@ void InputMgr :: Key2InputCode_Set(byte kCode, int iCode)
         if (iIndex == kIndex)
             return;
 
-        _InputMap->KeyCode2Index[kCode] = 0;         // remove this kCode from search results
+        InputMap->KeyCode2Index[kCode] = 0;         // remove this kCode from search results
         byte kIndexOld = Index2FirstKeyCode(kIndex); // were there more mappings for this old Input Code?
         int  iCodeOld  = Index2InputCode(kIndex);    // get old mapped Input Code
         assert (iCodeOld && iCode != iCodeOld);
@@ -27,23 +27,23 @@ void InputMgr :: Key2InputCode_Set(byte kCode, int iCode)
             // so we may reuse its index
             if (!iIndex)
             {
-                _InputMap->KeyCode2Index[kCode]   = kIndex;
-                _InputMap->InputCode2Index[iCode] = kIndex;
-                _IndexState[kIndex]   = false;
+                InputMap->KeyCode2Index[kCode]   = kIndex;
+                InputMap->InputCode2Index[iCode] = kIndex;
+                FL_IndexState[kIndex]   = 0;
                 return;
             }
             // we already have our own index, we must free the unused one
             if (iIndex)
             {
-                _InputMap->KeyCode2Index[kCode] = iIndex;
+                InputMap->KeyCode2Index[kCode] = iIndex;
 
-                int lastIndex = _InputMap->LastIndex;
-                --_InputMap->LastIndex;
-                _IndexState[kIndex] = _IndexState[lastIndex];
-                _InputMap->InputCode2Index[ Index2InputCode(lastIndex) ] = kIndex;
+                int lastIndex = InputMap->LastIndex;
+                --InputMap->LastIndex;
+                FL_IndexState[kIndex] = FL_IndexState[lastIndex];
+                InputMap->InputCode2Index[ Index2InputCode(lastIndex) ] = kIndex;
                 for (int kCode = 0; kCode < NUM_KEYS; ++kCode)
                     if (KeyCode2Index(kCode) == lastIndex)
-                        _InputMap->KeyCode2Index[kCode] = kIndex;
+                        InputMap->KeyCode2Index[kCode] = kIndex;
             }
         }
 
@@ -53,43 +53,49 @@ void InputMgr :: Key2InputCode_Set(byte kCode, int iCode)
 
     if (!iIndex)
     {
-        ++_InputMap->LastIndex;
-        _InputMap->KeyCode2Index[kCode]   = _InputMap->LastIndex;
-        _InputMap->InputCode2Index[iCode] = _InputMap->LastIndex;
-        _IndexState[_InputMap->LastIndex]   = false;
+        ++InputMap->LastIndex;
+        InputMap->KeyCode2Index[kCode]     = InputMap->LastIndex;
+        InputMap->InputCode2Index[iCode]   = InputMap->LastIndex;
+        FL_IndexState[InputMap->LastIndex] = 0;
         return;
     }
 
-    _InputMap->KeyCode2Index[kCode] = iIndex;
+    InputMap->KeyCode2Index[kCode] = iIndex;
 }
 
 void InputMgr :: LoadMap(const char *fileName)
 {
+    assert(I_CodeCount);
+
     std::ifstream in;
 
     in.open(fileName);
     if (in.is_open())
     {
-        ClearMap();
-        _InputMap = NULL;
+        ClearMappings();
 
         char buff[255];
         while (in.good())
         {
             in.getline(buff, 255);
+            if (buff[0] == 0 || buff[0] == '#') continue;
+            size_t len = strlen(buff);
+            if (buff[len - 1] == '\r') buff[len - 1] = 0;
+
             if (buff[0] == '[')
             {
-                _InputMap = &_ScenesMap[buff];
-                if (!_InputMap->InputCode2Index) _InputMap->Create(_iCodeCount);
+                InputMap = &ScenesMap[buff];
+                if (!InputMap->InputCode2Index) InputMap->Create(I_CodeCount);
             }
             else
             {
-                if (_InputMap)
+                if (InputMap)
                 {
-                    int kCode;
+                    const char *params = buff;
+                    int kCode = GetKeyCode(ReadSubstring(buff, params));
+                    if (!kCode) continue;
                     int iCode;
-
-                    sscanf(buff, "%d\t%d", &kCode, &iCode);
+                    sscanf(params, "%d", &iCode);
                     Key2InputCode_Set(kCode, iCode);
                 }
             }
@@ -106,9 +112,10 @@ void InputMgr :: SaveMap(const char *fileName)
     if (out.is_open())
     {
         TScenesMap::iterator iter;
-        for (iter = _ScenesMap.begin(); iter != _ScenesMap.end(); ++iter)
+        for (iter = ScenesMap.begin(); iter != ScenesMap.end(); ++iter)
         {
             out << iter->first << '\n';
+            InputMap = &iter->second;
 
             for (int kCode = 0; kCode < NUM_KEYS; ++kCode)
             {
@@ -116,7 +123,7 @@ void InputMgr :: SaveMap(const char *fileName)
                 if (index)
                 {
                     int iCode = Index2InputCode(index);
-                    out << kCode << '\t' << iCode << '\n';
+                    out << GetKeyName(kCode) << '\t' << iCode << '\n';
                 }
             }
         }
@@ -131,7 +138,7 @@ void InputMgr :: LoadKeyCodeMap(const char *fileName)
     in.open(fileName);
     if (in.is_open())
     {
-        _KeyCodeMap.clear();
+        KeyCodeNameMap.clear();
 
         char buff[255];
         int keyCode;
@@ -142,8 +149,8 @@ void InputMgr :: LoadKeyCodeMap(const char *fileName)
             in.getline(buff, 255);
             if (buff[0] == '\0' || buff[0] == '#') continue;
 
-            sscanf(buff, "%d\t%s", &keyCode, keyName);
-            _KeyCodeMap[keyCode] = keyName;
+            sscanf(buff, "%d %s", &keyCode, keyName);
+            KeyCodeNameMap[keyCode] = keyName;
         }
         in.close();
     }

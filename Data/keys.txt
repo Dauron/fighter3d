@@ -1,3 +1,10 @@
+1	L_Mouse_Button
+2	R_Mouse_Button
+3	VK_CANCEL
+4	M_Mouse_Button
+5	X_Mouse_Button1
+6	X_Mouse_Button1
+
 8	Backspace
 9	Tab
 
@@ -89,3 +96,16 @@
 163	Control_R
 164	Alt_L
 165	Alt_R
+
+186 Semicolon
+187 Plus
+188 Comma
+189 Dash
+190 Period
+191 Question
+192 Tilda
+
+219 Bracket_Open
+220 Slash
+221 Bracket_Close
+222 Quote

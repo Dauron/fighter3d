@@ -46,7 +46,7 @@ namespace Scenes { namespace Menu {
         {
             if (!BaseState::Update(T_time))
             {
-                if (g_InputMgr.GetInputStateAndClear(IC_LClick))
+                if (g_InputMgr.InputDown_GetAndRaise(IC_LClick))
                 {
                     xFLOAT mouseX = (xFLOAT)g_InputMgr.mouseX;
                     xFLOAT mouseY = (xFLOAT)g_InputMgr.mouseY;

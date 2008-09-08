@@ -79,7 +79,7 @@ void SceneMenu :: Resize(int left, int top, unsigned int width, unsigned int hei
 
 bool SceneMenu :: Update(float deltaTime)
 {
-    if (g_InputMgr.GetInputStateAndClear(IC_FullScreen))
+    if (g_InputMgr.InputDown_GetAndRaise(IC_FullScreen))
     {
         if (g_Application.MainWindow_Get().IsFullScreen())
             g_Application.MainWindow_Get().FullScreen_Set(Config::WindowX, Config::WindowY, false);

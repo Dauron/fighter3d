@@ -18,7 +18,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     bool right = (lParam & (54 << 16)) == (54 << 16);
                     int vkey = right ? VK_RSHIFT : VK_LSHIFT;
-                    g_InputMgr.SetKeyState((unsigned char)vkey, true);
+                    g_InputMgr.KeyDown_Set((byte)vkey, true);
                 }
                 if (wParam == VK_CONTROL || wParam == VK_MENU)    // mark L/R ctrl/alt
                 {
@@ -34,9 +34,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     else
                     if (wParam == VK_MENU)
                         vkey = right ? VK_RMENU : VK_LMENU;
-                    g_InputMgr.SetKeyState((unsigned char)vkey, true);
+                    g_InputMgr.KeyDown_Set((byte)vkey, true);
                 }
-                g_InputMgr.SetKeyState((unsigned char)wParam, true); // If So, Mark It As true
+                g_InputMgr.KeyDown_Set((byte)wParam, true); // If So, Mark It As true
             }
             break;
 
@@ -48,7 +48,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     bool right = (lParam & (54 << 16)) == (54 << 16);
                     int vkey = right ? VK_RSHIFT : VK_LSHIFT;
-                    g_InputMgr.SetKeyState((unsigned char)vkey, false);
+                    g_InputMgr.KeyDown_Set((byte)vkey, false);
                 }
                 if (wParam == VK_CONTROL || wParam == VK_MENU)    // mark L/R ctrl/alt
                 {
@@ -64,34 +64,34 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     else
                     if (wParam == VK_MENU)
                         vkey = right ? VK_RMENU : VK_LMENU;
-                    g_InputMgr.SetKeyState((unsigned char)vkey, false);
+                    g_InputMgr.KeyDown_Set((byte)vkey, false);
                 }
-                g_InputMgr.SetKeyState((unsigned char)wParam, false); // If So, Mark It As false
+                g_InputMgr.KeyDown_Set((byte)wParam, false); // If So, Mark It As false
             }
             break;
 
         case WM_CHAR:                                             // Translated character
             if (thisWnd)
-                g_InputMgr.AppendBuffer((unsigned char)wParam);       // Add it to buffer
+                g_InputMgr.AppendBuffer((byte)wParam);       // Add it to buffer
             break;
 
         case WM_LBUTTONDOWN:
-            g_InputMgr.SetKeyState(VK_LBUTTON, true);
+            g_InputMgr.KeyDown_Set(VK_LBUTTON, true);
             break;
         case WM_MBUTTONDOWN:
-            g_InputMgr.SetKeyState(VK_MBUTTON, true);
+            g_InputMgr.KeyDown_Set(VK_MBUTTON, true);
             break;
         case WM_RBUTTONDOWN:
-            g_InputMgr.SetKeyState(VK_RBUTTON, true);
+            g_InputMgr.KeyDown_Set(VK_RBUTTON, true);
             break;
         case WM_LBUTTONUP:
-            g_InputMgr.SetKeyState(VK_LBUTTON, false);
+            g_InputMgr.KeyDown_Set(VK_LBUTTON, false);
             break;
         case WM_MBUTTONUP:
-            g_InputMgr.SetKeyState(VK_MBUTTON, false);
+            g_InputMgr.KeyDown_Set(VK_MBUTTON, false);
             break;
         case WM_RBUTTONUP:
-            g_InputMgr.SetKeyState(VK_RBUTTON, false);
+            g_InputMgr.KeyDown_Set(VK_RBUTTON, false);
             break;
         case WM_MOUSEMOVE:
             g_InputMgr.mouseX = LOWORD(lParam);

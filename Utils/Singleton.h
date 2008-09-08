@@ -39,9 +39,9 @@ public:
     static T* GetSingletonPtr( void )
         {  return ( ms_Singleton );  }
 
-    static void Create()
+    static void CreateS()
        { new T(); }
-    static void Destroy()
+    static void DestroyS()
        { assert( ms_Singleton ); delete ms_Singleton; }
 };
 

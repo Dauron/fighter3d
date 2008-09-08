@@ -1,16 +1,21 @@
+#[map] - begin map definition
+#name  - map name
+#file  - map file
+#img   - screenshot of the map - bmp or tga - its size should be power of 2, but other sizes may be obtained by transparency
+
 [map]
 name Dojo
 file models/level_3.map
 img  models/level_3.tga
 
 [map]
-name Fast test
+name "Fast test"
 file models/level_0.map
 
 [map]
-name Bounce test
+name "Bounce test"
 file models/level_1.map
 
 [map]
-name Motion capture test
+name "Motion capture test"
 file models/level_2.map

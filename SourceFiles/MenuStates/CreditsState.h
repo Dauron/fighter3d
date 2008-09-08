@@ -12,10 +12,10 @@ namespace Scenes { namespace Menu {
 
         virtual bool Update(xFLOAT T_time)
         {
-            if (g_InputMgr.GetInputStateAndClear(IC_Accept) ||
-                g_InputMgr.GetInputStateAndClear(IC_LClick) ||
-                g_InputMgr.GetInputStateAndClear(IC_RClick) )
-                g_InputMgr.SetInputState(IC_Reject, true);
+            if (g_InputMgr.InputDown_GetAndRaise(IC_Accept) ||
+                g_InputMgr.InputDown_GetAndRaise(IC_LClick) ||
+                g_InputMgr.InputDown_GetAndRaise(IC_RClick) )
+                g_InputMgr.InputDown_Set(IC_Reject, true);
             if (!BaseState::Update(T_time))
             {
                 bool res = false;

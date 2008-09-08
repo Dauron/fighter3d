@@ -103,8 +103,8 @@ public:
 
     static void Load();
     static void Unload();
-    static void Create();
-    static void Destroy();
+    static void CreateS();
+    static void DestroyS();
     static void Invalidate();
 
     static bool Start();

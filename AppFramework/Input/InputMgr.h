@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include "../../Utils/Utils.h"
 #include "../../Utils/Singleton.h"
 #include "VirtualKeys.h"
 
@@ -12,18 +13,19 @@
 
 #define g_InputMgr InputMgr::GetSingleton()
 
+typedef unsigned char byte;
+
 class InputMgr : public Singleton<InputMgr>
 {
-    typedef unsigned char byte;
-    typedef std::map<byte, std::string> TKeyCodeMap;
-    struct TInputMap
+    typedef std::map<byte, std::string> TKeyCodeNameMap;
+    typedef struct TKeyInputMap
     {
         int  KeyCode2Index[NUM_KEYS];
         int *InputCode2Index;
         int  LastIndex;
 
-        TInputMap  () : InputCode2Index(NULL) {}
-        ~TInputMap () { Destroy(); }
+        TKeyInputMap  () : InputCode2Index(NULL) {}
+        ~TKeyInputMap () { Destroy(); }
 
         void Create(int iCodeCount)
         {
@@ -36,37 +38,35 @@ class InputMgr : public Singleton<InputMgr>
         void Destroy()
         { if (InputCode2Index) { delete InputCode2Index; InputCode2Index = NULL; }; }
     };
-    typedef std::map<std::string, TInputMap> TScenesMap;
+    typedef std::map<std::string, TKeyInputMap> TScenesMap;
 
-    TKeyCodeMap _KeyCodeMap;
-    TInputMap*  _InputMap;
-    TScenesMap  _ScenesMap;
+    TKeyCodeNameMap KeyCodeNameMap;
+    TKeyInputMap*   InputMap;
+    TScenesMap      ScenesMap;
 
-    int         _iCodeCount;
-    bool        _KeysState [256];
-    bool       *_IndexState;//[IC_CODE_COUNT];
+    int         I_CodeCount;
+    bool        FL_KeysState [256];
+    byte       *FL_IndexState;//[IC_CODE_COUNT];
 
     int KeyCode2Index(byte kCode)
     {
-        assert (_InputMap);
-        return _InputMap->KeyCode2Index[kCode];
+        assert (InputMap);
+        return InputMap->KeyCode2Index[kCode];
     }
     int InputCode2Index(int iCode)
     {
-        assert (_InputMap);
-        return _InputMap->InputCode2Index[iCode];
+        assert (InputMap);
+        return InputMap->InputCode2Index[iCode];
     }
     int Index2InputCode(int index)
     {
-        assert (_InputMap);
-        for (int iCode = 0; iCode < _iCodeCount; ++iCode)
+        for (int iCode = 0; iCode < I_CodeCount; ++iCode)
             if ( InputCode2Index(iCode) == index)
                 return iCode;
         return IC_Undefined;
     }
     int Index2FirstKeyCode(int index)
     {
-        assert (_InputMap);
         for (int kCode = 0; kCode < NUM_KEYS; ++kCode)
             if ( KeyCode2Index(kCode) == index)
                 return kCode;
@@ -88,64 +88,73 @@ public:
             return;
         if (charCode == 8)
         {
-        //    if (Buffer.length())
-        //        Buffer.resize(Buffer.length()-1);
+            if (Buffer.length())
+                Buffer.resize(Buffer.length()-1);
             return;
         }
         if (Buffer.length() == BUFFER_LENGTH)
             Buffer.clear();
         Buffer += charCode;
     }
-    // Set given key state
-    void SetKeyState(byte kCode, bool state) {
-        bool &kState = _KeysState[kCode];
-        if ((kState && state) || (!kState && !state))
-            return;
-        kState = state;
 
-        if (!_InputMap) return;
-        _IndexState[ KeyCode2Index(kCode) ] = state;
+    void KeyDown_Set(byte kCode, bool down) {
+        bool &kState = FL_KeysState[kCode];
+        if ((kState && down) || (!kState && !down))
+            return;
+        kState = down;
+
+        if (!InputMap) return;
+        byte &iState = FL_IndexState[ KeyCode2Index(kCode) ];
+        if (down)   ++iState;
+        else
+        if (iState) --iState;
     }
-    // Get given key state
-    bool GetKeyState(byte kCode)             { return _InputMap && _KeysState[ kCode ]; }
-    // Set given input state
-    void SetInputState(int iCode, bool state) { if (!_InputMap) return; _IndexState[ InputCode2Index(iCode) ] = state; }
-    // Get given input state
-    bool GetInputState(int iCode)             { return _InputMap && FL_enable && _IndexState[ InputCode2Index(iCode) ]; }
-    bool GetInputStateAndClear(int iCode)
+    bool KeyDown_Get(byte kCode)              { return FL_KeysState[ kCode ]; }
+
+    void InputDown_Set(int iCode, bool down)  {
+        if (!InputMap) return;
+        byte &iState = FL_IndexState[ InputCode2Index(iCode) ];
+        if (down && !iState) iState = 1;
+        else
+        if (!down)           iState = 0;
+    }
+    bool InputDown_Get(int iCode)
+    { return InputMap && FL_enable && FL_IndexState[ InputCode2Index(iCode) ]; }
+    bool InputDown_GetAndRaise(int iCode)
     {
-        if (!_InputMap || !FL_enable) return false;
-        int  index = InputCode2Index(iCode);
-        bool state = _IndexState[ index ];
-        _IndexState[ index ] = false;
-        return state;
+        if (!InputMap || !FL_enable) return false;
+        byte &iState = FL_IndexState[ InputCode2Index(iCode) ];
+        bool  rState = iState;
+        iState = 0;
+        return rState;
     }
 
     void SetScene(const char *scene, bool FL_dont_process_buttons = true)
     {
-        TInputMap *map = &_ScenesMap[scene];
-        if (_InputMap == map) return;
-        _InputMap = map;
-        if (!map->InputCode2Index) map->Create(_iCodeCount);
+        TKeyInputMap &map = ScenesMap[scene];
+        if (InputMap == &map) return;
+        InputMap = &map;
+        if (!map.InputCode2Index) map.Create(I_CodeCount);
 
         FL_enable = true;
         Buffer.clear();
-        memset(_IndexState, 0, (_InputMap->LastIndex+1) * sizeof(bool));
+        memset(FL_IndexState, 0, (InputMap->LastIndex+1) * sizeof(byte));
 
         if (FL_dont_process_buttons) return;
 
         for (int kCode = 0; kCode < NUM_KEYS; ++kCode)
-            if (_KeysState[kCode])
-                _IndexState[ KeyCode2Index(kCode) ] = true;
+            if (FL_KeysState[kCode])
+                ++FL_IndexState[ KeyCode2Index(kCode) ];
     }
     void AllKeysUp()
     {
-        memset(g_InputMgr._KeysState, 0, NUM_KEYS * sizeof(bool));
-        memset(_IndexState, 0, (_InputMap->LastIndex+1) * sizeof(bool));
+        memset(FL_KeysState,  0, NUM_KEYS * sizeof(bool));
+        if (InputMap)
+            memset(FL_IndexState, 0, (InputMap->LastIndex+1) * sizeof(byte));
     }
 
     // Get / Set the keyCode to inputCode mapping
-    int Key2InputCode(byte kCode)
+    int  Key2InputCode(byte kCode)
     {
         return Index2InputCode( KeyCode2Index(kCode) );
     }
@@ -160,47 +169,64 @@ public:
         if (kIndex) return;
         Key2InputCode_Set(kCode, iCode);
     }
-    void ClearMap()
-    {
-        _InputMap = NULL;
-        _ScenesMap.clear();
-        _KeyCodeMap.clear();
-    }
+
     void LoadMap(const char *fileName);
     void SaveMap(const char *fileName);
 
-    std::string GetKeyName(int kCode)
+    std::string GetKeyName(byte kCode)
     {
-        std::map<byte, std::string>::iterator iter = _KeyCodeMap.find(kCode);
-        if (iter != _KeyCodeMap.end())
+        std::map<byte, std::string>::iterator iter = KeyCodeNameMap.find(kCode);
+        if (iter != KeyCodeNameMap.end())
             return iter->second;
-
-        std::string res;
-        res += kCode;
-        res += '\0';
-        return res;
+        char c[2] = { kCode, 0 };
+        return c;
+    }
+    byte GetKeyCode(const std::string &kName)
+    {
+        std::map<byte, std::string>::iterator
+            KC_curr = KeyCodeNameMap.begin(),
+            KC_last = KeyCodeNameMap.end();
+        for (; KC_curr != KC_last; ++KC_curr)
+            if (KC_curr->second == kName)
+                return KC_curr->first;
+        if (kName.size() != 1) return 0;
+        return kName[0];
     }
     void LoadKeyCodeMap(const char *fileName);
 
-    static void Create(int iCodeCount)
+    void ClearMappings()
     {
-        Singleton::Create();
+        InputMap = NULL;
+        ScenesMap.clear();
+    }
+    void Clear()
+    {
+        I_CodeCount   = 0;
+        FL_IndexState = NULL;
+        KeyCodeNameMap.clear();
+        ClearMappings();
+    }
 
-        g_InputMgr.FL_enable = true;
-        g_InputMgr._InputMap = NULL;
-        g_InputMgr.Buffer.reserve(BUFFER_LENGTH);
-        g_InputMgr.LoadMap("Data/keyboard.txt");
-        g_InputMgr.LoadKeyCodeMap("Data/keys.txt");
+    void Create(int iCodeCount)
+    {
+        FL_enable = true;
+        InputMap  = NULL;
+        Buffer.reserve(BUFFER_LENGTH);
 
-        g_InputMgr._iCodeCount = iCodeCount;
-        g_InputMgr._IndexState = new bool[iCodeCount];
-        memset(g_InputMgr._KeysState,  0, NUM_KEYS * sizeof(bool));
+        I_CodeCount   = iCodeCount;
+        FL_IndexState = new byte[iCodeCount];
+        memset(FL_KeysState,  0, NUM_KEYS * sizeof(bool));
+    }
+    void Destroy()
+    {
+        if (FL_IndexState) delete[] FL_IndexState;
+        Clear();
     }
 
     InputMgr()
-    { _IndexState = NULL; }
+    { FL_IndexState = NULL; }
     ~InputMgr()
-    { if (_IndexState) { delete[] _IndexState; _IndexState = NULL; } }
+    { Destroy(); }
 };
 
 #endif

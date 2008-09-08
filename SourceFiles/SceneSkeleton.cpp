@@ -717,7 +717,7 @@ unsigned int SceneSkeleton::CountSelectable()
             return model.I_elements;
     else
     if (EditMode == emSelectVertex)
-        return Selection.Element->I_vertices;
+        return Selection.Element->renderData.I_vertices;
     return 0;
 }
 std::vector<xDWORD> *SceneSkeleton::SelectCommon(int X, int Y, int W, int H)

@@ -18,6 +18,7 @@ struct istring_less
 
 void itos(int in, std::string &out);
 std::string itos(int in);
+int stoi(const std::string &in);
 
 inline bool StartsWith(const char *buff, const char *string)
 {

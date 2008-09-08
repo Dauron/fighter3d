@@ -410,7 +410,7 @@ void RenderElementVerticesLST(
     }
 
     if (selectionMode == Renderer::smVertex)
-        for (GLuint i=0; i < elem->I_vertices; ++i)
+        for (GLuint i=0; i < elem->renderData.I_vertices; ++i)
         {
             glLoadName(i);
             glDrawArrays(GL_POINTS, i, 1);
