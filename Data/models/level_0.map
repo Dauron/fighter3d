@@ -26,7 +26,7 @@ model	dojo/floor0_F.3dx
 position    0 0 -0.21
 phantom     0
 
-[model]
+[skip model]
 model	crate.3dx
 skip rotation    0 10 0
 position    -0.5 10 0.2
@@ -37,7 +37,7 @@ phantom     0
 mass        20
 shadows     1
 
-[model]
+[skip model]
 model	crate.3dx
 skip rotation    0 10 0
 position    -0.5 5 1.3
@@ -47,6 +47,14 @@ locked      0
 phantom     0
 mass        20
 shadows     1
+
+[model]
+model	3ds/dojo/altar.3ds
+rotation	0 0 90
+position	0	-19.77	-0.21
+physical	0
+phantom	0
+shadows 1
 
 #
 

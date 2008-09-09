@@ -253,29 +253,32 @@ void RendererGL :: RenderBVHExt ( xBVHierarchy &bvh, const xMatrix &MX_LocalToWo
             glColor3f(1.f,1.f,1.f);
     }
 
-    // Sphere
-    if (bvh.Figure->Type == xIFigure3d::Sphere)
-        RenderSphere(*(xSphere*)bvh.GetTransformed(MX_LocalToWorld));
-    else
+    if (bvh.I_items == 0)
+    {
+        // Sphere
+        if (bvh.Figure->Type == xIFigure3d::Sphere)
+            RenderSphere(*(xSphere*)bvh.GetTransformed(MX_LocalToWorld));
+        else
 
-    // Capsule
-    if (bvh.Figure->Type == xIFigure3d::Capsule)
-        RenderCapsule(*(xCapsule*)bvh.GetTransformed(MX_LocalToWorld));
-    else
+        // Capsule
+        if (bvh.Figure->Type == xIFigure3d::Capsule)
+            RenderCapsule(*(xCapsule*)bvh.GetTransformed(MX_LocalToWorld));
+        else
 
-    // BoxO
-    if (bvh.Figure->Type == xIFigure3d::BoxOriented)
-        RenderBoxO(*(xBoxO*)bvh.GetTransformed(MX_LocalToWorld), I_level);
-    else
+        // BoxO
+        if (bvh.Figure->Type == xIFigure3d::BoxOriented)
+            RenderBoxO(*(xBoxO*)bvh.GetTransformed(MX_LocalToWorld), I_level);
+        else
 
-    // Cylinder
-    if (bvh.Figure->Type == xIFigure3d::Cylinder)
-        RenderCylinder(*(xCylinder*)bvh.GetTransformed(MX_LocalToWorld));
-    else
+        // Cylinder
+        if (bvh.Figure->Type == xIFigure3d::Cylinder)
+            RenderCylinder(*(xCylinder*)bvh.GetTransformed(MX_LocalToWorld));
+        else
 
-    // Mesh
-    if (bvh.Figure->Type == xIFigure3d::Mesh)
-        RenderMesh(*(xMesh*)bvh.GetTransformed(MX_LocalToWorld));
+        // Mesh
+        if (bvh.Figure->Type == xIFigure3d::Mesh)
+            RenderMesh(*(xMesh*)bvh.GetTransformed(MX_LocalToWorld));
+    }
 
     xBVHierarchy *bvh_cur = bvh.L_items,
                  *bvh_end = bvh.L_items + bvh.I_items;

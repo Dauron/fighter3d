@@ -140,7 +140,11 @@ void  GLFont :: Print  (float x, float y, float z, float maxHeight, int skipLine
             --skipLines;
         else
         {
-            if (maxHeight <= 0) return;
+            if (maxHeight <= 0)
+            {
+                glPopAttrib(); // Pops The Display List Bits
+                return;
+            }
 
             glCallLists((GLsizei)(end-start), GL_UNSIGNED_BYTE, start); // Draws The Display List Text
             y -= lineH;

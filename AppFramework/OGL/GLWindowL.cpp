@@ -147,6 +147,9 @@ void GLWindow::Dispose()
         XF86VidModeSetViewPort(hDC, screen, 0, 0);
     }
     if (hDC) XCloseDisplay(hDC);
+
+    glctx = NULL;
+    hDC   = NULL;
 }
 
 #endif

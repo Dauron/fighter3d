@@ -20,13 +20,14 @@ bool Model3dx :: Create ()
             model = xImportFileFrom3ds(file3ds);
             lib3ds_file_free(file3ds);
         }
-        if (model && Config::Save3dsTo3dx) {
-            // save
-            model->FileName = strdup (Filesystem::ChangeFileExt(Name, "3dx").c_str());
-            model->Save();
-        }
-        else
-            model->FileName = strdup (name);
+        if (model)
+            if (Config::Save3dsTo3dx) {
+                // save
+                model->FileName = strdup (Filesystem::ChangeFileExt(Name, "3dx").c_str());
+                model->Save();
+            }
+            else
+                model->FileName = strdup (name);
     }
     //model->Save();
     return model;

@@ -230,6 +230,11 @@ void GLWindow::Dispose()
     if (hInstance && !UnregisterClass(CLASS_NAME,hInstance)) // Are We Able To Unregister Class
         MessageBox(NULL,"Could not unregister class.","SHUTDOWN ERROR",MB_OK|MB_ICONINFORMATION);
 
+    hDC       = NULL;
+    hWnd      = NULL;
+    hRC       = NULL;
+    hInstance = NULL;
+
     if (FL_fullscreen)                                   // Are We In Fullscreen Mode?
     {
         ChangeDisplaySettings(NULL,0);                   // If So Switch Back To The Desktop

@@ -175,16 +175,21 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     ------------------------------------------------------------------------\n\
     help                | ?             | print this help screen\n\
     ------------------------------------------------------------------------\n\
-    toggle_lights       | tls           | turns the lighting on and off\n\
-    toggle_shadows      | tshadow       | toggles shadow rendering\n\
-    toggle_shadow_vol   | tshadowv      | toggles shadow volume rendering\n\
-    init map            | initm         | reinitialize map\n\
+    init map            | initm         | reinitialize map (no players)\n\
     init cam            | initc         | reinitialize cameras\n\
-    toggle_shader       | tshd          | toggles custom shader\n\
+    level {int}         | level {int}   | load 'level_{int}.map' scene\n\
+    speed {float}       | speed {float} | enter clock speed multiplier\n\
+    ------------------------------------------------------------------------\n\
+    toggle_lights       | tls           | turns the lighting on and off\n\
+    toggle_shaders      | tshdr         | toggles GPU shaders\n\
+    toggle_shadows      | tshdw         | toggles shadow rendering\n\
+    toggle_shadow_vol   | tshdv         | toggles shadow volume rendering\n\
+    toggle_skeleton     | tskel         | toggles skeleton rendering\n\
+    toggle_bvh          | tbvh          | toggles BVH rendering\n\
+    toggle_cameras      | tcam          | toggles cameras rendering\n\
     toggle_polygon_mode | tpm           | toggles polygon mode\n\
     ------------------------------------------------------------------------\n\
-    level {int}         | level {int}   | load 'level_{int}.map' scene\n\
-    speed {float}       | speed {float} | enter clock speed multiplier\n");
+    ");
         return true;
     }
     if (cmd.substr(0, 6) == "level ")
@@ -226,7 +231,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
             Map.lights[id].turned_on = !Map.lights[id].turned_on;
         return true;
     }
-    if (cmd == "tshadow" || cmd == "toggle_shadows")
+    if (cmd == "tshdw" || cmd == "toggle_shadows")
     {
         if (Config::EnableShadows = !Config::EnableShadows)
             output.append("\nThe shadows are ON.\n");
@@ -234,15 +239,39 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
             output.append("\nThe shadows are OFF.\n");
         return true;
     }
-    if (cmd == "tshadowv" || cmd == "toggle_shadow_vol")
+    if (cmd == "tshdv" || cmd == "toggle_shadow_vol")
     {
         if (Config::DisplayShadowVolumes = !Config::DisplayShadowVolumes)
-            output.append("\nThe shadow volumes are ON.\n");
+            output.append("\nShadow volumes drawing is ON.\n");
         else
-            output.append("\nThe shadow volumes are OFF.\n");
+            output.append("\nShadow volumes drawing is OFF.\n");
         return true;
     }
-    if (cmd == "tshd" || cmd == "toggle_shader")
+    if (cmd == "tskel" || cmd == "toggle_skeleton")
+    {
+        if (Config::DisplaySkeleton = !Config::DisplaySkeleton)
+            output.append("\nSkeleton drawing is ON.\n");
+        else
+            output.append("\nSkeleton drawing is OFF.\n");
+        return true;
+    }
+    if (cmd == "tbvh" || cmd == "toggle_bvh")
+    {
+        if (Config::DisplayBVH = !Config::DisplayBVH)
+            output.append("\nBVH drawing is ON.\n");
+        else
+            output.append("\nBVH drawing is OFF.\n");
+        return true;
+    }
+    if (cmd == "tcam" || cmd == "toggle_cameras")
+    {
+        if (Config::DisplayCameras = !Config::DisplayCameras)
+            output.append("\nCameras drawing is ON.\n");
+        else
+            output.append("\nCameras drawing is OFF.\n");
+        return true;
+    }
+    if (cmd == "tshdr" || cmd == "toggle_shaders")
     {
         if (Config::EnableShaders = !Config::EnableShaders)
             output.append("\nThe shaders are ON.\n");

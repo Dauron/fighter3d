@@ -42,6 +42,9 @@ void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView 
 
     if (!listID)
     {
+        GLShader::EnableTexturing(xState_Off);
+        GLShader::Start();
+
         mode = xGPUPointers::LIST;
         glNewList(listID = glGenLists(1), GL_COMPILE);
 
@@ -90,6 +93,9 @@ void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView 
 
     if (textured && elem->FL_textured && !listIDTex)
     {
+        GLShader::EnableTexturing(xState_On);
+        GLShader::Start();
+
         glNewList(listIDTex = glGenLists(1), GL_COMPILE);
 
         if (elem->FL_skeletized) {

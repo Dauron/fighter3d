@@ -326,7 +326,9 @@ bool SceneConsole :: ShellCommand(std::string &cmd, std::string &output)
     log message         | log message   | adds given message to the log file\n\
     log_tail            | tail          | displays tail of the log file\n\
     log_read            | read          | displays the log file\n\
-    log_clear           | clrlog        | remove the log file\n");
+    log_clear           | clrlog        | remove the log file\n\
+    ------------------------------------------------------------------------\n\
+    ");
         return true;
     }
     if (cmd == "clr" || cmd == "clear_console")
@@ -430,17 +432,20 @@ test  = ";
     }
     if (cmd.substr(0, 6) == "scene ")
     {
+        IScene *newScene = NULL;
+        if (cmd == "scene test") newScene = new SceneTest();
+        else
+        if (cmd == "scene game") newScene = new SceneGame();
+        else
+        if (cmd == "scene menu") newScene = new SceneMenu();
+        if (!newScene) return true;
         if (PrevScene)
         {
             PrevScene->Destroy();
             delete PrevScene;
             PrevScene = NULL;
         }
-        if (cmd == "scene test") PrevScene = new SceneTest();
-        else
-        if (cmd == "scene game") PrevScene = new SceneGame();
-        else
-        if (cmd == "scene menu") PrevScene = new SceneMenu();
+        PrevScene = newScene;
         PrevScene->Create(Left, Top, Width, Height);
         if (FL_visible)
         {

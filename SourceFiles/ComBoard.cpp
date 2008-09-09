@@ -104,12 +104,14 @@ void ComBoard :: Update(xFLOAT T_delta, bool FL_keyboard_on)
         if (combo.T_first > T_progress) return;
         if (combo.T_last > 0.f && combo.T_last  < T_progress) continue;
 
-        Combo::Keys::eKey key = combo.Key;
+        int key = combo.Key;
         if (FL_mirror)
-            if (key == Combo::Keys::Left)  key = Combo::Keys::Right;
+            if (key >= Combo::Keys::LeftFirst && key <= Combo::Keys::LeftLast)
+                key += Combo::Keys::RightFirst - Combo::Keys::LeftFirst;
             else
-            if (key == Combo::Keys::Right) key = Combo::Keys::Left;
-        if (g_InputMgr.InputDown_GetAndRaise(IC_CB_LeftPunch + key - Combo::Keys::LeftPunch))
+            if (key >= Combo::Keys::RightFirst && key <= Combo::Keys::RightLast)
+                key += Combo::Keys::LeftFirst - Combo::Keys::RightFirst;
+        if (g_InputMgr.InputDown_GetAndRaise(IC_CB_ComboSet0 + key - Combo::Keys::FirstKey))
         {
             AutoAction = AutoHint::HINT_NONE;
             PostActionTransformation(*action, combo.FL_pos_shift);

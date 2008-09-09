@@ -4,15 +4,15 @@ Lighting        2
 Shadows         1
 Shaders         1
 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
-Multisampling   0
-UseVBO          0
+Multisampling   1
+UseVBO          1
 ShadowMap       512
 VSync           0
 WindowX         800
 WindowY         600
 FillScreen      0
-FullScreenX    1280
-FullScreenY    800
+FullScreenX     1280
+FullScreenY     1024
 
 # debug rendering modes
 Show_ShadowVolumes   0
@@ -28,5 +28,5 @@ Level           2
 Speed           1
 # 0 = almost none, 1 = important errors, 2 = all errors, 3 = all errors + warnings
 Logging         3
-# 1 = export 3ds models to 3dx format
+# 1 = automaticaly export 3ds models to 3dx format (may overwrite!)
 3dsTo3dx        0

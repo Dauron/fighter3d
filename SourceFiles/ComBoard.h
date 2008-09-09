@@ -39,20 +39,32 @@ public:
             enum eKey {
                 Undefined      = 0,
 
-                LeftPunch      = 1,
-                LeftKick       = 2,
-                LeftHandGuard  = 3,
-                LeftLegGuard   = 4,
+                FirstKey       = 1,
 
-                RightPunch     = 5,
-                RightKick      = 6,
-                RightHandGuard = 7,
-                RightLegGuard  = 8,
+                LeftFirst      = 1,
 
-                Forward        = 9,
-                Backward       = 10,
-                Left           = 11,
-                Right          = 12
+                Left           = 1,
+                LeftPunch      = 2,
+                LeftKick       = 3,
+                LeftHandGuard  = 4,
+                LeftLegGuard   = 5,
+
+                LeftLast       = 5,
+
+                RightFirst     = 6,
+
+                Right          = 6,
+                RightPunch     = 7,
+                RightKick      = 8,
+                RightHandGuard = 9,
+                RightLegGuard  = 10,
+
+                RightLast      = 10,
+
+                Forward        = 11,
+                Backward       = 12,
+
+                LastKey        = 12
             };
         };
 

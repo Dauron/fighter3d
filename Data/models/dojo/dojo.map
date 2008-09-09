@@ -39,14 +39,6 @@ position	0.0	0.0	-0.68
 physical	0
 phantom	0
 #
-[model]
-model	../3ds/dojo/altar.3ds
-rotation	0 0 90
-position	0	-19.7	-0.21
-physical	0
-phantom	0
-shadows 0
-#
 [skip model]
 model	wall_entrance.3dx
 position	0.0	0.0	-0.21
@@ -57,6 +49,76 @@ shadows 1
 # North
 #
 [model]
+model	../3ds/dojo/wall_external_short.3ds
+position	0 24.4 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_medium.3ds
+position	-0.03 24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_medium.3ds
+position	-7.8 24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_medium.3ds
+position	7.73 24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_shortest.3ds
+position	-13.84 24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_shortest.3ds
+position	13.84 24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/pillar.3ds
+position	-3.9 24.35 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/pillar.3ds
+position	3.85 24.35 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/pillar.3ds
+position	-11.64 24.35 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/pillar.3ds
+position	11.61 24.35 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
 model	wall_inner_short.3dx
 position	-19.592	0.055	7.039
 rotation	0	0	-90
@@ -64,12 +126,114 @@ physical	0
 phantom	0
 shadows 1
 #
+[model]
+model	../3ds/dojo/altar-wall.3ds
+rotation	0 0 -90
+position	0 19.40 -0.18
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/altar-stand.3ds
+rotation	0 0 -90
+position	0 18.75 -0.18
+physical	0
+phantom	0
+shadows 1
+#
 # South
+#
+[model]
+model	../3ds/dojo/wall_external_short.3ds
+position	0 -24.4 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_medium.3ds
+position	-0.03 -24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_medium.3ds
+position	-7.8 -24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_medium.3ds
+position	7.73 -24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_shortest.3ds
+position	-13.84 -24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/grates_shortest.3ds
+position	13.84 -24.3 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/pillar.3ds
+position	-3.9 -24.35 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/pillar.3ds
+position	3.85 -24.35 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/pillar.3ds
+position	-11.64 -24.35 0
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/pillar.3ds
+position	11.61 -24.35 0
+physical	0
+phantom	0
+shadows 1
 #
 [model]
 model	wall_inner_short.3dx
 position	-19.491	0.015	7.039
 rotation	0	0	90
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/altar-wall.3ds
+rotation	0 0 90
+position	0 -19.25 -0.18
+physical	0
+phantom	0
+shadows 1
+#
+[model]
+model	../3ds/dojo/altar-stand.3ds
+rotation	0 0 90
+position	0 -18.85 -0.18
 physical	0
 phantom	0
 shadows 1
