@@ -10,14 +10,16 @@ namespace ShadowVolume
 
         if (infiniteL)
         {
-            dest->init(-lightPos, 0.f);
+            //dest->init(-lightPos, 0.f);
+            dest->init(-lightPos*100000.f, 1.f);
             return;
         }
 
         xVector4 *src  = shadowData.L_vertices,
                  *last = dest;
         for (; src != last; ++src, ++dest)
-            dest->init(src->vector3 - lightPos, 0.f);
+            //dest->init(src->vector3 - lightPos, 0.f);
+            dest->init(100000.f*(src->vector3 - lightPos), 1.f);
     }
 
     void GetBackFaces (const xElement *elem, const xElementInstance &instance, bool infiniteL,

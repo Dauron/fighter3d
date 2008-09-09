@@ -1,6 +1,7 @@
 #ifndef __incl_lib3dx_xRenderGL_h
 #define __incl_lib3dx_xRenderGL_h
 
+#include "../../../Config.h"
 #include "../../Renderer.h"
 #include "../Extensions/ARB_vertex_buffer_object.h"
 
@@ -50,7 +51,10 @@ class RendererGL : public Renderer
                                            xDWORD &shadowMapTexId,
                                            xWORD width, xMatrix &mtxBlockerToLight );
 
-    RendererGL() : UseVBO(GLExtensions::Exists_ARB_VertexBufferObject), UseList(true) {};
+    RendererGL() : UseList(true)
+    {
+        UseVBO = GLExtensions::Exists_ARB_VertexBufferObject && Config::UseVBO;
+    }
 
     virtual void InvalidateGraphics(xModel &model, xModelInstance &instance)
     {

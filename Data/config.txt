@@ -5,6 +5,7 @@ Shadows         1
 Shaders         1
 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
 Multisampling   0
+UseVBO          0
 ShadowMap       512
 VSync           0
 WindowX         800

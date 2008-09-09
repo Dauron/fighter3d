@@ -8,6 +8,7 @@ struct Config
     static bool  EnableFullLighting;
     static bool  EnableShadows;
     static bool  EnableShaders;
+    static bool  UseVBO;
     static int   MultisamplingLevel;
     static int   PolygonMode;
     static int   ShadowMapSize;

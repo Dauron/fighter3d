@@ -85,7 +85,7 @@ phantom  0
 mass     50
 shadows  1
 
-[model]
+[skip model]
 model    1barbells.3dx
 position 10 -2 -0.2
 physical 1
@@ -93,7 +93,7 @@ phantom  0
 mass     50
 shadows  1
 
-[model]
+[skip model]
 model    2stend.3dx
 position 10 0 -0.2
 physical 1
@@ -101,7 +101,7 @@ phantom  0
 mass     50
 shadows  1
 
-[model]
+[skip model]
 model    3vaulting_gym.3dx
 position 0 -10 5
 physical 1

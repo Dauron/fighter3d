@@ -79,7 +79,11 @@ public:
         if (ModelPh) ModelPh->instance.MX_LocalToWorld = MX_LocalToWorld_Get();
     }
     virtual void FrameEnd   () {
-        if (IsModified()) UpdateMatrices();
+        if (IsModified())
+        {
+            UpdateMatrices();
+            InvalidateShadowData();
+        }
         PhysicalBody::FrameEnd();
     }
 protected:

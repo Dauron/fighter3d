@@ -11,6 +11,7 @@ bool  Config::EnableFullLighting   = true;
 bool  Config::EnableShadows        = true;
 bool  Config::EnableShaders        = true;
 int   Config::MultisamplingLevel   = 0;
+bool  Config::UseVBO               = true;
 int   Config::PolygonMode          = 0x1B02;
 int   Config::ShadowMapSize        = 512;
 bool  Config::VSync                = false;
@@ -162,6 +163,13 @@ void Config :: Load(const char *fileName)
                     int level;
                     sscanf(buffer+13, "%d", &level);
                     Config::MultisamplingLevel = level;
+                    continue;
+                }
+                if (StartsWith(buffer, "usevbo"))
+                {
+                    int level;
+                    sscanf(buffer+6, "%d", &level);
+                    Config::UseVBO = level;
                     continue;
                 }
                 if (StartsWith(buffer, "shadowmap"))
