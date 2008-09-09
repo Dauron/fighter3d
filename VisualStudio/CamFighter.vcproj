@@ -613,6 +613,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Utils\Stat.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Utils\Utils.cpp"
 				>
 			</File>

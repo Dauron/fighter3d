@@ -40,12 +40,11 @@ void SkeletizedObj :: Create ()
     NW_VerletVelocity       = new xVector3[I_bones];
     NW_VerletVelocity_new   = new xVector3[I_bones];
     NW_VerletVelocity_total = new xVector3[I_bones];
-    for (int i = 0; i < I_bones; ++i)
-    {
-        NW_VerletVelocity[i].zero();
-        NW_VerletVelocity_new[i].zero();
-        NW_VerletVelocity_total[i].zero();
-    }
+    F_VerletPower           = new xVector3[I_bones];
+    memset(NW_VerletVelocity,       0, sizeof(xVector3)*I_bones);
+    memset(NW_VerletVelocity_new,   0, sizeof(xVector3)*I_bones);
+    memset(NW_VerletVelocity_total, 0, sizeof(xVector3)*I_bones);
+    memset(F_VerletPower,           0, sizeof(xVector3)*I_bones);
 }
 
 void SkeletizedObj :: Create (const char *gr_filename, const char *ph_filename)
@@ -68,9 +67,10 @@ void SkeletizedObj :: Destroy ()
 
     if (NW_VerletVelocity)
     {
-        delete[] NW_VerletVelocity;       NW_VerletVelocity     = NULL;
-        delete[] NW_VerletVelocity_new;   NW_VerletVelocity_new = NULL;
+        delete[] NW_VerletVelocity;       NW_VerletVelocity       = NULL;
+        delete[] NW_VerletVelocity_new;   NW_VerletVelocity_new   = NULL;
         delete[] NW_VerletVelocity_total; NW_VerletVelocity_total = NULL;
+        delete[] F_VerletPower;           F_VerletPower           = NULL;
     }
 
     comBoard.Destroy();
@@ -150,7 +150,7 @@ xVector3 SkeletizedObj :: GetVelocity(const Physics::Colliders::CollisionPoint &
         xVector3 V_velo; V_velo.zero();
 
         for (int i = 0; i < CP_point.I_Bones; ++i)
-            V_velo += CP_point.W_Bones[i].W_bone * NW_VerletVelocity_total[CP_point.W_Bones[i].I_bone];
+            V_velo += CP_point.W_Bones[i].W_bone * F_VerletPower[CP_point.W_Bones[i].I_bone] ;//NW_VerletVelocity_total[CP_point.W_Bones[i].I_bone];
 
         return V_velo + RigidObj::GetVelocity(CP_point);
     }
@@ -253,11 +253,11 @@ xVector3 SkeletizedObj :: MergeCollisions()
         }
     }
 
-    if (V_reaction.lengthSqr() > 5.f && postHit == 0.f)
+    if (V_reaction.lengthSqr() > 1500.f && postHit == 0.f)
     {
-        T_verlet_Max = T_verlet = 5.f;
+        T_verlet_Max = T_verlet = V_reaction.lengthSqr() / 1000.f;
         if (Offender)
-            Offender->postHit = 5.f;
+            Offender->postHit = V_reaction.lengthSqr() / 1000.f;// 5.f;
     }
 
     xFLOAT I_count_Inv = 1.f / (xFLOAT)Collisions.size();
@@ -452,7 +452,7 @@ void SkeletizedObj :: Update(float T_time)
     {
         xVector3 NW_aim = MX_LocalToWorld_Get().preTransformV(
                               comBoard.GetActionRotation().preTransformV(
-                                  xVector3::Create(0.f, -1.5f, 0.f)));
+                                  xVector3::Create(0.f, -1.1f, 0.f)));
         NW_aim.z = 0.f;
         Tracker.P_destination = P_center_Trfm + NW_aim;
         Tracker.UpdateDestination();
@@ -465,7 +465,7 @@ void SkeletizedObj :: Update(float T_time)
 
     //////////////////////////////////////////////////////// Update Animation
 
-    xQuaternion *bones = NULL;
+    xQuaternion *bones = NULL, *bones2 = NULL;
 
     if (actions.L_actions.size())
     {
@@ -476,24 +476,32 @@ void SkeletizedObj :: Update(float T_time)
 
         if (actions.T_progress > 10000) actions.T_progress = 0;
     }
-    else
+
     if ((ControlType == Control_ComBoardInput || FL_auto_movement_needed) && comBoard.L_actions.size())
     {
         comBoard.Update(T_time * 1000, ControlType == Control_ComBoardInput);
         MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
-        bones = comBoard.GetTransformations(I_bones);
+        bones2 = comBoard.GetTransformations(I_bones);
     }
     else
     if (ControlType == Control_CaptureInput)
-        bones = g_CaptureInput.GetTransformations();
+        bones2 = g_CaptureInput.GetTransformations();
     else
     if (ControlType == Control_NetworkInput)
-        bones = g_NetworkInput.GetTransformations();
+        bones2 = g_NetworkInput.GetTransformations();
     else
     {
-        //bones = new xQuaternion[ModelGr->instance.I_bones];
+        //bones2 = new xQuaternion[ModelGr->instance.I_bones];
         //for (int i = 0; i < ModelGr->instance.I_bones; ++i)
-        //    bones[i].zeroQ();
+        //    bones2[i].zeroQ();
+    }
+
+    if (!bones && bones2) bones = bones2;
+    else
+    if (bones2)
+    {
+        xAnimation::Average(bones2, bones, ModelGr->instance.I_bones, 0.5f, bones);
+        delete[] bones2;
     }
 
     if (bones)
@@ -530,6 +538,18 @@ void SkeletizedObj :: Update(float T_time)
     else
         for (int i = 0; i < I_bones; ++i)
             NW_VerletVelocity_total[i].zero();
+
+    for (int i = 0; i < I_bones; ++i)
+        if (NW_VerletVelocity_total[i].isZero())
+            F_VerletPower[i].zero();
+        else
+        {
+            xVector3 N_speed = xVector3::Normalize(NW_VerletVelocity_total[i]);
+            xFLOAT   W_power = xVector3::DotProduct(F_VerletPower[i], N_speed);
+            F_VerletPower[i] = NW_VerletVelocity_total[i];
+            if (W_power > 0.f) F_VerletPower[i] += N_speed*W_power;
+
+        }
 }
 
 

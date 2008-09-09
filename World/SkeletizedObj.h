@@ -5,6 +5,7 @@
 #include "../Models/lib3dx/xAction.h"
 #include "../SourceFiles/ComBoard.h"
 #include "../Math/Tracking/ObjectTracker.h"
+#include "../Utils/Stat.h"
 
 struct FightingStyle
 {
@@ -32,6 +33,7 @@ public:
     xVector3     *NW_VerletVelocity;
     xVector3     *NW_VerletVelocity_new;
     xVector3     *NW_VerletVelocity_total;
+    xVector3     *F_VerletPower;
     xBYTE         I_bones;
 
     VerletSystem  verletSystem;
@@ -42,6 +44,18 @@ public:
     xFLOAT        postHit;
 
 public:
+    void RegisterStats()
+    {
+        for (int i = 0; i < I_bones; ++i)
+        {
+            Stat_Float3Ptr *stat_power = new Stat_Float3PtrAndLen();
+            if (i < 10)
+                stat_power->Create("Power 0" + itos(i), F_VerletPower[i].xyz);
+            else
+                stat_power->Create("Power " + itos(i), F_VerletPower[i].xyz);
+            g_StatMgr.Add(*stat_power);
+        }
+    }
 
     SkeletizedObj ()
         : RigidObj()
@@ -56,12 +70,12 @@ public:
         RigidObj::Stop();
 
         if (NW_VerletVelocity)
-            for (int i = 0; i < I_bones; ++i)
-            {
-                NW_VerletVelocity[i].zero();
-                NW_VerletVelocity_new[i].zero();
-                NW_VerletVelocity_total[i].zero();
-            }
+        {
+            memset(NW_VerletVelocity,       0, sizeof(xVector3)*I_bones);
+            memset(NW_VerletVelocity_new,   0, sizeof(xVector3)*I_bones);
+            memset(NW_VerletVelocity_total, 0, sizeof(xVector3)*I_bones);
+            memset(F_VerletPower,           0, sizeof(xVector3)*I_bones);
+        }
     }
 
     virtual void LoadLine(char *buffer, std::string &dir);

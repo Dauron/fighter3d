@@ -106,6 +106,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 void Application_OnCreate(Application& sender, void *receiver, bool &res)
 {
     GLExtensions   ::Initialize();
+    StatMgr        ::CreateS();
     InputMgr       ::CreateS();
     g_InputMgr.Create(IC_CODE_COUNT);
     g_InputMgr.LoadKeyCodeMap("Data/keys.txt");
@@ -153,5 +154,6 @@ void Application_OnDestroy(Application& sender, void *receiver, bool &res)
     NetworkInput   ::DestroyS();
     g_InputMgr.SaveMap("Data/keyboard.txt");
     InputMgr       ::DestroyS();
+    StatMgr        ::DestroyS();
     res = true;
 }

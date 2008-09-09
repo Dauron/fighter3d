@@ -9,6 +9,7 @@
 #include "../Graphics/OGL/GLAnimSkeletal.h"
 
 #include "../Utils/Debug.h"
+#include "../Utils/Stat.h"
 #include "../Utils/GraphicsModes.h"
 
 using namespace Scenes;
@@ -465,7 +466,6 @@ bool SceneConsole::Render()
 
     GLint cHeight = Height/2;
 
-    glViewport(Left, Top+cHeight, Width, cHeight); // Set viewport
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
     GLShader::SetLightType(xLight_NONE);
     GLShader::EnableTexturing(xState_Off);
@@ -482,10 +482,11 @@ bool SceneConsole::Render()
     glLoadIdentity();
 
     const GLFont* pFont = g_FontMgr.GetFont(font);
-
     float lineHeight = pFont->LineH();
 
-    // Draw backgroud
+    glViewport(Left, Top+cHeight, Width, cHeight); // Set viewport
+
+    // Draw background
     glColor4f( 0.0f, 0.0f, 0.0f, 0.5f );
     glBegin(GL_QUADS);
         glVertex2f(0.0f, 0.0f);
@@ -537,6 +538,29 @@ bool SceneConsole::Render()
             glVertex2f((GLfloat)Width, position);
             glVertex2f(Width-10.0f, position);
         glEnd();
+    }
+
+    glViewport(Left, Top, Width, cHeight); // Set viewport
+
+
+    if (g_StatMgr.stats.size())
+    {
+        // Draw background
+        glColor4f( 0.0f, 0.0f, 0.0f, 0.5f );
+        glBegin(GL_QUADS);
+            glVertex2f(0.0f, 0.0f);
+            glVertex2f((GLfloat)Width, 0.0f);
+            glVertex2f((GLfloat)Width, (GLfloat)cHeight);
+            glVertex2f(0.0f, (GLfloat)cHeight);
+        glEnd();
+
+        glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+
+        StatMgr::Vec_Stats::iterator ST_curr = g_StatMgr.stats.begin(),
+                                     ST_last = g_StatMgr.stats.end();
+        int i = 1;
+        for (; ST_curr != ST_last; ++ST_curr, ++i)
+            pFont->PrintF(0.0f, cHeight-lineHeight*i, 0.0f, (**ST_curr).Print());
     }
 
     glDisable(GL_BLEND);

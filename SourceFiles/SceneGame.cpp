@@ -43,11 +43,20 @@ bool SceneGame :: InitMap()
     Physics::PhysicalWorld::Vec_Object::iterator
         OB_curr = Map.objects.begin(),
         OB_last = Map.objects.end();
+
+    int i = 0;
+
     for (; OB_curr != OB_last; ++OB_curr)
         if ( (**OB_curr).Type == AI::ObjectType::Human )
         {
             Targets.L_objects.push_back(*OB_curr);
-            ((SkeletizedObj*)(*OB_curr))->Tracker.Targets = &Targets;
+            SkeletizedObj &obj = *(SkeletizedObj*)(*OB_curr);
+            obj.Tracker.Targets = &Targets;
+
+            if (i == 0)
+                obj.RegisterStats();
+
+            ++i;
         }
 
     //Cameras.Free();
@@ -60,6 +69,7 @@ bool SceneGame :: InitMap()
 
 void SceneGame :: FreeMap()
 {
+    g_StatMgr.Destroy();
     WorldRenderGL().Free(Map);
     Map.Destroy();
 }
