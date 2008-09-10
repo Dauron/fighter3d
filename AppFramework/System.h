@@ -15,12 +15,4 @@ typedef long LONG;
 
 #endif
 
-#include <ctime>
-
-inline float GetTick()
-{
-    static float __TimerScale = 1000.f / CLOCKS_PER_SEC;
-    return clock() * __TimerScale;
-}
-
 #endif

@@ -86,6 +86,8 @@ struct xAnimation
                                      xWORD boneC, xQuaternion *&bones);
     static void          Average    (xQuaternion *pCurr, xQuaternion *pNext,
                                      xWORD boneC, xFLOAT progress, xQuaternion *&bones);
+    static void          Average    (xQuaternion *pCurr, xQuaternion *pNext,
+                                     xWORD boneC, xFLOAT *progress, xQuaternion *&bones);
 };
 
 #endif

@@ -14,6 +14,8 @@ void SkeletizedObj :: ApplyDefaults()
     RigidObj::ApplyDefaults();
     W_restitution      = 0.9f;
     W_restitution_self = 0.0f;
+    LifeEnergy         = 100.f;
+    LifeEnergyMax      = 100.f;
     FL_auto_movement   = true;
 
     Tracker.Init();
@@ -150,7 +152,7 @@ xVector3 SkeletizedObj :: GetVelocity(const Physics::Colliders::CollisionPoint &
         xVector3 V_velo; V_velo.zero();
 
         for (int i = 0; i < CP_point.I_Bones; ++i)
-            V_velo += CP_point.W_Bones[i].W_bone * F_VerletPower[CP_point.W_Bones[i].I_bone] ;//NW_VerletVelocity_total[CP_point.W_Bones[i].I_bone];
+            V_velo += CP_point.W_Bones[i].W_bone * F_VerletPower[CP_point.W_Bones[i].I_bone] * 0.1f ;//NW_VerletVelocity_total[CP_point.W_Bones[i].I_bone];
 
         return V_velo + RigidObj::GetVelocity(CP_point);
     }
@@ -199,8 +201,10 @@ xVector3 SkeletizedObj :: MergeCollisions()
     xFLOAT   S_maxLen = xFLOAT_HUGE_NEGATIVE;
 
     xVector3 NW_fix; NW_fix.zero();
-    xVector3 V_reaction; V_reaction.zero();
     xVector3 V_action;   V_action.zero();
+
+    xVector3 V_reaction[100];
+    memset(V_reaction, 0, sizeof(xVector3)*I_bones);
 
     SkeletizedObj *Offender = NULL;
 
@@ -211,9 +215,15 @@ xVector3 SkeletizedObj :: MergeCollisions()
     {
         if (iter_cur->V_action.lengthSqr() > V_action.lengthSqr())
             V_action =  iter_cur->V_action;
-        V_reaction += iter_cur->V_reaction;
-        if (iter_cur->Offender && iter_cur->Offender->Type == AI::ObjectType::Human)
-            Offender = ((SkeletizedObj*)iter_cur->Offender);
+        //V_reaction += iter_cur->V_reaction;
+        //if (iter_cur->Offender && iter_cur->Offender->Type == AI::ObjectType::Human)
+        //    Offender = ((SkeletizedObj*)iter_cur->Offender);
+
+        for (int i = 0; i < iter_cur->I_Bones; ++i)
+        {
+            Physics::Colliders::BoneWeight &bone = iter_cur->W_Bones[i];
+            V_reaction[bone.I_bone] += iter_cur->V_reaction * bone.W_bone;
+        }
 
         xVector3 NW_tmp = iter_cur->NW_fix;// * iter_cur->W_fix;
         NW_fix += NW_tmp;
@@ -253,11 +263,22 @@ xVector3 SkeletizedObj :: MergeCollisions()
         }
     }
 
+    /*
     if (V_reaction.lengthSqr() > 1500.f && postHit == 0.f)
     {
         T_verlet_Max = T_verlet = V_reaction.lengthSqr() / 1000.f;
         if (Offender)
             Offender->postHit = V_reaction.lengthSqr() / 1000.f;// 5.f;
+    }
+    */
+    for (int i = 0; i < I_bones; ++i)
+    {
+        xFLOAT V_len = V_reaction[i].lengthSqr();
+        if (V_len > 1.f)
+        {
+            LifeEnergy = max (LifeEnergy - V_len, 0.f);
+            verletSystem.W_boneMix[i] = 1.f;
+        }
     }
 
     xFLOAT I_count_Inv = 1.f / (xFLOAT)Collisions.size();
@@ -293,6 +314,8 @@ xVector3 SkeletizedObj :: MergeCollisions()
 
 void SkeletizedObj :: Update(float T_time)
 {
+    Profile("Update skeletized object");
+
     //RigidObj::Update(T_time);
 
     //////////////////////////////////////////////////////// Update Verlets
@@ -442,13 +465,34 @@ void SkeletizedObj :: Update(float T_time)
         T_verlet = max(0.f, T_verlet-T_time);
     W_verlet = (T_verlet <= 2.f) ? T_verlet * 0.5f : 1.f;
 
+
+    bool FL_verlet = false;
+    bool FL_locked = false;
+    for (int i = 0; i < I_bones; ++i)
+        if (verletSystem.FL_attached[i])
+        {
+            FL_locked = true;
+            break;
+        }
+
+    xFLOAT T_mod = T_time*0.2f;
+    for (int i = 0; i < I_bones; ++i)
+        if (verletSystem.W_boneMix[i] > T_mod)
+        {
+            if (FL_locked) verletSystem.W_boneMix[i] -= T_mod;
+            FL_verlet = true;
+        }
+        else
+            verletSystem.W_boneMix[i] = 0.f;
+
+
     spine.L_bones->QT_rotation.zeroQ();
     QT_verlet[0].zeroQ();
 
     //////////////////////////////////////////////////////// Track enemy movement
 
-    if (FL_auto_movement && Tracker.Mode != Math::Tracking::ObjectTracker::TRACK_NOTHING &&
-        W_verlet == 0.f && T_time > 0.f)
+    if (false && FL_auto_movement && Tracker.Mode != Math::Tracking::ObjectTracker::TRACK_NOTHING &&
+        !FL_verlet && LifeEnergy > 0.f && T_time > 0.f)
     {
         xVector3 NW_aim = MX_LocalToWorld_Get().preTransformV(
                               comBoard.GetActionRotation().preTransformV(
@@ -467,33 +511,36 @@ void SkeletizedObj :: Update(float T_time)
 
     xQuaternion *bones = NULL, *bones2 = NULL;
 
-    if (actions.L_actions.size())
+    if (LifeEnergy > 0.f)
     {
-        xDWORD delta = (xDWORD)(T_time*1000);
+        if (actions.L_actions.size())
+        {
+            xDWORD delta = (xDWORD)(T_time*1000);
 
-        actions.Update(delta);
-        bones = actions.GetTransformations();
+            actions.Update(delta);
+            bones = actions.GetTransformations();
 
-        if (actions.T_progress > 10000) actions.T_progress = 0;
-    }
+            if (actions.T_progress > 10000) actions.T_progress = 0;
+        }
 
-    if ((ControlType == Control_ComBoardInput || FL_auto_movement_needed) && comBoard.L_actions.size())
-    {
-        comBoard.Update(T_time * 1000, ControlType == Control_ComBoardInput);
-        MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
-        bones2 = comBoard.GetTransformations(I_bones);
-    }
-    else
-    if (ControlType == Control_CaptureInput)
-        bones2 = g_CaptureInput.GetTransformations();
-    else
-    if (ControlType == Control_NetworkInput)
-        bones2 = g_NetworkInput.GetTransformations();
-    else
-    {
-        //bones2 = new xQuaternion[ModelGr->instance.I_bones];
-        //for (int i = 0; i < ModelGr->instance.I_bones; ++i)
-        //    bones2[i].zeroQ();
+        if ((ControlType == Control_ComBoardInput || FL_auto_movement_needed) && comBoard.L_actions.size())
+        {
+            comBoard.Update(T_time * 1000, ControlType == Control_ComBoardInput);
+            MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
+            bones2 = comBoard.GetTransformations(I_bones);
+        }
+        else
+        if (ControlType == Control_CaptureInput)
+            bones2 = g_CaptureInput.GetTransformations();
+        else
+        if (ControlType == Control_NetworkInput)
+            bones2 = g_NetworkInput.GetTransformations();
+        else
+        {
+            //bones2 = new xQuaternion[ModelGr->instance.I_bones];
+            //for (int i = 0; i < ModelGr->instance.I_bones; ++i)
+            //    bones2[i].zeroQ();
+        }
     }
 
     if (!bones && bones2) bones = bones2;
@@ -505,8 +552,8 @@ void SkeletizedObj :: Update(float T_time)
     }
 
     if (bones)
-        if (W_verlet > 0.f)
-            xAnimation::Average(QT_verlet, bones, ModelGr->instance.I_bones, 1.f-W_verlet, bones);
+        if (FL_verlet)
+            xAnimation::Average(bones, QT_verlet, ModelGr->instance.I_bones, verletSystem.W_boneMix, bones);
         else
             UpdateSkews(bones);
 
@@ -552,6 +599,39 @@ void SkeletizedObj :: Update(float T_time)
         }
 }
 
+
+void SkeletizedObj :: RegisterStats(StatPage &page)
+{
+    for (int i = 0; i < I_bones; ++i)
+    {
+        Stat_Float3Ptr *stat_power = new Stat_Float3PtrAndLen();
+        if (i < 10)
+            stat_power->Create("Power 0" + itos(i), F_VerletPower[i].xyz);
+        else
+            stat_power->Create("Power " + itos(i), F_VerletPower[i].xyz);
+        page.Add(*stat_power);
+    }
+
+    for (int i = 0; i < I_bones; ++i)
+    {
+        Stat_Float3Ptr *stat_power = new Stat_Float3PtrAndLen();
+        if (i < 10)
+            stat_power->Create("Speed 0" + itos(i), NW_VerletVelocity_total[i].xyz);
+        else
+            stat_power->Create("Speed " + itos(i), NW_VerletVelocity_total[i].xyz);
+        page.Add(*stat_power);
+    }
+
+    for (int i = 0; i < I_bones; ++i)
+    {
+        Stat_BoolPtr *stat_locked = new Stat_BoolPtr();
+        if (i < 10)
+            stat_locked->Create("Locked 0" + itos(i), verletSystem.FL_attached[i]);
+        else
+            stat_locked->Create("Locked " + itos(i), verletSystem.FL_attached[i]);
+        page.Add(*stat_locked);
+    }
+}
 
 void SkeletizedObj :: LoadLine(char *buffer, std::string &dir)
 {

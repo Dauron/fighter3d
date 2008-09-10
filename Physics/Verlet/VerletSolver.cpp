@@ -1,10 +1,12 @@
 #include "VerletSolver.h"
+#include "../../Utils/Profiler.h"
 
 const float VerletSolver :: FRICTION_AIR = 0.5f;
 const float VerletSolver :: GRAVITY      = 10.f;
 
 void VerletSolver :: SatisfyConstraints()
 {
+    Profile("Satisfy bone constraints");
     for (xBYTE pi = I_passes; pi; --pi)
     {
         bool modified = false;

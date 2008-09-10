@@ -6,6 +6,8 @@
 #include "Extensions/EXT_stencil_two_side.h"
 #include "Extensions/ARB_multisample.h"
 
+#include "../../Utils/Profiler.h"
+
 void WorldRenderGL :: SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular)
 {
     float light_off[4] = { 0.f, 0.f, 0.f, 0.f };
@@ -39,6 +41,8 @@ void WorldRenderGL :: SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bo
 
 void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &cameraSet)
 {
+    Profile("Render world");
+
     glHint(GL_POINT_SMOOTH_HINT,           GL_NICEST);
     glHint(GL_LINE_SMOOTH_HINT,            GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT,         GL_NICEST);
@@ -78,6 +82,8 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
 
     for (; CAM_curr != CAM_last; ++CAM_curr)
     {
+        Profile("Camera view");
+
         Math::Cameras::Camera &camera = **CAM_curr;
 
         ViewportSet_GL(camera);
@@ -102,29 +108,37 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
             glEnable(GL_MULTISAMPLE_ARB);
 
         ////// RENDER Z-ONLY PASS
-        glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-        glEnable   (GL_DEPTH_TEST);
-        glDepthMask(1);
-        glDepthFunc(GL_LESS);
-        glColorMask(0,0,0,0);
-        GLShader::SetLightType(xLight_NONE);
-        GLShader::EnableTexturing(xState_Off);
-        for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
-            RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderDepth( *obj.ModelGr->xModelP, obj.ModelGr->instance, false, camera.FOV );
+            Profile("Z-only pass");
+
+            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+            glEnable   (GL_DEPTH_TEST);
+            glDepthMask(1);
+            glDepthFunc(GL_LESS);
+            glColorMask(0,0,0,0);
+            GLShader::SetLightType(xLight_NONE);
+            GLShader::EnableTexturing(xState_Off);
+            for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
+            {
+                RigidObj &obj = *(RigidObj*)*MD_curr;
+                renderModel.RenderDepth( *obj.ModelGr->xModelP, obj.ModelGr->instance, false, camera.FOV );
+            }
         }
 
         ////// RENDER GLOBAL AMBIENT PASS
-        glDepthMask(0);
-        glDepthFunc(GL_LEQUAL);
-        glColorMask(1,1,1,1);
-        GLShader::SetLightType(xLight_GLOBAL, true, false, false);
-        glDisable(GL_LIGHT0);
-        for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
-            RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, false, camera.FOV );
+            Profile("Ambient pass");
+
+            glDepthMask(0);
+            glDepthFunc(GL_LEQUAL);
+            glColorMask(1,1,1,1);
+            GLShader::SetLightType(xLight_GLOBAL, true, false, false);
+            glDisable(GL_LIGHT0);
+            for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
+            {
+                RigidObj &obj = *(RigidObj*)*MD_curr;
+                renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, false, camera.FOV );
+            }
         }
 
         ////// RENDER SHADOWS AND LIGHTS
@@ -132,6 +146,8 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         {
             if (LT_curr->turned_on && LT_curr->isVisible(camera.FOV))
             {
+                Profile("Light pass");
+
                 if (LT_curr->type != xLight_INFINITE && LT_curr->radius > 0.f)
                 {
                     //int x, y, width, height;
@@ -148,6 +164,8 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                 ////// SHADOW DETERMINATION PASS
                 if (Config::EnableShadows)
                 {
+                    Profile("Cast shadow volumes pass");
+
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     glStencilMask(0xff);
                     glClear(GL_STENCIL_BUFFER_BIT);
@@ -202,6 +220,8 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                 ////// DISPLAY SHADOW VOLUMES PASS
                 if (Config::DisplayShadowVolumes)
                 {
+                    Profile("Display shadow volumes pass");
+
                     glPushAttrib(GL_ALL_ATTRIB_BITS);
                     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
                     glDisable(GL_STENCIL_TEST);
@@ -225,25 +245,31 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         }
 
         ////// RENDER TRANSPARENT PASS
-        glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
-        glDepthMask(0);
-        glDepthFunc(GL_LESS);
-        glDisable(GL_STENCIL_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        GLShader::EnableTexturing(xState_Enable);
-        GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
-        glDisable(GL_LIGHT0);
-        for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
-            RigidObj &obj = *(RigidObj*)*MD_curr;
-            renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, true, camera.FOV );
+            Profile("Transparent pass");
+
+            glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
+            glDepthMask(0);
+            glDepthFunc(GL_LESS);
+            glDisable(GL_STENCIL_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+            GLShader::EnableTexturing(xState_Enable);
+            GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
+            glDisable(GL_LIGHT0);
+            for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
+            {
+                RigidObj &obj = *(RigidObj*)*MD_curr;
+                renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, true, camera.FOV );
+            }
         }
         GLShader::Suspend();
 
         ////// RENDER SKELETONS
         if (Config::DisplaySkeleton)
         {
+            Profile("Skeleton pass");
+
             GLShader::EnableTexturing(xState_Disable);
             GLShader::SetLightType(xLight_NONE);
             GLShader::Start();
@@ -257,6 +283,8 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         ////// RENDER BVHs
         if (Config::DisplayBVH)
         {
+            Profile("BVH pass");
+
             GLShader::EnableTexturing(xState_Disable);
             GLShader::SetLightType(xLight_NONE);
             GLShader::Start();

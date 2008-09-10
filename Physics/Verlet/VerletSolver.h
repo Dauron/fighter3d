@@ -19,6 +19,7 @@ struct VerletSystem
     xVector3 *A_forces;     // force accumulators
     xFLOAT   *M_weight_Inv; // inverted particle masses
     xVector3 *NW_shift;     // last shift
+    xFLOAT   *W_boneMix;    // inverted particle masses
 
     bool     *FL_attached;  // is the particle attached to other object
 
@@ -39,6 +40,7 @@ struct VerletSystem
         P_previous   = NULL;
         A_forces     = NULL;
         M_weight_Inv = NULL;
+        W_boneMix    = NULL;
         MX_ModelToWorld.identity();
         MX_WorldToModel_T.identity();
     }
@@ -54,11 +56,14 @@ struct VerletSystem
         QT_boneSkew  = new xQuaternion[I_particles];
         NW_shift     = new xVector3[I_particles];
         FL_attached  = new bool    [I_particles];
+        W_boneMix    = new xFLOAT  [I_particles];
         xFLOAT      *M_iter  = M_weight_Inv;
+        xFLOAT      *W_bmix  = W_boneMix;
         bool        *FL_lock = FL_attached;
         xQuaternion *QT_skew = QT_boneSkew;
-        for (xWORD i = I_particles; i; --i, ++M_iter, ++FL_lock, ++QT_skew)
+        for (xWORD i = I_particles; i; --i, ++M_iter, ++FL_lock, ++QT_skew, ++W_bmix)
         {
+            *W_bmix  = 0.f;
             *M_iter  = 1.f;
             *FL_lock = false;
             QT_skew->zeroQ();
@@ -80,10 +85,12 @@ struct VerletSystem
         if (P_previous)   delete[] P_previous;
         if (A_forces)     delete[] A_forces;
         if (M_weight_Inv) delete[] M_weight_Inv;
+        if (W_boneMix)    delete[] W_boneMix;
         P_current    = NULL;
         P_previous   = NULL;
         A_forces     = NULL;
         M_weight_Inv = NULL;
+        W_boneMix    = NULL;
         I_constraints = 0;
         C_constraints = NULL;
         C_lengthConst = NULL;

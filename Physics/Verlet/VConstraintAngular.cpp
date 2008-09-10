@@ -47,6 +47,20 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
 
     if (N_curr_Local.z > 0.99f) return false;
 
+    xFLOAT w_max = max(system->W_boneMix[particle], system->W_boneMix[particleRootE]);
+    xFLOAT w_min = min(system->W_boneMix[particle], system->W_boneMix[particleRootE]);
+    xFLOAT w_mean = w_min + 0.8 * (w_max-w_min);
+    system->W_boneMix[particle] = w_mean;
+    system->W_boneMix[particleRootE] = w_mean;
+
+    xFLOAT w1 = system->M_weight_Inv[particle];
+    xFLOAT w2 = system->M_weight_Inv[particleRootE];
+    if (system->FL_attached[particle])      w1 *= 0.1f;
+    if (system->FL_attached[particleRootE]) w2 *= 0.1f;
+    if (w1 == 0.f && w2 == 0.f) return false;
+    w1 /= (w1+w2);
+    w2 = 1.f - w1;
+
     xFLOAT r_Inv = 1.f / sqrt(N_curr_Local.x*N_curr_Local.x+N_curr_Local.y*N_curr_Local.y);
     xFLOAT cosAlpha = fabs(N_curr_Local.x)*r_Inv,
            sinAlpha = fabs(N_curr_Local.y)*r_Inv,
@@ -90,14 +104,6 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
             QT_minFix = xQuaternion::GetRotation(N_curr_Local, P_new_Local);
         }
     }
-
-    xFLOAT w1 = system->M_weight_Inv[particle];
-    xFLOAT w2 = system->M_weight_Inv[particleRootE];
-    if (system->FL_attached[particle])      w1 *= 0.1f;
-    if (system->FL_attached[particleRootE]) w2 *= 0.1f;
-    if (w1 == 0.f && w2 == 0.f) return false;
-    w1 /= (w1+w2);
-    w2 = 1.f - w1;
 
     xQuaternion QT_curr = xQuaternion::InterpolateFull(QT_minFix, w1);
     xQuaternion QT_root = xQuaternion::InterpolateFull(QT_minFix, w2);

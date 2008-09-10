@@ -18,6 +18,8 @@ bool SceneConsole :: Create(int left, int top, unsigned int width, unsigned int 
 {
     IScene::Create(left, top, width, height, prevScene);
 
+    font = g_FontMgr.GetFont("Courier New", 12);
+
     InitInputMgr();
 
     history = '>';
@@ -52,6 +54,12 @@ void SceneConsole :: InitInputMgr()
     im.Key2InputCode_SetIfKeyFree(VK_HOME,  IC_Con_FirstPage);
     im.Key2InputCode_SetIfKeyFree(VK_END,   IC_Con_LastPage);
 
+    im.Key2InputCode_SetIfKeyFree(VK_LEFT,  IC_Con_StatPrevPage);
+    im.Key2InputCode_SetIfKeyFree(VK_RIGHT, IC_Con_StatNextPage);
+
+    KeyNextPage = "[" + g_InputMgr.GetKeyName(g_InputMgr.Input2KeyCode(IC_Con_StatPrevPage)) + "] or [" +
+        g_InputMgr.GetKeyName(g_InputMgr.Input2KeyCode(IC_Con_StatNextPage)) + "]";
+
     im.SetScene(PrevScene->Name);
 #ifdef WIN32
     im.Key2InputCode_SetIfKeyFree(VK_OEM_3,  IC_Console);
@@ -64,8 +72,7 @@ void SceneConsole :: Destroy()
 {
     IScene::Destroy();
     g_FontMgr.Release(font);
-    g_FontMgr.Release(font15);
-    font = font15 = HFont();
+    font = HFont();
 }
 
 void SceneConsole :: Enter()
@@ -99,12 +106,7 @@ void SceneConsole :: Resize(int left, int top, unsigned int width, unsigned int 
     //if (PrevScene) PrevScene->Resize(left, top, width, height);
     IScene::Resize(left, top, width, height);
 
-    if (!g_FontMgr.IsHandleValid(font))
-        font = g_FontMgr.GetFont("Courier New", 12);
-    if (!g_FontMgr.IsHandleValid(font15))
-        font15 = g_FontMgr.GetFont("Courier New", 15);
     const GLFont* pFont = g_FontMgr.GetFont(font);
-
     pageSize = (int)(height/2.0f/pFont->LineH()) - 3;
     if (scroll_v > histLines-1-pageSize) scroll_v = histLines-1-pageSize;
 }
@@ -163,10 +165,10 @@ bool SceneConsole :: Update(float T_delta)
 {
     Performance.Update(T_delta);
 
-    float T_tick = GetTick();
-    if (T_tick - T_carretTick > 500.f)
+    T_carretTick += T_delta;
+    while (T_carretTick > 500.f)
     {
-        T_carretTick = T_tick;
+        T_carretTick -= 500.f;
         FL_carretVisible = !FL_carretVisible;
     }
 
@@ -225,6 +227,20 @@ bool SceneConsole :: Update(float T_delta)
     }
 
     im.SetScene(Name);
+
+    if (im.InputDown_GetAndRaise(IC_Con_StatPrevPage))
+    {
+        --curStatPage;
+        if (curStatPage < -1)
+            curStatPage = g_StatMgr.pages.size()-1;
+    }
+    if (im.InputDown_GetAndRaise(IC_Con_StatNextPage))
+    {
+        ++curStatPage;
+        if (curStatPage >= g_StatMgr.pages.size())
+            curStatPage = -1;
+    }
+
     if (im.InputDown_GetAndRaise(IC_FullScreen))
     {
         if (g_Application.MainWindow_Get().IsFullScreen())
@@ -464,6 +480,8 @@ bool SceneConsole::Render()
     if (PrevScene) PrevScene->Render();
     if (!FL_visible) return true;
 
+    Profile("Render console");
+
     GLint cHeight = Height/2;
 
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
@@ -497,10 +515,9 @@ bool SceneConsole::Render()
 
     glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
     pFont->PrintF(0.0f, (float)cHeight-lineHeight, 0.0f,
-        "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u T_world: %4.3f, T1: %2.2f, T2: %2.2f",
+        "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u T_world: %4.3f",
         (int)Performance.FPSmin, (int)Performance.FPSsnap, (int)Performance.FPSmax,
-        Performance.T_world,
-        Performance.snapCollisionDataFillMS, Performance.snapCollisionDeterminationMS);
+        Performance.T_world);
     pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
         "   Num culled elements: %3u diffuse: %u shadows: %u culled: %u zP: %u zF: %u zFs: %u zFf: %u zFb: %u",
         (int)Performance.CulledElements, Performance.CulledDiffuseElements,
@@ -542,9 +559,12 @@ bool SceneConsole::Render()
 
     glViewport(Left, Top, Width, cHeight); // Set viewport
 
-
-    if (g_StatMgr.stats.size())
+    if (curStatPage >= 0 && curStatPage >= g_StatMgr.pages.size())
+        curStatPage = g_StatMgr.pages.size() - 1;
+    if (curStatPage >= 0)
     {
+        StatPage_Base &page = *g_StatMgr.pages[curStatPage];
+
         // Draw background
         glColor4f( 0.0f, 0.0f, 0.0f, 0.5f );
         glBegin(GL_QUADS);
@@ -556,11 +576,45 @@ bool SceneConsole::Render()
 
         glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 
-        StatMgr::Vec_Stats::iterator ST_curr = g_StatMgr.stats.begin(),
-                                     ST_last = g_StatMgr.stats.end();
-        int i = 1;
-        for (; ST_curr != ST_last; ++ST_curr, ++i)
-            pFont->PrintF(0.0f, cHeight-lineHeight*i, 0.0f, (**ST_curr).Print());
+        glBegin(GL_LINES);
+        {
+            glVertex2f(0.0f, (GLfloat)cHeight-1);
+            glVertex2f((GLfloat)Width, (GLfloat)cHeight-1);
+        }
+        glEnd();
+
+        pFont->PrintF(0.0f, cHeight-lineHeight, 0.0f, "Page %d/%d - %s - Press %s to change",
+            curStatPage+1, g_StatMgr.pages.size(), page.Name.c_str(), KeyNextPage.c_str());
+
+        const Vec_string &lines = page.GetLines();
+        Vec_string::const_iterator LN_curr = lines.begin(),
+                                   LN_last = lines.end();
+        xFLOAT x = 0.f;
+        xFLOAT y = cHeight-lineHeight*2;
+        xFLOAT w = 0.f;
+
+        for (; LN_curr != LN_last; ++LN_curr)
+        {
+            const char *text = LN_curr->c_str();
+            w = max( w, pFont->Length(text) );
+
+            pFont->PrintF(x, y, 0.0f, text);
+            y -= lineHeight;
+            if (y < 0.f)
+            {
+                x += w + 20.f;
+
+                glBegin(GL_LINES);
+                {
+                    glVertex2f(x - 10.f, y+lineHeight);
+                    glVertex2f(x - 10.f, cHeight-lineHeight*1.5f);
+                }
+                glEnd();
+
+                w = 0.f;
+                y = cHeight-lineHeight*2.f;
+            }
+        }
     }
 
     glDisable(GL_BLEND);

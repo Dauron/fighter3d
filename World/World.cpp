@@ -17,6 +17,8 @@ void World:: Update(float T_delta)
     float T_step = TIME_STEP;
     while (T_delta > EPSILON)
     {
+        Profile("Update world");
+
         T_delta -= T_step;
         if (T_delta < 0.f) { T_step += T_delta; }
 

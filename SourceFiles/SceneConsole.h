@@ -16,7 +16,8 @@ namespace Scenes {
         void Clear()
         {
             T_carretTick = 0;
-            font = font15 = HFont();
+            curStatPage  = 0;
+            font = HFont();
             FL_overlayInput = false;
             FL_overlayClock = false;
         }
@@ -42,13 +43,13 @@ namespace Scenes {
         void AppendConsole(std::string text);
 
         HFont    font;
-        HFont    font15;
 
         float    T_carretTick;
         bool     FL_carretVisible;
 
         int      scroll_v;
         int      pageSize;
+        int      curStatPage;
 
         bool     FL_justOpened;   // skip the key that has opened the console
         bool     FL_visible;
@@ -58,6 +59,8 @@ namespace Scenes {
         std::string history;    // console history
         int         histLines;  // no of lines in history
         std::string currCmd;    // currently edited command
+
+        std::string KeyNextPage;
     };
 
 } // namespace Scenes

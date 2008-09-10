@@ -43,13 +43,15 @@
 #define IC_CB_Forward        IC_CB_Right+5
 #define IC_CB_Backward       IC_CB_Forward+1
 
-#define IC_Con_BackSpace IC_CB_Backward+1
-#define IC_Con_LineUp    IC_Con_BackSpace+1
-#define IC_Con_LineDown  IC_Con_BackSpace+2
-#define IC_Con_PageUp    IC_Con_BackSpace+3
-#define IC_Con_PageDown  IC_Con_BackSpace+4
-#define IC_Con_FirstPage IC_Con_BackSpace+5
-#define IC_Con_LastPage  IC_Con_BackSpace+6
+#define IC_Con_BackSpace    IC_CB_Backward+1
+#define IC_Con_LineUp       IC_Con_BackSpace+1
+#define IC_Con_LineDown     IC_Con_BackSpace+2
+#define IC_Con_PageUp       IC_Con_BackSpace+3
+#define IC_Con_PageDown     IC_Con_BackSpace+4
+#define IC_Con_FirstPage    IC_Con_BackSpace+5
+#define IC_Con_LastPage     IC_Con_BackSpace+6
+#define IC_Con_StatPrevPage IC_Con_BackSpace+7
+#define IC_Con_StatNextPage IC_Con_BackSpace+8
 
 #define IC_LClick        IC_Undefined+98
 #define IC_RClick        IC_Undefined+99

@@ -43,19 +43,11 @@ public:
     xFLOAT        T_verlet_Max;
     xFLOAT        postHit;
 
+    xFLOAT        LifeEnergy;
+    xFLOAT        LifeEnergyMax;
+
 public:
-    void RegisterStats()
-    {
-        for (int i = 0; i < I_bones; ++i)
-        {
-            Stat_Float3Ptr *stat_power = new Stat_Float3PtrAndLen();
-            if (i < 10)
-                stat_power->Create("Power 0" + itos(i), F_VerletPower[i].xyz);
-            else
-                stat_power->Create("Power " + itos(i), F_VerletPower[i].xyz);
-            g_StatMgr.Add(*stat_power);
-        }
-    }
+    void RegisterStats(StatPage &page);
 
     SkeletizedObj ()
         : RigidObj()

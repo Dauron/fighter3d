@@ -1,4 +1,5 @@
 #include "PhysicalWorld.h"
+#include "../Utils/Profiler.h"
 
 using namespace Physics;
 
@@ -25,101 +26,104 @@ void PhysicalWorld :: Interact(xFLOAT T_time, Vec_Object &L_objects)
                     IPhysicalBody &pBody1 = **Object_1,
                                   &pBody2 = **Object_2;
 
-                    if (! (pBody1.FL_stationary && pBody2.FL_stationary ) &&
-                        Collider.Collide(&pBody1, &pBody2,
+                    if (!pBody1.FL_stationary || !pBody2.FL_stationary )
+                    {
+                        Profile("Collision Detection");
+                        if (Collider.Collide(&pBody1, &pBody2,
                                          pBody1.BVHierarchy, pBody2.BVHierarchy,
                                          pBody1.MX_LocalToWorld_Get(),
                                          pBody2.MX_LocalToWorld_Get(),
                                          cset) )
-                    {
-                        CollisionSet::CollisionVec::iterator collision, ci_end = cset.collisions.end();
-
-                        xPoint3  P_mean_support_1;
-                        xPoint3  P_mean_support_2;
-                        xVector3 NW_best_fix_1;
-                        cset.MergeCollisions(P_mean_support_1, P_mean_support_2, NW_best_fix_1);
-
-                        xFLOAT W_hits_Inv = 1.f / cset.Count();
-                        if (!(pBody1.FL_stationary || pBody2.FL_stationary))
                         {
-                            xFLOAT M_mass_1 = pBody1.GetMass();
-                            xFLOAT M_mass_2 = pBody2.GetMass();
-                            xFLOAT W_M1M2_Inv = 1.f / (M_mass_1 + M_mass_2);
+                            CollisionSet::CollisionVec::iterator collision, ci_end = cset.collisions.end();
 
-                            xFLOAT W_V1_1 = (M_mass_1 - M_mass_2) * W_M1M2_Inv * W_hits_Inv * pBody1.W_restitution_self;
-                            xFLOAT W_V1_2 = 2.f * M_mass_1 * W_M1M2_Inv * W_hits_Inv * pBody1.W_restitution;
-                            xFLOAT W_V2_1 = 2.f * M_mass_2 * W_M1M2_Inv * W_hits_Inv * pBody2.W_restitution;
-                            xFLOAT W_V2_2 = (M_mass_2 - M_mass_1) * W_M1M2_Inv * W_hits_Inv * pBody2.W_restitution_self;
+                            xPoint3  P_mean_support_1;
+                            xPoint3  P_mean_support_2;
+                            xVector3 NW_best_fix_1;
+                            cset.MergeCollisions(P_mean_support_1, P_mean_support_2, NW_best_fix_1);
 
-                            xFLOAT W_fix_1 = M_mass_1 * W_M1M2_Inv;
-                            xFLOAT W_fix_2 = M_mass_2 * W_M1M2_Inv;
-
-                            for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
+                            xFLOAT W_hits_Inv = 1.f / cset.Count();
+                            if (!(pBody1.FL_stationary || pBody2.FL_stationary))
                             {
-                                CollisionPoint &cp1 = collision->CPoint1_Get();
-                                CollisionPoint &cp2 = collision->CPoint2_Get();
-                                cp1.V_action = pBody1.GetVelocity(cp1);
-                                cp1.V_reaction.zero();
-                                cp2.V_action = pBody2.GetVelocity(cp2);
-                                cp2.V_reaction.zero();
+                                xFLOAT M_mass_1 = pBody1.GetMass();
+                                xFLOAT M_mass_2 = pBody2.GetMass();
+                                xFLOAT W_M1M2_Inv = 1.f / (M_mass_1 + M_mass_2);
 
-                                xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp1.V_action), xVector3::Normalize(cp1.NW_fix));
-                                if (W_cos > 0.f)
+                                xFLOAT W_V1_1 = (M_mass_1 - M_mass_2) * W_M1M2_Inv * W_hits_Inv * pBody1.W_restitution_self;
+                                xFLOAT W_V1_2 = 2.f * M_mass_1 * W_M1M2_Inv * W_hits_Inv * pBody1.W_restitution;
+                                xFLOAT W_V2_1 = 2.f * M_mass_2 * W_M1M2_Inv * W_hits_Inv * pBody2.W_restitution;
+                                xFLOAT W_V2_2 = (M_mass_2 - M_mass_1) * W_M1M2_Inv * W_hits_Inv * pBody2.W_restitution_self;
+
+                                xFLOAT W_fix_1 = M_mass_1 * W_M1M2_Inv;
+                                xFLOAT W_fix_2 = M_mass_2 * W_M1M2_Inv;
+
+                                for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
                                 {
-                                    cp1.V_reaction = cp1.V_action * (W_cos * W_V1_1);
-                                    cp2.V_reaction = cp1.V_action * (W_cos * W_V1_2);
+                                    CollisionPoint &cp1 = collision->CPoint1_Get();
+                                    CollisionPoint &cp2 = collision->CPoint2_Get();
+                                    cp1.V_action = pBody1.GetVelocity(cp1);
+                                    cp1.V_reaction.zero();
+                                    cp2.V_action = pBody2.GetVelocity(cp2);
+                                    cp2.V_reaction.zero();
+
+                                    xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp1.V_action), xVector3::Normalize(cp1.NW_fix));
+                                    if (W_cos > 0.f)
+                                    {
+                                        cp1.V_reaction = cp1.V_action * (W_cos * W_V1_1);
+                                        cp2.V_reaction = cp1.V_action * (W_cos * W_V1_2);
+                                    }
+                                    W_cos = -xVector3::DotProduct(xVector3::Normalize(cp2.V_action), xVector3::Normalize(cp2.NW_fix));
+                                    if (W_cos > 0.f)
+                                    {
+                                        cp1.V_reaction += cp2.V_action * (W_cos * W_V2_1);
+                                        cp2.V_reaction += cp2.V_action * (W_cos * W_V2_2);
+                                    }
+                                    cp1.W_fix      = W_fix_1;
+                                    cp2.W_fix      = W_fix_2;
+
+                                    pBody1.Collisions.push_back(cp1);
+                                    pBody2.Collisions.push_back(cp2);
                                 }
-                                W_cos = -xVector3::DotProduct(xVector3::Normalize(cp2.V_action), xVector3::Normalize(cp2.NW_fix));
-                                if (W_cos > 0.f)
+                            }
+                            else
+                            if (pBody2.FL_stationary)
+                            {
+                                xFLOAT W_V1_1 = -1.f * W_hits_Inv * pBody1.W_restitution_self;
+
+                                for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
                                 {
-                                    cp1.V_reaction += cp2.V_action * (W_cos * W_V2_1);
-                                    cp2.V_reaction += cp2.V_action * (W_cos * W_V2_2);
+                                    CollisionPoint &cp1 = collision->CPoint1_Get();
+                                    cp1.V_action   = pBody1.GetVelocity(cp1);
+                                    cp1.V_reaction.zero();
+                                    xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp1.V_action), xVector3::Normalize(cp1.NW_fix));
+                                    if (W_cos > 0.f)
+                                        cp1.V_reaction = cp1.V_action * (W_cos * W_V1_1);
+                                    //cp1.V_reaction = cp1.V_action * W_V1_1;
+                                    cp1.W_fix      = 1.f;
+                                    pBody1.Collisions.push_back(cp1);
                                 }
-                                cp1.W_fix      = W_fix_1;
-                                cp2.W_fix      = W_fix_2;
-
-                                pBody1.Collisions.push_back(cp1);
-                                pBody2.Collisions.push_back(cp2);
                             }
-                        }
-                        else
-                        if (pBody2.FL_stationary)
-                        {
-                            xFLOAT W_V1_1 = -1.f * W_hits_Inv * pBody1.W_restitution_self;
-
-                            for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
+                            else
+                            if (pBody1.FL_stationary)
                             {
-                                CollisionPoint &cp1 = collision->CPoint1_Get();
-                                cp1.V_action   = pBody1.GetVelocity(cp1);
-                                cp1.V_reaction.zero();
-                                xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp1.V_action), xVector3::Normalize(cp1.NW_fix));
-                                if (W_cos > 0.f)
-                                    cp1.V_reaction = cp1.V_action * (W_cos * W_V1_1);
-                                //cp1.V_reaction = cp1.V_action * W_V1_1;
-                                cp1.W_fix      = 1.f;
-                                pBody1.Collisions.push_back(cp1);
-                            }
-                        }
-                        else
-                        if (pBody1.FL_stationary)
-                        {
-                            xFLOAT W_V2_2 = -1.f * W_hits_Inv * pBody2.W_restitution_self;
+                                xFLOAT W_V2_2 = -1.f * W_hits_Inv * pBody2.W_restitution_self;
 
-                            for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
-                            {
-                                CollisionPoint &cp2 = collision->CPoint2_Get();
-                                cp2.V_action   = pBody2.GetVelocity(cp2);
-                                cp2.V_reaction.zero();
-                                xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp2.V_action), xVector3::Normalize(cp2.NW_fix));
-                                if (W_cos > 0.f)
-                                    cp2.V_reaction = cp2.V_action * (W_cos * W_V2_2);
-                                //cp2.V_reaction = cp2.V_action * W_V2_2;
-                                cp2.W_fix      = 1.f;
-                                pBody2.Collisions.push_back(cp2);
+                                for (collision = cset.collisions.begin(); collision != ci_end; ++collision)
+                                {
+                                    CollisionPoint &cp2 = collision->CPoint2_Get();
+                                    cp2.V_action   = pBody2.GetVelocity(cp2);
+                                    cp2.V_reaction.zero();
+                                    xFLOAT W_cos = -xVector3::DotProduct(xVector3::Normalize(cp2.V_action), xVector3::Normalize(cp2.NW_fix));
+                                    if (W_cos > 0.f)
+                                        cp2.V_reaction = cp2.V_action * (W_cos * W_V2_2);
+                                    //cp2.V_reaction = cp2.V_action * W_V2_2;
+                                    cp2.W_fix      = 1.f;
+                                    pBody2.Collisions.push_back(cp2);
+                                }
                             }
-                        }
 
-                        cset.Clear();
+                            cset.Clear();
+                        }
                     }
                 }
 

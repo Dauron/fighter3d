@@ -1,5 +1,6 @@
 #include "../AppFramework/Application.h"
 #include "../Utils/Debug.h"
+#include "../Utils/Profiler.h"
 #include "../Utils/Filesystem.h"
 #include "../Graphics/OGL/GLShader.h"
 
@@ -106,7 +107,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 void Application_OnCreate(Application& sender, void *receiver, bool &res)
 {
     GLExtensions   ::Initialize();
+    Profiler       ::CreateS(100);
     StatMgr        ::CreateS();
+    g_StatMgr.Add(*new ProfilerPage());
     InputMgr       ::CreateS();
     g_InputMgr.Create(IC_CODE_COUNT);
     g_InputMgr.LoadKeyCodeMap("Data/keys.txt");
@@ -155,5 +158,6 @@ void Application_OnDestroy(Application& sender, void *receiver, bool &res)
     g_InputMgr.SaveMap("Data/keyboard.txt");
     InputMgr       ::DestroyS();
     StatMgr        ::DestroyS();
+    Profiler       ::DestroyS();
     res = true;
 }

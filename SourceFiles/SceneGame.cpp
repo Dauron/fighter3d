@@ -28,6 +28,8 @@ bool SceneGame :: Create(int left, int top, unsigned int width, unsigned int hei
 
     GLExtensions::SetVSync(Config::VSync);
 
+    font = g_FontMgr.GetFont("Courier New", 12);
+
     return true;
 }
 
@@ -53,8 +55,13 @@ bool SceneGame :: InitMap()
             SkeletizedObj &obj = *(SkeletizedObj*)(*OB_curr);
             obj.Tracker.Targets = &Targets;
 
-            if (i == 0)
-                obj.RegisterStats();
+            if (pages.size() < i+1)
+            {
+                pages.push_back(new StatPage());
+                g_StatMgr.Add(*pages[i]);
+            }
+            pages[i]->Name = obj.Name;
+            obj.RegisterStats(*pages[i]);
 
             ++i;
         }
@@ -69,7 +76,9 @@ bool SceneGame :: InitMap()
 
 void SceneGame :: FreeMap()
 {
-    g_StatMgr.Destroy();
+    for (int i = pages.size(); i > 0; --i)
+        pages[i-1]->Destroy();
+
     WorldRenderGL().Free(Map);
     Map.Destroy();
 }
@@ -169,8 +178,14 @@ bool SceneGame :: Invalidate()
 void SceneGame :: Destroy()
 {
     IScene::Destroy();
+
+    g_FontMgr.Release(font);
+    font = HFont();
+
     Cameras.Free();
     FreeMap();
+    for (int i = pages.size(); i > 0; --i)
+        g_StatMgr.Remove(*pages[i-1]);
     Clear();
 }
 
@@ -405,8 +420,11 @@ bool SceneGame :: Update(float T_delta)
     return true;
 }
 
+#include "../Graphics/OGL/GLShader.h"
+
 bool SceneGame :: Render()
 {
+    Profile("Render game");
     Map.Render();
 
     static xLight dayLight;
@@ -441,6 +459,8 @@ bool SceneGame :: Render()
 
     if (Config::DisplayCameras)
     {
+        Profile("Display camera's avatars");
+
         glDisable(GL_DEPTH_TEST);
         glColor3f(1.f,1.f,1.f);
         Math::Cameras::CameraSet::Vec_Camera::iterator
@@ -480,6 +500,72 @@ bool SceneGame :: Render()
                 glEnd();
             }
         }
+    }
+
+    // render UI
+    if (Targets.L_objects.size() >= 2)
+    {
+        glDisable(GL_DEPTH_TEST);  // Disable depth testing
+        GLShader::SetLightType(xLight_NONE);
+        GLShader::EnableTexturing(xState_Off);
+        glDisable (GL_POLYGON_SMOOTH);
+
+        // Set projection
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, Width, Height, 0, 0, 100);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        //const GLFont* pFont = g_FontMgr.GetFont(font);
+        //float lineHeight = pFont->LineH();
+
+        glViewport(Left, Top, Width, Height); // Set viewport
+
+        SkeletizedObj &player1 = *(SkeletizedObj*) *(Targets.L_objects.rbegin()+1);
+        SkeletizedObj &player2 = *(SkeletizedObj*) Targets.L_objects.back();
+
+        const GLFont* pFont = g_FontMgr.GetFont(font);
+        float lineHeight = pFont->LineH();
+
+        pFont->PrintF(10.f, lineHeight, 0, "Player 1 : %s", player1.Name.c_str());
+        std::string name_p2 = player2.Name + " : Player 2";
+        pFont->PrintF(Width - 10.f - pFont->Length(name_p2.c_str()),
+            lineHeight, 0, name_p2.c_str());
+
+        xFLOAT BarWidth = Width * 0.5f - 20.f;
+        xFLOAT LifeWidthP1 = player1.LifeEnergy == 0.f ? 0.f
+            : max(1.f, BarWidth * player1.LifeEnergy / player1.LifeEnergyMax);
+        xFLOAT LifeWidthP2 = player2.LifeEnergy == 0.f ? 0.f
+            : max(1.f, BarWidth * player2.LifeEnergy / player2.LifeEnergyMax);
+
+        // Draw life-bars
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glColor3ub( 255, 0, 0 );
+        glBegin(GL_QUADS);
+            glVertex2f(10.f, lineHeight+10.f);
+            glVertex2f(10.f + LifeWidthP1, lineHeight+10.f);
+            glVertex2f(10.f + LifeWidthP1, lineHeight+20.f);
+            glVertex2f(10.f, lineHeight+20.f);
+
+            glVertex2f(Width - 10.f, lineHeight+10.f);
+            glVertex2f(Width - 10.f - LifeWidthP2, lineHeight+10.f);
+            glVertex2f(Width - 10.f - LifeWidthP2, lineHeight+20.f);
+            glVertex2f(Width - 10.f, lineHeight+20.f);
+        glEnd();
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glColor3ub( 255, 255, 255 );
+        glBegin(GL_QUADS);
+            glVertex2f(9.f, lineHeight+10.f);
+            glVertex2f(11.f + BarWidth, lineHeight+10.f);
+            glVertex2f(11.f + BarWidth, lineHeight+20.f);
+            glVertex2f(9.f, lineHeight+20.f);
+
+            glVertex2f(Width - 9.f, lineHeight+10.f);
+            glVertex2f(Width - 11.f - BarWidth, lineHeight+10.f);
+            glVertex2f(Width - 11.f - BarWidth, lineHeight+20.f);
+            glVertex2f(Width - 9.f, lineHeight+20.f);
+        glEnd();
     }
 
     glFlush(); //glFinish();

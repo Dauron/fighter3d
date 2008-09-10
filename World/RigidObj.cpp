@@ -4,6 +4,7 @@
 #include "../Math/Figures/xCapsule.h"
 #include "ObjectTypes.h"
 #include "../Utils/Filesystem.h"
+#include "../Utils/Profiler.h"
 
 void RigidObj :: ApplyDefaults()
 {
@@ -193,21 +194,21 @@ void RigidObj :: VerticesChanged(bool init, bool free)
         ModelPh->instance.I_bones      = ModelGr->instance.I_bones;
     }
 
-    float delta = GetTick();
+    {
+        Profile("VerticesChanged-GetBounds");
 
-    // bounds used for rendering
-    if (ModelGr->xModelP->Spine.I_bones) xModel_SkinElementInstance(*ModelGr->xModelP, ModelGr->instance);
-    xModel_GetBounds(*ModelGr->xModelP, ModelGr->instance);
+        // bounds used for rendering
+        if (ModelGr->xModelP->Spine.I_bones) xModel_SkinElementInstance(*ModelGr->xModelP, ModelGr->instance);
+        xModel_GetBounds(*ModelGr->xModelP, ModelGr->instance);
+    }
+    {
+        Profile("VerticesChanged-UpdateBVH");
 
-    Performance.CollisionDataFillMS += GetTick() - delta;
-    delta = GetTick();
-
-    if (FL_customBVH)
-        UpdateCustomBVH();
-    else
-        UpdateGeneratedBVH();
-
-    Performance.CollisionDeterminationMS += GetTick() - delta;
+        if (FL_customBVH)
+            UpdateCustomBVH();
+        else
+            UpdateGeneratedBVH();
+    }
 }
 
 void RigidObj :: CalculateSkeleton()

@@ -36,13 +36,13 @@ xAnimationInfo xAnimation::GetInfo()
     return info;
 }
 
-void           xAnimation::SaveToSkeleton(xSkeleton &spine)
+void xAnimation::SaveToSkeleton(xSkeleton &spine)
 {
     xQuaternion *transf   = GetTransformations();
     spine.QuatsFromArray(transf);
     delete[] transf;
 }
-void           xAnimation::UpdatePosition()
+void xAnimation::UpdatePosition()
 {
     if (!this->CurrentFrame)
     {
@@ -134,7 +134,7 @@ xQuaternion xAnimation::GetTransformation(xBYTE ID_bone)
     return bone;
 }
 
-xQuaternion *     xAnimation::GetTransformations()
+xQuaternion *xAnimation::GetTransformations()
 {
     xQuaternion *bones = new xQuaternion[this->I_bones];
     xQuaternion *pRes = bones;
@@ -247,7 +247,7 @@ xQuaternion *     xAnimation::GetTransformations()
     return bones;
 }
 
-xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext, xFLOAT progress, xWORD I_bones)
+xQuaternion *xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext, xFLOAT progress, xWORD I_bones)
 {
 
     xQuaternion *bones = new xQuaternion[I_bones];
@@ -345,7 +345,8 @@ xQuaternion *     xAnimation::Interpolate(xQuaternion *pCurr, xQuaternion *pNext
 
     return bones;
 }
-void           xAnimation::Combine(xQuaternion *pCurr, xQuaternion *pNext, xWORD I_bones, xQuaternion *&bones)
+
+void xAnimation::Combine(xQuaternion *pCurr, xQuaternion *pNext, xWORD I_bones, xQuaternion *&bones)
 {
     if (!bones) bones = new xQuaternion[I_bones];
     xQuaternion *pRes = bones;
@@ -376,7 +377,8 @@ void           xAnimation::Combine(xQuaternion *pCurr, xQuaternion *pNext, xWORD
     }
     return;
 }
-void           xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD I_bones, xFLOAT progress, xQuaternion *&bones)
+
+void xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD I_bones, xFLOAT progress, xQuaternion *&bones)
 {
     if (!bones) bones = new xQuaternion[I_bones];
     xQuaternion *pRes = bones;
@@ -410,7 +412,41 @@ void           xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD
     }
     return;
 }
-xKeyFrame *    xAnimation::InsertKeyFrame()
+
+void xAnimation::Average(xQuaternion *pCurr, xQuaternion *pNext, xWORD I_bones, xFLOAT *progress, xQuaternion *&bones)
+{
+    if (!bones) bones = new xQuaternion[I_bones];
+    xQuaternion *pRes = bones;
+    xFLOAT      *pCom = progress;
+
+    if (!pCurr)
+    {
+        for (int i = I_bones; i; --i, ++pRes )
+            pRes->zeroQ();
+        return;
+    }
+
+    if (!pNext)
+    {
+        for (int i = I_bones; i; --i, ++pCurr, ++pRes, ++pCom )
+            *pRes = *pCurr * (1.f - *pCom);
+        return;
+    }
+
+    for (int i = I_bones; i; --i, ++pCurr, ++pNext, ++pRes, ++pCom )
+    {
+        if (i == I_bones) // root
+        {
+            *pRes = *pCurr * (1.f - *pCom) + *pNext * *pCom;
+            pRes->w = 1.f;
+            continue;
+        }
+        *pRes = xQuaternion::SLerp(*pCurr, *pNext, *pCom);
+    }
+    return;
+}
+
+xKeyFrame *xAnimation::InsertKeyFrame()
 {
     xKeyFrame *kfNew = new xKeyFrame();
     kfNew->T_duration = 1000;

@@ -21,6 +21,8 @@ namespace Scenes {
 
         void Clear()
         {
+            pages.clear();
+            font = HFont();
             MainCamera = NULL;
             Player1    = NULL;
             Player2    = NULL;
@@ -46,6 +48,8 @@ namespace Scenes {
         virtual bool ShellCommand(std::string &cmd, std::string &output);
 
     private:
+        HFont    font;
+
         bool InitMap();
         void FreeMap();
         void InitCameras();
@@ -55,6 +59,8 @@ namespace Scenes {
         Math::Cameras::Camera      *MainCamera;
         Math::Cameras::CameraSet    Cameras;
         Math::Tracking::TrackingSet Targets;
+
+        std::vector<StatPage*> pages;
 
         virtual void RenderSelect(const Math::Cameras::FieldOfView &FOV);
         unsigned int CountSelectable()

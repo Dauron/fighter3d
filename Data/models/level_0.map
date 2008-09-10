@@ -48,17 +48,9 @@ phantom     0
 mass        20
 shadows     1
 
-[model]
-model	3ds/dojo/altar.3ds
-rotation	0 0 90
-position	0	-19.77	-0.21
-physical	0
-phantom	0
-shadows 1
-
 #
 
-[skip skeletized]
+[skeletized]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 rotation    0 0 180
@@ -72,9 +64,10 @@ shadows     0
 restitution 0.9
 control     comboard
 style       Karate anims/karate.txt
+name        "ComBoard player"
 enemy       1
 
-[skip skeletized]
+[skeletized]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 #rotation    0 45 0
@@ -93,7 +86,9 @@ restitution 0.9
 #animation	anims/human/skulony.ska	0
 #animation	anims/human/kiwa_sie.ska	0
 #animation	anims/human/idzie.ska 0
-control     camera
+animation   anims/karate/position.ska
+#control     camera
+name        "Camera player"
 style       Karate anims/karate.txt
-enemy       0
+#enemy       0
 

@@ -2,8 +2,9 @@
 #define __incl_Utils_Stat_h
 
 #include "Singleton.h"
-#include <string>
-#include <vector>
+#include "Profiler.h"
+
+typedef std::vector<std::string> Vec_string;
 
 struct Stat_Base {
     std::string Name;
@@ -50,25 +51,122 @@ struct Stat_Float3PtrAndLen : public Stat_Float3Ptr {
     }
 };
 
-#define g_StatMgr   StatMgr::GetSingleton()
+struct Stat_BoolPtr : public Stat_Base {
+protected:
+    bool *BoolP;
+    char  buff[255];
 
-class StatMgr : public Singleton<StatMgr> {
 public:
-    typedef std::vector<Stat_Base*> Vec_Stats;
-    Vec_Stats stats;
+    Stat_BoolPtr() { BoolP = NULL; }
 
-    void Add(Stat_Base &stat)
+    void Create(const std::string &Name, bool &BoolP)
     {
-        stats.push_back(&stat);
+        assert (Name.size() && "Stat_BoolPtr::Create : Name is empty");
+
+        this->Name   = Name;
+        this->BoolP = &BoolP;
     }
 
-    void Destroy()
+    virtual const char* Print()
     {
+        assert (Name.size() && "Stat_BoolPtr::Print : Name is empty");
+        assert (BoolP && "Stat_BoolPtr::Print : BoolP is NULL");
+
+        sprintf(buff, "%s = %s", Name.c_str(), *BoolP ? "true" : "false");
+        return buff;
+    }
+};
+
+#define g_StatMgr   StatMgr::GetSingleton()
+
+struct StatPage_Base
+{
+    std::string Name;
+
+    virtual const Vec_string &GetLines() = 0;
+
+    virtual void Destroy() { Name.clear(); }
+    virtual ~StatPage_Base() { Destroy(); }
+};
+
+struct StatPage : public StatPage_Base
+{
+private:
+    Vec_string lines;
+
+    typedef std::vector<Stat_Base*> Vec_Stats;
+    Vec_Stats stats;
+public:
+
+    StatPage()
+    { Name = "Unnamed stat page"; }
+
+    void Add(Stat_Base &stat)
+    { stats.push_back(&stat); }
+
+    virtual const Vec_string &GetLines()
+    {
+        lines.clear();
+        Vec_Stats::iterator ST_curr = stats.begin(),
+                            ST_last = stats.end();
+        for (; ST_curr != ST_last; ++ST_curr)
+            lines.push_back((**ST_curr).Print());
+
+        return lines;
+    }
+
+    virtual void Destroy()
+    {
+        StatPage_Base::Destroy();
+
         Vec_Stats::iterator ST_curr = stats.begin(),
                             ST_last = stats.end();
         for (; ST_curr != ST_last; ++ST_curr)
             delete *ST_curr;
         stats.clear();
+    }
+};
+
+struct ProfilerPage : public StatPage_Base
+{
+public:
+
+    ProfilerPage() { Name = "Profiler"; }
+
+    virtual const Vec_string &GetLines()
+    { return g_Profiler.GetLines(); }
+};
+
+class StatMgr : public Singleton<StatMgr> {
+public:
+    typedef std::vector<StatPage_Base*> Vec_Pages;
+    Vec_Pages pages;
+
+    void Add(StatPage_Base &page)
+    {
+        pages.push_back(&page);
+    }
+
+    void Remove(StatPage_Base &page)
+    {
+        Vec_Pages::iterator PG_curr = pages.begin(),
+                            PG_last = pages.end();
+        for (; PG_curr != PG_last; ++PG_curr)
+            if (*PG_curr == &page)
+            {
+                delete *PG_curr;
+                pages.erase(PG_curr);
+                return;
+            }
+    }
+
+    void Destroy()
+    {
+        Vec_Pages::iterator PG_curr = pages.begin(),
+                            PG_last = pages.end();
+        for (; PG_curr != PG_last; ++PG_curr)
+            delete *PG_curr;
+        pages.clear();
     }
 
     ~StatMgr() { Destroy(); }

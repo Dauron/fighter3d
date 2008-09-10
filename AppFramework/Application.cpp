@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "OGL/GLWindow.h"
+#include "../Utils/Profiler.h"
 
 void MainWindow_OnCreate(IWindow &window, void* receiver)
 { g_Application.MainWindow_OnCreate(window); }
@@ -89,24 +90,31 @@ int Application::Run()
     float T_preRender = T_currrent;
     float T_prev;
 
+    g_Profiler.ClearSamples();
+
     while (MainWindow && !MainWindow->IsDestroyed())
     {
-        if (!MainWindow->ProcessMessages()) break;
+        {
+            Profile("Main Loop");
 
-        T_prev     = T_currrent;
-        T_currrent = GetTick();
-        float T_total  = T_currrent - T_prev;
-        float T_render = T_currrent - T_preRender;
+            if (!MainWindow->ProcessMessages()) break;
 
-        SceneCur->FrameStart();
+            T_prev     = T_currrent;
+            T_currrent = GetTick();
+            float T_total  = T_currrent - T_prev;
+            float T_render = T_currrent - T_preRender;
 
-        Update(T_render * 0.001f);
+            SceneCur->FrameStart();
 
-        T_preRender = GetTick();
-        Render();
+            Update(T_total * 0.001f);
 
-        if (!MainWindow || MainWindow->IsDestroyed()) return 0;
-        SceneCur->FrameEnd();
+            T_preRender = GetTick();
+            Render();
+
+            if (!MainWindow || MainWindow->IsDestroyed()) return 0;
+            SceneCur->FrameEnd();
+        }
+        g_Profiler.FrameEnd();
     }
     return 0;
 }
@@ -116,7 +124,10 @@ bool Application::Update(float T_delta)
     if (!MainWindow || MainWindow->IsDestroyed()) return false;
 
     if (MainWindow->IsActive())
+    {
+        Profile("Update Frame");
         return SceneCur->Update(T_delta);
+    }
     return true;
 }
 
@@ -126,8 +137,14 @@ bool Application::Render()
 
     if (MainWindow->IsActive())
     {
+        Profile("Render Frame");
+
         bool res = SceneCur->Render();
-        MainWindow->SwapBuffers();
+
+        {
+            Profile("Swap buffers");
+            MainWindow->SwapBuffers();
+        }
         return res;
     }
     return true;

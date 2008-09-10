@@ -605,6 +605,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Utils\Profiler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Utils\Profiler.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Utils\Resource.h"
 				>
 			</File>
