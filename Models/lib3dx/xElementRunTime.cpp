@@ -7,8 +7,10 @@ xShadowData & xElementInstance :: GetShadowData(xLight &light, xShadowData::xSha
         if (iter->ID_light == light.id)
         {
             if (light.modified || iter->zDataLevel < zLevel)
+            {
                 iter->FreeData();
-            iter->zDataLevel = zLevel;
+                iter->zDataLevel = zLevel;
+            }
             return *iter;
         }
 
@@ -64,6 +66,9 @@ void xElementInstance :: InvalidateVertexData()
     xShadowDataVector::iterator iter = gpuShadows.begin(), iterE = gpuShadows.end();
     for (; iter != iterE; ++iter)
         iter->InvalidateData();
+
+    if (bBox_T)    { delete bBox_T;    bBox_T = NULL; }
+    if (bSphere_T) { delete bSphere_T; bSphere_T = NULL; }
 }
 
 ////////////////////// xRenderData

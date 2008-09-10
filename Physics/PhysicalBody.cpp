@@ -152,14 +152,17 @@ void PhysicalBody :: Update(xFLOAT T_time)
             xFLOAT W_air_drag = air_drag(S_radius, V_omega*V_omega * S_radius*S_radius * 0.25f)
                 * T_time / M_mass;
             if (V_omega > W_air_drag)
-                QT_velocity_new = xQuaternion::Product(
+                QT_velocity = xQuaternion::Product(
                                         QT_velocity.interpolateFull(1.f - W_air_drag / V_omega),
                                         QT_velocity_new);
+            else
+                QT_velocity = QT_velocity_new;
         }
         else
-            QT_velocity_new = xQuaternion::Product(QT_velocity, QT_velocity_new);
+            QT_velocity = xQuaternion::Product(QT_velocity, QT_velocity_new);
     }
-    QT_velocity = QT_velocity_new;
+    else
+        QT_velocity = QT_velocity_new;
     if (QT_velocity.w != 1.f)
     {
         if (T_time != 0)

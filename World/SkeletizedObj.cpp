@@ -200,8 +200,8 @@ xVector3 SkeletizedObj :: MergeCollisions()
     xFLOAT   S_minLen = xFLOAT_HUGE_POSITIVE;
     xFLOAT   S_maxLen = xFLOAT_HUGE_NEGATIVE;
 
-    xVector3 NW_fix; NW_fix.zero();
-    xVector3 V_action;   V_action.zero();
+    xVector3 NW_fix;   NW_fix.zero();
+    xVector3 V_action; V_action.zero();
 
     xVector3 V_reaction[100];
     memset(V_reaction, 0, sizeof(xVector3)*I_bones);
@@ -308,7 +308,30 @@ xVector3 SkeletizedObj :: MergeCollisions()
     else
         NW_fix.z = 0.f;
 
-    if (NW_fix.lengthSqr() < 0.000001f) NW_fix.init(0.f, 0.f, 0.1f); // add random fix if locked
+    if (NW_fix.lengthSqr() < 0.000001f)// NW_fix.init(0.f, 0.f, 0.1f); // add random fix if locked
+    {
+        NW_fix.zero();
+        S_minLen = xFLOAT_HUGE_POSITIVE;
+        S_maxLen = xFLOAT_HUGE_NEGATIVE;
+        std::vector<Physics::Colliders::CollisionPoint>::iterator
+                            iter_cur = Collisions.begin(),
+                            iter_end = Collisions.end();
+        I_MaxX = 0;
+        for (; iter_cur != iter_end; ++iter_cur)
+        {
+            xVector3 NW_tmp = iter_cur->NW_fix;
+
+            xVector3 NW_direction = P_center - iter_cur->P_collision;
+
+            if (xVector3::DotProduct(NW_direction, NW_tmp) > 0)
+            {
+                NW_fix += NW_tmp;
+                ++I_MaxX;
+            }
+        }
+        if (I_MaxX)
+            NW_fix /= I_MaxX;
+    }
     return NW_fix;
 }
 

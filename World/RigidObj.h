@@ -75,15 +75,11 @@ public:
 
     virtual void Render() {
         PhysicalBody::Render();
-        if (ModelGr) ModelGr->instance.MX_LocalToWorld = MX_LocalToWorld_Get();
-        if (ModelPh) ModelPh->instance.MX_LocalToWorld = MX_LocalToWorld_Get();
+        if (IsModified()) InvalidateShadowData();
     }
     virtual void FrameEnd   () {
         if (IsModified())
-        {
             UpdateMatrices();
-            InvalidateShadowData();
-        }
         PhysicalBody::FrameEnd();
     }
 protected:
@@ -116,6 +112,7 @@ private:
     void GetShadowProjectionMatrix (xLight* light, xMatrix &mtxBlockerToLight, xMatrix &mtxReceiverUVMatrix, xWORD width);
     void InvalidateShadowData(xModelInstance &instance)
     {
+        instance.MX_LocalToWorld = MX_LocalToWorld_Get();
         if (instance.L_elements)
         {
             xElementInstance *iter = instance.L_elements;

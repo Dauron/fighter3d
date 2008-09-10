@@ -120,19 +120,15 @@ void GLFont :: Dispose()
 void  GLFont :: Print  (float x, float y, float z, float maxHeight, int skipLines, const char *text) const
 {
     assert(ID_GLFontBase != -1);
-
-    glRasterPos3f(x, y, z);            // Position The Text On The Screen
-
-    if (text == NULL)                  // If There's No Text
-        return;                        // Do Nothing
+    assert(text);
 
     const char *start = text;
     size_t len = strlen(text);
     const char *end;
 
     float lineH = LineH();
+    glRasterPos3f(x, y, z);            // Position The Text On The Screen
 
-    glPushAttrib(GL_LIST_BIT);         // Pushes The Display List Bits
     glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     while ( (end = strchr(start, '\n')) )
     {
@@ -142,7 +138,7 @@ void  GLFont :: Print  (float x, float y, float z, float maxHeight, int skipLine
         {
             if (maxHeight <= 0)
             {
-                glPopAttrib(); // Pops The Display List Bits
+                glListBase(0);
                 return;
             }
 
@@ -155,31 +151,23 @@ void  GLFont :: Print  (float x, float y, float z, float maxHeight, int skipLine
     }
     end = text + len;
     glCallLists((GLsizei)(end-start), GL_UNSIGNED_BYTE, start);     // Draws The Display List Text
-    glPopAttrib();                     // Pops The Display List Bits
+    glListBase(0);
 }
 
-void  GLFont :: PrintF (float x, float y, float z, const char *fmt, ...) const
+#include "../../../Utils/Profiler.h"
+
+void  GLFont :: Print  (float x, float y, float z, const char *text) const
 {
     assert(ID_GLFontBase != -1);
+    assert(text);
 
+    const char *start = text;
+    size_t len = strlen(text);
+    const char *end;
+
+    float lineH = LineH();
     glRasterPos3f(x, y, z);            // Position The Text On The Screen
 
-    char    text[256];                 // Holds Our String
-    va_list ap;                        // Pointer To List Of Arguments
-    float lineH = LineH();
-
-    if (fmt == NULL)                   // If There's No Text
-        return;                        // Do Nothing
-
-    va_start(ap, fmt);                 // Parses The String For Variables
-    vsprintf(text, fmt, ap);           // And Converts Symbols To Actual Numbers
-    va_end(ap);                        // Results Are Stored In Text
-
-    char *start = text;
-    size_t len = strlen(text);
-    char *end;
-
-    glPushAttrib(GL_LIST_BIT);         // Pushes The Display List Bits
     glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     while ( (end = strchr(start, '\n')) )
     {
@@ -190,40 +178,64 @@ void  GLFont :: PrintF (float x, float y, float z, const char *fmt, ...) const
     }
     end = text + len;
     glCallLists((GLsizei)(end-start), GL_UNSIGNED_BYTE, start);     // Draws The Display List Text
-    glPopAttrib();                     // Pops The Display List Bits
+    glListBase(0); // Sets The Base Character to FIRST_CHAR
+}
+
+void  GLFont :: PrintF (float x, float y, float z, const char *fmt, ...) const
+{
+    assert(ID_GLFontBase != -1);
+    assert(fmt);
+
+    char    text[256];                 // Holds Our String
+    va_list ap;                        // Pointer To List Of Arguments
+    va_start(ap, fmt);                 // Parses The String For Variables
+    vsprintf(text, fmt, ap);           // And Converts Symbols To Actual Numbers
+    va_end(ap);                        // Results Are Stored In Text
+
+    char *start = text;
+    size_t len = strlen(text);
+    char *end;
+
+    float lineH = LineH();
+    glRasterPos3f(x, y, z);            // Position The Text On The Screen
+
+    glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
+    while ( (end = strchr(start, '\n')) )
+    {
+        glCallLists((GLsizei)(end-start), GL_UNSIGNED_BYTE, start); // Draws The Display List Text
+        start = end+1;
+        y -= lineH;
+        glRasterPos3f(x, y, z);        // Position The Text On The Screen
+    }
+    end = text + len;
+    glCallLists((GLsizei)(end-start), GL_UNSIGNED_BYTE, start);     // Draws The Display List Text
+    glListBase(0);
 }
 
 void  GLFont :: Print  (const char *text) const
 {
     assert(ID_GLFontBase != -1);
+    assert(text);
 
-    if (text == NULL)                   // If There's No Text
-        return;                        // Do Nothing
-
-    glPushAttrib(GL_LIST_BIT);         // Pushes The Display List Bits
     glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     glCallLists((GLsizei)strlen(text), GL_UNSIGNED_BYTE, text);    // Draws The Display List Text
-    glPopAttrib();                     // Pops The Display List Bits
+    glListBase(0);
 }
 
 void  GLFont :: PrintF (const char *fmt, ...) const
 {
     assert(ID_GLFontBase != -1);
+    assert(fmt);
 
     char        text[256];             // Holds Our String
     va_list        ap;                 // Pointer To List Of Arguments
-
-    if (fmt == NULL)                   // If There's No Text
-        return;                        // Do Nothing
-
     va_start(ap, fmt);                 // Parses The String For Variables
     vsprintf(text, fmt, ap);           // And Converts Symbols To Actual Numbers
     va_end(ap);                        // Results Are Stored In Text
 
-    glPushAttrib(GL_LIST_BIT);         // Pushes The Display List Bits
     glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     glCallLists((GLsizei)strlen(text), GL_UNSIGNED_BYTE, text);    // Draws The Display List Text
-    glPopAttrib();                     // Pops The Display List Bits
+    glListBase(0);
 }
 
 float GLFont :: Length (const char *text) const

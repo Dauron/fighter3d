@@ -89,7 +89,7 @@ class GLButton
             glColor4f( 0.f, 0.f, 0.f, 1.f );
         else
             glColor4f( 1.f, 1.f, 1.f, 1.f );
-        pFont->PrintF(X+3.f, Y2-(Y2-Y-fHeight*0.5f)*0.5f, 0.f, Text);
+        pFont->Print(X+3.f, Y2-(Y2-Y-fHeight*0.5f)*0.5f, 0.f, Text);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glRectf(X, Y, X2, Y2);

@@ -528,9 +528,9 @@ bool SceneGame :: Render()
         const GLFont* pFont = g_FontMgr.GetFont(font);
         float lineHeight = pFont->LineH();
 
-        pFont->PrintF(10.f, lineHeight, 0, "Player 1 : %s", player1.Name.c_str());
+        pFont->Print(10.f, lineHeight, 0, ("Player 1 : " + player1.Name).c_str());
         std::string name_p2 = player2.Name + " : Player 2";
-        pFont->PrintF(Width - 10.f - pFont->Length(name_p2.c_str()),
+        pFont->Print(Width - 10.f - pFont->Length(name_p2.c_str()),
             lineHeight, 0, name_p2.c_str());
 
         xFLOAT BarWidth = Width * 0.5f - 20.f;

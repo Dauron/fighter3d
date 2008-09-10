@@ -13,35 +13,36 @@ position	0	0	10
 # OBJECTS
 
 [model]
-fastm	crate_fst.3dx
-model	crate.3dx
-skip rotation    0  45  45
-skip position	-4 -3.75 0.75
-skip position	-4 -3.5 0.5
-position	-4 -4 1
-velocity	7	0	0
-physical	0
-locked	0
-phantom	0
-mass	50
-shadows 1
+model    crate.3dx
+physical 0
+locked   0
+phantom  0
+mass     50
+shadows  1
+## uncomment 2 lines below for nice 'gears' behaviour test
+#rotation    0 45 45
+#position   -4 -3.75 0.75
+## rotation+movement test
+position    -4 -3.75 0.75
+## movement test
+#position   -4 -4 1
+## velocity must be defined after positioning the object
+velocity    7 0 0
 
 [model]
-fastm	crate_fst.3dx
-model	crate.3dx
-position	-1	-4	1
-physical	0
-locked	0
-phantom	0
-mass	50
-shadows 1
+model    crate.3dx
+position -1 -4 1
+physical 0
+locked   0
+phantom  0
+mass     50
+shadows  1
 
 [model]
-fastm	crate_fst.3dx
-model	crate.3dx
-position	4	-4	1
-physical	0
-locked	0
-phantom	0
-mass	50
-shadows 1
+model    crate.3dx
+position 4 -4 1
+physical 0
+locked   0
+phantom  0
+mass     50
+shadows  1

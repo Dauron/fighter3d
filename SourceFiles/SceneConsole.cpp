@@ -489,135 +489,141 @@ bool SceneConsole::Render()
     GLShader::EnableTexturing(xState_Off);
     glDisable (GL_POLYGON_SMOOTH);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glEnable (GL_BLEND);                    // Enable blending
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // Set projection
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, Width, 0, cHeight, 0, 100);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-
     const GLFont* pFont = g_FontMgr.GetFont(font);
     float lineHeight = pFont->LineH();
 
-    glViewport(Left, Top+cHeight, Width, cHeight); // Set viewport
-
-    // Draw background
-    glColor4f( 0.0f, 0.0f, 0.0f, 0.5f );
-    glBegin(GL_QUADS);
-        glVertex2f(0.0f, 0.0f);
-        glVertex2f((GLfloat)Width, 0.0f);
-        glVertex2f((GLfloat)Width, (GLfloat)cHeight);
-        glVertex2f(0.0f, (GLfloat)cHeight);
-    glEnd();
-
-    glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-    pFont->PrintF(0.0f, (float)cHeight-lineHeight, 0.0f,
-        "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u T_world: %4.3f",
-        (int)Performance.FPSmin, (int)Performance.FPSsnap, (int)Performance.FPSmax,
-        Performance.T_world);
-    pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
-        "   Num culled elements: %3u diffuse: %u shadows: %u culled: %u zP: %u zF: %u zFs: %u zFf: %u zFb: %u",
-        (int)Performance.CulledElements, Performance.CulledDiffuseElements,
-        Performance.Shadows.shadows, Performance.Shadows.culled, Performance.Shadows.zPass, Performance.Shadows.zFail,
-        Performance.Shadows.zFailS, Performance.Shadows.zFailF, Performance.Shadows.zFailB);
-
-    glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
-    glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing
-
-    pFont->Print(0.0f, cHeight-3*lineHeight, 0.0f, cHeight-3*lineHeight, scroll_v, history.c_str());
-    pFont->Print(currCmd.c_str());
-    if (FL_carretVisible && scroll_v >= histLines -1-pageSize)
-        pFont->Print("_");
-
-    glDisable(GL_SCISSOR_TEST);                            // Disable Scissor Testing
-
-    // Draw scrollbar
-    float size = (float)(pageSize+1) / histLines;
-    if (size < 1)
     {
-        size *= cHeight-2*lineHeight;
+        Profile("Shell");
 
-        float position = (float)(scroll_v) / histLines;
-        position = (cHeight-2*lineHeight)*(1-position);
+        // Set projection
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, Width, 0, cHeight, 0, 100);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
 
-        glColor4f( 1.0f, 1.0f, 1.0f, 0.5f );
-        glBegin(GL_QUADS);
-            glVertex2f((GLfloat)Width-10.0f, 0.0f);
-            glVertex2f((GLfloat)Width, 0.0f);
-            glVertex2f((GLfloat)Width, (GLfloat)cHeight-2*lineHeight);
-            glVertex2f(Width-10.0f, (GLfloat)cHeight-2*lineHeight);
-
-            glVertex2f((GLfloat)Width-10.0f, position-size);
-            glVertex2f((GLfloat)Width, position-size);
-            glVertex2f((GLfloat)Width, position);
-            glVertex2f(Width-10.0f, position);
-        glEnd();
-    }
-
-    glViewport(Left, Top, Width, cHeight); // Set viewport
-
-    if (curStatPage >= 0 && curStatPage >= g_StatMgr.pages.size())
-        curStatPage = g_StatMgr.pages.size() - 1;
-    if (curStatPage >= 0)
-    {
-        StatPage_Base &page = *g_StatMgr.pages[curStatPage];
+        glViewport(Left, Top+cHeight, Width, cHeight); // Set viewport
 
         // Draw background
-        glColor4f( 0.0f, 0.0f, 0.0f, 0.5f );
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glEnable (GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glColor4ub( 0, 0, 0, 128 );
         glBegin(GL_QUADS);
             glVertex2f(0.0f, 0.0f);
             glVertex2f((GLfloat)Width, 0.0f);
             glVertex2f((GLfloat)Width, (GLfloat)cHeight);
             glVertex2f(0.0f, (GLfloat)cHeight);
         glEnd();
-
-        glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-
-        glBegin(GL_LINES);
+        // Draw scrollbar
+        float size = (float)(pageSize+1) / histLines;
+        if (size < 1)
         {
-            glVertex2f(0.0f, (GLfloat)cHeight-1);
-            glVertex2f((GLfloat)Width, (GLfloat)cHeight-1);
+            size *= cHeight-2*lineHeight;
+
+            float position = (float)(scroll_v) / histLines;
+            position = (cHeight-2*lineHeight)*(1-position);
+
+            glBegin(GL_QUADS);
+                glVertex2f((GLfloat)Width-10.0f, 0.0f);
+                glVertex2f((GLfloat)Width, 0.0f);
+                glVertex2f((GLfloat)Width, (GLfloat)cHeight-2*lineHeight);
+                glVertex2f(Width-10.0f, (GLfloat)cHeight-2*lineHeight);
+
+                glVertex2f((GLfloat)Width-10.0f, position-size);
+                glVertex2f((GLfloat)Width, position-size);
+                glVertex2f((GLfloat)Width, position);
+                glVertex2f(Width-10.0f, position);
+            glEnd();
         }
-        glEnd();
+        glDisable(GL_BLEND);
 
-        pFont->PrintF(0.0f, cHeight-lineHeight, 0.0f, "Page %d/%d - %s - Press %s to change",
-            curStatPage+1, g_StatMgr.pages.size(), page.Name.c_str(), KeyNextPage.c_str());
+        glColor4ub( 255, 255, 255, 255 );
+        pFont->PrintF(0.0f, (float)cHeight-lineHeight, 0.0f,
+            "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u T_world: %4.3f",
+            (int)Performance.FPSmin, (int)Performance.FPSsnap, (int)Performance.FPSmax,
+            Performance.T_world);
+        pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
+            "   Num culled elements: %3u diffuse: %u shadows: %u culled: %u zP: %u zF: %u zFs: %u zFf: %u zFb: %u",
+            (int)Performance.CulledElements, Performance.CulledDiffuseElements,
+            Performance.Shadows.shadows, Performance.Shadows.culled, Performance.Shadows.zPass, Performance.Shadows.zFail,
+            Performance.Shadows.zFailS, Performance.Shadows.zFailF, Performance.Shadows.zFailB);
 
-        const Vec_string &lines = page.GetLines();
-        Vec_string::const_iterator LN_curr = lines.begin(),
-                                   LN_last = lines.end();
-        xFLOAT x = 0.f;
-        xFLOAT y = cHeight-lineHeight*2;
-        xFLOAT w = 0.f;
+        glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
+        glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing
 
-        for (; LN_curr != LN_last; ++LN_curr)
+        pFont->Print(0.0f, cHeight-3*lineHeight, 0.0f, cHeight-3*lineHeight, scroll_v, history.c_str());
+        pFont->Print(currCmd.c_str());
+        if (FL_carretVisible && scroll_v >= histLines -1-pageSize)
+            pFont->Print("_");
+
+        glDisable(GL_SCISSOR_TEST);
+    }
+    {
+        Profile("Stats");
+
+        glViewport(Left, Top, Width, cHeight); // Set viewport
+
+        if (curStatPage >= 0 && curStatPage >= g_StatMgr.pages.size())
+            curStatPage = g_StatMgr.pages.size() - 1;
+        if (curStatPage >= 0)
         {
-            const char *text = LN_curr->c_str();
-            w = max( w, pFont->Length(text) );
+            StatPage_Base &page = *g_StatMgr.pages[curStatPage];
 
-            pFont->PrintF(x, y, 0.0f, text);
-            y -= lineHeight;
-            if (y < 0.f)
+            // Draw background
+            glEnable (GL_BLEND);
+            glColor4ub( 0, 0, 0, 128 );
+            glBegin(GL_QUADS);
+                glVertex2f(0.0f, 0.0f);
+                glVertex2f((GLfloat)Width, 0.0f);
+                glVertex2f((GLfloat)Width, (GLfloat)cHeight);
+                glVertex2f(0.0f, (GLfloat)cHeight);
+            glEnd();
+            glDisable(GL_BLEND);
+
+            glColor4ub( 255, 255, 255, 255 );
+
+            glBegin(GL_LINES);
             {
-                x += w + 20.f;
+                glVertex2f(0.0f, (GLfloat)cHeight-1);
+                glVertex2f((GLfloat)Width, (GLfloat)cHeight-1);
+            }
+            glEnd();
 
-                glBegin(GL_LINES);
+            pFont->PrintF(0.0f, cHeight-lineHeight, 0.0f, "Page %d/%d - %s - Press %s to change",
+                curStatPage+1, g_StatMgr.pages.size(), page.Name.c_str(), KeyNextPage.c_str());
+
+            const Vec_string &lines = page.GetLines();
+            Vec_string::const_iterator LN_curr = lines.begin(),
+                                       LN_last = lines.end();
+            xFLOAT x = 0.f;
+            xFLOAT y = cHeight-lineHeight*2;
+            xFLOAT w = 0.f;
+
+            for (; LN_curr != LN_last; ++LN_curr)
+            {
+                const char *text = LN_curr->c_str();
+                w = max( w, pFont->Length(text) );
+
+                glRasterPos2f(x, y);
+                pFont->Print(text);
+                y -= lineHeight;
+                if (y < 0.f)
                 {
-                    glVertex2f(x - 10.f, y+lineHeight);
-                    glVertex2f(x - 10.f, cHeight-lineHeight*1.5f);
-                }
-                glEnd();
+                    x += w + 20.f;
+                    glBegin(GL_LINES);
+                    {
+                        glVertex2f(x - 10.f, y+lineHeight);
+                        glVertex2f(x - 10.f, cHeight-lineHeight*1.5f);
+                    }
+                    glEnd();
 
-                w = 0.f;
-                y = cHeight-lineHeight*2.f;
+                    w = 0.f;
+                    y = cHeight-lineHeight*2.f;
+                }
             }
         }
     }
-
-    glDisable(GL_BLEND);
 
     // Flush the buffer to force drawing of all objects thus far
     glFlush();

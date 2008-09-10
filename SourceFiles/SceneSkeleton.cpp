@@ -457,25 +457,25 @@ bool SceneSkeleton::Render()
         sCamera = "Bottom";
     if (Cameras.Current == &Cameras.Perspective)
         sCamera = "Perspective";
-    pFont->PrintF(5.f, 20.f, 0.f, sCamera);
+    pFont->Print(5.f, 20.f, 0.f, sCamera);
 
     if (EditMode == emCreateBone)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton |");
+        pFont->Print(5.f, Height-5.f, 0.f, "Skeleton |");
     else if (EditMode == emCreateConstraint_Type)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints |");
+        pFont->Print(5.f, Height-5.f, 0.f, "Skeleton constraints |");
     else if (EditMode == emCreateConstraint_Node)
     {
         if (Constraint.type == IC_BE_CreateConstrWeight)
-            pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | select bone");
+            pFont->Print(5.f, Height-5.f, 0.f, "Skeleton constraints | select bone");
         else
         if (Constraint.type == IC_BE_CreateConstrAng)
-            pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | select bone to constrain");
+            pFont->Print(5.f, Height-5.f, 0.f, "Skeleton constraints | select bone to constrain");
         else
         if (Constraint.boneA == xBYTE_MAX)
-            pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | select first node");
+            pFont->Print(5.f, Height-5.f, 0.f, "Skeleton constraints | select first node");
         else
         if (Constraint.boneB == xBYTE_MAX)
-            pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | select second node");
+            pFont->Print(5.f, Height-5.f, 0.f, "Skeleton constraints | select second node");
     }
     else if (EditMode == emCreateConstraint_Params)
     {
@@ -500,18 +500,18 @@ bool SceneSkeleton::Render()
             pFont->PrintF(5.f, Height-25.f, 0.f, "Weight: (%2.2f) %s", Constraint.M_weight, InputState.String.c_str());
         else
             pFont->PrintF(5.f, Height-25.f, 0.f, "Length: (%2.2f) %s", Constraint.S_length, InputState.String.c_str());
-        pFont->PrintF(5.f, Height-5.f, 0.f, "Skeleton constraints | Input parameters of the constraint");
+        pFont->Print(5.f, Height-5.f, 0.f, "Skeleton constraints | Input parameters of the constraint");
     }
     else if (EditMode == emEditBVH)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "BVH Editor |");
+        pFont->Print(5.f, Height-5.f, 0.f, "BVH Editor |");
     else if (EditMode == emSelectBVHBone)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "BVH Editor | Click: Select Bone");
+        pFont->Print(5.f, Height-5.f, 0.f, "BVH Editor | Click: Select Bone");
     else if (EditMode == emCreateBVH)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "BVH Editor |");
+        pFont->Print(5.f, Height-5.f, 0.f, "BVH Editor |");
     else if (EditMode == emEditVolume)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "BVH Editor | Drag: Edit bounding volume");
+        pFont->Print(5.f, Height-5.f, 0.f, "BVH Editor | Drag: Edit bounding volume");
     else if (EditMode == emSelectElement)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "Skinning | Click: Select Element");
+        pFont->Print(5.f, Height-5.f, 0.f, "Skinning | Click: Select Element");
     else if (EditMode == emSelectVertex)
     {
         pFont->PrintF(5.f, Height-5.f, 0.f,
@@ -528,22 +528,22 @@ bool SceneSkeleton::Render()
         }
     }
     else if (EditMode == emSelectBone)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "Skinning | Click: Select Bone");
+        pFont->Print(5.f, Height-5.f, 0.f, "Skinning | Click: Select Bone");
     else if (EditMode == emInputWght)
         pFont->PrintF(5.f, Height-5.f, 0.f, "Skinning | Type in Bone weight | %s: Accept", KeyName_Accept);
     else if (EditMode == emSaveModel)
-        pFont->PrintF(5.f, Height-5.f, 0.f, "Save |");
+        pFont->Print(5.f, Height-5.f, 0.f, "Save |");
 
     else if (EditMode == emSelectAnimation || EditMode == emAnimateBones
         || EditMode == emLoadAnimation || EditMode == emEditAnimation
         || EditMode == emFrameParams || EditMode == emSaveAnimation)
     {
-        pFont->PrintF(5.f, Height-5.f, 0.f, "Animation |");
+        pFont->Print(5.f, Height-5.f, 0.f, "Animation |");
         if (EditMode != emSelectAnimation && EditMode != emLoadAnimation)
             if (AnimationName.size())
-                pFont->PrintF(150.f, 20.f, 0.f, "Animation: %s", AnimationName.c_str());
+                pFont->Print(150.f, 20.f, 0.f, ("Animation: " + AnimationName).c_str());
             else
-                pFont->PrintF(150.f, 20.f, 0.f, "Animation: new animation");
+                pFont->Print(150.f, 20.f, 0.f, "Animation: new animation");
     }
 
     if (EditMode == emEditAnimation)
@@ -558,7 +558,7 @@ bool SceneSkeleton::Render()
         }
     }
     else if (EditMode == emSaveAnimation || EditMode == emSaveModel)
-        pFont->PrintF(5.f, Height-25.f, 0.f, "Filename: %s", InputState.String.c_str());
+        pFont->Print(5.f, Height-25.f, 0.f, ("Filename: " + InputState.String).c_str());
 
     std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
     std::vector<GLButton>::iterator end   = Buttons[EditMode].end();

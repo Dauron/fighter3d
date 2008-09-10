@@ -36,26 +36,26 @@ namespace Scenes { namespace Menu {
 
             xFLOAT textLen = pFont04->Length("programming");
             glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont04->PrintF((Width - textLen) * 0.5f, y, 0.0f, "programming");
+            pFont04->Print((Width - textLen) * 0.5f, y, 0.0f, "programming");
             textLen = pFont05->Length("Dariusz Maciejewski");
             glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-            pFont05->PrintF((Width - textLen) * 0.5f, y+lineHeight04, 0.0f, "Dariusz Maciejewski");
+            pFont05->Print((Width - textLen) * 0.5f, y+lineHeight04, 0.0f, "Dariusz Maciejewski");
 
             textLen = pFont04->Length("supervision");
             glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont04->PrintF((Width - textLen) * 0.5f, y+lineHeight05+lineHeight04, 0.0f, "supervision");
+            pFont04->Print((Width - textLen) * 0.5f, y+lineHeight05+lineHeight04, 0.0f, "supervision");
             textLen = pFont05->Length("Przemyslaw Rokita");
             glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-            pFont05->PrintF((Width - textLen) * 0.5f, y+lineHeight05+lineHeight04*2, 0.0f, "Przemyslaw Rokita");
+            pFont05->Print((Width - textLen) * 0.5f, y+lineHeight05+lineHeight04*2, 0.0f, "Przemyslaw Rokita");
 
             textLen = pFont04->Length("art");
             glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont04->PrintF((Width - textLen) * 0.5f, y+lineHeight05*2+lineHeight04*2, 0.0f, "art");
+            pFont04->Print((Width - textLen) * 0.5f, y+lineHeight05*2+lineHeight04*2, 0.0f, "art");
             textLen = pFont05->Length("Eliza Mielnicka");
             glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-            pFont05->PrintF((Width - textLen) * 0.5f, y+lineHeight05*2+lineHeight04*3, 0.0f, "Eliza Mielnicka");
+            pFont05->Print((Width - textLen) * 0.5f, y+lineHeight05*2+lineHeight04*3, 0.0f, "Eliza Mielnicka");
             textLen = pFont05->Length("Dariusz Maciejewski");
-            pFont05->PrintF((Width - textLen) * 0.5f, y+lineHeight05*3+lineHeight04*3, 0.0f, "Dariusz Maciejewski");
+            pFont05->Print((Width - textLen) * 0.5f, y+lineHeight05*3+lineHeight04*3, 0.0f, "Dariusz Maciejewski");
         }
     };
 

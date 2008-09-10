@@ -60,6 +60,7 @@ public:
     /////// font usage functions
 
     void Print   (float x, float y, float z, float maxHeight, int skipLines, const char *text) const;
+    void Print   (float x, float y, float z, const char *text) const;
     void PrintF  (float x, float y, float z, const char *fmt, ...) const;
     void Print   (const char *text) const;
     void PrintF  (const char *fmt, ...) const;

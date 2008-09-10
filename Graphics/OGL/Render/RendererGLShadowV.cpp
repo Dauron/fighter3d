@@ -4,6 +4,7 @@
 #include "../../ShadowVolume.h"
 #include "../Extensions/EXT_stencil_wrap.h"
 #include "../Extensions/EXT_stencil_two_side.h"
+#include "../../../Utils/Profiler.h"
 
 /***************************** shadow volumes *********************************/
 void CheckShadowVolumeInFrustum(xElementInstance &instance, xShadowData &shadowData,
@@ -299,6 +300,8 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
     xShadowData &shadowData = instance.GetShadowData(light, zPass ? xShadowData::ZPASS_ONLY : xShadowData::ZFAIL_PASS);
     if (!shadowData.L_indices)
     {
+        Profile("Calculate shadow volumes");
+
         xMatrix MX_WorldToMesh = xMatrix::Invert(MX_MeshToWorld);
         xVector3 lightPos = (infiniteL)
             ? MX_WorldToMesh.preTransformV(light.position)
@@ -352,6 +355,8 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
             shadowData.gpuShadowPointers.listIDFailB = 0;
         }
     }
+
+    Profile("Render shadow volumes");
 
     glPushMatrix();
     glMultMatrixf(&elem->MX_MeshToLocal.x0);

@@ -14,7 +14,7 @@ FillScreen      0
 FullScreenX     1280
 FullScreenY     1024
 
-# debug rendering modes
+# rendering modes for debugging
 Show_ShadowVolumes   0
 Show_Skeleton        0
 Show_BVH             0
@@ -24,7 +24,7 @@ Show_Cameras         0
 Console         1
 # menu, game, test
 Scene           menu
-Level           2
+Level           0
 Speed           1
 # 0 = almost none, 1 = important errors, 2 = all errors, 3 = all errors + warnings
 Logging         3

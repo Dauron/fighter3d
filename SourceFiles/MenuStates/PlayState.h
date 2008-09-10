@@ -298,7 +298,7 @@ namespace Scenes { namespace Menu {
 
             const char* title = "Select fighters";
             xFLOAT textLen = pFont05->Length(title);
-            pFont05->PrintF((Width - textLen) * 0.5f, lineHeight05*1.25f, 0.0f, title);
+            pFont05->Print((Width - textLen) * 0.5f, lineHeight05*1.25f, 0.0f, title);
 
             const char* menu = "Back";
             MenuButton = xRectangle(20.f, Height-lineHeight05*1.75f, pFont05->Length(menu), lineHeight05);
@@ -306,7 +306,7 @@ namespace Scenes { namespace Menu {
                 glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
             else
                 glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont05->PrintF(MenuButton.X, Height-lineHeight05*0.75f, 0.0f, menu);
+            pFont05->Print(MenuButton.X, Height-lineHeight05*0.75f, 0.0f, menu);
 
             const char* play = "Play";
             textLen = pFont05->Length(play);
@@ -315,7 +315,7 @@ namespace Scenes { namespace Menu {
                 glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
             else
                 glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont05->PrintF(PlayButton.X, Height-lineHeight05*0.75f, 0.0f, play);
+            pFont05->Print(PlayButton.X, Height-lineHeight05*0.75f, 0.0f, play);
 
             ////// Player config
             for(int i = 0; i < 2; ++i)
@@ -327,11 +327,11 @@ namespace Scenes { namespace Menu {
                 ////// Control mode
                 xFLOAT y = HeightHalf + lineHeight03;
                 const char* controlType = i == 0 ? "Controls: ComBoard" : "Controls: Camera";
-                pFont03->PrintF(WidthHalf * 0.1f, y, 0.0f, controlType);
+                pFont03->Print(WidthHalf * 0.1f, y, 0.0f, controlType);
                 y += lineHeight03*2;
 
                 ////// Fighters
-                pFont03->PrintF(WidthHalf * 0.1f, y, 0.0f, "Fighters:");
+                pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Fighters:");
                 fightersY = (xDWORD)y;
                 y += lineHeight03;
                 for (size_t j = 0; j < players[i].size(); ++j)
@@ -341,14 +341,14 @@ namespace Scenes { namespace Menu {
                     else
                         glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
                     const char *name = players[i][j].Name.c_str();
-                    pFont03->PrintF(WidthHalf * 0.2f, y, 0.0f, name);
+                    pFont03->Print(WidthHalf * 0.2f, y, 0.0f, name);
                     y += lineHeight03;
                 }
                 y += lineHeight03;
 
                 ////// Fighting styles
                 glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                pFont03->PrintF(WidthHalf * 0.1f, y, 0.0f, "Fighting styles:");
+                pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Fighting styles:");
                 stylesY = (xDWORD)y;
                 y += lineHeight03;
                 for (size_t j = 0; j < choosen[i]->styles.size(); ++j)
@@ -358,7 +358,7 @@ namespace Scenes { namespace Menu {
                     else
                         glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
                     const char *name = choosen[i]->styles[j].Name.c_str();
-                    pFont03->PrintF(WidthHalf * 0.2f, y, 0.0f, name);
+                    pFont03->Print(WidthHalf * 0.2f, y, 0.0f, name);
                     y += lineHeight03;
                 }
             }

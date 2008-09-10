@@ -122,7 +122,7 @@ namespace Scenes { namespace Menu {
 
             const char* title = "Select map";
             xFLOAT textLen = pFont05->Length(title);
-            pFont05->PrintF((Width - textLen) * 0.5f, lineHeight05*1.25f, 0.0f, title);
+            pFont05->Print((Width - textLen) * 0.5f, lineHeight05*1.25f, 0.0f, title);
 
             const char* menu = "Back";
             BackButton = xRectangle(20.f, Height-lineHeight05*1.75f, pFont05->Length(menu), lineHeight05);
@@ -130,7 +130,7 @@ namespace Scenes { namespace Menu {
                 glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
             else
                 glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont05->PrintF(BackButton.X, Height-lineHeight05*0.75f, 0.0f, menu);
+            pFont05->Print(BackButton.X, Height-lineHeight05*0.75f, 0.0f, menu);
 
             const char* play = "Next";
             textLen = pFont05->Length(play);
@@ -139,7 +139,7 @@ namespace Scenes { namespace Menu {
                 glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
             else
                 glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont05->PrintF(NextButton.X, Height-lineHeight05*0.75f, 0.0f, play);
+            pFont05->Print(NextButton.X, Height-lineHeight05*0.75f, 0.0f, play);
 
             glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
             xFLOAT y = HeadersHeight + lineHeight03*2;
@@ -147,7 +147,7 @@ namespace Scenes { namespace Menu {
             mapsH = (xDWORD)lineHeight03;
             ////// Maps
             textLen = pFont03->Length("Maps:");
-            pFont03->PrintF(WidthHalf * 0.1f, y, 0.0f, "Maps:");
+            pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Maps:");
             y += lineHeight03;
 
             for(size_t i = 0; i < L_maps.size(); ++i)
@@ -158,7 +158,7 @@ namespace Scenes { namespace Menu {
                     glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
                 const char *name = L_maps[i].Name.c_str();
                 textLen = pFont03->Length(name);
-                pFont03->PrintF(WidthHalf * 0.2f, y, 0.0f, name);
+                pFont03->Print(WidthHalf * 0.2f, y, 0.0f, name);
                 y += lineHeight03;
             }
 

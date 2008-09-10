@@ -89,7 +89,7 @@ namespace Scenes { namespace Menu {
             xFLOAT textLen = pFont10->Length(Name.c_str());
 
             glColor4f( 1.0f, 0.0f, 0.0f, 1.f );
-            pFont10->PrintF((Width - textLen) * 0.5f, lineHeight10, 0.0f, Name.c_str());
+            pFont10->Print((Width - textLen) * 0.5f, lineHeight10, 0.0f, Name.c_str());
 
             int mouseX = g_InputMgr.mouseX;
             int mouseY = g_InputMgr.mouseY;
@@ -112,7 +112,7 @@ namespace Scenes { namespace Menu {
                     glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
                 else
                     glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                pFont05->PrintF(buttons[i].X, y+lineHeight05*i, 0.0f, state.Name.c_str());
+                pFont05->Print(buttons[i].X, y+lineHeight05*i, 0.0f, state.Name.c_str());
             }
         }
     };
