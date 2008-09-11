@@ -83,12 +83,12 @@ void RenderCapsule(const xCapsule &object)
 
 ////////////////////////////// BoxO
 
-void RenderBoxO(const xBoxO &object, int I_level)
+void RenderBoxO(const xBoxO &object, bool showAxes)
 {
     glPushMatrix();
     glTranslatef(object.P_center.x,object.P_center.y,object.P_center.z);
 
-    if (I_level == 0)
+    if (showAxes)
     {
         glBegin(GL_LINES);
         {
@@ -267,7 +267,7 @@ void RendererGL :: RenderBVHExt ( xBVHierarchy &bvh, const xMatrix &MX_LocalToWo
 
         // BoxO
         if (bvh.Figure->Type == xIFigure3d::BoxOriented)
-            RenderBoxO(*(xBoxO*)bvh.GetTransformed(MX_LocalToWorld), I_level);
+            RenderBoxO(*(xBoxO*)bvh.GetTransformed(MX_LocalToWorld), ID == ID_selected);
         else
 
         // Cylinder

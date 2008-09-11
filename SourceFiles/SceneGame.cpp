@@ -66,6 +66,15 @@ bool SceneGame :: InitMap()
             ++i;
         }
 
+    if (Targets.L_objects.size() >= 2)
+    {
+        int p1 = Targets.L_objects.size()-2;
+        SkeletizedObj &obj1 = *(SkeletizedObj*)Targets.L_objects[p1];
+        obj1.Tracker.ID_object = p1+1;
+        SkeletizedObj &obj2 = *(SkeletizedObj*)Targets.L_objects.back();
+        obj2.Tracker.ID_object = p1;
+    }
+
     //Cameras.Free();
     InitCameras();
 
@@ -450,7 +459,7 @@ bool SceneGame :: Render()
     renderer.FreeIfNeeded(Map);
 
     if (Config::EnableLighting)
-        if (Config::EnableFullLighting)
+        if (Config::EnableFullLighting && Map.lights.size())
             renderer.RenderWorld(Map, Cameras);
         else
             renderer.RenderWorld(Map, dayLight, skyColor, Cameras);

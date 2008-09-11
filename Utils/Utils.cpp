@@ -39,7 +39,7 @@ const char *ReadSubstring(const char *buff)
 
     // check if we want white spaces
     char delim = 0;
-    if (buff[0] == '"' || buff[1] == '\'') delim = *buff;
+    if (buff[0] == '"' || buff[0] == '\'') delim = *buff;
 
     // if we want single word, return it
     if (!delim)

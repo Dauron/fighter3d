@@ -7,7 +7,7 @@ spawn2pos -0.5 -2 -0.2
 # OBJECTS
 
 [model]
-model	floor0_F.3dx
+model	floor0.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0

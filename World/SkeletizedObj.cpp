@@ -12,6 +12,11 @@ SkeletizedObj *SkeletizedObj::network_controled = NULL;
 void SkeletizedObj :: ApplyDefaults()
 {
     RigidObj::ApplyDefaults();
+
+    FL_stationary   = false;
+    FL_physical     = true;
+    FL_customBVH    = false;
+    FL_phantom      = false;
     W_restitution      = 0.9f;
     W_restitution_self = 0.0f;
     LifeEnergy         = 100.f;
@@ -700,9 +705,11 @@ void SkeletizedObj :: LoadLine(char *buffer, std::string &dir)
         else
         if (StartsWith(name, "comboard"))
         {
-            ControlType = SkeletizedObj::Control_ComBoardInput;
+            ControlType = Control_ComBoardInput;
             FL_auto_movement = false;
         }
+        else
+            ControlType = Control_AI;
         return;
     }
     if (StartsWith(buffer, "enemy"))

@@ -3,29 +3,15 @@ name        "Male Textured"       # displayed name
 fastm	    models/human1_fst.3dx # simplified physical model
 model	    models/human1.3dx     # graphical model
 customBVH	0                     # should physical engine use custom BVH (generated one is better for skeletal objects)
-physical    1                     # is model physical? - yes, it is :-)
-locked      0                     # is model locked?   - yes, it is :-)
-phantom     0                     # is model a ghost?  - nooo :-)
 mass        70                    # how heavy is it
-shadows     0                     # should it cast shadows? only when you have good CPU and GPU
-restitution 0.9                   # how much energy does it pass to other objects on collisions
-#control     comboard             # control will be overwriten by the player selection screen, so don't care
 style       Dummy  models/anims/dummy.txt   # styles aviable for this model - must match bone configuration
 style       Karate models/anims/karate.txt  # styles aviable for this model - must match bone configuration
-#enemy       1                    # enemy number will be overwritten by the player selection screen, so don't care
 
 [player]
 name        Male
 fastm	    models/human2_fst.3dx
 model	    models/human2.3dx
 customBVH	0
-physical    1
-locked      0
-phantom     0
 mass        70
-shadows     0
-restitution 0.9
-#control     comboard
 style       Dummy  models/anims/dummy.txt
 style       Karate models/anims/karate.txt
-#enemy       1

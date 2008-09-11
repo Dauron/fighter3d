@@ -104,7 +104,9 @@ public:
         kState = down;
 
         if (!InputMap) return;
-        byte &iState = FL_IndexState[ KeyCode2Index(kCode) ];
+        int index = KeyCode2Index(kCode);
+        if (!index) return;
+        byte &iState = FL_IndexState[ index ];
         if (down)   ++iState;
         else
         if (iState) --iState;
@@ -113,7 +115,9 @@ public:
 
     void InputDown_Set(int iCode, bool down)  {
         if (!InputMap) return;
-        byte &iState = FL_IndexState[ InputCode2Index(iCode) ];
+        int index = InputCode2Index(iCode);
+        if (!index) return;
+        byte &iState = FL_IndexState[ index ];
         if (down && !iState) iState = 1;
         else
         if (!down)           iState = 0;
@@ -123,7 +127,9 @@ public:
     bool InputDown_GetAndRaise(int iCode)
     {
         if (!InputMap || !FL_enable) return false;
-        byte &iState = FL_IndexState[ InputCode2Index(iCode) ];
+        int index = InputCode2Index(iCode);
+        if (!index) return false;
+        byte &iState = FL_IndexState[ index ];
         bool  rState = iState;
         iState = 0;
         return rState;

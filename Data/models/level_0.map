@@ -10,7 +10,7 @@ spawn2pos -0.5 -2 -0.2
 # LIGHTS
 
 # yellow
-[light]
+[skip light]
 type	POINT
 att_const   0.9
 att_linear  0.005
@@ -22,7 +22,7 @@ position    0 0 10
 # OBJECTS
 
 [model]
-model	dojo/floor0_F.3dx
+model	dojo/floor0.3dx
 position    0 0 -0.21
 phantom     0
 
@@ -50,7 +50,7 @@ shadows     1
 
 #
 
-[skeletized]
+[person]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 rotation    0 0 180
@@ -67,7 +67,7 @@ style       Karate anims/karate.txt
 name        "ComBoard player"
 enemy       1
 
-[skeletized]
+[person]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 #rotation    0 45 0

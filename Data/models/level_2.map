@@ -9,7 +9,7 @@ direction	0.5	-1	-1
 
 # OBJECTS
 
-[skeletized]
+[person]
 fastm	human2_fst.3dx
 model	human2.3dx
 rotation	0	0	-90

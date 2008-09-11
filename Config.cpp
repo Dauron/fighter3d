@@ -109,7 +109,7 @@ void Config :: Load(const char *fileName)
         {
             LoadMode_None,
             LoadMode_Graphics,
-            LoadMode_Gameplay
+            LoadMode_General
         } mode = LoadMode_None;
 
         while (in.good())
@@ -126,9 +126,9 @@ void Config :: Load(const char *fileName)
                     mode = LoadMode_Graphics;
                     continue;
                 }
-                if (StartsWith(buffer, "[gameplay]"))
+                if (StartsWith(buffer, "[general]"))
                 {
-                    mode = LoadMode_Gameplay;
+                    mode = LoadMode_General;
                     continue;
                 }
                 mode = LoadMode_None;
@@ -250,7 +250,7 @@ void Config :: Load(const char *fileName)
                     continue;
                 }
             }
-            if (mode == LoadMode_Gameplay)
+            if (mode == LoadMode_General)
             {
                 if (StartsWith(buffer, "console"))
                 {

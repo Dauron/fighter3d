@@ -121,7 +121,7 @@ void World:: Load(const char *mapFileName)
                     mode = LoadMode_General;
                     continue;
                 }
-                if (StartsWith(buffer, "[model]") || StartsWith(buffer, "[skeletized]"))
+                if (StartsWith(buffer, "[model]") || StartsWith(buffer, "[person]"))
                 {
                     if (model)
                     {
@@ -219,9 +219,6 @@ void World:: Load(const char *mapFileName)
                     else
                     if (StartsWith(type, "point"))
                         light.type = xLight_POINT;
-                    else
-                    if (StartsWith(type, "spot"))
-                        light.type = xLight_SPOT;
                     continue;
                 }
                 if (StartsWith(buffer, "state"))
@@ -266,16 +263,19 @@ void World:: Load(const char *mapFileName)
                     float x,y,z;
                     sscanf(buffer+8, "%f\t%f\t%f", &x,&y,&z);
                     light.spotDirection.init(x, y, z);
+                    light.type = xLight_SPOT;
                     continue;
                 }
                 if (StartsWith(buffer, "spot_cut"))
                 {
                     sscanf(buffer+8, "%f", &light.spotCutOff);
+                    light.type = xLight_SPOT;
                     continue;
                 }
                 if (StartsWith(buffer, "spot_att"))
                 {
                     sscanf(buffer+8, "%f", &light.spotAttenuation);
+                    light.type = xLight_SPOT;
                     continue;
                 }
                 if (StartsWith(buffer, "att_const"))

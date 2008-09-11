@@ -186,7 +186,12 @@ bool SceneSkeleton::Update(float deltaTime)
         EditMode != emInputWght && EditMode != emCreateConstraint_Params)
     {
         if (im.InputDown_GetAndRaise(IC_ShowBonesAlways))
-            State.ShowBonesAlways = !State.ShowBonesAlways;
+        {
+            if (EditMode == emAnimateBones)
+                Buttons[EditMode][3].Down = !(State.HideBonesOnAnim = !State.HideBonesOnAnim);
+            else
+                State.ShowBonesAlways = !State.ShowBonesAlways;
+        }
         if (EditMode != emSelectVertex && EditMode != emSelectBone &&
             im.InputDown_GetAndRaise(IC_ViewPhysicalModel))
         {
@@ -242,22 +247,30 @@ bool SceneSkeleton::Update(float deltaTime)
             { Animation.Instance->T_progress += 1; update = true; }
             if (im.InputDown_GetAndRaise(IC_MoveUp))
             {
-                if (Animation.Instance->CurrentFrame->Next)
+                xAnimation &anim = *Animation.Instance;
+                if (anim.CurrentFrame->Next &&
+                    (anim.CurrentFrame->Next != anim.L_frames ||
+                     anim.T_progress == anim.CurrentFrame->T_freeze + anim.CurrentFrame->T_duration))
                 {
-                    Animation.Instance->CurrentFrame = Animation.Instance->CurrentFrame->Next;
-                    Animation.Instance->T_progress = 0;
+                    anim.CurrentFrame = anim.CurrentFrame->Next;
+                    anim.T_progress = 0;
                 }
                 else
-                    Animation.Instance->T_progress = Animation.Instance->CurrentFrame->T_freeze + Animation.Instance->CurrentFrame->T_duration;
+                    anim.T_progress = anim.CurrentFrame->T_freeze + anim.CurrentFrame->T_duration;
                 update = true;
             }
             if (im.InputDown_GetAndRaise(IC_MoveDown))
             {
-                if (Animation.Instance->T_progress)
-                    Animation.Instance->T_progress = 0;
+                xAnimation &anim = *Animation.Instance;
+                if (anim.T_progress)
+                    anim.T_progress = 0;
                 else
-                if (Animation.Instance->CurrentFrame->Prev)
-                    Animation.Instance->CurrentFrame = Animation.Instance->CurrentFrame->Prev;
+                if (anim.CurrentFrame->Prev)
+                {
+                    anim.CurrentFrame = anim.CurrentFrame->Prev;
+                    if (anim.CurrentFrame->Next == anim.L_frames)
+                        anim.T_progress = anim.CurrentFrame->T_freeze + anim.CurrentFrame->T_duration;
+                }
                 update = true;
             }
 
@@ -486,6 +499,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
         if (button.Action == IC_BE_Create)
         {
             Animation.Instance  = new xAnimation();
+            Animation.Instance->Name = "empty";
             Animation.Instance->Create(Model.ModelGr->xModelP->Spine.I_bones);
             Animation.Instance->SaveToSkeleton(Model.ModelGr->xModelP->Spine);
             Model.CalculateSkeleton();
@@ -560,6 +574,8 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
                 Animation.Instance->L_frames->Prev = frameP;
                 frameP->Next = Animation.Instance->L_frames;
             }
+            Animation.Instance->SaveToSkeleton(Model.ModelGr->xModelP->Spine);
+            Model.CalculateSkeleton();
         }
         else
         if (button.Action == IC_BE_Save)
@@ -582,7 +598,7 @@ bool SceneSkeleton::UpdateButton(GLButton &button)
             Model.CalculateSkeleton();
         }
         else
-        if (button.Action == IC_BE_Save)
+        if (button.Action == IC_Accept)
         {
             Animation.Instance->CurrentFrame->LoadFromSkeleton(Model.ModelGr->xModelP->Spine);
             UpdateCustomBVH();

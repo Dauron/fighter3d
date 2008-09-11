@@ -309,7 +309,7 @@ void RendererGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWO
             glPointSize(10.f);
 
             glBegin(GL_POINTS);
-                glVertex3fv(model.Spine.L_bones[0].P_begin.xyz);
+                glVertex3fv(instance.P_bone_trans[0].xyz);
             glEnd();
 
             glPopAttrib();

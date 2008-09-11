@@ -1,10 +1,8 @@
-[Graphics]
-# 0 = none, 1 = basic, 2 = full
-Lighting        2
+[graphics]
+Lighting        2 # 0 = none, 1 = basic, 2 = full
 Shadows         1
 Shaders         1
-# 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
-Multisampling   1
+Multisampling   1 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
 UseVBO          1
 ShadowMap       512
 VSync           0
@@ -20,13 +18,10 @@ Show_Skeleton        0
 Show_BVH             0
 Show_Cameras         0
 
-[Gameplay]
+[general]
 Console         1
-# menu, game, test
-Scene           menu
+Scene           menu # menu, game, test
 Level           0
 Speed           1
-# 0 = almost none, 1 = important errors, 2 = all errors, 3 = all errors + warnings
-Logging         3
-# 1 = automaticaly export 3ds models to 3dx format (may overwrite!)
-3dsTo3dx        0
+Logging         3 # 0 = almost none, 1 = important errors, 2 = all errors, 3 = all errors + warnings
+3dsTo3dx        0 # 1 = automaticaly export 3ds models to 3dx format (may overwrite!)

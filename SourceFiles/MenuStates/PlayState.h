@@ -131,12 +131,12 @@ namespace Scenes { namespace Menu {
                     player1->comBoard.ID_action_cur = player1->comBoard.StopAction.ID_action;
                     player1->FL_auto_movement = false;
                     player1->Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
-                    player1->Tracker.ID_object = 1;
+                    //player1->Tracker.ID_object = 1;
 
                     player2->comBoard.ID_action_cur = player2->comBoard.StopAction.ID_action;
                     player2->FL_auto_movement = true;
                     player2->Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
-                    player2->Tracker.ID_object = 0;
+                    //player2->Tracker.ID_object = 0;
 
                     SkeletizedObj::camera_controled = player2;
                     g_CaptureInput.Finalize();

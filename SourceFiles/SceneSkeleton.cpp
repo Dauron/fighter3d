@@ -100,7 +100,7 @@ bool SceneSkeleton::Create(int left, int top, unsigned int width, unsigned int h
     menu8.push_back(GLButton("Move",       menu8[0].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
     menu8.push_back(GLButton("Reset Bone", menu8[1].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
     menu8.push_back(GLButton("Tgl.Bones",  menu8[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkeletize));
-    menu8.push_back(GLButton("Accept",     menu8[3].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+    menu8.push_back(GLButton("Accept",     menu8[3].X2 + 5, Height-20.f, pFont, IC_Accept));
     menu8.push_back(GLButton("Reject",     menu8[4].X2 + 5, Height-20.f, pFont, IC_Reject));
 
     Buttons[emLoadAnimation].push_back(GLButton("Reject", 110, Height-20.f, pFont, IC_Reject));
@@ -369,10 +369,11 @@ bool SceneSkeleton::Render()
 
     if (EditMode == emSelectVertex)
         render.RenderVertices(model, modelInstance, Renderer::smNone, Selection.ElementId, &Selection.Vertices);
-    if (State.ShowBonesAlways || EditMode == emSelectBone || EditMode == emCreateBone ||
+    if ((State.ShowBonesAlways && EditMode != emAnimateBones) ||
+        (EditMode == emAnimateBones && !State.HideBonesOnAnim) ||
+        EditMode == emSelectBone || EditMode == emCreateBone ||
         EditMode == emCreateConstraint_Node || EditMode == emCreateConstraint_Params ||
-        EditMode == emInputWght  || (EditMode == emAnimateBones && !State.HideBonesOnAnim) ||
-        EditMode == emSelectBVHBone || EditMode == emEditVolume)
+        EditMode == emInputWght  || EditMode == emSelectBVHBone || EditMode == emEditVolume)
         render.RenderSkeleton(model, modelInstance, Selection.Bone ? Selection.Bone->ID : xWORD_MAX);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

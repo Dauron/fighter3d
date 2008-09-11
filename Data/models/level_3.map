@@ -20,7 +20,7 @@ position	0	0	10
 
 # red
 [skip light]
-type       SPOT
+type       POINT
 att_const  1
 att_linear 0.0004
 att_square 0.00008
@@ -51,7 +51,7 @@ att_square 0.0005
 #################### OBJECTS
 
 [skip model]
-model	dojo/floor0_F.3dx
+model	dojo/floor0.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
@@ -120,7 +120,7 @@ shadows  1
 
 #################### PLAYERS
 
-[skip skeletized]
+[skip person]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 rotation    0 0 180
@@ -136,7 +136,7 @@ control     comboard
 style       Karate anims/karate.txt
 enemy       1
 
-[skip skeletized]
+[skip person]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 #rotation    0 45 0
