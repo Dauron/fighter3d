@@ -109,7 +109,7 @@ namespace Scenes { namespace Menu {
                     if (stylesY < y && y < stylesY + stylesH * choosen[0]->styles.size())
                     {
                         xDWORD j = (y - stylesY) / stylesH;
-                        choosen[i]->comBoard.Load(choosen[i]->styles[j].FileName.c_str());
+                        choosen[i]->comBoard.Load(choosen[i]->styles[j].FileName.c_str(), choosen[i]->I_bones);
                     }
                     else
                     if (MenuButton.Contains(x,y))
@@ -128,11 +128,14 @@ namespace Scenes { namespace Menu {
                                   *player2 = new SkeletizedObj();
                     *player1 = *choosen[0];
                     *player2 = *choosen[1];
+
+                    player1->FL_shadowcaster = Config::EnableShadowsForPlayers;
                     player1->comBoard.ID_action_cur = player1->comBoard.StopAction.ID_action;
                     player1->FL_auto_movement = false;
                     player1->Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
                     //player1->Tracker.ID_object = 1;
 
+                    player2->FL_shadowcaster = Config::EnableShadowsForPlayers;
                     player2->comBoard.ID_action_cur = player2->comBoard.StopAction.ID_action;
                     player2->FL_auto_movement = true;
                     player2->Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;

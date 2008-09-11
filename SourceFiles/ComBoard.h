@@ -143,6 +143,8 @@ public:
 
     xMatrix        MX_shift;
 
+    xBYTE          I_bones;
+
     void Destroy();
 
     xMatrix GetActionRotation()
@@ -153,9 +155,9 @@ public:
 
     bool         AutoMovement  (const xVector3 &NW_aim, const xVector3 &NW_dst, xFLOAT T_delta);
     void         Update(xFLOAT T_delta, bool FL_keyboard_on);
-    xQuaternion *GetTransformations(xBYTE I_bones);
+    xQuaternion *GetTransformations();
 
-    void Load(const char *fileName);
+    void Load(const char *fileName, xBYTE I_bones);
 
 private:
     xMatrix GetActionRotation(Action &action);

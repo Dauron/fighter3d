@@ -9,6 +9,7 @@ int   Config::Initialize           = false;
 bool  Config::EnableLighting       = true;
 bool  Config::EnableFullLighting   = true;
 bool  Config::EnableShadows        = true;
+bool  Config::EnableShadowsForPlayers = true;
 bool  Config::EnableShaders        = true;
 int   Config::MultisamplingLevel   = 0;
 bool  Config::UseVBO               = true;
@@ -148,7 +149,8 @@ void Config :: Load(const char *fileName)
                 {
                     int level;
                     sscanf(buffer+7, "%d", &level);
-                    Config::EnableShadows = level;
+                    Config::EnableShadows = level > 0;
+                    Config::EnableShadowsForPlayers = level > 1;
                     continue;
                 }
                 if (StartsWith(buffer, "shaders"))

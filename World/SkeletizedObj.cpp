@@ -33,10 +33,7 @@ void SkeletizedObj :: Create ()
     RigidObj::Create();
     Type = AI::ObjectType::Human;
 
-    T_verlet     = 0.f; // 1000.f;
-    W_verlet     = 0.f;
-    T_verlet_Max = 0.f; // 0.002f;
-    postHit = 0.f;
+    FL_verlet = false;
 
     I_bones =  ModelGr->xModelP->Spine.I_bones;
     if (NW_VerletVelocity)
@@ -48,10 +45,12 @@ void SkeletizedObj :: Create ()
     NW_VerletVelocity_new   = new xVector3[I_bones];
     NW_VerletVelocity_total = new xVector3[I_bones];
     F_VerletPower           = new xVector3[I_bones];
+    T_Verlet                = new xFLOAT[I_bones];
     memset(NW_VerletVelocity,       0, sizeof(xVector3)*I_bones);
     memset(NW_VerletVelocity_new,   0, sizeof(xVector3)*I_bones);
     memset(NW_VerletVelocity_total, 0, sizeof(xVector3)*I_bones);
     memset(F_VerletPower,           0, sizeof(xVector3)*I_bones);
+    memset(T_Verlet,                0, sizeof(xFLOAT)*I_bones);
 }
 
 void SkeletizedObj :: Create (const char *gr_filename, const char *ph_filename)
@@ -60,7 +59,7 @@ void SkeletizedObj :: Create (const char *gr_filename, const char *ph_filename)
     CreateVerletSystem();
     QT_verlet = new xQuaternion[verletSystem.I_particles];
 
-    comBoard.Load(comBoard.FileName.c_str());
+    comBoard.Load(comBoard.FileName.c_str(), I_bones);
 }
 
 void SkeletizedObj :: Destroy ()
@@ -78,11 +77,18 @@ void SkeletizedObj :: Destroy ()
         delete[] NW_VerletVelocity_new;   NW_VerletVelocity_new   = NULL;
         delete[] NW_VerletVelocity_total; NW_VerletVelocity_total = NULL;
         delete[] F_VerletPower;           F_VerletPower           = NULL;
+        delete[] T_Verlet;                T_Verlet                = NULL;
     }
 
     comBoard.Destroy();
 }
 
+void SkeletizedObj :: FrameStart()
+{
+    RigidObj::FrameStart();
+    collisionConstraints.clear();
+    memset(verletSystem.FL_attached, 0, sizeof(bool)*verletSystem.I_particles);
+}
 
 
 void SkeletizedObj :: CreateVerletSystem()
@@ -183,13 +189,6 @@ void SkeletizedObj :: ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time,
     }
 }
 
-void SkeletizedObj :: FrameStart()
-{
-    RigidObj::FrameStart();
-    collisionConstraints.clear();
-    memset(verletSystem.FL_attached, 0, sizeof(bool)*verletSystem.I_particles);
-}
-
 xVector3 SkeletizedObj :: MergeCollisions()
 {
     if (!Collisions.size()) return xVector3::Create(0,0,0);
@@ -220,14 +219,16 @@ xVector3 SkeletizedObj :: MergeCollisions()
     {
         if (iter_cur->V_action.lengthSqr() > V_action.lengthSqr())
             V_action =  iter_cur->V_action;
-        //V_reaction += iter_cur->V_reaction;
-        //if (iter_cur->Offender && iter_cur->Offender->Type == AI::ObjectType::Human)
-        //    Offender = ((SkeletizedObj*)iter_cur->Offender);
 
-        for (int i = 0; i < iter_cur->I_Bones; ++i)
+        if (iter_cur->Offender && iter_cur->Offender->Type == AI::ObjectType::Human)
         {
-            Physics::Colliders::BoneWeight &bone = iter_cur->W_Bones[i];
-            V_reaction[bone.I_bone] += iter_cur->V_reaction * bone.W_bone;
+            Offender = ((SkeletizedObj*)iter_cur->Offender);
+            if (!Offender->FL_verlet)
+                for (int i = 0; i < iter_cur->I_Bones; ++i)
+                {
+                    Physics::Colliders::BoneWeight &bone = iter_cur->W_Bones[i];
+                    V_reaction[bone.I_bone] += iter_cur->V_reaction * bone.W_bone;
+                }
         }
 
         xVector3 NW_tmp = iter_cur->NW_fix;// * iter_cur->W_fix;
@@ -282,7 +283,8 @@ xVector3 SkeletizedObj :: MergeCollisions()
         if (V_len > 1.f)
         {
             LifeEnergy = max (LifeEnergy - V_len, 0.f);
-            verletSystem.W_boneMix[i] = 1.f;
+            verletSystem.W_boneMix[i]  = 1.f;
+            T_Verlet[i] = max(V_len*0.1f, T_Verlet[i]);
         }
     }
 
@@ -335,7 +337,7 @@ xVector3 SkeletizedObj :: MergeCollisions()
             }
         }
         if (I_MaxX)
-            NW_fix /= I_MaxX;
+            NW_fix /= (xFLOAT) I_MaxX;
     }
     return NW_fix;
 }
@@ -421,7 +423,7 @@ void SkeletizedObj :: Update(float T_time)
     if (Collisions.size())
     {
         NW_translation = MergeCollisions() * 0.9f;
-        if (W_verlet == 1.f || NW_translation.lengthSqr() < 0.0001f)
+        if (NW_translation.lengthSqr() < 0.0001f)
             NW_translation.zero();
     }
     else
@@ -487,14 +489,7 @@ void SkeletizedObj :: Update(float T_time)
         0, verletSystem.MX_WorldToModel_T);
     spine.QuatsToArray(QT_verlet);
 
-    if (postHit != 0.f)
-        postHit = max(0.f, postHit-T_time);
-    if (T_verlet != 0.f)
-        T_verlet = max(0.f, T_verlet-T_time);
-    W_verlet = (T_verlet <= 2.f) ? T_verlet * 0.5f : 1.f;
-
-
-    bool FL_verlet = false;
+    FL_verlet = false;
     bool FL_locked = false;
     for (int i = 0; i < I_bones; ++i)
         if (verletSystem.FL_attached[i])
@@ -505,6 +500,20 @@ void SkeletizedObj :: Update(float T_time)
 
     xFLOAT T_mod = T_time*0.2f;
     for (int i = 0; i < I_bones; ++i)
+        if (T_Verlet[i] > T_time)
+        {
+            if (FL_locked) T_Verlet[i] -= T_time;
+            verletSystem.W_boneMix[i] = 1.f;
+            FL_verlet = true;
+        }
+        else
+        if (T_Verlet[i] > 0.f)
+        {
+            T_Verlet[i] = 0.f;
+            verletSystem.W_boneMix[i] = 1.f;
+            FL_verlet = true;
+        }
+        else
         if (verletSystem.W_boneMix[i] > T_mod)
         {
             if (FL_locked) verletSystem.W_boneMix[i] -= T_mod;
@@ -519,7 +528,7 @@ void SkeletizedObj :: Update(float T_time)
 
     //////////////////////////////////////////////////////// Track enemy movement
 
-    if (false && FL_auto_movement && Tracker.Mode != Math::Tracking::ObjectTracker::TRACK_NOTHING &&
+    if (FL_auto_movement && Tracker.Mode != Math::Tracking::ObjectTracker::TRACK_NOTHING &&
         !FL_verlet && LifeEnergy > 0.f && T_time > 0.f)
     {
         xVector3 NW_aim = MX_LocalToWorld_Get().preTransformV(
@@ -553,9 +562,12 @@ void SkeletizedObj :: Update(float T_time)
 
         if ((ControlType == Control_ComBoardInput || FL_auto_movement_needed) && comBoard.L_actions.size())
         {
-            comBoard.Update(T_time * 1000, ControlType == Control_ComBoardInput);
-            MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
-            bones2 = comBoard.GetTransformations(I_bones);
+            if (!FL_verlet)
+            {
+                comBoard.Update(T_time * 1000, ControlType == Control_ComBoardInput);
+                MX_LocalToWorld_Set().preMultiply(comBoard.MX_shift);
+            }
+            bones2 = comBoard.GetTransformations();
         }
         else
         if (ControlType == Control_CaptureInput)
@@ -658,6 +670,24 @@ void SkeletizedObj :: RegisterStats(StatPage &page)
         else
             stat_locked->Create("Locked " + itos(i), verletSystem.FL_attached[i]);
         page.Add(*stat_locked);
+    }
+
+    for (int i = 0; i < I_bones; ++i)
+    {
+        Stat_FloatPtr *stat_float1 = new Stat_FloatPtr();
+        Stat_FloatPtr *stat_float2 = new Stat_FloatPtr();
+        if (i < 10)
+        {
+            stat_float1->Create("W_Verlet 0" + itos(i), verletSystem.W_boneMix[i]);
+            stat_float2->Create("T_Verlet 0" + itos(i), T_Verlet[i]);
+        }
+        else
+        {
+            stat_float1->Create("W_Verlet " + itos(i), verletSystem.W_boneMix[i]);
+            stat_float2->Create("T_Verlet " + itos(i), T_Verlet[i]);
+        }
+        page.Add(*stat_float1);
+        page.Add(*stat_float2);
     }
 }
 

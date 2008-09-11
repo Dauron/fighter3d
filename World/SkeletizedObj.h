@@ -34,14 +34,12 @@ public:
     xVector3     *NW_VerletVelocity_new;
     xVector3     *NW_VerletVelocity_total;
     xVector3     *F_VerletPower;
+    xFLOAT       *T_Verlet;
     xBYTE         I_bones;
+    bool          FL_verlet;
 
     VerletSystem  verletSystem;
     xQuaternion  *QT_verlet;
-    xFLOAT        W_verlet;
-    xFLOAT        T_verlet;
-    xFLOAT        T_verlet_Max;
-    xFLOAT        postHit;
 
     xFLOAT        LifeEnergy;
     xFLOAT        LifeEnergyMax;

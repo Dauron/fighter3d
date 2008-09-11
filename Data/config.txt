@@ -1,6 +1,6 @@
 [graphics]
 Lighting        2 # 0 = none, 1 = basic, 2 = full
-Shadows         1
+Shadows         2 # 0 = none, 1 = rigid, 2 = rigid + players
 Shaders         1
 Multisampling   1 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
 UseVBO          1

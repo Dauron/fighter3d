@@ -59,12 +59,12 @@ protected:
 public:
     Stat_BoolPtr() { BoolP = NULL; }
 
-    void Create(const std::string &Name, bool &BoolP)
+    void Create(const std::string &Name, bool &Bool)
     {
         assert (Name.size() && "Stat_BoolPtr::Create : Name is empty");
 
         this->Name   = Name;
-        this->BoolP = &BoolP;
+        this->BoolP = &Bool;
     }
 
     virtual const char* Print()
@@ -73,6 +73,32 @@ public:
         assert (BoolP && "Stat_BoolPtr::Print : BoolP is NULL");
 
         sprintf(buff, "%s = %s", Name.c_str(), *BoolP ? "true" : "false");
+        return buff;
+    }
+};
+
+struct Stat_FloatPtr : public Stat_Base {
+protected:
+    float *FloatP;
+    char   buff[255];
+
+public:
+    Stat_FloatPtr() { FloatP = NULL; }
+
+    void Create(const std::string &Name, float &Float)
+    {
+        assert (Name.size() && "Stat_FloatPtr::Create : Name is empty");
+
+        this->Name   = Name;
+        this->FloatP = &Float;
+    }
+
+    virtual const char* Print()
+    {
+        assert (Name.size() && "Stat_FloatPtr::Print : Name is empty");
+        assert (FloatP && "Stat_FloatPtr::Print : FloatP is NULL");
+
+        sprintf(buff, "%s = %f", Name.c_str(), *FloatP);
         return buff;
     }
 };

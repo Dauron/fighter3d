@@ -7,6 +7,7 @@ struct Config
     static bool  EnableLighting;
     static bool  EnableFullLighting;
     static bool  EnableShadows;
+    static bool  EnableShadowsForPlayers;
     static bool  EnableShaders;
     static bool  UseVBO;
     static int   MultisamplingLevel;
