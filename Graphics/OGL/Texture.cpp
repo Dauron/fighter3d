@@ -1,7 +1,8 @@
 #include "Texture.h"
-#include "../../Images/ImageFile.h"
-#include "../ogl.h"
-#include "../../../Utils/Utils.h"
+#include "../Textures/ImageFile.h"
+#include "../../Utils/Utils.h" // string case compare
+
+using namespace Graphics::OGL;
 
 bool Texture :: Create()
 {

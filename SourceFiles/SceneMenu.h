@@ -2,7 +2,7 @@
 #define __incl_SceneMenu_h
 
 #include "../AppFramework/IScene.h"
-#include "../Graphics/OGL/Fonts/FontMgr.h"
+#include "../Graphics/FontMgr.h"
 #include "MenuStates/BaseState.h"
 
 namespace Scenes {

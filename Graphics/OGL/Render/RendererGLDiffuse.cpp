@@ -1,5 +1,7 @@
 #include "RendererGL.h"
-#include "../GLAnimSkeletal.h"
+#include "../AnimSkeletal.h"
+
+using namespace Graphics::OGL;
 
 /********************************* diffuse model ************************************/
 void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView &FOV,
@@ -38,12 +40,12 @@ void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView 
     bool textured = false;
 
     if (elem->FL_skeletized)
-        GLShader::EnableSkeleton(xState_On);
+        Shader::EnableSkeleton(xState_On);
 
     if (!listID)
     {
-        GLShader::EnableTexturing(xState_Off);
-        GLShader::Start();
+        Shader::EnableTexturing(xState_Off);
+        Shader::Start();
 
         mode = xGPUPointers::LIST;
         glNewList(listID = glGenLists(1), GL_COMPILE);
@@ -93,8 +95,8 @@ void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView 
 
     if (textured && elem->FL_textured && !listIDTex)
     {
-        GLShader::EnableTexturing(xState_On);
-        GLShader::Start();
+        Shader::EnableTexturing(xState_On);
+        Shader::Start();
 
         glNewList(listIDTex = glGenLists(1), GL_COMPILE);
 
@@ -137,20 +139,20 @@ void RenderElementDiffuseLST(bool transparent, const Math::Cameras::FieldOfView 
         glPushMatrix();
         {
             glMultMatrixf(&elem->MX_MeshToLocal.x0);
-            GLShader::EnableTexturing(xState_Off);
-            GLShader::Start();
+            Shader::EnableTexturing(xState_Off);
+            Shader::Start();
             glCallList(listID);
             if (listIDTex)
             {
-                GLShader::EnableTexturing(xState_On);
-                GLShader::Start();
+                Shader::EnableTexturing(xState_On);
+                Shader::Start();
                 glCallList(listIDTex);
             }
         }
         glPopMatrix();
     }
 
-    GLShader::EnableSkeleton(xState_Off);
+    Shader::EnableSkeleton(xState_Off);
 }
 
 void RenderElementDiffuseVBO(bool transparent, const Math::Cameras::FieldOfView &FOV,
@@ -192,8 +194,8 @@ void RenderElementDiffuseVBO(bool transparent, const Math::Cameras::FieldOfView 
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), (void *)(7*sizeof(xFLOAT)));
         }
-        GLShader::EnableSkeleton(xState_On);
-        GLShader::Start();
+        Shader::EnableSkeleton(xState_On);
+        Shader::Start();
         g_AnimSkeletal.BeginAnimation();
         g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
                                 modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
@@ -244,7 +246,7 @@ void RenderElementDiffuseVBO(bool transparent, const Math::Cameras::FieldOfView 
         glDisableClientState(GL_NORMAL_ARRAY);
     if (elem->FL_skeletized)
         g_AnimSkeletal.EndAnimation();
-    GLShader::EnableSkeleton(xState_Off);
+    Shader::EnableSkeleton(xState_Off);
 
     glPopMatrix();
 }

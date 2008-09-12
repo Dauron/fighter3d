@@ -4,7 +4,7 @@
 #include "../AppFramework/IScene.h"
 #include "../Math/Cameras/CameraFree.h"
 #include "../Math/Cameras/CameraHuman.h"
-#include "../Graphics/OGL/Fonts/FontMgr.h"
+#include "../Graphics/FontMgr.h"
 #include "../Graphics/OGL/ISelectionProvider.h"
 
 #include "../Math/Figures/xSphere.h"

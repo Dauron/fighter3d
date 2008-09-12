@@ -24,9 +24,9 @@ namespace Scenes { namespace Menu {
             return true;
         }
 
-        virtual void Render(const GLFont* pFont03, const GLFont* pFont04,
-                        const GLFont* pFont05, const GLFont* pFont10,
-                        xDWORD Width, xDWORD Height)
+        virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
+                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
+                            xDWORD Width, xDWORD Height)
         {
             xFLOAT lineHeight04 = pFont04->LineH();
             xFLOAT lineHeight05 = pFont05->LineH();

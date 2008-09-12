@@ -1,12 +1,14 @@
 #include "WorldRenderGL.h"
 
 #include "Utils.h"
-#include "GLShader.h"
+#include "Shader.h"
 #include "Extensions/EXT_stencil_wrap.h"
 #include "Extensions/EXT_stencil_two_side.h"
 #include "Extensions/ARB_multisample.h"
 
 #include "../../Utils/Profiler.h"
+
+using namespace Graphics::OGL;
 
 void WorldRenderGL :: SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular)
 {
@@ -36,7 +38,7 @@ void WorldRenderGL :: SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bo
     else
         glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0f);
 
-    GLShader::SetLightType(light.type, t_Ambient, t_Diffuse, t_Specular);
+    Shader::SetLightType(light.type, t_Ambient, t_Diffuse, t_Specular);
 }
 
 void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &cameraSet)
@@ -91,9 +93,9 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         glPushAttrib(GL_ALL_ATTRIB_BITS);
 
         /////// Render the SKY
-        GLShader::Suspend();
-        GLShader::SetLightType(xLight_NONE);
-        GLShader::EnableTexturing(xState_Enable);
+        Shader::Suspend();
+        Shader::SetLightType(xLight_NONE);
+        Shader::EnableTexturing(xState_Enable);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glFrontFace(GL_CCW);     // Front faces are drawn in counter-clockwise direction
         glEnable   (GL_CULL_FACE);
@@ -116,8 +118,8 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
             glDepthMask(1);
             glDepthFunc(GL_LESS);
             glColorMask(0,0,0,0);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::EnableTexturing(xState_Off);
+            Shader::SetLightType(xLight_NONE);
+            Shader::EnableTexturing(xState_Off);
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
@@ -132,7 +134,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
             glDepthMask(0);
             glDepthFunc(GL_LEQUAL);
             glColorMask(1,1,1,1);
-            GLShader::SetLightType(xLight_GLOBAL, true, false, false);
+            Shader::SetLightType(xLight_GLOBAL, true, false, false);
             glDisable(GL_LIGHT0);
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
@@ -185,9 +187,9 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                     glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
                     glDepthFunc(GL_LESS);
                     glColorMask(0, 0, 0, 0);            // do not write to frame buffer
-                    GLShader::EnableTexturing(xState_Disable);
-                    GLShader::SetLightType(xLight_NONE);
-                    GLShader::Suspend();
+                    Shader::EnableTexturing(xState_Disable);
+                    Shader::SetLightType(xLight_NONE);
+                    Shader::Suspend();
                     for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
                     {
                         RigidObj &obj = *(RigidObj*)*MD_curr;
@@ -208,7 +210,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                 glColorMask(1,1,1,1);
                 glEnable(GL_BLEND);                 // add light contribution to frame buffer
                 glBlendFunc(GL_ONE, GL_ONE);
-                GLShader::EnableTexturing(xState_Enable);
+                Shader::EnableTexturing(xState_Enable);
                 SetLight(*LT_curr, false, true, true);
                 glEnable(GL_LIGHT0);
                 for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
@@ -228,9 +230,9 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                     glDepthMask(1);
                     glColorMask(1, 1, 1, 1);
                     glEnable(GL_BLEND);
-                    GLShader::EnableTexturing(xState_Disable);
-                    GLShader::SetLightType(xLight_NONE);
-                    GLShader::Suspend();
+                    Shader::EnableTexturing(xState_Disable);
+                    Shader::SetLightType(xLight_NONE);
+                    Shader::Suspend();
                     glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
                     for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
                     {
@@ -254,8 +256,8 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
             glDisable(GL_STENCIL_TEST);
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-            GLShader::EnableTexturing(xState_Enable);
-            GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
+            Shader::EnableTexturing(xState_Enable);
+            Shader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
             glDisable(GL_LIGHT0);
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
@@ -263,16 +265,16 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                 renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, true, camera.FOV );
             }
         }
-        GLShader::Suspend();
+        Shader::Suspend();
 
         ////// RENDER SKELETONS
         if (Config::DisplaySkeleton)
         {
             Profile("Skeleton pass");
 
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Start();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
+            Shader::Start();
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
@@ -285,9 +287,9 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         {
             Profile("BVH pass");
 
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Start();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
+            Shader::Start();
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_CULL_FACE);
@@ -302,7 +304,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         glPopAttrib();
     }
 
-    GLShader::Suspend();
+    Shader::Suspend();
 
     if (GLExtensions::Exists_ARB_Multisample)
         glDisable(GL_MULTISAMPLE_ARB);
@@ -352,7 +354,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
 
         glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-        GLShader::EnableTexturing(xState_Enable);
+        Shader::EnableTexturing(xState_Enable);
         if (GLExtensions::Exists_ARB_Multisample && Config::MultisamplingLevel > 0)
             glEnable(GL_MULTISAMPLE_ARB);
 
@@ -365,8 +367,8 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         glEnable   (GL_CULL_FACE);
         glCullFace (GL_BACK);
         glColorMask(1,1,1,1);
-        GLShader::Suspend();
-        GLShader::SetLightType(xLight_GLOBAL, true, false, false);
+        Shader::Suspend();
+        Shader::SetLightType(xLight_GLOBAL, true, false, false);
         glDisable(GL_BLEND);
         glDisable(GL_LIGHT0);
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
@@ -400,9 +402,9 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
             glStencilFunc(GL_ALWAYS, 0, 0xff);  // always pass stencil test
             glDepthFunc(GL_LESS);
             glColorMask(0, 0, 0, 0);            // do not write to frame buffer
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Suspend();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
+            Shader::Suspend();
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
@@ -422,7 +424,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         glColorMask(1,1,1,1);
         glEnable(GL_BLEND);                 // add light contribution to frame buffer
         glBlendFunc(GL_ONE, GL_ONE);
-        GLShader::EnableTexturing(xState_Enable);
+        Shader::EnableTexturing(xState_Enable);
         SetLight(light, false, true, true);
         glEnable(GL_LIGHT0);
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
@@ -440,9 +442,9 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
             glDepthMask(1);
             glColorMask(1, 1, 1, 1);
             glEnable(GL_BLEND);
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Suspend();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
+            Shader::Suspend();
             glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
@@ -461,22 +463,22 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         glDisable(GL_STENCIL_TEST);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-        GLShader::EnableTexturing(xState_Enable);
-        GLShader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
+        Shader::EnableTexturing(xState_Enable);
+        Shader::SetLightType(xLight_GLOBAL, true, false, false); // 3 * true
         glDisable(GL_LIGHT0);
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
             renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, light, true, camera.FOV );
         }
-        GLShader::Suspend();
+        Shader::Suspend();
 
         ////// RENDER SKELETONS
         if (Config::DisplaySkeleton)
         {
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Start();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
+            Shader::Start();
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
@@ -487,9 +489,9 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         ////// RENDER BVHs
         if (Config::DisplayBVH)
         {
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Start();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
+            Shader::Start();
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_CULL_FACE);
@@ -504,7 +506,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         glPopAttrib();
     }
 
-    GLShader::Suspend();
+    Shader::Suspend();
 
     if (GLExtensions::Exists_ARB_Multisample)
         glDisable(GL_MULTISAMPLE_ARB);
@@ -566,9 +568,9 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
         glEnable   (GL_CULL_FACE);
         glCullFace (GL_BACK);
         glColorMask(1, 1, 1, 1);
-        GLShader::Suspend();
-        GLShader::EnableTexturing(xState_Enable);
-        GLShader::SetLightType(xLight_NONE);
+        Shader::Suspend();
+        Shader::EnableTexturing(xState_Enable);
+        Shader::SetLightType(xLight_NONE);
         for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
         {
             RigidObj &obj = *(RigidObj*)*MD_curr;
@@ -583,14 +585,14 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
             RigidObj &obj = *(RigidObj*)*MD_curr;
             renderModel.RenderAmbient( *obj.ModelGr->xModelP, obj.ModelGr->instance, world.lights, true, camera.FOV );
         }
-        GLShader::Suspend();
+        Shader::Suspend();
 
         ////// RENDER SKELETONS
         if (Config::DisplaySkeleton)
         {
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Start();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
+            Shader::Start();
             for ( MD_curr = MD_first ; MD_curr != MD_last ; ++MD_curr )
             {
                 RigidObj &obj = *(RigidObj*)*MD_curr;
@@ -601,9 +603,9 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
         ////// RENDER BVHs
         if (Config::DisplayBVH)
         {
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
-            GLShader::Start();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
+            Shader::Start();
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_CULL_FACE);
@@ -618,7 +620,7 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
         glPopAttrib();
     }
 
-    GLShader::Suspend();
+    Shader::Suspend();
 
     if (GLExtensions::Exists_ARB_Multisample)
         glDisable(GL_MULTISAMPLE_ARB);

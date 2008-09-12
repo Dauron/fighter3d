@@ -1,23 +1,26 @@
-#include "TextureMgr.h"
-#include "../../../Utils/Filesystem.h"
+#include "FontMgr.h"
 
-HTexture TextureMgr :: GetTexture( const char* name )
+HFont FontMgr :: GetFont( const char* name, int size )
 {
+    std::string key( name );
+    key.append("|", 1);
+    key += itos(size);
+
     // insert/find
     NameIndexInsertRc rc =
-        m_NameIndex.insert( std::make_pair( Filesystem::GetFullPath(name), HTexture() ) );
+        m_NameIndex.insert( std::make_pair( key, HFont() ) );
     if ( rc.second )
     {
         // this is a new insertion
-        Texture* tex = m_HandleMgr.Acquire( rc.first->second );
-        if ( !tex->Create( rc.first->first, true ) )
+        Graphics::OGL::Font* fnt = m_HandleMgr.Acquire( rc.first->second );
+        if ( !fnt->Create( name, size ) )
         {
             m_HandleMgr.Release( rc.first->second );
             m_NameIndex.erase( rc.first );
             //IncReferences( rc.first->second );
-            //DeleteTexture( rc.first->second );
+            //DeleteFont( rc.first->second );
             //assert (false);
-            return HTexture();
+            return HFont();
         }
     }
     Lock(rc.first->second);
@@ -27,6 +30,6 @@ HTexture TextureMgr :: GetTexture( const char* name )
     else
     {
         assert (false);
-        return HTexture();
+        return HFont();
     }
 }

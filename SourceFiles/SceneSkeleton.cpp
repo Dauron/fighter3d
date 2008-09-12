@@ -3,7 +3,7 @@
 #include "../AppFramework/Input/InputMgr.h"
 #include "InputCodes.h"
 #include "../Utils/Filesystem.h"
-#include "../Graphics/OGL/GLShader.h"
+#include "../Graphics/OGL/Shader.h"
 #include "../Graphics/OGL/WorldRenderGL.h"
 
 using namespace Scenes;
@@ -42,76 +42,76 @@ bool SceneSkeleton::Create(int left, int top, unsigned int width, unsigned int h
     KeyName_Modify  = strdup(g_InputMgr.GetKeyName(g_InputMgr.Input2KeyCode(IC_BE_Modifier)).c_str());
     KeyName_Accept  = strdup(g_InputMgr.GetKeyName(g_InputMgr.Input2KeyCode(IC_Accept)).c_str());
     Font            = g_FontMgr.GetFont("Courier New", 15);
-    const GLFont* pFont = g_FontMgr.GetFont(Font);
+    const Graphics::OGL::Font* pFont = g_FontMgr.GetFont(Font);
 
     CurrentDirectory = Filesystem::GetFullPath("Data/models");
 
     // Init buttons
     Buttons.resize(emLast);
-    std::vector<GLButton> &menu1 = Buttons[emMain];
-    menu1.push_back(GLButton("Create Skeleton", 10,              Height-20.f, pFont, IC_BE_ModeSkeletize));
-    menu1.push_back(GLButton("Edit BVH",        menu1[0].X2 + 5, Height-20.f, pFont, IC_BE_ModeBVH));
-    menu1.push_back(GLButton("Skinning",        menu1[1].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkin));
-    menu1.push_back(GLButton("Animating",       menu1[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeAnimate));
-    menu1.push_back(GLButton("Graph/Phys",      menu1[3].X2 + 5, Height-20.f, pFont, IC_BE_Select));
-    menu1.push_back(GLButton("Save",            menu1[4].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+    std::vector<Graphics::OGL::Button> &menu1 = Buttons[emMain];
+    menu1.push_back(Graphics::OGL::Button("Create Skeleton", 10,              Height-20.f, pFont, IC_BE_ModeSkeletize));
+    menu1.push_back(Graphics::OGL::Button("Edit BVH",        menu1[0].X2 + 5, Height-20.f, pFont, IC_BE_ModeBVH));
+    menu1.push_back(Graphics::OGL::Button("Skinning",        menu1[1].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkin));
+    menu1.push_back(Graphics::OGL::Button("Animating",       menu1[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeAnimate));
+    menu1.push_back(Graphics::OGL::Button("Graph/Phys",      menu1[3].X2 + 5, Height-20.f, pFont, IC_BE_Select));
+    menu1.push_back(Graphics::OGL::Button("Save",            menu1[4].X2 + 5, Height-20.f, pFont, IC_BE_Save));
 
-    std::vector<GLButton> &menu2 = Buttons[emCreateBone];
-    menu2.push_back(GLButton("Select",        100,             Height-20.f, pFont, IC_BE_Select, true, true));
-    menu2.push_back(GLButton("Create",        menu2[0].X2 + 5, Height-20.f, pFont, IC_BE_Create, true));
-    menu2.push_back(GLButton("Move",          menu2[1].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
-    menu2.push_back(GLButton("Delete",        menu2[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
-    menu2.push_back(GLButton("Create constr", menu2[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstr));
-    menu2.push_back(GLButton("Delete constr", menu2[4].X2 + 5, Height-20.f, pFont, IC_BE_DeleteConstr, true));
+    std::vector<Graphics::OGL::Button> &menu2 = Buttons[emCreateBone];
+    menu2.push_back(Graphics::OGL::Button("Select",        100,             Height-20.f, pFont, IC_BE_Select, true, true));
+    menu2.push_back(Graphics::OGL::Button("Create",        menu2[0].X2 + 5, Height-20.f, pFont, IC_BE_Create, true));
+    menu2.push_back(Graphics::OGL::Button("Move",          menu2[1].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
+    menu2.push_back(Graphics::OGL::Button("Delete",        menu2[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+    menu2.push_back(Graphics::OGL::Button("Create constr", menu2[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstr));
+    menu2.push_back(Graphics::OGL::Button("Delete constr", menu2[4].X2 + 5, Height-20.f, pFont, IC_BE_DeleteConstr, true));
 
-    std::vector<GLButton> &menu3 = Buttons[emCreateConstraint_Type];
-    menu3.push_back(GLButton("Max",    205,             Height-20.f, pFont, IC_BE_CreateConstrMax));
-    menu3.push_back(GLButton("Min",    menu3[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrMin));
-    menu3.push_back(GLButton("Const",  menu3[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrEql));
-    menu3.push_back(GLButton("Ang",    menu3[2].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrAng));
-    menu3.push_back(GLButton("Weight", menu3[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrWeight));
+    std::vector<Graphics::OGL::Button> &menu3 = Buttons[emCreateConstraint_Type];
+    menu3.push_back(Graphics::OGL::Button("Max",    205,             Height-20.f, pFont, IC_BE_CreateConstrMax));
+    menu3.push_back(Graphics::OGL::Button("Min",    menu3[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrMin));
+    menu3.push_back(Graphics::OGL::Button("Const",  menu3[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrEql));
+    menu3.push_back(Graphics::OGL::Button("Ang",    menu3[2].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrAng));
+    menu3.push_back(Graphics::OGL::Button("Weight", menu3[3].X2 + 5, Height-20.f, pFont, IC_BE_CreateConstrWeight));
 
-    std::vector<GLButton> &menu4 = Buttons[emEditBVH];
-    menu4.push_back(GLButton("Create", 120,             Height-20.f, pFont, IC_BE_Create));
-    menu4.push_back(GLButton("Edit",   menu4[0].X2 + 5, Height-20.f, pFont, IC_BE_Edit, true, true));
-    menu4.push_back(GLButton("Clone",  menu4[1].X2 + 5, Height-20.f, pFont, IC_BE_Clone, true));
-    menu4.push_back(GLButton("Delete", menu4[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete, true));
+    std::vector<Graphics::OGL::Button> &menu4 = Buttons[emEditBVH];
+    menu4.push_back(Graphics::OGL::Button("Create", 120,             Height-20.f, pFont, IC_BE_Create));
+    menu4.push_back(Graphics::OGL::Button("Edit",   menu4[0].X2 + 5, Height-20.f, pFont, IC_BE_Edit, true, true));
+    menu4.push_back(Graphics::OGL::Button("Clone",  menu4[1].X2 + 5, Height-20.f, pFont, IC_BE_Clone, true));
+    menu4.push_back(Graphics::OGL::Button("Delete", menu4[2].X2 + 5, Height-20.f, pFont, IC_BE_Delete, true));
 
-    std::vector<GLButton> &menu5 = Buttons[emCreateBVH];
-    menu5.push_back(GLButton("Sphere",  120,             Height-20.f, pFont, IC_BE_CreateSphere));
-    menu5.push_back(GLButton("Capsule", menu5[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateCapsule));
-    menu5.push_back(GLButton("Box",     menu5[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateBox));
+    std::vector<Graphics::OGL::Button> &menu5 = Buttons[emCreateBVH];
+    menu5.push_back(Graphics::OGL::Button("Sphere",  120,             Height-20.f, pFont, IC_BE_CreateSphere));
+    menu5.push_back(Graphics::OGL::Button("Capsule", menu5[0].X2 + 5, Height-20.f, pFont, IC_BE_CreateCapsule));
+    menu5.push_back(Graphics::OGL::Button("Box",     menu5[1].X2 + 5, Height-20.f, pFont, IC_BE_CreateBox));
 
-    std::vector<GLButton> &menu6 = Buttons[emSelectAnimation];
-    menu6.push_back(GLButton("New",  110,             Height-20.f, pFont, IC_BE_Create));
-    menu6.push_back(GLButton("Load", menu6[0].X2 + 5, Height-20.f, pFont, IC_BE_Select));
+    std::vector<Graphics::OGL::Button> &menu6 = Buttons[emSelectAnimation];
+    menu6.push_back(Graphics::OGL::Button("New",  110,             Height-20.f, pFont, IC_BE_Create));
+    menu6.push_back(Graphics::OGL::Button("Load", menu6[0].X2 + 5, Height-20.f, pFont, IC_BE_Select));
 
-    std::vector<GLButton> &menu7 = Buttons[emEditAnimation];
-    menu7.push_back(GLButton("Play",      110,             Height-20.f, pFont, IC_BE_Play));
-    menu7.push_back(GLButton("Insert KF", menu7[0].X2 + 5, Height-20.f, pFont, IC_BE_Create));
-    menu7.push_back(GLButton("Edit KF",   menu7[1].X2 + 5, Height-20.f, pFont, IC_BE_Edit));
-    menu7.push_back(GLButton("KF Time",   menu7[2].X2 + 5, Height-20.f, pFont, IC_BE_Move));
-    menu7.push_back(GLButton("Delete KF", menu7[3].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
-    menu7.push_back(GLButton("Loop",      menu7[4].X2 + 5, Height-20.f, pFont, IC_BE_Loop));
-    menu7.push_back(GLButton("Save",      menu7[5].X2 + 5, Height-20.f, pFont, IC_BE_Save));
+    std::vector<Graphics::OGL::Button> &menu7 = Buttons[emEditAnimation];
+    menu7.push_back(Graphics::OGL::Button("Play",      110,             Height-20.f, pFont, IC_BE_Play));
+    menu7.push_back(Graphics::OGL::Button("Insert KF", menu7[0].X2 + 5, Height-20.f, pFont, IC_BE_Create));
+    menu7.push_back(Graphics::OGL::Button("Edit KF",   menu7[1].X2 + 5, Height-20.f, pFont, IC_BE_Edit));
+    menu7.push_back(Graphics::OGL::Button("KF Time",   menu7[2].X2 + 5, Height-20.f, pFont, IC_BE_Move));
+    menu7.push_back(Graphics::OGL::Button("Delete KF", menu7[3].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+    menu7.push_back(Graphics::OGL::Button("Loop",      menu7[4].X2 + 5, Height-20.f, pFont, IC_BE_Loop));
+    menu7.push_back(Graphics::OGL::Button("Save",      menu7[5].X2 + 5, Height-20.f, pFont, IC_BE_Save));
 
-    std::vector<GLButton> &menu8 = Buttons[emAnimateBones];
-    menu8.push_back(GLButton("Select",     110,             Height-20.f, pFont, IC_BE_Select, true, true));
-    menu8.push_back(GLButton("Move",       menu8[0].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
-    menu8.push_back(GLButton("Reset Bone", menu8[1].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
-    menu8.push_back(GLButton("Tgl.Bones",  menu8[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkeletize));
-    menu8.push_back(GLButton("Accept",     menu8[3].X2 + 5, Height-20.f, pFont, IC_Accept));
-    menu8.push_back(GLButton("Reject",     menu8[4].X2 + 5, Height-20.f, pFont, IC_Reject));
+    std::vector<Graphics::OGL::Button> &menu8 = Buttons[emAnimateBones];
+    menu8.push_back(Graphics::OGL::Button("Select",     110,             Height-20.f, pFont, IC_BE_Select, true, true));
+    menu8.push_back(Graphics::OGL::Button("Move",       menu8[0].X2 + 5, Height-20.f, pFont, IC_BE_Move,   true));
+    menu8.push_back(Graphics::OGL::Button("Reset Bone", menu8[1].X2 + 5, Height-20.f, pFont, IC_BE_Delete));
+    menu8.push_back(Graphics::OGL::Button("Tgl.Bones",  menu8[2].X2 + 5, Height-20.f, pFont, IC_BE_ModeSkeletize));
+    menu8.push_back(Graphics::OGL::Button("Accept",     menu8[3].X2 + 5, Height-20.f, pFont, IC_Accept));
+    menu8.push_back(Graphics::OGL::Button("Reject",     menu8[4].X2 + 5, Height-20.f, pFont, IC_Reject));
 
-    Buttons[emLoadAnimation].push_back(GLButton("Reject", 110, Height-20.f, pFont, IC_Reject));
+    Buttons[emLoadAnimation].push_back(Graphics::OGL::Button("Reject", 110, Height-20.f, pFont, IC_Reject));
 
-    std::vector<GLButton> &menu9 = Buttons[emSaveAnimation];
-    menu9.push_back(GLButton("Accept", 110,             Height-20.f, pFont, IC_Accept));
-    menu9.push_back(GLButton("Reject", menu9[0].X2 + 5, Height-20.f, pFont, IC_Reject));
+    std::vector<Graphics::OGL::Button> &menu9 = Buttons[emSaveAnimation];
+    menu9.push_back(Graphics::OGL::Button("Accept", 110,             Height-20.f, pFont, IC_Accept));
+    menu9.push_back(Graphics::OGL::Button("Reject", menu9[0].X2 + 5, Height-20.f, pFont, IC_Reject));
 
-    std::vector<GLButton> &menu10 = Buttons[emSaveModel];
-    menu10.push_back(GLButton("Accept", 110,              Height-20.f, pFont, IC_Accept));
-    menu10.push_back(GLButton("Reject", menu10[0].X2 + 5, Height-20.f, pFont, IC_Reject));
+    std::vector<Graphics::OGL::Button> &menu10 = Buttons[emSaveModel];
+    menu10.push_back(Graphics::OGL::Button("Accept", 110,              Height-20.f, pFont, IC_Accept));
+    menu10.push_back(Graphics::OGL::Button("Reject", menu10[0].X2 + 5, Height-20.f, pFont, IC_Reject));
 
     // Init cameras
     Cameras.Current = NULL;
@@ -251,7 +251,7 @@ void SceneSkeleton::Resize(int left, int top, unsigned int width, unsigned int h
     IScene::Resize(left, top, width, height);
     InitCameras(false);
 
-    const GLFont* pFont = g_FontMgr.GetFont(Font);
+    const Graphics::OGL::Font* pFont = g_FontMgr.GetFont(Font);
     for (size_t i = 0; i < Buttons.size(); ++i)
         for (size_t j = 0; j < Buttons[i].size(); ++j)
         {
@@ -345,8 +345,8 @@ bool SceneSkeleton::Render()
     glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.f);
     glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.f);
     glEnable(GL_LIGHT0);
-    GLShader::SetLightType(xLight_INFINITE);
-    GLShader::EnableTexturing(xState_Enable);
+    Graphics::OGL::Shader::SetLightType(xLight_INFINITE);
+    Graphics::OGL::Shader::EnableTexturing(Graphics::OGL::xState_Enable);
 
     glMultMatrixf(&Cameras.Current->MX_WorldToView_Get().x0);
 
@@ -360,12 +360,12 @@ bool SceneSkeleton::Render()
     xModelInstance &modelInstance = Model.ModelGr->instance;
 
     render.RenderModel(model, modelInstance, false, Cameras.Current->FOV);
-    render.RenderModel(model, modelInstance, true, Cameras.Current->FOV);
-    GLShader::Suspend();
+    render.RenderModel(model, modelInstance, true,  Cameras.Current->FOV);
+    Graphics::OGL::Shader::Suspend();
 
-    GLShader::EnableTexturing(xState_Disable);
-    GLShader::SetLightType(xLight_NONE);
-    GLShader::Start();
+    Graphics::OGL::Shader::EnableTexturing(Graphics::OGL::xState_Disable);
+    Graphics::OGL::Shader::SetLightType(xLight_NONE);
+    Graphics::OGL::Shader::Start();
 
     if (EditMode == emSelectVertex)
         render.RenderVertices(model, modelInstance, Renderer::smNone, Selection.ElementId, &Selection.Vertices);
@@ -405,7 +405,7 @@ bool SceneSkeleton::Render()
     if ((EditMode == emEditBVH || EditMode == emEditVolume) && model.BVHierarchy)
         render.RenderBVH(*model.BVHierarchy, xMatrix::Identity(), true, 0, Selection.BVHNodeID);
 
-    GLShader::Suspend();
+    Graphics::OGL::Shader::Suspend();
 
     glFlush();
 
@@ -439,7 +439,7 @@ bool SceneSkeleton::Render()
         glDisable(GL_BLEND);
     }
 
-    const GLFont* pFont = g_FontMgr.GetFont(Font);
+    const Graphics::OGL::Font* pFont = g_FontMgr.GetFont(Font);
 
     glColor4f( 1.f, 1.f, 1.f, 1.f );
 
@@ -561,8 +561,8 @@ bool SceneSkeleton::Render()
     else if (EditMode == emSaveAnimation || EditMode == emSaveModel)
         pFont->Print(5.f, Height-25.f, 0.f, ("Filename: " + InputState.String).c_str());
 
-    std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
-    std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
+    std::vector<Graphics::OGL::Button>::iterator begin = Buttons[EditMode].begin();
+    std::vector<Graphics::OGL::Button>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
         begin->Render(pFont);
 
@@ -630,7 +630,7 @@ void SceneSkeleton::RenderProgressBar()
         glVertex2f (x+info.T_progress*scale, y2-3);
     glEnd();
 
-    const GLFont* pFont = g_FontMgr.GetFont(Font);
+    const Graphics::OGL::Font* pFont = g_FontMgr.GetFont(Font);
     pFont->PrintF(5.f, 40.f, 0.f, "Frame: %d/%d | Progress: %d/%d (%d/%d)",
         info.I_frameNo, Animation.Instance->I_frames,
         info.T_progress, info.T_duration,

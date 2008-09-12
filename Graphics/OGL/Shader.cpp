@@ -1,4 +1,4 @@
-#include "GLShader.h"
+#include "Shader.h"
 
 #include <cassert>
 #include <iostream>
@@ -7,27 +7,29 @@
 #include "../../Utils/Debug.h"
 #include "../../Utils/Filesystem.h"
 
-ShaderProgram *GLShader::currShader       = NULL;
-xLightType     GLShader::lightType        = xLight_NONE;
-xState         GLShader::shaderState      = xState_Enable;
-xState         GLShader::textureState     = xState_Enable;
-xState         GLShader::skeletalState    = xState_Enable;
-bool           GLShader::ambient          = false;
-bool           GLShader::diffuse          = false;
-bool           GLShader::specular         = false;
+using namespace Graphics::OGL;
+
+ShaderProgram *Shader::currShader       = NULL;
+xLightType     Shader::lightType        = xLight_NONE;
+xState         Shader::shaderState      = xState_Enable;
+xState         Shader::textureState     = xState_Enable;
+xState         Shader::skeletalState    = xState_Enable;
+bool           Shader::ambient          = false;
+bool           Shader::diffuse          = false;
+bool           Shader::specular         = false;
 GLenum         ShaderProgram::currProgram = 0;
 
-ShaderLighting GLShader::slNoLighting;
-ShaderLighting GLShader::slGlobalA;
-ShaderLighting GLShader::slInfiniteA;
-ShaderLighting GLShader::slInfiniteDS;
-ShaderLighting GLShader::slInfiniteADS;
-ShaderLighting GLShader::slPointA;
-ShaderLighting GLShader::slPointDS;
-ShaderLighting GLShader::slPointADS;
-ShaderLighting GLShader::slSpotA;
-ShaderLighting GLShader::slSpotDS;
-ShaderLighting GLShader::slSpotADS;
+ShaderLighting Shader::slNoLighting;
+ShaderLighting Shader::slGlobalA;
+ShaderLighting Shader::slInfiniteA;
+ShaderLighting Shader::slInfiniteDS;
+ShaderLighting Shader::slInfiniteADS;
+ShaderLighting Shader::slPointA;
+ShaderLighting Shader::slPointDS;
+ShaderLighting Shader::slPointADS;
+ShaderLighting Shader::slSpotA;
+ShaderLighting Shader::slSpotDS;
+ShaderLighting Shader::slSpotADS;
 
 ShaderProgram :: ShaderProgram()
 {
@@ -274,7 +276,7 @@ void ShaderLighting :: Invalidate()
     TexturedSkeletal.Invalidate();
 }
 
-void GLShader :: Load()
+void Shader :: Load()
 {
     slNoLighting.Plain.Load("NoLights_noTex.vert", "NoLights_noTex.frag");
     slNoLighting.Textured.Load("NoLights_Tex.vert", "NoLights_Tex.frag");
@@ -334,7 +336,7 @@ void GLShader :: Load()
     slSpotADS.TexturedSkeletal.Load("Spot_DS_Tex_Skel.vert", "Spot_ADS_Tex.frag");
 }
 
-void GLShader :: Unload()
+void Shader :: Unload()
 {
     slNoLighting.Plain.Unload();
     slNoLighting.Textured.Unload();
@@ -392,7 +394,7 @@ void GLShader :: Unload()
     slSpotADS.TexturedSkeletal.Unload();
 }
 
-void GLShader :: CreateS()
+void Shader :: CreateS()
 {
     slNoLighting.Create();
     slGlobalA.Create();
@@ -407,7 +409,7 @@ void GLShader :: CreateS()
     slSpotADS.Create();
 }
 
-void GLShader :: DestroyS()
+void Shader :: DestroyS()
 {
     slNoLighting.Destroy();
     slGlobalA.Destroy();
@@ -422,7 +424,7 @@ void GLShader :: DestroyS()
     slSpotADS.Destroy();
 }
 
-void GLShader :: Invalidate()
+void Shader :: Invalidate()
 {
     slNoLighting.Invalidate();
     slGlobalA.Invalidate();
@@ -437,7 +439,7 @@ void GLShader :: Invalidate()
     slSpotADS.Invalidate();
 }
 
-bool GLShader :: Start()
+bool Shader :: Start()
 {
     //assert(program);
     //assert(!IsCurrent());
@@ -520,7 +522,7 @@ bool GLShader :: Start()
     return true;
 }
 
-void GLShader :: Suspend()
+void Shader :: Suspend()
 {
     //assert(program);
     //assert(IsCurrent());

@@ -4,8 +4,8 @@
 #include "../AppFramework/IScene.h"
 
 #include "../Graphics/OGL/ISelectionProvider.h"
-#include "../Graphics/OGL/GLButton.h"
-#include "../Graphics/OGL/Fonts/FontMgr.h"
+#include "../Graphics/OGL/Button.h"
+#include "../Graphics/FontMgr.h"
 
 #include "../Math/Cameras/CameraHuman.h"
 #include "../Math/Cameras/CameraFree.h"
@@ -64,8 +64,8 @@ namespace Scenes {
 
         char                              * KeyName_Accept;
         char                              * KeyName_Modify;
-        std::vector<std::vector<GLButton> > Buttons;         // Buttons[EditMode][ButtonNo]
-        std::vector<GLButton>               Directories;
+        std::vector<std::vector<Graphics::OGL::Button> > Buttons;         // Buttons[EditMode][ButtonNo]
+        std::vector<Graphics::OGL::Button>               Directories;
         std::string                         CurrentDirectory;
         std::string                         AnimationName;
 
@@ -170,7 +170,7 @@ namespace Scenes {
         void          UpdateBBox();
 
         /* INPUT & CAMERAS */
-        bool        UpdateButton(GLButton &button);
+        bool        UpdateButton(Graphics::OGL::Button &button);
         void        UpdateDisplay(float deltaTime);
         /* MOUSE */
         void        UpdateMouse(float deltaTime);

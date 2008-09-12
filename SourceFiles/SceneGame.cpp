@@ -429,7 +429,7 @@ bool SceneGame :: Update(float T_delta)
     return true;
 }
 
-#include "../Graphics/OGL/GLShader.h"
+#include "../Graphics/OGL/Shader.h"
 
 bool SceneGame :: Render()
 {
@@ -515,8 +515,8 @@ bool SceneGame :: Render()
     if (Targets.L_objects.size() >= 2)
     {
         glDisable(GL_DEPTH_TEST);  // Disable depth testing
-        GLShader::SetLightType(xLight_NONE);
-        GLShader::EnableTexturing(xState_Off);
+        Graphics::OGL::Shader::SetLightType(xLight_NONE);
+        Graphics::OGL::Shader::EnableTexturing(Graphics::OGL::xState_Off);
         glDisable (GL_POLYGON_SMOOTH);
 
         // Set projection
@@ -534,7 +534,7 @@ bool SceneGame :: Render()
         SkeletizedObj &player1 = *(SkeletizedObj*) *(Targets.L_objects.rbegin()+1);
         SkeletizedObj &player2 = *(SkeletizedObj*) Targets.L_objects.back();
 
-        const GLFont* pFont = g_FontMgr.GetFont(font);
+        const Graphics::OGL::Font* pFont = g_FontMgr.GetFont(font);
         float lineHeight = pFont->LineH();
 
         pFont->Print(10.f, lineHeight, 0, ("Player 1 : " + player1.Name).c_str());

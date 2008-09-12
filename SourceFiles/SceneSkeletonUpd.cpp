@@ -95,8 +95,8 @@ bool SceneSkeleton::Update(float deltaTime)
 {
     InputMgr &im = g_InputMgr;
 
-    std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
-    std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
+    std::vector<Graphics::OGL::Button>::iterator begin = Buttons[EditMode].begin();
+    std::vector<Graphics::OGL::Button>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
         if (im.InputDown_GetAndRaise(begin->Action))
         { UpdateButton(*begin); return true; }
@@ -292,12 +292,12 @@ bool SceneSkeleton::Update(float deltaTime)
     return true;
 }
 
-bool SceneSkeleton::UpdateButton(GLButton &button)
+bool SceneSkeleton::UpdateButton(Graphics::OGL::Button &button)
 {
     if (button.RadioBox)
     {
-        std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
-        std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
+        std::vector<Graphics::OGL::Button>::iterator begin = Buttons[EditMode].begin();
+        std::vector<Graphics::OGL::Button>::iterator end   = Buttons[EditMode].end();
         for (; begin != end; ++begin)
             if (begin->RadioBox)
                 begin->Down = button.Action == begin->Action;
@@ -789,8 +789,8 @@ void SceneSkeleton::MouseLDown (int X, int Y)
 
 void SceneSkeleton::MouseLUp   (int X, int Y)
 {
-    std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
-    std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
+    std::vector<Graphics::OGL::Button>::iterator begin = Buttons[EditMode].begin();
+    std::vector<Graphics::OGL::Button>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
         if (begin->Click((xFLOAT)X, (xFLOAT)Y) && UpdateButton(*begin))
             return;
@@ -1032,8 +1032,8 @@ void SceneSkeleton::MouseRUp   (int X, int Y)
 
 void SceneSkeleton::MouseMove  (int X, int Y)
 {
-    std::vector<GLButton>::iterator begin = Buttons[EditMode].begin();
-    std::vector<GLButton>::iterator end   = Buttons[EditMode].end();
+    std::vector<Graphics::OGL::Button>::iterator begin = Buttons[EditMode].begin();
+    std::vector<Graphics::OGL::Button>::iterator end   = Buttons[EditMode].end();
     for (; begin != end; ++begin)
         begin->Hover((xFLOAT)X, (xFLOAT)Y);
 
@@ -1149,8 +1149,8 @@ void SceneSkeleton::MouseMove  (int X, int Y)
     else
     if (EditMode == emLoadAnimation || EditMode == emSaveAnimation || EditMode == emSaveModel)
     {
-        std::vector<GLButton>::iterator begin = Directories.begin();
-        std::vector<GLButton>::iterator end   = Directories.end();
+        std::vector<Graphics::OGL::Button>::iterator begin = Directories.begin();
+        std::vector<Graphics::OGL::Button>::iterator end   = Directories.end();
         for (; begin != end; ++begin)
             begin->Hover((xFLOAT)X, (xFLOAT)Y);
     }
@@ -1387,7 +1387,7 @@ void SceneSkeleton::FillDirectoryBtns(bool files, const char *mask)
     {
         top += 20;
         if (top > Height-45) { top = 25.f; left += Width*0.333f; }
-        Directories.push_back(GLButton(dirs[i].c_str(), left, top, width, 15, IC_BE_Move));
+        Directories.push_back(Graphics::OGL::Button(dirs[i].c_str(), left, top, width, 15, IC_BE_Move));
     }
     if (files)
     {
@@ -1396,8 +1396,8 @@ void SceneSkeleton::FillDirectoryBtns(bool files, const char *mask)
         {
             top += 20;
             if (top > Height-45) { top = 25.f; left += Width*0.333f; }
-            Directories.push_back(GLButton(dirs[i].c_str(), left, top, width, 15, IC_BE_Select));
-            GLButton &btn = Directories.back();
+            Directories.push_back(Graphics::OGL::Button(dirs[i].c_str(), left, top, width, 15, IC_BE_Select));
+            Graphics::OGL::Button &btn = Directories.back();
             btn.Background.r = btn.Background.g = btn.Background.b = 0.35f;
         }
     }

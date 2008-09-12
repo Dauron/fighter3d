@@ -1,15 +1,15 @@
-#include "GLAnimSkeletal.h"
+#include "AnimSkeletal.h"
 
 #include "Extensions/ARB_vertex_buffer_object.h"
 #include "../../Models/lib3dx/xSkeleton.h"
 
-int aBoneIdxWghts = -1;
+using namespace Graphics::OGL;
 
-void GLAnimSkeletal::BeginAnimation()
+void AnimSkeletal::BeginAnimation()
 {
-    currSkeletalShader = (ShaderSkeletal*)GLShader::currShader;
+    currSkeletalShader = (ShaderSkeletal*)Shader::currShader;
 
-    if (GLShader::SkeletonState() != xState_On)
+    if (Shader::SkeletonState() != xState_On)
         currSkeletalShader = 0;
     aBoneIdxWghts = -1;
 
@@ -18,13 +18,13 @@ void GLAnimSkeletal::BeginAnimation()
     sft_normals   = NULL;
 }
 
-void GLAnimSkeletal::EndAnimation()
+void AnimSkeletal::EndAnimation()
 {
     if (m_notForceCPU && currSkeletalShader->currProgram)
     {
         if (aBoneIdxWghts > -1)
             glDisableVertexAttribArrayARB(aBoneIdxWghts);
-        //GLShader::Suspend();
+        //Shader::Suspend();
     }
     if (sft_vertices)
     {
@@ -38,15 +38,15 @@ void GLAnimSkeletal::EndAnimation()
     }
 }
 
-void GLAnimSkeletal::SetBones(GLsizei noOfBones,
+void AnimSkeletal::SetBones(GLsizei noOfBones,
                               const xMatrix *bonesM,
                               const xQuaternion *bonesQ,
                               const xPoint3     *bonesR,
                               const xPoint3     *bonesT,
                               const xElement *element, bool VBO)
 {
-    currSkeletalShader = (ShaderSkeletal*)GLShader::currShader;
-    if (GLShader::SkeletonState() != xState_On)
+    currSkeletalShader = (ShaderSkeletal*)Shader::currShader;
+    if (Shader::SkeletonState() != xState_On)
         currSkeletalShader = 0;
     m_notForceCPU = !m_forceCPU && Config::EnableShaders && currSkeletalShader && currSkeletalShader->currProgram;
 
@@ -76,7 +76,7 @@ void GLAnimSkeletal::SetBones(GLsizei noOfBones,
     }
 }
 
-void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance *instance, bool VBO)
+void AnimSkeletal::SetElement(const xElement *element, const xElementInstance *instance, bool VBO)
 {
     if (m_notForceCPU) {
         xDWORD stride = element->GetVertexStride();
@@ -86,7 +86,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance 
             if (State::RenderingShadows) glTexCoordPointer (3, GL_FLOAT, stride, 0);
 
             /************************* LOAD NORMALS ****************************/
-            if ((GLShader::NeedNormals()) && element->renderData.gpuMain.normalB) {
+            if ((Shader::NeedNormals()) && element->renderData.gpuMain.normalB) {
                 glBindBufferARB ( GL_ARRAY_BUFFER_ARB, element->renderData.gpuMain.normalB );
                 glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
                 glEnableClientState(GL_NORMAL_ARRAY);
@@ -111,7 +111,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance 
             glVertexPointer (3, GL_FLOAT, sizeof(xVector4), instance->L_vertices);
             if (State::RenderingShadows) glTexCoordPointer (3, GL_FLOAT, sizeof(xVector4), instance->L_vertices);
             /************************* LOAD NORMALS ****************************/
-            if ((VBO && GLShader::NeedNormals()) ||
+            if ((VBO && Shader::NeedNormals()) ||
                 (!VBO && !State::RenderingSelection))
             {
                 glNormalPointer (GL_FLOAT, sizeof(xVector3), instance->L_normals);
@@ -136,7 +136,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance 
         if (VBO) glBindBufferARB( GL_ARRAY_BUFFER_ARB, 0 );
         glVertexPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
         if (State::RenderingShadows) glTexCoordPointer (3, GL_FLOAT, sizeof(xVector3), sft_vertices);
-        if ((VBO && GLShader::NeedNormals()) ||
+        if ((VBO && Shader::NeedNormals()) ||
             (!VBO && !State::RenderingSelection))
         {
             glNormalPointer (GL_FLOAT, sizeof(xVector3), sft_normals);
@@ -148,7 +148,7 @@ void GLAnimSkeletal::SetElement(const xElement *element, const xElementInstance 
 
 /**************** generic implementation ******************/
 
-void GLAnimSkeletal::SetBoneIdxWghts(GLsizei stride, const GLfloat *pointer)
+void AnimSkeletal::SetBoneIdxWghts(GLsizei stride, const GLfloat *pointer)
 {
     if (m_notForceCPU) {
         glEnableVertexAttribArrayARB(currSkeletalShader->aBoneIdxWghts);
@@ -161,7 +161,7 @@ void GLAnimSkeletal::SetBoneIdxWghts(GLsizei stride, const GLfloat *pointer)
     }
 }
 
-void GLAnimSkeletal::SetVertices(GLsizei stride, const GLfloat *pointer, int count)
+void AnimSkeletal::SetVertices(GLsizei stride, const GLfloat *pointer, int count)
 {
     if (m_notForceCPU)
         glVertexPointer   (3, GL_FLOAT, stride, pointer);
@@ -209,7 +209,7 @@ void GLAnimSkeletal::SetVertices(GLsizei stride, const GLfloat *pointer, int cou
     }
 }
 
-void GLAnimSkeletal::SetBoneIdxWghts(const GLfloat pointer[4])
+void AnimSkeletal::SetBoneIdxWghts(const GLfloat pointer[4])
 {
     if (m_notForceCPU)
         glVertexAttrib4fv(currSkeletalShader->aBoneIdxWghts, pointer);
@@ -221,7 +221,7 @@ void GLAnimSkeletal::SetBoneIdxWghts(const GLfloat pointer[4])
     }
 }
 
-void GLAnimSkeletal::SetVertex(const GLfloat vertex[3])
+void AnimSkeletal::SetVertex(const GLfloat vertex[3])
 {
     if (m_notForceCPU)
         glVertex3fv(vertex);

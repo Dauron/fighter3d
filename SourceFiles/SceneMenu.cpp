@@ -2,7 +2,7 @@
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
-#include "../Graphics/OGL/GLAnimSkeletal.h"
+#include "../Graphics/OGL/AnimSkeletal.h"
 
 #include "MenuStates/MenuStates.h"
 
@@ -99,8 +99,8 @@ bool SceneMenu :: Render()
 
     glViewport(Left, Top, Width, Height);
     glDisable(GL_DEPTH_TEST);
-    GLShader::SetLightType(xLight_NONE);
-    GLShader::EnableTexturing(xState_Off);
+    Graphics::OGL::Shader::SetLightType(xLight_NONE);
+    Graphics::OGL::Shader::EnableTexturing(xState_Off);
     glDisable (GL_POLYGON_SMOOTH);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -122,14 +122,15 @@ bool SceneMenu :: Render()
         glVertex2f(0.f, (GLfloat)Height);
     glEnd();
 
-    const GLFont* pFont03 = g_FontMgr.GetFont(font03);
-    const GLFont* pFont04 = g_FontMgr.GetFont(font04);
-    const GLFont* pFont05 = g_FontMgr.GetFont(font05);
-    const GLFont* pFont10 = g_FontMgr.GetFont(font10);
+    glDisable(GL_BLEND);
+
+    const Graphics::OGL::Font* pFont03 = g_FontMgr.GetFont(font03);
+    const Graphics::OGL::Font* pFont04 = g_FontMgr.GetFont(font04);
+    const Graphics::OGL::Font* pFont05 = g_FontMgr.GetFont(font05);
+    const Graphics::OGL::Font* pFont10 = g_FontMgr.GetFont(font10);
 
     Menu::BaseState::Current_Get()->Render(pFont03, pFont04, pFont05, pFont10, Width, Height);
 
-    glDisable(GL_BLEND);
 
     //////////////////// WORLD - END
     glFlush(); //glFinish();

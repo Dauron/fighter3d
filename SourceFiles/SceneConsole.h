@@ -4,7 +4,7 @@
 #include <string>
 #include "../Math/xMath.h"
 #include "../AppFramework/IScene.h"
-#include "../Graphics/OGL/Fonts/FontMgr.h"
+#include "../Graphics/FontMgr.h"
 
 namespace Scenes {
 

@@ -2,7 +2,7 @@
 #include "../Utils/Debug.h"
 #include "../Utils/Profiler.h"
 #include "../Utils/Filesystem.h"
-#include "../Graphics/OGL/GLShader.h"
+#include "../Graphics/OGL/Shader.h"
 
 #include "SceneConsole.h"
 #include "SceneGame.h"
@@ -22,7 +22,7 @@ int main( int argc, char **argv )
     logEx(0, true, "Game started");
 
     Config::Load("Data/config.txt");
-    GLShader::Load();
+    Graphics::OGL::Shader::Load();
 
     IScene *scene = NULL;
     if (!strcmp(Config::Scene, "test")) scene = new Scenes::SceneTest();
@@ -50,7 +50,7 @@ int main( int argc, char **argv )
     int rres = game.Run();
     game.Destroy();
 
-    GLShader::Unload();
+    Graphics::OGL::Shader::Unload();
 
     logEx(0, true, "Game finished");
     logEx(0, false, "***********************************");
@@ -98,11 +98,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #include "InputCodes.h"
 #include "../MotionCapture/CaptureInput.h"
 #include "../Multiplayer/NetworkInput.h"
-#include "../Graphics/OGL/Textures/TextureMgr.h"
-#include "../Graphics/OGL/Fonts/FontMgr.h"
-#include "../Graphics/OGL/GLAnimSkeletal.h"
+#include "../Graphics/Textures/TextureMgr.h"
+#include "../Graphics/FontMgr.h"
+#include "../Graphics/OGL/AnimSkeletal.h"
 #include "../Models/ModelMgr.h"
 #include "../Models/lib3dx/xAnimationMgr.h"
+
+using namespace Graphics::OGL;
 
 void Application_OnCreate(Application& sender, void *receiver, bool &res)
 {
@@ -118,8 +120,8 @@ void Application_OnCreate(Application& sender, void *receiver, bool &res)
     CaptureInput   ::CreateS();
     FontMgr        ::CreateS();
     TextureMgr     ::CreateS();
-    GLShader       ::CreateS();
-    GLAnimSkeletal ::CreateS();
+    Shader         ::CreateS();
+    AnimSkeletal   ::CreateS();
     xAnimationMgr  ::CreateS();
     ModelMgr       ::CreateS();
     res = true;
@@ -133,7 +135,7 @@ void Application_OnInvalidate(Application& sender, void *receiver, bool &res)
     if (TextureMgr::GetSingletonPtr())
         g_TextureMgr.InvalidateItems();
 
-    GLShader::Invalidate();
+    Shader::Invalidate();
     g_InputMgr.AllKeysUp();
 
     if (xAnimationMgr::GetSingletonPtr())
@@ -149,8 +151,8 @@ void Application_OnDestroy(Application& sender, void *receiver, bool &res)
 {
     ModelMgr       ::DestroyS();
     xAnimationMgr  ::DestroyS();
-    GLAnimSkeletal ::DestroyS();
-    GLShader       ::DestroyS();
+    AnimSkeletal   ::DestroyS();
+    Shader         ::DestroyS();
     TextureMgr     ::DestroyS();
     FontMgr        ::DestroyS();
     CaptureInput   ::DestroyS();

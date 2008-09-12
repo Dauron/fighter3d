@@ -1,13 +1,13 @@
 // included in MenuStates.h
 
-#include "../../Graphics/OGL/GLButton.h"
+#include "../../Graphics/OGL/Button.h"
 #include "../SceneSkeleton.h"
 
 namespace Scenes { namespace Menu {
 
     class EditModelState : public BaseState {
 
-        std::vector<GLButton>  Buttons;
+        std::vector<Graphics::OGL::Button>  Buttons;
         Filesystem::Vec_string Directories;
         Filesystem::Vec_string Files;
         std::string            CurrentDirectory;
@@ -53,7 +53,7 @@ namespace Scenes { namespace Menu {
 
                     for (size_t i = 0; i < Buttons.size(); ++i)
                     {
-                        GLButton &button = Buttons[i];
+                        Graphics::OGL::Button &button = Buttons[i];
                         if (button.HitTest(mouseX, mouseY))
                         {
                             if (button.Action == IC_BE_Move)
@@ -96,8 +96,8 @@ namespace Scenes { namespace Menu {
             return true;
         }
 
-        virtual void Render(const GLFont* pFont03, const GLFont* pFont04,
-                            const GLFont* pFont05, const GLFont* pFont10,
+        virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
+                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                             xDWORD Width, xDWORD Height)
         {
             xFLOAT lineHeight03 = pFont03->LineH();
@@ -108,21 +108,21 @@ namespace Scenes { namespace Menu {
             {
                 top += lineHeight03+3;
                 if (top > Height-lineHeight03) { top = lineHeight03*2.f; left += Width*0.333f; }
-                Buttons.push_back(GLButton(Directories[i].c_str(), left, top, width, lineHeight03*1.f, IC_BE_Move));
+                Buttons.push_back(Graphics::OGL::Button(Directories[i].c_str(), left, top, width, lineHeight03*1.f, IC_BE_Move));
             }
             for (size_t i=0; i<Files.size(); ++i)
             {
                 top += lineHeight03+3;
                 if (top > Height-lineHeight03) { top = lineHeight03*2.f; left += Width*0.333f; }
-                Buttons.push_back(GLButton(Files[i].c_str(), left, top, width, lineHeight03*1.f, IC_BE_Select));
+                Buttons.push_back(Graphics::OGL::Button(Files[i].c_str(), left, top, width, lineHeight03*1.f, IC_BE_Select));
                 Buttons.back().Background.init(0.35f,0.35f,0.35f,1.f);
             }
 
             int X = g_InputMgr.mouseX;
             int Y = g_InputMgr.mouseY;
 
-            std::vector<GLButton>::iterator begin = Buttons.begin();
-            std::vector<GLButton>::iterator end   = Buttons.end();
+            std::vector<Graphics::OGL::Button>::iterator begin = Buttons.begin();
+            std::vector<Graphics::OGL::Button>::iterator end   = Buttons.end();
             for (; begin != end; ++begin)
             {
                 begin->Hover((xFLOAT)X, (xFLOAT)Y);

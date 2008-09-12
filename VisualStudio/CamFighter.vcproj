@@ -1339,6 +1339,14 @@
 			Name="Graphics"
 			>
 			<File
+				RelativePath="..\Graphics\FontMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Graphics\FontMgr.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Graphics\Renderer.cpp"
 				>
 			</File>
@@ -1358,23 +1366,23 @@
 				Name="OGL"
 				>
 				<File
-					RelativePath="..\Graphics\OGL\GLAnimSkeletal.cpp"
+					RelativePath="..\Graphics\OGL\AnimSkeletal.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\OGL\GLAnimSkeletal.h"
+					RelativePath="..\Graphics\OGL\AnimSkeletal.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\OGL\GLButton.h"
+					RelativePath="..\Graphics\OGL\Button.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\OGL\GLShader.cpp"
+					RelativePath="..\Graphics\OGL\Font.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\OGL\GLShader.h"
+					RelativePath="..\Graphics\OGL\Font.h"
 					>
 				</File>
 				<File
@@ -1387,6 +1395,22 @@
 				</File>
 				<File
 					RelativePath="..\Graphics\OGL\ogl.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\Shader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\Shader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\Texture.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\Texture.h"
 					>
 				</File>
 				<File
@@ -1512,26 +1536,6 @@
 					</File>
 				</Filter>
 				<Filter
-					Name="Fonts"
-					>
-					<File
-						RelativePath="..\Graphics\OGL\Fonts\FontMgr.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Fonts\FontMgr.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Fonts\GLFont.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Fonts\GLFont.h"
-						>
-					</File>
-				</Filter>
-				<Filter
 					Name="Render"
 					>
 					<File
@@ -1571,40 +1575,28 @@
 						>
 					</File>
 				</Filter>
-				<Filter
-					Name="Textures"
-					>
-					<File
-						RelativePath="..\Graphics\OGL\Textures\Texture.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Textures\Texture.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Textures\TextureMgr.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Textures\TextureMgr.h"
-						>
-					</File>
-				</Filter>
 			</Filter>
 			<Filter
-				Name="Images"
+				Name="Textures"
 				>
 				<File
-					RelativePath="..\Graphics\Images\BMPFile.cpp"
+					RelativePath="..\Graphics\Textures\BMPFile.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\Images\ImageFile.h"
+					RelativePath="..\Graphics\Textures\ImageFile.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\Images\TGAFile.cpp"
+					RelativePath="..\Graphics\Textures\TextureMgr.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\Textures\TextureMgr.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\Textures\TGAFile.cpp"
 					>
 				</File>
 			</Filter>

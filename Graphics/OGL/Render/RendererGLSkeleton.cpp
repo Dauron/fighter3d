@@ -1,9 +1,11 @@
 #include "RendererGL.h"
-#include "../GLAnimSkeletal.h"
+#include "../AnimSkeletal.h"
 #include "../../../Physics/Verlet/VConstraintLengthEql.h"
 #include "../../../Physics/Verlet/VConstraintLengthMin.h"
 #include "../../../Physics/Verlet/VConstraintLengthMax.h"
 #include "../../../Physics/Verlet/VConstraintAngular.h"
+
+using namespace Graphics::OGL;
 
 // Bone / constraint view
 

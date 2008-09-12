@@ -1,5 +1,5 @@
-#include "GLFont.h"
-#include "../../../AppFramework/Application.h"
+#include "Font.h"
+#include "../../AppFramework/Application.h"
 
 #ifdef WIN32
 #pragma warning(disable : 4996) // deprecated
@@ -7,9 +7,11 @@
 #include <stdarg.h>
 #endif
 
-const float GLFont::INTERLINE = 0.2f;
+using namespace Graphics::OGL;
 
-bool GLFont :: Create()
+const float Font::INTERLINE = 0.2f;
+
+bool Font :: Create()
 {
     assert (ID_GLFontBase == -1);
     assert (Name.size());
@@ -40,8 +42,6 @@ bool GLFont :: Create()
 
     oldfont = (HFONT)SelectObject(hDC, font);       // Selects The Font We Want
 
-    // BUG: call it 2 times, cause sometimes 1 time is not enought
-    //wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, ID_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
     wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, ID_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
 
     ABCFLOAT metrics[NUM_CHARS]; // Storage For Information About Our Font
@@ -108,7 +108,7 @@ bool GLFont :: Create()
     return true;
 }
 
-void GLFont :: Dispose()
+void Font :: Dispose()
 {
     if (ID_GLFontBase != -1)
     {
@@ -117,7 +117,7 @@ void GLFont :: Dispose()
     }
 }
 
-void  GLFont :: Print  (float x, float y, float z, float maxHeight, int skipLines, const char *text) const
+void  Font :: Print  (float x, float y, float z, float maxHeight, int skipLines, const char *text) const
 {
     assert(ID_GLFontBase != -1);
     assert(text);
@@ -154,9 +154,7 @@ void  GLFont :: Print  (float x, float y, float z, float maxHeight, int skipLine
     glListBase(0);
 }
 
-#include "../../../Utils/Profiler.h"
-
-void  GLFont :: Print  (float x, float y, float z, const char *text) const
+void  Font :: Print  (float x, float y, float z, const char *text) const
 {
     assert(ID_GLFontBase != -1);
     assert(text);
@@ -181,7 +179,7 @@ void  GLFont :: Print  (float x, float y, float z, const char *text) const
     glListBase(0); // Sets The Base Character to FIRST_CHAR
 }
 
-void  GLFont :: PrintF (float x, float y, float z, const char *fmt, ...) const
+void  Font :: PrintF (float x, float y, float z, const char *fmt, ...) const
 {
     assert(ID_GLFontBase != -1);
     assert(fmt);
@@ -212,7 +210,7 @@ void  GLFont :: PrintF (float x, float y, float z, const char *fmt, ...) const
     glListBase(0);
 }
 
-void  GLFont :: Print  (const char *text) const
+void  Font :: Print  (const char *text) const
 {
     assert(ID_GLFontBase != -1);
     assert(text);
@@ -222,13 +220,13 @@ void  GLFont :: Print  (const char *text) const
     glListBase(0);
 }
 
-void  GLFont :: PrintF (const char *fmt, ...) const
+void  Font :: PrintF (const char *fmt, ...) const
 {
     assert(ID_GLFontBase != -1);
     assert(fmt);
 
-    char        text[256];             // Holds Our String
-    va_list        ap;                 // Pointer To List Of Arguments
+    char    text[256];                 // Holds Our String
+    va_list ap;                        // Pointer To List Of Arguments
     va_start(ap, fmt);                 // Parses The String For Variables
     vsprintf(text, fmt, ap);           // And Converts Symbols To Actual Numbers
     va_end(ap);                        // Results Are Stored In Text
@@ -238,9 +236,10 @@ void  GLFont :: PrintF (const char *fmt, ...) const
     glListBase(0);
 }
 
-float GLFont :: Length (const char *text) const
+float Font :: Length (const char *text) const
 {
-    float length = 0.0f;
+    float length = 0.f;
+    float maxLen = 0.f;
 
     for (; *text; ++text)    // Loop To Find Text Length
 #if FIRST_CHAR
@@ -248,13 +247,22 @@ float GLFont :: Length (const char *text) const
 #elseif FIRST_CHAR+NUM_CHARS < 255
         if ((byte)*text < FIRST_CHAR+NUM_CHARS)
 #endif
+        {
+            if (*text == '\n')
+            {
+                if (length > maxLen) maxLen = length;
+                length = 0.f;
+                continue;
+            }
             length += LWidth[(byte)*text-FIRST_CHAR]; // Increase Length By Each Characters Width
-    return length;
+        }
+    if (length > maxLen) maxLen = length;
+    return maxLen;
 }
 
 #ifdef WIN32
 /*
-void GLFont::Print3d (const char *fmt, ...) const
+void Font::Print3d (const char *fmt, ...) const
 {
     assert(m_GLFontBase3d != -1);
     //if (m_GLFontBase3d == -1) Init();
@@ -287,7 +295,7 @@ void GLFont::Print3d (const char *fmt, ...) const
     glTranslatef(length/2,0.0f,0.0f);             // Center Our Text On The Screen
 }
 
-GLfloat GLFont::Length3d (const char *text) const
+GLfloat Font::Length3d (const char *text) const
 {
     assert(m_GLFontBase3d != -1);
     //if (m_GLFontBase3d == -1) Init();

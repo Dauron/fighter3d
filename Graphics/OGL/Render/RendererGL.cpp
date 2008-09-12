@@ -1,6 +1,8 @@
 #include "RendererGL.h"
-#include "../GLAnimSkeletal.h"
-#include "../Textures/TextureMgr.h"
+#include "../AnimSkeletal.h"
+#include "../../Textures/TextureMgr.h"
+
+using namespace Graphics::OGL;
 
 /********************************* common private ************************************/
 void RendererGL :: InitVBO (xElement *elem)
@@ -62,11 +64,11 @@ void RendererGL::SetMaterial(xColor color, xMaterial *mat, bool toggleShader)
             HTexture htext;
             htext.SetHandle(mat->texture.htex);
             g_TextureMgr.BindTexture(htext);
-            GLShader::EnableTexturing(xState_On);
+            Shader::EnableTexturing(xState_On);
         }
         else
         {
-            GLShader::EnableTexturing(xState_Off);
+            Shader::EnableTexturing(xState_Off);
             //float specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
             //glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
         }
@@ -122,10 +124,10 @@ void RendererGL::SetMaterial(xColor color, xMaterial *mat, bool toggleShader)
         float specular[4] = {0.0f, 0.0f, 0.0f, 1.0f};
         glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
         glMaterialf(GL_FRONT, GL_SHININESS, 2.0f);
-        GLShader::EnableTexturing(xState_Off);
+        Shader::EnableTexturing(xState_Off);
     }
     if (toggleShader)
-        GLShader::Start();
+        Shader::Start();
 }
 /*
 void SetLight(const xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular)
@@ -138,7 +140,7 @@ void SetLight(const xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specul
     glLightfv(GL_LIGHT0, GL_DIFFUSE,  t_Diffuse ? diffuse.col : light_off); // direct light
     glLightfv(GL_LIGHT0, GL_SPECULAR, t_Specular ? diffuse.col : light_off); // light on mirrors/metal
 
-    GLShader::SetLightType(light.type, t_Ambient, t_Diffuse, t_Specular);
+    Shader::SetLightType(light.type, t_Ambient, t_Diffuse, t_Specular);
 }
 */
 /********************************* faces **************************************/
@@ -275,7 +277,7 @@ void RendererGL :: RenderFaces( xModel &model, xModelInstance &instance,
     glEnableClientState(GL_VERTEX_ARRAY);
 
     glColor4f( 0.8f, 0.8f, 0.f, 1.f );
-    GLShader::EnableTexturing(xState_Disable);
+    Shader::EnableTexturing(xState_Disable);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
 
@@ -285,7 +287,7 @@ void RendererGL :: RenderFaces( xModel &model, xModelInstance &instance,
         else
             RenderElementFacesLST(selectedElement, facesToRender, elem, instance);
 
-    GLShader::EnableTexturing(xState_Enable);
+    Shader::EnableTexturing(xState_Enable);
     glDisable(GL_COLOR_MATERIAL);
     glDisableClientState(GL_VERTEX_ARRAY);
 }
@@ -470,7 +472,7 @@ void RendererGL :: RenderVertices( xModel &model, xModelInstance &instance,
     glMultMatrixf(&instance.MX_LocalToWorld.x0);
 
     glColor4f( 0.8f, 0.8f, 0.f, 1.f );
-    GLShader::EnableTexturing(xState_Disable);
+    Shader::EnableTexturing(xState_Disable);
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
     glEnable(GL_COLOR_MATERIAL);
 
@@ -485,7 +487,7 @@ void RendererGL :: RenderVertices( xModel &model, xModelInstance &instance,
     if (selectionMode != smNone) g_AnimSkeletal.ForceSoftware(false);
 
     glDisable(GL_COLOR_MATERIAL);
-    GLShader::EnableTexturing(xState_Enable);
+    Shader::EnableTexturing(xState_Enable);
     glPopMatrix();
 
     glPolygonMode(GL_FRONT, prevMode[0]);
@@ -526,12 +528,12 @@ void RenderModelLST(bool transparent, const Math::Cameras::FieldOfView &FOV,
     bool textured = false;
 
     if (elem->FL_skeletized)
-        GLShader::EnableSkeleton(xState_On);
+        Shader::EnableSkeleton(xState_On);
 
     if (!listID)
     {
-        GLShader::EnableTexturing(xState_Off);
-        GLShader::Start();
+        Shader::EnableTexturing(xState_Off);
+        Shader::Start();
 
         mode = xGPUPointers::LIST;
         glNewList(listID = glGenLists(1), GL_COMPILE);
@@ -583,8 +585,8 @@ void RenderModelLST(bool transparent, const Math::Cameras::FieldOfView &FOV,
     {
         glNewList(listIDTex = glGenLists(1), GL_COMPILE);
 
-        GLShader::EnableTexturing(xState_On);
-        GLShader::Start();
+        Shader::EnableTexturing(xState_On);
+        Shader::Start();
 
         if (elem->FL_skeletized) {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -624,20 +626,20 @@ void RenderModelLST(bool transparent, const Math::Cameras::FieldOfView &FOV,
         glPushMatrix();
         {
             glMultMatrixf(&elem->MX_MeshToLocal.x0);
-            GLShader::EnableTexturing(xState_Off);
-            GLShader::Start();
+            Shader::EnableTexturing(xState_Off);
+            Shader::Start();
             glCallList(listID);
             if (listIDTex)
             {
-                GLShader::EnableTexturing(xState_On);
-                GLShader::Start();
+                Shader::EnableTexturing(xState_On);
+                Shader::Start();
                 glCallList(listIDTex);
             }
         }
         glPopMatrix();
     }
 
-    GLShader::EnableSkeleton(xState_Off);
+    Shader::EnableSkeleton(xState_Off);
 }
 
 void RenderModelVBO(bool transparent, const Math::Cameras::FieldOfView &FOV,
@@ -673,8 +675,8 @@ void RenderModelVBO(bool transparent, const Math::Cameras::FieldOfView &FOV,
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer (2, GL_FLOAT, sizeof(xVertexTexSkel), (void *)(7*sizeof(xFLOAT)));
         }
-        GLShader::EnableSkeleton(xState_On);
-        GLShader::Start();
+        Shader::EnableSkeleton(xState_On);
+        Shader::Start();
         g_AnimSkeletal.BeginAnimation();
         g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
                                 modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
@@ -690,7 +692,7 @@ void RenderModelVBO(bool transparent, const Math::Cameras::FieldOfView &FOV,
         else
             glVertexPointer   (3, GL_FLOAT, sizeof(xVertex), 0);
         /************************* LOAD NORMALS ****************************/
-        if (GLShader::NeedNormals() && elem->renderData.L_normals) {
+        if (Shader::NeedNormals() && elem->renderData.L_normals) {
             glBindBufferARB ( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.normalB );
             glNormalPointer ( GL_FLOAT, sizeof(xVector3), 0 );
             glEnableClientState(GL_NORMAL_ARRAY);
@@ -721,11 +723,11 @@ void RenderModelVBO(bool transparent, const Math::Cameras::FieldOfView &FOV,
 
     if (elem->FL_textured)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    if (elem->renderData.L_normals && GLShader::NeedNormals())
+    if (elem->renderData.L_normals && Shader::NeedNormals())
         glDisableClientState(GL_NORMAL_ARRAY);
     if (elem->FL_skeletized)
         g_AnimSkeletal.EndAnimation();
-    GLShader::EnableSkeleton(xState_Off);
+    Shader::EnableSkeleton(xState_Off);
 
     glPopMatrix();
 }

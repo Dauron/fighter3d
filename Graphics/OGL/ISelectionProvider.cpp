@@ -1,8 +1,10 @@
 #include "ISelectionProvider.h"
 
 #include "../../Config.h"
-#include "GLShader.h"
+#include "Shader.h"
 #include <GL/glu.h>
+
+using namespace Graphics::OGL;
 
 std::vector<xDWORD> * ISelectionProvider:: Select(const Math::Cameras::Camera &Camera,
                                                   int X, int Y, int W, int H)
@@ -20,8 +22,8 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const Math::Cameras::Camera &C
     glSelectBuffer(capacity, selectBuffer);
     glRenderMode(GL_SELECT);
     State::RenderingSelection = true;
-    GLShader::SetLightType(xLight_NONE);
-    GLShader::EnableTexturing(xState_Disable);
+    Shader::SetLightType(xLight_NONE);
+    Shader::EnableTexturing(xState_Disable);
 
     //Select the projection matrix
     glViewport(Camera.FOV.ViewportLeft, Camera.FOV.ViewportTop, Camera.FOV.ViewportWidth, Camera.FOV.ViewportHeight);
@@ -50,7 +52,7 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const Math::Cameras::Camera &C
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 
-    GLShader::EnableTexturing(xState_Enable);
+    Shader::EnableTexturing(xState_Enable);
 
     if(nbRecords <= 0)
     {

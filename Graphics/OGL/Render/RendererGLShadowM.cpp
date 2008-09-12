@@ -1,5 +1,7 @@
 #include "RendererGL.h"
-#include "../GLAnimSkeletal.h"
+#include "../AnimSkeletal.h"
+
+using namespace Graphics::OGL;
 
 /********************************* shadows ************************************/
 void RenderShadowMapLST(xElement *elem, xModelInstance &modelInstance,
@@ -111,8 +113,8 @@ void RendererGL :: RenderShadowMap(xModel &model, xModelInstance &instance,
     State::RenderingShadows = true;
 
     glBindTexture(GL_TEXTURE_2D, shadowMap.texId );
-    GLShader::EnableTexturing(xState_On);
-    GLShader::SetLightType(xLight_NONE);
+    Shader::EnableTexturing(xState_On);
+    Shader::SetLightType(xLight_NONE);
 
     glEnable(GL_BLEND);
     glDisable (GL_LINE_SMOOTH);
@@ -278,8 +280,8 @@ void RendererGL :: CreateShadowMapTexture(xModel &model, xModelInstance &instanc
     glClearColor(1.0, 1.0, 1.0, 0.0);
 
     glDisable(GL_BLEND);
-    GLShader::SetLightType(xLight_NONE);
-    GLShader::EnableTexturing(xState_Disable);
+    Shader::SetLightType(xLight_NONE);
+    Shader::EnableTexturing(xState_Disable);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Load BlockerLocalToShadowMap matrix
@@ -294,7 +296,7 @@ void RendererGL :: CreateShadowMapTexture(xModel &model, xModelInstance &instanc
     glColor3f(0.9f, 0.9f, 0.9f);
     RenderShadowMapTexture(model, instance, true, UseVBO);
 
-    GLShader::EnableTexturing(xState_Enable);
+    Shader::EnableTexturing(xState_Enable);
 
     glPopMatrix();
     // Restore OpenGL's PROJECTION matrix

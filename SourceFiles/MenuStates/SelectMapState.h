@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-#include "../../Graphics/OGL/Textures/TextureMgr.h"
+#include "../../Graphics/Textures/TextureMgr.h"
 #include "../../Utils/Filesystem.h"
 
 #include "PlayState.h"
@@ -96,8 +96,8 @@ namespace Scenes { namespace Menu {
             return true;
         }
 
-        virtual void Render(const GLFont* pFont03, const GLFont* pFont04,
-                            const GLFont* pFont05, const GLFont* pFont10,
+        virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
+                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                             xDWORD Width, xDWORD Height)
         {
             xDWORD WidthHalf  = (xDWORD)(Width * 0.5f);
@@ -166,7 +166,8 @@ namespace Scenes { namespace Menu {
             {
                 if (!g_TextureMgr.IsHandleValid(L_maps[selected].Texture))
                     return;
-
+                glEnable (GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 glEnable(GL_TEXTURE_2D);
                 g_TextureMgr.BindTexture(L_maps[selected].Texture);
                 xFLOAT W = (xFLOAT) g_TextureMgr.GetWidth(L_maps[selected].Texture);
@@ -200,6 +201,7 @@ namespace Scenes { namespace Menu {
                 glEnd();
 
                 glDisable(GL_TEXTURE_2D);
+                glDisable(GL_BLEND);
             }
         }
 

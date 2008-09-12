@@ -63,8 +63,8 @@ namespace Scenes { namespace Menu {
         virtual void Enter() {}
         virtual void Exit()  {}
 
-        virtual void Render(const GLFont* pFont03, const GLFont* pFont04,
-                        const GLFont* pFont05, const GLFont* pFont10,
+        virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
+                        const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                         xDWORD Width, xDWORD Height)
         {}
 

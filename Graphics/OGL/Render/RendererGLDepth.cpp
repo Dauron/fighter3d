@@ -1,5 +1,7 @@
 #include "RendererGL.h"
-#include "../GLAnimSkeletal.h"
+#include "../AnimSkeletal.h"
+
+using namespace Graphics::OGL;
 
 /********************************* vertices && element selections ************************************/
 void RenderElementDepthLST(
@@ -26,8 +28,8 @@ void RenderElementDepthLST(
     glMultMatrixf(&elem->MX_MeshToLocal.x0);
 
     if (elem->FL_skeletized) {
-        GLShader::EnableSkeleton(xState_On);
-        GLShader::Start();
+        Shader::EnableSkeleton(xState_On);
+        Shader::Start();
         g_AnimSkeletal.BeginAnimation();
         g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
                                 modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, false);
@@ -54,7 +56,7 @@ void RenderElementDepthLST(
 
     if (elem->FL_skeletized)
         g_AnimSkeletal.EndAnimation();
-    GLShader::EnableSkeleton(xState_Off);
+    Shader::EnableSkeleton(xState_Off);
 
     glPopMatrix();
 }
@@ -88,8 +90,8 @@ void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
 
     glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.vertexB );
     if (elem->FL_skeletized) {
-        GLShader::EnableSkeleton(xState_On);
-        GLShader::Start();
+        Shader::EnableSkeleton(xState_On);
+        Shader::Start();
         g_AnimSkeletal.BeginAnimation();
         g_AnimSkeletal.SetBones(modelInstance.I_bones, modelInstance.MX_bones, modelInstance.QT_bones,
                                 modelInstance.P_bone_roots, modelInstance.P_bone_trans, elem, true);
@@ -120,7 +122,7 @@ void RenderElementDepthVBO( xElement * elem, xModelInstance &modelInstance,
 
     if (elem->FL_skeletized)
         g_AnimSkeletal.EndAnimation();
-    GLShader::EnableSkeleton(xState_Off);
+    Shader::EnableSkeleton(xState_Off);
 
     glPopMatrix();
 }

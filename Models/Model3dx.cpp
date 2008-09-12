@@ -1,7 +1,7 @@
 #include "Model3dx.h"
 
 #include "lib3dx/xImport.h"
-#include "../Graphics/OGL/Textures/TextureMgr.h"
+#include "../Graphics/Textures/TextureMgr.h"
 #include "../Utils/Filesystem.h"
 
 bool Model3dx :: Create ()

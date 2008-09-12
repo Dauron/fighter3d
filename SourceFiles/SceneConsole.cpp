@@ -6,7 +6,7 @@
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
 #include "InputCodes.h"
-#include "../Graphics/OGL/GLAnimSkeletal.h"
+#include "../Graphics/OGL/AnimSkeletal.h"
 
 #include "../Utils/Debug.h"
 #include "../Utils/Stat.h"
@@ -106,7 +106,7 @@ void SceneConsole :: Resize(int left, int top, unsigned int width, unsigned int 
     //if (PrevScene) PrevScene->Resize(left, top, width, height);
     IScene::Resize(left, top, width, height);
 
-    const GLFont* pFont = g_FontMgr.GetFont(font);
+    const Graphics::OGL::Font* pFont = g_FontMgr.GetFont(font);
     pageSize = (int)(height/2.0f/pFont->LineH()) - 3;
     if (scroll_v > histLines-1-pageSize) scroll_v = histLines-1-pageSize;
 }
@@ -411,7 +411,7 @@ test  = ";
     ss.clear();
     ss << Config::TestCase;  ss >> txt2; txt += txt2 + '\n';
     AppendConsole(txt);
-    if (g_AnimSkeletal.HardwareEnabled())
+    if (Graphics::OGL::g_AnimSkeletal.HardwareEnabled())
         output.append("hardware skeletal animation ENABLED\n");
     else
         output.append("hardware skeletal animation DISABLED\n");
@@ -485,11 +485,11 @@ bool SceneConsole::Render()
     GLint cHeight = Height/2;
 
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
-    GLShader::SetLightType(xLight_NONE);
-    GLShader::EnableTexturing(xState_Off);
+    Graphics::OGL::Shader::SetLightType(xLight_NONE);
+    Graphics::OGL::Shader::EnableTexturing(Graphics::OGL::xState_Off);
     glDisable (GL_POLYGON_SMOOTH);
 
-    const GLFont* pFont = g_FontMgr.GetFont(font);
+    const Graphics::OGL::Font* pFont = g_FontMgr.GetFont(font);
     float lineHeight = pFont->LineH();
 
     {
@@ -516,6 +516,7 @@ bool SceneConsole::Render()
             glVertex2f(0.0f, (GLfloat)cHeight);
         glEnd();
         // Draw scrollbar
+        glColor4ub( 255, 255, 255, 128 );
         float size = (float)(pageSize+1) / histLines;
         if (size < 1)
         {

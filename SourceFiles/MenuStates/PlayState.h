@@ -13,6 +13,7 @@
 #include "../../Multiplayer/NetworkInput.h"
 
 namespace Scenes { namespace Menu {
+    using namespace Graphics::OGL;
 
     struct PlayState : public BaseState {
 
@@ -181,8 +182,8 @@ namespace Scenes { namespace Menu {
             return true;
         }
 
-        virtual void Render(const GLFont* pFont03, const GLFont* pFont04,
-                            const GLFont* pFont05, const GLFont* pFont10,
+        virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
+                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                             xDWORD Width, xDWORD Height)
         {
             xDWORD HeightHalf = (xDWORD)(Height * 0.5f);
@@ -246,8 +247,8 @@ namespace Scenes { namespace Menu {
             glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.f);
             glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.f);
             glEnable(GL_LIGHT0);
-            GLShader::SetLightType(xLight_INFINITE);
-            GLShader::EnableTexturing(xState_Enable);
+            Shader::SetLightType(xLight_INFINITE);
+            Shader::EnableTexturing(xState_Enable);
 
             WorldRenderGL wRender;
             RendererGL   &render = wRender.renderModel;
@@ -268,9 +269,9 @@ namespace Scenes { namespace Menu {
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_CULL_FACE);
 
-            GLShader::Suspend();
-            GLShader::EnableTexturing(xState_Disable);
-            GLShader::SetLightType(xLight_NONE);
+            Shader::Suspend();
+            Shader::EnableTexturing(xState_Disable);
+            Shader::SetLightType(xLight_NONE);
 
             ////// Overlay
 
