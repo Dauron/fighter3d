@@ -9,6 +9,10 @@ file models/level_3.map
 img  models/level_3.tga
 
 [map]
+name "Sumo dohyo"
+file models/level_4.map
+
+[map]
 name "Fast test"
 file models/level_0.map
 

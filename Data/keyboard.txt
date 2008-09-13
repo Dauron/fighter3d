@@ -12,23 +12,19 @@ Right	48
 Down	42
 F11	100
 Tilda	4
-[Game]
+[Game_Set2]
 L_Mouse_Button	98
 Return	1
 Caps_Lock	43
 Escape	2
-Page_Down	57
-End	63
-Home	62
-Left	28
-Up	38
-Right	33
-Down	39
-Delete	52
-A	31
-C	35
-D	34
-F	36
+Left	52
+Up	62
+Right	57
+Down	63
+A	41
+C	49
+D	48
+F	40
 G	51
 H	45
 I	55
@@ -36,11 +32,10 @@ K	56
 L	54
 O	53
 P	58
-S	29
+S	46
 T	50
-V	37
-X	30
-Z	32
+X	47
+Z	42
 F11	100
 Shift_L	44
 Semicolon	59

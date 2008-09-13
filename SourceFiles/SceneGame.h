@@ -18,6 +18,7 @@ namespace Scenes {
         std::string                 MapFileName;
 
         SceneGame() { Name="[Game]"; Clear(); };
+        SceneGame(const char *name) { Name=name; Clear(); };
 
         void Clear()
         {

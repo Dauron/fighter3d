@@ -137,75 +137,80 @@ void SceneGame :: InitInputMgr()
     im.Key2InputCode_SetIfKeyFree(VK_RETURN,  IC_Accept);
     im.Key2InputCode_SetIfKeyFree(VK_ESCAPE,  IC_Reject);
     im.Key2InputCode_SetIfKeyFree(VK_LBUTTON, IC_LClick);
-/*
-    // Cameras
-    im.Key2InputCode_SetIfKeyFree(VK_NUMPAD8, IC_TurnUp);
-    im.Key2InputCode_SetIfKeyFree(VK_NUMPAD5, IC_TurnDown);
-    im.Key2InputCode_SetIfKeyFree(VK_NUMPAD4, IC_TurnLeft);
-    im.Key2InputCode_SetIfKeyFree(VK_NUMPAD6, IC_TurnRight);
-    im.Key2InputCode_SetIfKeyFree('Y', IC_RollLeft);
-    im.Key2InputCode_SetIfKeyFree('I', IC_RollRight);
 
-    im.Key2InputCode_SetIfKeyFree('U', IC_OrbitUp);
-    im.Key2InputCode_SetIfKeyFree('J', IC_OrbitDown);
-    im.Key2InputCode_SetIfKeyFree('H', IC_OrbitLeft);
-    im.Key2InputCode_SetIfKeyFree('K', IC_OrbitRight);
+    if (strcmp(Name, "[Game]") == 0)
+    {
+        // Cameras
+        im.Key2InputCode_SetIfKeyFree(VK_NUMPAD8, IC_TurnUp);
+        im.Key2InputCode_SetIfKeyFree(VK_NUMPAD5, IC_TurnDown);
+        im.Key2InputCode_SetIfKeyFree(VK_NUMPAD4, IC_TurnLeft);
+        im.Key2InputCode_SetIfKeyFree(VK_NUMPAD6, IC_TurnRight);
+        im.Key2InputCode_SetIfKeyFree('Y', IC_RollLeft);
+        im.Key2InputCode_SetIfKeyFree('I', IC_RollRight);
 
-    im.Key2InputCode_SetIfKeyFree(VK_HOME,   IC_MoveForward);
-    im.Key2InputCode_SetIfKeyFree(VK_END,    IC_MoveBack);
-    im.Key2InputCode_SetIfKeyFree(VK_DELETE, IC_MoveLeft);
-    im.Key2InputCode_SetIfKeyFree(VK_NEXT,   IC_MoveRight);
-    im.Key2InputCode_SetIfKeyFree(VK_PRIOR,  IC_MoveUp);
-    im.Key2InputCode_SetIfKeyFree(VK_INSERT, IC_MoveDown);
-    im.Key2InputCode_SetIfKeyFree(VK_LSHIFT, IC_RunModifier);
-*/
-    // ComBoard set 0 (single player plays on comboard)
-    im.Key2InputCode_SetIfKeyFree('S', IC_CB_LeftPunch);
-    im.Key2InputCode_SetIfKeyFree('A', IC_CB_LeftHandGuard);
-    im.Key2InputCode_SetIfKeyFree('X', IC_CB_LeftKick);
-    im.Key2InputCode_SetIfKeyFree('Z', IC_CB_LeftLegGuard);
-    im.Key2InputCode_SetIfKeyFree('D', IC_CB_RightPunch);
-    im.Key2InputCode_SetIfKeyFree('F', IC_CB_RightHandGuard);
-    im.Key2InputCode_SetIfKeyFree('C', IC_CB_RightKick);
-    im.Key2InputCode_SetIfKeyFree('V', IC_CB_RightLegGuard);
-    im.Key2InputCode_SetIfKeyFree(VK_UP,    IC_CB_Forward);
-    im.Key2InputCode_SetIfKeyFree(VK_DOWN,  IC_CB_Backward);
-    im.Key2InputCode_SetIfKeyFree(VK_LEFT,  IC_CB_Left);
-    im.Key2InputCode_SetIfKeyFree(VK_RIGHT, IC_CB_Right);
+        im.Key2InputCode_SetIfKeyFree('U', IC_OrbitUp);
+        im.Key2InputCode_SetIfKeyFree('J', IC_OrbitDown);
+        im.Key2InputCode_SetIfKeyFree('H', IC_OrbitLeft);
+        im.Key2InputCode_SetIfKeyFree('K', IC_OrbitRight);
 
-    // ComBoard set 1 (first player plays on comboard, second too)
-    im.Key2InputCode_SetIfKeyFree('A', IC_CB_LeftPunch1);
-    im.Key2InputCode_SetIfKeyFree(VK_CAPITAL, IC_CB_LeftHandGuard1);
-    im.Key2InputCode_SetIfKeyFree('Z', IC_CB_LeftKick1);
-    im.Key2InputCode_SetIfKeyFree(VK_LSHIFT, IC_CB_LeftLegGuard1);
-    im.Key2InputCode_SetIfKeyFree('S', IC_CB_RightPunch1);
-    im.Key2InputCode_SetIfKeyFree('D', IC_CB_RightHandGuard1);
-    im.Key2InputCode_SetIfKeyFree('X', IC_CB_RightKick1);
-    im.Key2InputCode_SetIfKeyFree('C', IC_CB_RightLegGuard1);
-    im.Key2InputCode_SetIfKeyFree('T',    IC_CB_Forward1);
-    im.Key2InputCode_SetIfKeyFree('G',  IC_CB_Backward1);
-    im.Key2InputCode_SetIfKeyFree('F',  IC_CB_Left1);
-    im.Key2InputCode_SetIfKeyFree('H', IC_CB_Right1);
+        im.Key2InputCode_SetIfKeyFree(VK_HOME,   IC_MoveForward);
+        im.Key2InputCode_SetIfKeyFree(VK_END,    IC_MoveBack);
+        im.Key2InputCode_SetIfKeyFree(VK_DELETE, IC_MoveLeft);
+        im.Key2InputCode_SetIfKeyFree(VK_NEXT,   IC_MoveRight);
+        im.Key2InputCode_SetIfKeyFree(VK_PRIOR,  IC_MoveUp);
+        im.Key2InputCode_SetIfKeyFree(VK_INSERT, IC_MoveDown);
+        im.Key2InputCode_SetIfKeyFree(VK_LSHIFT, IC_RunModifier);
 
-    // ComBoard set 2 (second player plays on comboard, first too)
-    im.Key2InputCode_SetIfKeyFree('O', IC_CB_LeftPunch2);
-    im.Key2InputCode_SetIfKeyFree('I', IC_CB_LeftHandGuard2);
-    im.Key2InputCode_SetIfKeyFree('L', IC_CB_LeftKick2);
-    im.Key2InputCode_SetIfKeyFree('K', IC_CB_LeftLegGuard2);
-    im.Key2InputCode_SetIfKeyFree('P', IC_CB_RightPunch2);
+        // ComBoard set 0 (single player plays on comboard)
+        im.Key2InputCode_SetIfKeyFree('S', IC_CB_LeftPunch);
+        im.Key2InputCode_SetIfKeyFree('A', IC_CB_LeftHandGuard);
+        im.Key2InputCode_SetIfKeyFree('X', IC_CB_LeftKick);
+        im.Key2InputCode_SetIfKeyFree('Z', IC_CB_LeftLegGuard);
+        im.Key2InputCode_SetIfKeyFree('D', IC_CB_RightPunch);
+        im.Key2InputCode_SetIfKeyFree('F', IC_CB_RightHandGuard);
+        im.Key2InputCode_SetIfKeyFree('C', IC_CB_RightKick);
+        im.Key2InputCode_SetIfKeyFree('V', IC_CB_RightLegGuard);
+        im.Key2InputCode_SetIfKeyFree(VK_UP,    IC_CB_Forward);
+        im.Key2InputCode_SetIfKeyFree(VK_DOWN,  IC_CB_Backward);
+        im.Key2InputCode_SetIfKeyFree(VK_LEFT,  IC_CB_Left);
+        im.Key2InputCode_SetIfKeyFree(VK_RIGHT, IC_CB_Right);
+    }
+    else
+    {
+        // ComBoard set 1 (first player plays on comboard, second too)
+        im.Key2InputCode_SetIfKeyFree('A', IC_CB_LeftPunch1);
+        im.Key2InputCode_SetIfKeyFree(VK_CAPITAL, IC_CB_LeftHandGuard1);
+        im.Key2InputCode_SetIfKeyFree('Z', IC_CB_LeftKick1);
+        im.Key2InputCode_SetIfKeyFree(VK_LSHIFT, IC_CB_LeftLegGuard1);
+        im.Key2InputCode_SetIfKeyFree('S', IC_CB_RightPunch1);
+        im.Key2InputCode_SetIfKeyFree('D', IC_CB_RightHandGuard1);
+        im.Key2InputCode_SetIfKeyFree('X', IC_CB_RightKick1);
+        im.Key2InputCode_SetIfKeyFree('C', IC_CB_RightLegGuard1);
+        im.Key2InputCode_SetIfKeyFree('T', IC_CB_Forward1);
+        im.Key2InputCode_SetIfKeyFree('G', IC_CB_Backward1);
+        im.Key2InputCode_SetIfKeyFree('F', IC_CB_Left1);
+        im.Key2InputCode_SetIfKeyFree('H', IC_CB_Right1);
+
+        // ComBoard set 2 (second player plays on comboard, first too)
+        im.Key2InputCode_SetIfKeyFree('O', IC_CB_LeftPunch2);
+        im.Key2InputCode_SetIfKeyFree('I', IC_CB_LeftHandGuard2);
+        im.Key2InputCode_SetIfKeyFree('L', IC_CB_LeftKick2);
+        im.Key2InputCode_SetIfKeyFree('K', IC_CB_LeftLegGuard2);
+        im.Key2InputCode_SetIfKeyFree('P', IC_CB_RightPunch2);
 #ifdef WIN32
-    im.Key2InputCode_SetIfKeyFree(VK_OEM_4, IC_CB_RightHandGuard2);
-    im.Key2InputCode_SetIfKeyFree(VK_OEM_1, IC_CB_RightKick2);
-    im.Key2InputCode_SetIfKeyFree(VK_OEM_7, IC_CB_RightLegGuard2);
+        im.Key2InputCode_SetIfKeyFree(VK_OEM_4, IC_CB_RightHandGuard2);
+        im.Key2InputCode_SetIfKeyFree(VK_OEM_1, IC_CB_RightKick2);
+        im.Key2InputCode_SetIfKeyFree(VK_OEM_7, IC_CB_RightLegGuard2);
 #else
-    im.Key2InputCode_SetIfKeyFree('[', IC_CB_RightHandGuard2);
-    im.Key2InputCode_SetIfKeyFree(':', IC_CB_RightKick2);
-    im.Key2InputCode_SetIfKeyFree('\'', IC_CB_RightLegGuard2);
+        im.Key2InputCode_SetIfKeyFree('[', IC_CB_RightHandGuard2);
+        im.Key2InputCode_SetIfKeyFree(':', IC_CB_RightKick2);
+        im.Key2InputCode_SetIfKeyFree('\'', IC_CB_RightLegGuard2);
 #endif
-    im.Key2InputCode_SetIfKeyFree(VK_HOME,   IC_CB_Forward2);
-    im.Key2InputCode_SetIfKeyFree(VK_END,    IC_CB_Backward2);
-    im.Key2InputCode_SetIfKeyFree(VK_DELETE, IC_CB_Left2);
-    im.Key2InputCode_SetIfKeyFree(VK_NEXT,   IC_CB_Right2);
+        im.Key2InputCode_SetIfKeyFree(VK_UP,   IC_CB_Forward2);
+        im.Key2InputCode_SetIfKeyFree(VK_DOWN,    IC_CB_Backward2);
+        im.Key2InputCode_SetIfKeyFree(VK_LEFT, IC_CB_Left2);
+        im.Key2InputCode_SetIfKeyFree(VK_RIGHT,   IC_CB_Right2);
+    }
 }
 
 bool SceneGame :: Invalidate()

@@ -313,8 +313,8 @@ void RenderShadowVolumeElem (xElement *elem, xModelInstance &modelInstance, xLig
 
         if (!shadowData.L_vertices)
             shadowData.L_vertices = (infiniteL) ? new xPoint4[elem->I_vertices + 1] : new xPoint4[elem->I_vertices << 1];
-        if (instance.I_vertices)
-            memcpy (shadowData.L_vertices, instance.L_vertices, instance.I_vertices*sizeof(xPoint4));
+        if (instance.I_vertices) // we are only interested in first elem->I_vertices, the rest are shaded duplicates
+            memcpy (shadowData.L_vertices, instance.L_vertices, elem->I_vertices*sizeof(xPoint4));
         else
         {
             size_t    stride = elem->GetVertexStride();

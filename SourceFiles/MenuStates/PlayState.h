@@ -191,7 +191,7 @@ namespace Scenes { namespace Menu {
                     *choosen[0] = SkeletizedObj();
                     *choosen[1] = SkeletizedObj();
 
-                    SceneGame *scene = new SceneGame();
+                    SceneGame *scene = new SceneGame(SkeletizedObj::camera_controled ? "[Game]" : "[Game_Set2]");
                     scene->Player1 = player1;
                     scene->Player2 = player2;
                     scene->MapFileName = MapFile;
