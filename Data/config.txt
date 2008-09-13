@@ -1,8 +1,9 @@
 [graphics]
 Lighting        2 # 0 = none, 1 = basic, 2 = full
-Shadows         2 # 0 = none, 1 = rigid, 2 = rigid + players
+Shadows         1 # 0 = none, 1 = rigid, 2 = rigid + players
 Shaders         1
-Multisampling   1 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
+// Some old GPUs has problems with displaying text when multisampling is on :/
+Multisampling   0 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
 UseVBO          1
 ShadowMap       512
 VSync           0

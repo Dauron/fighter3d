@@ -23,11 +23,14 @@ namespace Scenes { namespace Menu {
 
         SkeletizedObj             *choosen[2];
         std::vector<SkeletizedObj> players[2];
+        int                        control[2];
 
         xRectangle MenuButton;
         xRectangle PlayButton;
 
         xDWORD widthHalf;
+        xDWORD controlsY;
+        xDWORD controlsH;
         xDWORD fightersY;
         xDWORD fightersH;
         xDWORD stylesY;
@@ -86,6 +89,8 @@ namespace Scenes { namespace Menu {
         {
             ChoosePlayer(0, players[0].front());
             ChoosePlayer(1, players[1].back());
+            control[0] = 0;
+            control[1] = 1;
         }
 
         virtual void Exit()
@@ -101,6 +106,14 @@ namespace Scenes { namespace Menu {
                     xDWORD x = (xDWORD)g_InputMgr.mouseX, y = (xDWORD)g_InputMgr.mouseY;
                     xDWORD i = (x < widthHalf) ? 0 : 1;
 
+                    if (controlsY < y && y < controlsY + controlsH * 3)
+                    {
+                        xDWORD j = (y - controlsY) / controlsH;
+                        control[i] = j;
+                        if (j == 2 && control[(i+1)%2] == 2)
+                            control[(i+1)%2] = 1;
+                    }
+                    else
                     if (fightersY < y && y < fightersY + fightersH * players[0].size())
                     {
                         xDWORD j = (y - fightersY) / fightersH;
@@ -132,22 +145,48 @@ namespace Scenes { namespace Menu {
 
                     player1->FL_shadowcaster = Config::EnableShadowsForPlayers;
                     player1->comBoard.ID_action_cur = player1->comBoard.StopAction.ID_action;
-                    player1->FL_auto_movement = false;
                     player1->Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
                     //player1->Tracker.ID_object = 1;
 
                     player2->FL_shadowcaster = Config::EnableShadowsForPlayers;
                     player2->comBoard.ID_action_cur = player2->comBoard.StopAction.ID_action;
-                    player2->FL_auto_movement = true;
                     player2->Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
                     //player2->Tracker.ID_object = 0;
 
-                    SkeletizedObj::camera_controled = player2;
+                    SkeletizedObj::camera_controled = NULL;
+
+                    player1->FL_auto_movement = control[0] > 0;
+                    player2->FL_auto_movement = control[1] > 0;
+                    if (control[0] < 2 && control[1] < 2)
+                    {
+                        player1->comBoard.PlayerSet = IC_CB_ComboSet1;
+                        player1->ControlType = SkeletizedObj::Control_ComBoardInput;
+                        player2->comBoard.PlayerSet = IC_CB_ComboSet2;
+                        player2->ControlType = SkeletizedObj::Control_ComBoardInput;
+                    }
+                    else
+                    if (control[0] == 2)
+                    {
+                        SkeletizedObj::camera_controled = player1;
+                        player2->comBoard.PlayerSet = IC_CB_ComboSet0;
+                        player2->ControlType = SkeletizedObj::Control_ComBoardInput;
+                    }
+                    else
+                    if (control[1] == 2)
+                    {
+                        SkeletizedObj::camera_controled = player2;
+                        player1->comBoard.PlayerSet = IC_CB_ComboSet0;
+                        player1->ControlType = SkeletizedObj::Control_ComBoardInput;
+                    }
+
                     g_CaptureInput.Finalize();
-                    bool captureOK = g_CaptureInput.Initialize(SkeletizedObj::camera_controled->ModelGr_Get().xModelP->Spine);
-                    SkeletizedObj::camera_controled->ControlType = (captureOK)
-                        ? SkeletizedObj::Control_CaptureInput
-                        : SkeletizedObj::Control_ComBoardInput;
+                    if (SkeletizedObj::camera_controled)
+                    {
+                        bool captureOK = g_CaptureInput.Initialize(SkeletizedObj::camera_controled->ModelGr_Get().xModelP->Spine);
+                        SkeletizedObj::camera_controled->ControlType = (captureOK)
+                            ? SkeletizedObj::Control_CaptureInput
+                            : SkeletizedObj::Control_ComBoardInput;
+                    }
 
                     *choosen[0] = SkeletizedObj();
                     *choosen[1] = SkeletizedObj();
@@ -281,7 +320,7 @@ namespace Scenes { namespace Menu {
             glPopMatrix();
 
             widthHalf = WidthHalf;
-            fightersH = stylesH = (xDWORD)lineHeight03;
+            controlsH = fightersH = stylesH = (xDWORD)lineHeight03;
 
             ////// Header & footer
             glViewport(0,0,Width,Height);
@@ -330,11 +369,30 @@ namespace Scenes { namespace Menu {
 
                 ////// Control mode
                 xFLOAT y = HeightHalf + lineHeight03;
-                const char* controlType = i == 0 ? "Controls: ComBoard" : "Controls: Camera";
-                pFont03->Print(WidthHalf * 0.1f, y, 0.0f, controlType);
+                pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Controls:");
+                controlsY = (xDWORD)y;
+                y += lineHeight03;
+                if (control[i] == 0)
+                    glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
+                else
+                    glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
+                pFont03->Print(WidthHalf * 0.2f, y, 0.0f, "ComBoard");
+                y += lineHeight03;
+                if (control[i] == 1)
+                    glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
+                else
+                    glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
+                pFont03->Print(WidthHalf * 0.2f, y, 0.0f, "ComBoard (auto move)");
+                y += lineHeight03;
+                if (control[i] == 2)
+                    glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
+                else
+                    glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
+                pFont03->Print(WidthHalf * 0.2f, y, 0.0f, "Camera (auto move)");
                 y += lineHeight03*2;
 
                 ////// Fighters
+                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
                 pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Fighters:");
                 fightersY = (xDWORD)y;
                 y += lineHeight03;

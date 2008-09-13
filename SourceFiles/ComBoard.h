@@ -143,6 +143,8 @@ public:
 
     xMatrix        MX_shift;
 
+    xBYTE          PlayerSet;
+
     xBYTE          I_bones;
 
     void Destroy();

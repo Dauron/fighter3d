@@ -5,6 +5,7 @@
 #include "../Multiplayer/NetworkInput.h"
 #include "ObjectTypes.h"
 #include "../Utils/Filesystem.h"
+#include "../SourceFiles/InputCodes.h"
 
 SkeletizedObj *SkeletizedObj::camera_controled  = NULL;
 SkeletizedObj *SkeletizedObj::network_controled = NULL;
@@ -26,6 +27,7 @@ void SkeletizedObj :: ApplyDefaults()
     Tracker.Init();
     styles.clear();
     comBoard.Destroy();
+    comBoard.PlayerSet = IC_CB_ComboSet0;
 }
 
 void SkeletizedObj :: Create ()

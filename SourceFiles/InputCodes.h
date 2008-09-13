@@ -43,6 +43,34 @@
 #define IC_CB_Forward        IC_CB_Right+5
 #define IC_CB_Backward       IC_CB_Forward+1
 
+#define IC_CB_ComboSet1       IC_CB_Backward+1
+#define IC_CB_Left1           IC_CB_ComboSet1
+#define IC_CB_LeftPunch1      IC_CB_Left1+1
+#define IC_CB_LeftKick1       IC_CB_Left1+2
+#define IC_CB_LeftHandGuard1  IC_CB_Left1+3
+#define IC_CB_LeftLegGuard1   IC_CB_Left1+4
+#define IC_CB_Right1          IC_CB_Left1+5
+#define IC_CB_RightPunch1     IC_CB_Right1+1
+#define IC_CB_RightKick1      IC_CB_Right1+2
+#define IC_CB_RightHandGuard1 IC_CB_Right1+3
+#define IC_CB_RightLegGuard1  IC_CB_Right1+4
+#define IC_CB_Forward1        IC_CB_Right1+5
+#define IC_CB_Backward1       IC_CB_Forward1+1
+
+#define IC_CB_ComboSet2       IC_CB_Backward1+1
+#define IC_CB_Left2           IC_CB_ComboSet2
+#define IC_CB_LeftPunch2      IC_CB_Left2+1
+#define IC_CB_LeftKick2       IC_CB_Left2+2
+#define IC_CB_LeftHandGuard2  IC_CB_Left2+3
+#define IC_CB_LeftLegGuard2   IC_CB_Left2+4
+#define IC_CB_Right2          IC_CB_Left2+5
+#define IC_CB_RightPunch2     IC_CB_Right2+1
+#define IC_CB_RightKick2      IC_CB_Right2+2
+#define IC_CB_RightHandGuard2 IC_CB_Right2+3
+#define IC_CB_RightLegGuard2  IC_CB_Right2+4
+#define IC_CB_Forward2        IC_CB_Right2+5
+#define IC_CB_Backward2       IC_CB_Forward2+1
+
 #define IC_Con_BackSpace    IC_CB_Backward+1
 #define IC_Con_LineUp       IC_Con_BackSpace+1
 #define IC_Con_LineDown     IC_Con_BackSpace+2

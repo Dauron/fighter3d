@@ -111,7 +111,8 @@ void ComBoard :: Update(xFLOAT T_delta, bool FL_keyboard_on)
             else
             if (key >= Combo::Keys::RightFirst && key <= Combo::Keys::RightLast)
                 key += Combo::Keys::LeftFirst - Combo::Keys::RightFirst;
-        if (g_InputMgr.InputDown_GetAndRaise(IC_CB_ComboSet0 + key - Combo::Keys::FirstKey))
+
+        if (g_InputMgr.InputDown_GetAndRaise(PlayerSet + key - Combo::Keys::FirstKey))
         {
             AutoAction = AutoHint::HINT_NONE;
             PostActionTransformation(*action, combo.FL_pos_shift);

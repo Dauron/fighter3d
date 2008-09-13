@@ -68,7 +68,7 @@ void SceneMenu :: Resize(int left, int top, unsigned int width, unsigned int hei
     IScene::Resize(left, top, width, height);
 
     g_FontMgr.Release(font03);
-    font03 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.03f));
+    font03 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.02f));
     g_FontMgr.Release(font04);
     font04 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.04f));
     g_FontMgr.Release(font05);
