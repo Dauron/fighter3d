@@ -6,9 +6,15 @@ xShadowData & xElementInstance :: GetShadowData(xLight &light, xShadowData::xSha
     for (; iter != iterE; ++iter)
         if (iter->ID_light == light.id)
         {
-            if (light.modified || iter->zDataLevel < zLevel)
+            if (light.modified)
             {
                 iter->FreeData();
+                iter->zDataLevel = zLevel;
+            }
+            else
+            if (iter->zDataLevel < zLevel)
+            {
+                iter->InvalidateData();
                 iter->zDataLevel = zLevel;
             }
             return *iter;

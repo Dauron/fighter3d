@@ -49,15 +49,9 @@ namespace Physics {
         virtual xVector3 GetVelocity() const = 0;
         virtual xVector3 GetVelocity(const CollisionPoint &CP_point) const = 0;
 
-        virtual xVector3 GetForce(xFLOAT T_time_inv) const = 0;
-        virtual xVector3 GetForce(xFLOAT T_time_inv, const CollisionPoint &CP_point) const = 0;
-
         virtual void     ApplyFix(const CollisionPoint &CP_point) = 0;
         virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time) = 0;
         virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time, const CollisionPoint &CP_point) = 0;
-
-        virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time) = 0;
-        virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time, const CollisionPoint &CP_point) = 0;
 
         IPhysicalBody() : FL_defaults_applied(false), FL_created(false) { BVHierarchy.zero(); }
 
@@ -84,7 +78,7 @@ namespace Physics {
         virtual void     Update(xFLOAT T_time) { if  (IsModified()) P_center_Trfm = MX_LocalToWorld_Get().preTransformP(P_center); }
         virtual void     Render()              {}
         virtual void     FrameEnd()            { FL_modified = false; }
-        virtual void     Destroy()             { FL_created = false; BVHierarchy.free(); BVHierarchy.zero(); }
+        virtual void     Destroy()             { FL_defaults_applied = false; FL_created = false; BVHierarchy.free(); BVHierarchy.zero(); }
     };
 
 } // namespace Physics

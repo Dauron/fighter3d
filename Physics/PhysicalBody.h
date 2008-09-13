@@ -35,22 +35,12 @@ namespace Physics {
         virtual xVector3 GetVelocity(const CollisionPoint &CP_point) const
         { return NW_velocity + xVector3::CrossProduct(QT_velocity.angularVelocity(), CP_point.P_collision - P_center_Trfm); }
 
-        virtual xVector3 GetForce(xFLOAT T_time_inv) const
-        { return GetVelocity() * GetMass() * T_time_inv; }
-        virtual xVector3 GetForce(xFLOAT T_time_inv, const CollisionPoint &CP_point) const
-        { return GetVelocity(CP_point) * GetMass() * T_time_inv; }
-
         virtual void     ApplyFix(const CollisionPoint &CP_point)
         { MX_LocalToWorld_Set().postTranslateT(CP_point.NW_fix * CP_point.W_fix); }
 
         virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time)
         { NW_velocity_new += NW_accel * T_time; }
         virtual void     ApplyAcceleration(const xVector3 &NW_accel, xFLOAT T_time, const CollisionPoint &CP_point);
-
-        virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time)
-        { ApplyAcceleration(NW_force / GetMass(), T_time); }
-        virtual void     ApplyForce(const xVector3 &NW_force, xFLOAT T_time, const CollisionPoint &CP_point)
-        { ApplyAcceleration(NW_force / GetMass(), T_time, CP_point); }
 
     public:
         virtual void LocationChanged() { BVHierarchy.invalidateTransformation(); }
