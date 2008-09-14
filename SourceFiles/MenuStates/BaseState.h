@@ -2,7 +2,7 @@
 #define __incl_Scenes_MenuStates_BaseState_h
 
 #include "../../AppFramework/Input/InputMgr.h"
-#include "InputCodes.h"
+#include "../InputCodes.h"
 #include <string>
 #include <vector>
 #include "../../Math/xMath.h"

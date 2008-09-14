@@ -18,8 +18,8 @@ bool WindowProc(IWindow *thisWnd, XEvent &event)
             //drawGLScene();
             break;
         case ConfigureNotify:
-            if (((long)event.xconfigure.width != (long)thisWnd->width) ||
-                ((long)event.xconfigure.height != (long)thisWnd->height))
+            if (((long)event.xconfigure.width != (long)thisWnd->Width) ||
+                ((long)event.xconfigure.height != (long)thisWnd->Height))
                 thisWnd->Resize (event.xconfigure.width, event.xconfigure.height);
             break;
 

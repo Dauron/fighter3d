@@ -1,11 +1,11 @@
 #ifndef __incl_Utils_Delegate_h
 #define __incl_Utils_Delegate_h
 
-template <typename SENDER, typename METHODT>
-class BaseDelegate
+template <typename SENDER, typename DATA1 = void, typename DATA2 = void>
+class Delegate
 {
 public:
-    typedef METHODT METHOD;
+    typedef void (*METHOD) (SENDER &sender, void *receiver, DATA1 &data1, DATA2 &data2);
 
 protected:
     SENDER *Sender;
@@ -13,12 +13,6 @@ protected:
     METHOD  Method;
 
 public:
-    BaseDelegate()
-        : Sender(NULL), Receiver(NULL), Method(NULL)
-    {}
-    BaseDelegate(SENDER &sender, void *receiver, METHOD method)
-        : Sender(&sender), Receiver(receiver), Method(method)
-    {}
 
     void Set(void *receiver, METHOD method)
     {
@@ -27,29 +21,23 @@ public:
     }
     void Set(METHOD method)
     {
-        Receiver = NULL;
+        Receiver = 0;
         Method   = method;
     }
 
-    BaseDelegate<SENDER, METHODT>
-    &operator = (const BaseDelegate<SENDER, METHODT> &source) {
+    Delegate<SENDER, DATA1, DATA2>
+    &operator = (const Delegate<SENDER, DATA1, DATA2> &source) {
         Sender   = source.Sender;
         Receiver = source.Receiver;
         Method   = source.Method;
         return *this;
     }
-};
 
-#define DELEGATE_CONSTRUCTORS                                               \
-    Delegate() : BaseDelegate() {}                                          \
-    Delegate(SENDER &sender, void *receiver = NULL, METHOD method = NULL)   \
-        : BaseDelegate(sender, receiver, method) {}
-
-template <typename SENDER, typename DATA1 = void, typename DATA2 = void>
-class Delegate : public BaseDelegate<SENDER, void (*) (SENDER &sender, void *receiver, DATA1 &data1, DATA2 &data2)>
-{
 public:
-    DELEGATE_CONSTRUCTORS
+    Delegate()
+        : Sender(0), Receiver(0), Method(0) {}
+    Delegate(SENDER &sender, void *receiver = 0, METHOD method = 0)
+        : Sender(&sender), Receiver(receiver), Method(method) {}
 
     void Raise(DATA1 &data1, DATA2 &data2)
     { if (Method) Method(*Sender, Receiver, data1, data2); }
@@ -59,23 +47,93 @@ public:
 };
 
 template <typename SENDER, typename DATA>
-class Delegate<SENDER, DATA, void> : public BaseDelegate<SENDER, void (*) (SENDER &sender, void *receiver, DATA &data)>
+class Delegate<SENDER, DATA, void>
 {
 public:
-    DELEGATE_CONSTRUCTORS
+    typedef void (*METHOD) (SENDER &sender, void *receiver, DATA &data);
 
-    void Raise(DATA &data)       { if (Method) Method(*Sender, Receiver, data); }
-    void operator() (DATA &data) { Raise(data); }
+protected:
+    SENDER *Sender;
+    void   *Receiver;
+    METHOD  Method;
+
+public:
+
+    void Set(void *receiver, METHOD method)
+    {
+        Receiver = receiver;
+        Method   = method;
+    }
+    void Set(METHOD method)
+    {
+        Receiver = 0;
+        Method   = method;
+    }
+
+    Delegate<SENDER, DATA>
+    &operator = (const Delegate<SENDER, DATA> &source) {
+        Sender   = source.Sender;
+        Receiver = source.Receiver;
+        Method   = source.Method;
+        return *this;
+    }
+
+public:
+    Delegate()
+        : Sender(0), Receiver(0), Method(0) {}
+    Delegate(SENDER &sender, void *receiver = 0, METHOD method = 0)
+        : Sender(&sender), Receiver(receiver), Method(method) {}
+
+    void Raise(DATA &data)
+    { if (Method) Method(*Sender, Receiver, data); }
+
+    void operator() (DATA &data)
+    { Raise(data); }
 };
 
 template <typename SENDER>
-class Delegate<SENDER, void, void> : public BaseDelegate<SENDER, void (*) (SENDER &sender, void *receiver)>
+class Delegate<SENDER, void, void>
 {
 public:
-    DELEGATE_CONSTRUCTORS
+    typedef void (*METHOD) (SENDER &sender, void *receiver);
 
-    void Raise()       { if (Method) Method(*Sender, Receiver); }
-    void operator() () { Raise(); }
+protected:
+    SENDER *Sender;
+    void   *Receiver;
+    METHOD  Method;
+
+public:
+
+    void Set(void *receiver, METHOD method)
+    {
+        Receiver = receiver;
+        Method   = method;
+    }
+    void Set(METHOD method)
+    {
+        Receiver = 0;
+        Method   = method;
+    }
+
+    Delegate<SENDER>
+    &operator = (const Delegate<SENDER> &source) {
+        Sender   = source.Sender;
+        Receiver = source.Receiver;
+        Method   = source.Method;
+        return *this;
+    }
+
+public:
+    Delegate()
+        : Sender(0), Receiver(0), Method(0) {}
+    Delegate(SENDER &sender, void *receiver = 0, METHOD method = 0)
+        : Sender(&sender), Receiver(receiver), Method(method) {}
+
+    void Raise()
+    { if (Method) Method(*Sender, Receiver); }
+
+    void operator() ()
+    { Raise(); }
 };
 
 /* Usage:

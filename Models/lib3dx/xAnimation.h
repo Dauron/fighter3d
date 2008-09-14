@@ -3,6 +3,7 @@
 
 #include "../../Math/xMath.h"
 #include "xModel.h"
+#include <string>
 
 struct xKeyFrame
 {

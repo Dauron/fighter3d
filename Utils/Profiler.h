@@ -50,7 +50,7 @@ class Profiler : public Singleton<Profiler>
 public:
     static void CreateS(uint i_MaxSamples)
     {
-        Singleton::CreateS();
+        new Profiler();
         g_Profiler.Create(i_MaxSamples);
     }
 
@@ -133,7 +133,7 @@ struct ProfileInstance
     const char* Name;
 
     ProfileInstance(const char *name)
-    { if (Profiler::GetSingletonPtr()) g_Profiler.ProfileBegin(Name = name); }
+    { Name = name; if (Profiler::GetSingletonPtr()) g_Profiler.ProfileBegin(Name); }
 
     ~ProfileInstance()
     { if (Profiler::GetSingletonPtr()) g_Profiler.ProfileEnd(Name); }

@@ -46,7 +46,7 @@ bool SceneGame :: InitMap()
         OB_curr = Map.objects.begin(),
         OB_last = Map.objects.end();
 
-    int i = 0;
+    size_t i = 0;
 
     for (; OB_curr != OB_last; ++OB_curr)
         if ( (**OB_curr).Type == AI::ObjectType::Human )

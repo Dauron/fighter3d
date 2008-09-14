@@ -10,6 +10,7 @@ Left	47
 Up	41
 Right	48
 Down	42
+Numpad_0	4
 F11	100
 Tilda	4
 [Game]
@@ -56,6 +57,7 @@ Left	52
 Up	62
 Right	57
 Down	63
+:	59
 A	41
 C	49
 D	48
@@ -71,6 +73,8 @@ S	46
 T	50
 X	47
 Z	42
+Windows_L	60
+Numpad_0	4
 F11	100
 Shift_L	44
 Semicolon	59
@@ -83,6 +87,7 @@ Return	1
 Escape	2
 Up	24
 Down	25
+Numpad_0	4
 F11	100
 Tilda	4
 [Skeleton]

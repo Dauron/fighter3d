@@ -59,12 +59,12 @@ protected:
 public:
     Stat_BoolPtr() { BoolP = NULL; }
 
-    void Create(const std::string &Name, bool &Bool)
+    void Create(const std::string &Name, bool &pBool)
     {
         assert (Name.size() && "Stat_BoolPtr::Create : Name is empty");
 
         this->Name   = Name;
-        this->BoolP = &Bool;
+        this->BoolP = &pBool;
     }
 
     virtual const char* Print()

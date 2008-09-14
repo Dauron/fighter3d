@@ -75,7 +75,7 @@ Image *LoadTGA(const char *filename)
     texture->data = new unsigned char[imageSize];              // Reserve Memory To Hold The TGA Data
 
     fseek(file, 0, SEEK_END);
-    long size = ftell(file);
+    //long size = ftell(file);
     fseek(file, 18+TGAcompare[0], SEEK_SET);
 
     if( texture->data == NULL ||                               // Does The Storage Memory Exist?

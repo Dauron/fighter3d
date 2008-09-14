@@ -99,8 +99,6 @@ namespace Scenes { namespace Menu {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glEnable(GL_TEXTURE_2D);
 
-            xFLOAT wMax  = Width * 0.4f;
-            xFLOAT hMax  = Height * 0.4f;
             xFLOAT scale = Height * 0.7f / 1024.f;
             xFLOAT left  = 0.f;
             xFLOAT top   = 0.f;

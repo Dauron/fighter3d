@@ -31,7 +31,7 @@ namespace Graphics { namespace OGL {
         ShaderSkeletal *currSkeletalShader;
 
     public:
-        AnimSkeletal() : m_forceCPU(false), aBoneIdxWghts(-1) {}
+        AnimSkeletal() : aBoneIdxWghts(-1), m_forceCPU(false) {}
 
         bool HardwareEnabled()          { return currSkeletalShader; }
         void ForceSoftware(bool enable) { m_forceCPU = enable; }

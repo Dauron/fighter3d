@@ -327,7 +327,7 @@ void   xModel :: Save()
     if (file)
     {
         bool   FL_save_bvh = BVHierarchy != NULL;
-        bool   FL_save_smooth = true;
+        //bool   FL_save_smooth = true;
         this->FL_save_rdata = true;
 
         xDWORD len = 3;

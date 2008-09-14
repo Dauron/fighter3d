@@ -56,7 +56,7 @@ bool GLWindow::Create()
     deskMode = *modes[0];
     /* look for mode with requested resolution */
     for (i = 0; i < modeNum; i++)
-        if ((modes[i]->hdisplay == width) && (modes[i]->vdisplay == height))
+        if ((modes[i]->hdisplay == Width) && (modes[i]->vdisplay == Height))
             bestMode = i;
     /* get an appropriate visual */
     vi = glXChooseVisual(hDC, screen, attrListDbl);
@@ -107,7 +107,7 @@ bool GLWindow::Create()
         attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
             PointerMotionMask | FocusChangeMask | StructureNotifyMask;
         win = XCreateWindow(hDC, RootWindow(hDC, vi->screen),
-            0, 0, width, height, 0, vi->depth, InputOutput, vi->visual,
+            0, 0, Width, Height, 0, vi->depth, InputOutput, vi->visual,
             CWBorderPixel | CWColormap | CWEventMask, &attr);
         /* only set window title and handle wm_delete_events if in windowed mode */
         wmDelete = XInternAtom(hDC, "WM_DELETE_WINDOW", True);
@@ -127,7 +127,7 @@ bool GLWindow::Create()
         printf("Sorry, no Direct Rendering possible!\n");
 
     OnCreate();
-    this->Resize(width, height);
+    this->Resize(Width, Height);
 
     return true;
 }

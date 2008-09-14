@@ -4,6 +4,7 @@
 #include "System.h"
 #include "../Utils/Delegate.h"
 #include <cassert>
+#include <cstring>
 
 #ifndef WIN32
 #include <GL/glx.h>

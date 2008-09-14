@@ -237,7 +237,7 @@ bool SceneConsole :: Update(float T_delta)
     if (im.InputDown_GetAndRaise(IC_Con_StatNextPage))
     {
         ++curStatPage;
-        if (curStatPage >= g_StatMgr.pages.size())
+        if (curStatPage >= (int)g_StatMgr.pages.size())
             curStatPage = -1;
     }
 
@@ -565,7 +565,7 @@ bool SceneConsole::Render()
 
         glViewport(Left, Top, Width, cHeight); // Set viewport
 
-        if (curStatPage >= 0 && curStatPage >= g_StatMgr.pages.size())
+        if (curStatPage >= 0 && curStatPage >= (int)g_StatMgr.pages.size())
             curStatPage = g_StatMgr.pages.size() - 1;
         if (curStatPage >= 0)
         {

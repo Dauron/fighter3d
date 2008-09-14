@@ -10,9 +10,8 @@ SOURCE_MATH = ./Math/*.cpp \
 SOURCE_GRPH = ./Graphics/*.cpp \
          ./Graphics/OGL/*.cpp \
          ./Graphics/OGL/Extensions/*.cpp \
-         ./Graphics/OGL/Fonts/*.cpp \
          ./Graphics/OGL/Render/*.cpp \
-         ./Graphics/OGL/Textures/*.cpp
+         ./Graphics/Textures/*.cpp
 SOURCE_END = ./Config.cpp \
          ./App\ Framework/*.cpp \
          ./App\ Framework/OGL/*.cpp \

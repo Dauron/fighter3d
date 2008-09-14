@@ -9,9 +9,9 @@
 
 using namespace Graphics::OGL;
 
-const float Font::INTERLINE = 0.2f;
+const float Graphics::OGL::Font::INTERLINE = 0.2f;
 
-bool Font :: Create()
+bool Graphics::OGL::Font :: Create()
 {
     assert (ID_GLFontBase == -1);
     assert (Name.size());
@@ -91,7 +91,7 @@ bool Font :: Create()
             printf("Problems loading fonts :-(\n");
     }
     /* build 96 display lists out of our font starting at char 32 */
-    glXUseXFont(font->fid, FIRST_CHAR, NUM_CHARS, m_GLFontBase);
+    glXUseXFont(font->fid, FIRST_CHAR, NUM_CHARS, ID_GLFontBase);
 
     char s = FIRST_CHAR;
     for (int i = 0; i < NUM_CHARS; ++i, ++s)
@@ -108,7 +108,7 @@ bool Font :: Create()
     return true;
 }
 
-void Font :: Dispose()
+void Graphics::OGL::Font :: Dispose()
 {
     if (ID_GLFontBase != -1)
     {
@@ -117,7 +117,7 @@ void Font :: Dispose()
     }
 }
 
-void  Font :: Print  (float x, float y, float z, float maxHeight, int skipLines, const char *text) const
+void  Graphics::OGL::Font :: Print  (float x, float y, float z, float maxHeight, int skipLines, const char *text) const
 {
     assert(ID_GLFontBase != -1);
     assert(text);
@@ -154,7 +154,7 @@ void  Font :: Print  (float x, float y, float z, float maxHeight, int skipLines,
     glListBase(0);
 }
 
-void  Font :: Print  (float x, float y, float z, const char *text) const
+void  Graphics::OGL::Font :: Print  (float x, float y, float z, const char *text) const
 {
     assert(ID_GLFontBase != -1);
     assert(text);
@@ -179,7 +179,7 @@ void  Font :: Print  (float x, float y, float z, const char *text) const
     glListBase(0); // Sets The Base Character to FIRST_CHAR
 }
 
-void  Font :: PrintF (float x, float y, float z, const char *fmt, ...) const
+void  Graphics::OGL::Font :: PrintF (float x, float y, float z, const char *fmt, ...) const
 {
     assert(ID_GLFontBase != -1);
     assert(fmt);
@@ -210,7 +210,7 @@ void  Font :: PrintF (float x, float y, float z, const char *fmt, ...) const
     glListBase(0);
 }
 
-void  Font :: Print  (const char *text) const
+void  Graphics::OGL::Font :: Print  (const char *text) const
 {
     assert(ID_GLFontBase != -1);
     assert(text);
@@ -220,7 +220,7 @@ void  Font :: Print  (const char *text) const
     glListBase(0);
 }
 
-void  Font :: PrintF (const char *fmt, ...) const
+void  Graphics::OGL::Font :: PrintF (const char *fmt, ...) const
 {
     assert(ID_GLFontBase != -1);
     assert(fmt);
@@ -236,7 +236,7 @@ void  Font :: PrintF (const char *fmt, ...) const
     glListBase(0);
 }
 
-float Font :: Length (const char *text) const
+float Graphics::OGL::Font :: Length (const char *text) const
 {
     float length = 0.f;
     float maxLen = 0.f;
@@ -262,7 +262,7 @@ float Font :: Length (const char *text) const
 
 #ifdef WIN32
 /*
-void Font::Print3d (const char *fmt, ...) const
+void Graphics::OGL::Font::Print3d (const char *fmt, ...) const
 {
     assert(m_GLFontBase3d != -1);
     //if (m_GLFontBase3d == -1) Init();
@@ -295,7 +295,7 @@ void Font::Print3d (const char *fmt, ...) const
     glTranslatef(length/2,0.0f,0.0f);             // Center Our Text On The Screen
 }
 
-GLfloat Font::Length3d (const char *text) const
+GLfloat Graphics::OGL::Font::Length3d (const char *text) const
 {
     assert(m_GLFontBase3d != -1);
     //if (m_GLFontBase3d == -1) Init();

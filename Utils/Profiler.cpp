@@ -132,7 +132,7 @@ void Profiler :: FrameEnd()
         char *nameT = buff2;
 
         strcpy (name, history.Name);
-        for (int indent=0; indent < sample.I_NumParents; ++indent)
+        for (size_t indent=0; indent < sample.I_NumParents; ++indent)
         {
             sprintf( nameT, "    %s", name );
             char* swp = name; name = nameT; nameT = swp;
