@@ -15,6 +15,8 @@ namespace Scenes { namespace Menu {
         std::string            ModelGrFile;
         std::string            ModelPhFile;
 
+        HTexture backGround;
+
         virtual void Init(BaseState *parent)
         {
             BaseState::Init(parent);
@@ -26,6 +28,15 @@ namespace Scenes { namespace Menu {
             CurrentDirectory = Filesystem::GetFullPath("Data/models");
             Buttons.clear();
             GetFiles();
+
+            backGround = g_TextureMgr.GetTexture("Data/textures/menu/model_editor.tga");
+        }
+
+        virtual void Clear()
+        {
+            BaseState::Clear();
+            g_TextureMgr.Release(backGround);
+            backGround = HTexture();
         }
 
         virtual void Enter()
@@ -97,9 +108,38 @@ namespace Scenes { namespace Menu {
         }
 
         virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
-                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                             xDWORD Width, xDWORD Height)
         {
+            if (!backGround.IsNull())
+            {
+                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
+                glEnable (GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glEnable(GL_TEXTURE_2D);
+
+                xFLOAT scale   = Height * 0.7f / 1024.f;
+                xFLOAT iWidth  = scale * g_TextureMgr.GetWidth(backGround);
+                xFLOAT iHeight = scale * g_TextureMgr.GetHeight(backGround);
+                xFLOAT left = Width  - iWidth  - 170.f*scale;
+                xFLOAT top  = Height - iHeight - 480.f*scale;
+
+                g_TextureMgr.BindTexture(backGround);
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(left, top);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(left+iWidth, top);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(left+iWidth, top+iHeight);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(left, top+iHeight);
+                }
+                glEnd();
+
+                glDisable(GL_TEXTURE_2D);
+                glDisable(GL_BLEND);
+            }
             xFLOAT lineHeight03 = pFont03->LineH();
 
             xFLOAT top  = lineHeight03-3, left = 5, width = Width*0.333f-10;

@@ -8,6 +8,10 @@ namespace Scenes { namespace Menu {
 
         std::vector<xRectangle> buttons;
 
+        HTexture backGround;
+        HTexture marker;
+        bool     FL_mouseOver;
+
         virtual void Init(BaseState *parent)
         {
             Name = "Camera Fighter";
@@ -30,6 +34,18 @@ namespace Scenes { namespace Menu {
                 if (selected >= SubStates.size()) selected = 0;
             }
             while (!SubStates[selected]->FL_enabled);
+
+            backGround = g_TextureMgr.GetTexture("Data/textures/menu/main.tga");
+            marker     = g_TextureMgr.GetTexture("Data/textures/menu/dot.tga");
+        }
+
+        virtual void Clear()
+        {
+            BaseState::Clear();
+            g_TextureMgr.Release(backGround);
+            g_TextureMgr.Release(marker);
+            backGround = HTexture();
+            marker     = HTexture();
         }
 
         virtual bool Update(xFLOAT T_time)
@@ -62,17 +78,10 @@ namespace Scenes { namespace Menu {
                     return true;
                 }
 
-                if (im.InputDown_GetAndRaise(IC_LClick))
+                if (im.InputDown_GetAndRaise(IC_LClick) && FL_mouseOver)
                 {
-                    int mouseX = im.mouseX;
-                    int mouseY = im.mouseY;
-
-                    for (size_t i = 0; i < buttons.size(); ++i)
-                        if (buttons[i].Contains(mouseX, mouseY))
-                        {
-                            if (SubStates[i]->FL_enabled) SwitchState(*SubStates[i]);
-                            return true;
-                        }
+                    SwitchState(*SubStates[selected]);
+                    return true;
                 }
                 return res;
             }
@@ -80,40 +89,84 @@ namespace Scenes { namespace Menu {
         }
 
         virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
-                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                             xDWORD Width, xDWORD Height)
         {
-            xFLOAT lineHeight05 = pFont05->LineH();
-            xFLOAT lineHeight10 = pFont10->LineH();
-
-            xFLOAT textLen = pFont10->Length(Name.c_str());
-
-            glColor4f( 1.0f, 0.0f, 0.0f, 1.f );
-            pFont10->Print((Width - textLen) * 0.5f, lineHeight10, 0.0f, Name.c_str());
-
             int mouseX = g_InputMgr.mouseX;
             int mouseY = g_InputMgr.mouseY;
 
-            xFLOAT y = (Height - lineHeight05 * SubStates.size()) * 0.5f;
-            int    i = 0;
-            Vec_State::iterator SS_curr = SubStates.begin(),
-                                SS_last = SubStates.end();
-            for (; SS_curr != SS_last; ++SS_curr, ++i)
+            glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
+            glEnable (GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_TEXTURE_2D);
+
+            xFLOAT wMax  = Width * 0.4f;
+            xFLOAT hMax  = Height * 0.4f;
+            xFLOAT scale = Height * 0.7f / 1024.f;
+            xFLOAT left  = 0.f;
+            xFLOAT top   = 0.f;
+
+            if (!backGround.IsNull())
             {
-                BaseState &state = **SS_curr;
+                xFLOAT iWidth  = scale * g_TextureMgr.GetWidth(backGround);
+                xFLOAT iHeight = scale * g_TextureMgr.GetHeight(backGround);
 
-                textLen = pFont05->Length(state.Name.c_str());
-                buttons[i] = xRectangle((Width - textLen) * 0.5f, y+lineHeight05*(i-1), textLen, lineHeight05);
+                left = Width  - iWidth  - 170.f*scale;
+                top  = Height - iHeight - 150.f*scale;
 
-                if (!state.FL_enabled)
-                    glColor4f( 0.6f, 0.6f, 0.6f, 1.f );
-                else
-                if (i == selected || buttons[i].Contains(mouseX, mouseY))
-                    glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-                else
-                    glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                pFont05->Print(buttons[i].X, y+lineHeight05*i, 0.0f, state.Name.c_str());
+                g_TextureMgr.BindTexture(backGround);
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(left, top);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(left+iWidth, top);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(left+iWidth, top+iHeight);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(left, top+iHeight);
+                }
+                glEnd();
             }
+
+            xFLOAT textLeft   = left + 525.f * scale;
+            xFLOAT textRight  = left + 790.f * scale;
+            xFLOAT textTop    = top  + 177.f * scale;
+            xFLOAT textHeight = 53.5f * scale;
+
+            FL_mouseOver = false;
+            if (mouseX > textLeft && mouseX < textRight)
+            {
+                if (mouseY > textTop && mouseY < textTop + 6 * textHeight)
+                {
+                    FL_mouseOver = true;
+                    int i = (int)((mouseY - textTop) / textHeight);
+                    if (SubStates[i]->FL_enabled)
+                        selected = i;
+                }
+            }
+
+            if (!marker.IsNull())
+            {
+                g_TextureMgr.BindTexture(marker);
+
+                xFLOAT y = textTop + textHeight * selected;
+                xFLOAT iWidth = 32 * scale;
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(textRight, y);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(textRight+iWidth, y);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(textRight+iWidth, y+iWidth);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(textRight, y+iWidth);
+                }
+                glEnd();
+            }
+
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_BLEND);
         }
     };
 

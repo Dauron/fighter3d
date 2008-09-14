@@ -22,9 +22,9 @@ bool SceneConsole :: Create(int left, int top, unsigned int width, unsigned int 
 
     InitInputMgr();
 
-    history = '>';
-    histLines = 1;
-    scroll_v = 0;
+    history      = '>';
+    histLines    = 1;
+    scroll_v     = 0;
 
     FL_visible = !PrevScene;
 
@@ -166,9 +166,9 @@ bool SceneConsole :: Update(float T_delta)
     Performance.Update(T_delta);
 
     T_carretTick += T_delta;
-    while (T_carretTick > 500.f)
+    while (T_carretTick > 0.5f)
     {
-        T_carretTick -= 500.f;
+        T_carretTick -= 0.5f;
         FL_carretVisible = !FL_carretVisible;
     }
 

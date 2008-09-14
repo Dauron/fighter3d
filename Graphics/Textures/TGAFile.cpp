@@ -56,8 +56,8 @@ Image *LoadTGA(const char *filename)
         return NULL;                                           // Return False
     }
 
-    texture->sizeX = (unsigned int)(header[1]) << 8 + header[0]; // Determine The TGA Width  (highbyte*256+lowbyte)
-    texture->sizeY = (unsigned int)(header[3]) << 8 + header[2]; // Determine The TGA Height (highbyte*256+lowbyte)
+    texture->sizeX = (unsigned int)(header[1] << 8) + header[0]; // Determine The TGA Width  (highbyte*256+lowbyte)
+    texture->sizeY = (unsigned int)(header[3] << 8) + header[2]; // Determine The TGA Height (highbyte*256+lowbyte)
     texture->bpp = header[4];                                    // Grab The TGA's Bits Per Pixel (24 or 32)
 
      if( texture->sizeX == 0 ||                                // Is The Width Less Than Or Equal To Zero

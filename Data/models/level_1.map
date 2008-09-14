@@ -1,3 +1,9 @@
+[general]
+spawn1rot    0 0 90
+spawn1pos    -1.5 -1.5 0.95
+spawn2rot    0 0 -90
+spawn2pos    3.5 -1.5 0.95
+
 # LIGHTS
 
 # yellow
@@ -11,6 +17,12 @@ softness	0.3
 position	0	0	10
 
 # OBJECTS
+
+[model]
+model	dojo/floor0.3dx
+position	0.0	0.0	-0.21
+physical	0
+phantom	0
 
 [model]
 model    crate.3dx

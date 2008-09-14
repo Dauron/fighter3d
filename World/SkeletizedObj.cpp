@@ -524,6 +524,9 @@ void SkeletizedObj :: Update(float T_time)
         else
             verletSystem.W_boneMix[i] = 0.f;
 
+    if (FL_verlet)
+        comBoard.ID_action_cur = comBoard.StopAction.ID_action;
+
 
     spine.L_bones->QT_rotation.zeroQ();
     QT_verlet[0].zeroQ();

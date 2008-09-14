@@ -42,9 +42,7 @@ void SceneMenu :: Destroy()
 {
     g_FontMgr.Release(font03);
     g_FontMgr.Release(font04);
-    g_FontMgr.Release(font05);
-    g_FontMgr.Release(font10);
-    font03 = font04 = font05 = font10 = HFont();
+    font03 = font04 = HFont();
 
     if (root)
     {
@@ -68,13 +66,9 @@ void SceneMenu :: Resize(int left, int top, unsigned int width, unsigned int hei
     IScene::Resize(left, top, width, height);
 
     g_FontMgr.Release(font03);
-    font03 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.02f));
+    font03 = g_FontMgr.GetFont("Arial", (int)(Height * 0.025f));
     g_FontMgr.Release(font04);
-    font04 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.04f));
-    g_FontMgr.Release(font05);
-    font05 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.05f));
-    g_FontMgr.Release(font10);
-    font10 = g_FontMgr.GetFont("Courier New", (int)(Height * 0.10f));
+    font04 = g_FontMgr.GetFont("Arial", (int)(Height * 0.035f));
 }
 
 bool SceneMenu :: Update(float deltaTime)
@@ -100,11 +94,11 @@ bool SceneMenu :: Render()
     glViewport(Left, Top, Width, Height);
     glDisable(GL_DEPTH_TEST);
     Graphics::OGL::Shader::SetLightType(xLight_NONE);
-    Graphics::OGL::Shader::EnableTexturing(xState_Off);
+    Graphics::OGL::Shader::EnableTexturing(Graphics::OGL::xState_Off);
     glDisable (GL_POLYGON_SMOOTH);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glEnable (GL_BLEND);                    // Enable blending
+    //glEnable (GL_BLEND);                    // Enable blending
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // Set projection
     glMatrixMode(GL_PROJECTION);
@@ -114,7 +108,7 @@ bool SceneMenu :: Render()
     glLoadIdentity();
 
     // Draw backgroud
-    glColor4f( 0.7f, 0.7f, 1.f, 0.6f );
+    glColor4f( 1.f, 1.f, 1.f, 1.f );
     glBegin(GL_QUADS);
         glVertex2f(0.f, 0.f);
         glVertex2f((GLfloat)Width, 0.f);
@@ -122,14 +116,12 @@ bool SceneMenu :: Render()
         glVertex2f(0.f, (GLfloat)Height);
     glEnd();
 
-    glDisable(GL_BLEND);
+    //glDisable(GL_BLEND);
 
     const Graphics::OGL::Font* pFont03 = g_FontMgr.GetFont(font03);
     const Graphics::OGL::Font* pFont04 = g_FontMgr.GetFont(font04);
-    const Graphics::OGL::Font* pFont05 = g_FontMgr.GetFont(font05);
-    const Graphics::OGL::Font* pFont10 = g_FontMgr.GetFont(font10);
 
-    Menu::BaseState::Current_Get()->Render(pFont03, pFont04, pFont05, pFont10, Width, Height);
+    Menu::BaseState::Current_Get()->Render(pFont03, pFont04, Width, Height);
 
 
     //////////////////// WORLD - END

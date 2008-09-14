@@ -1,20 +1,19 @@
 [general]
 import   dojo/dojo.map
-# night sky
-skybox   night.3dx
-skycolor 0.04 0.04 0.04
+# day sky
+skycolor 0.8 0.8 1
 
 #################### LIGHTS
 
-# yellow
+# day sky
 [light]
-type	POINT
-att_const	0.9
-att_linear	0.005
-att_square	0.0005
-color	1	0.7	0
-softness	0.3
-position	0	0	10
+type      INFINITE
+color     0.9 0.9 1.0
+softness  0.4
+direction -10 -10 -10
+att_const  0.9
+att_linear 0.005
+att_square 0.0005
 
 #################### OBJECTS
 

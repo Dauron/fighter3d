@@ -36,6 +36,10 @@ namespace Scenes { namespace Menu {
         xDWORD stylesY;
         xDWORD stylesH;
 
+        HTexture backGround;
+        HTexture nextBtn;
+        HTexture backBtn;
+
         virtual void Init(BaseState *parent)
         {
             BaseState::Init(parent);
@@ -43,6 +47,9 @@ namespace Scenes { namespace Menu {
             LoadPlayers();
             FL_enabled = players[0].size();
             MapFile.clear();
+            backGround = g_TextureMgr.GetTexture("Data/textures/menu/fighters.tga");
+            nextBtn = g_TextureMgr.GetTexture("Data/textures/menu/next.tga");
+            backBtn = g_TextureMgr.GetTexture("Data/textures/menu/back.tga");
         }
         virtual void Invalidate()
         {
@@ -68,6 +75,10 @@ namespace Scenes { namespace Menu {
                     }
                 players[i].clear();
             }
+            g_TextureMgr.Release(backGround);
+            g_TextureMgr.Release(nextBtn);
+            g_TextureMgr.Release(backBtn);
+            nextBtn = backBtn = backGround = HTexture();
         }
 
         void ChoosePlayer(xBYTE player, SkeletizedObj &model)
@@ -191,6 +202,9 @@ namespace Scenes { namespace Menu {
                     *choosen[0] = SkeletizedObj();
                     *choosen[1] = SkeletizedObj();
 
+                    player1->comBoard.FL_mirror = false;
+                    player2->comBoard.FL_mirror = false;
+
                     SceneGame *scene = new SceneGame(SkeletizedObj::camera_controled ? "[Game]" : "[Game_Set2]");
                     scene->Player1 = player1;
                     scene->Player2 = player2;
@@ -222,15 +236,89 @@ namespace Scenes { namespace Menu {
         }
 
         virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
-                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                             xDWORD Width, xDWORD Height)
         {
-            xDWORD HeightHalf = (xDWORD)(Height * 0.5f);
-            xDWORD WidthHalf  = (xDWORD)(Width * 0.5f);
+            glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
+            glEnable (GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_TEXTURE_2D);
+
+            xFLOAT scale   = Height * 0.7f / 1024.f;
+
+            if (!backGround.IsNull())
+            {
+                xFLOAT iWidth  = scale * g_TextureMgr.GetWidth(backGround);
+                xFLOAT iHeight = scale * g_TextureMgr.GetHeight(backGround);
+                xFLOAT left = Width  - iWidth  - 450.f*scale;
+                xFLOAT top  = Height - iHeight - 480.f*scale;
+
+                g_TextureMgr.BindTexture(backGround);
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(left, top);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(left+iWidth, top);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(left+iWidth, top+iHeight);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(left, top+iHeight);
+                }
+                glEnd();
+            }
+
+            if (!nextBtn.IsNull())
+            {
+                PlayButton.W = 2.f * scale * g_TextureMgr.GetWidth(nextBtn);
+                PlayButton.X = Width - PlayButton.W - 100.f * scale;
+                PlayButton.H = 2.f * scale * g_TextureMgr.GetHeight(nextBtn);
+                PlayButton.Y = Height - PlayButton.H - 50.f * scale;
+                g_TextureMgr.BindTexture(nextBtn);
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(PlayButton.X, PlayButton.Y);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(PlayButton.X+PlayButton.W, PlayButton.Y);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(PlayButton.X+PlayButton.W, PlayButton.Y+PlayButton.H);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(PlayButton.X, PlayButton.Y+PlayButton.H);
+                }
+                glEnd();
+            }
+
+            if (!backBtn.IsNull())
+            {
+                MenuButton.W = 2.f * scale * g_TextureMgr.GetWidth(backBtn);
+                MenuButton.X = 100.f * scale;
+                MenuButton.H = 2.f * scale * g_TextureMgr.GetHeight(backBtn);
+                MenuButton.Y = Height - MenuButton.H - 50.f * scale;
+                g_TextureMgr.BindTexture(backBtn);
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(MenuButton.X, MenuButton.Y);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(MenuButton.X+MenuButton.W, MenuButton.Y);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(MenuButton.X+MenuButton.W, MenuButton.Y+MenuButton.H);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(MenuButton.X, MenuButton.Y+MenuButton.H);
+                }
+                glEnd();
+            }
+
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_BLEND);
+
+            xFLOAT HeightHalf  = Height * 0.5f;
+            xFLOAT WidthFourth = Width * 0.25f;
+            widthHalf = (xDWORD)(Width * 0.5f);
 
             xFLOAT lineHeight03 = pFont03->LineH();
-            xFLOAT lineHeight05 = pFont05->LineH();
-            xFLOAT HeadersHeight = lineHeight05*2.f;
+            xFLOAT lineHeight04 = pFont04->LineH();
+            xFLOAT HeadersHeight = lineHeight04*2.f;
 
             ////// Fighter demo
 
@@ -267,7 +355,7 @@ namespace Scenes { namespace Menu {
             glPolygonMode(GL_FRONT_AND_BACK, Config::PolygonMode);
 
             Front.Init(10.f, -10.0f, choosen[0]->P_center_Trfm.z, 9.0f, -9.0f, choosen[0]->P_center_Trfm.z, 0.0f, 0.0f, 1.0f);
-            Front.FOV.InitViewport(0,HeightHalf,WidthHalf,HeightHalf-(xDWORD)HeadersHeight);
+            Front.FOV.InitViewport(0,(xDWORD)HeightHalf,(xDWORD)WidthFourth*3,(xDWORD)(HeightHalf-HeadersHeight));
             Front.FOV.InitOrthogonal();
             Front.Update(0.f);
             ViewportSet_GL(Front);
@@ -300,7 +388,7 @@ namespace Scenes { namespace Menu {
             render.RenderModel(*choosen[0]->ModelGr->xModelP, choosen[0]->ModelGr->instance, false, Front.FOV);
             render.RenderModel(*choosen[0]->ModelGr->xModelP, choosen[0]->ModelGr->instance, true,  Front.FOV);
 
-            glViewport(WidthHalf,HeightHalf,WidthHalf,HeightHalf-(xDWORD)HeadersHeight);
+            glViewport((xDWORD)WidthFourth,(xDWORD)HeightHalf,(xDWORD)WidthFourth*3,(xDWORD)(HeightHalf-HeadersHeight));
 
             render.RenderModel(*choosen[1]->ModelGr->xModelP, choosen[1]->ModelGr->instance, false, Front.FOV);
             render.RenderModel(*choosen[1]->ModelGr->xModelP, choosen[1]->ModelGr->instance, true,  Front.FOV);
@@ -319,110 +407,147 @@ namespace Scenes { namespace Menu {
             glMatrixMode(GL_MODELVIEW);
             glPopMatrix();
 
-            widthHalf = WidthHalf;
-            controlsH = fightersH = stylesH = (xDWORD)lineHeight03;
+            controlsH = fightersH = stylesH = (xDWORD)lineHeight04;
 
-            ////// Header & footer
-            glViewport(0,0,Width,Height);
-            glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
+            // Set projection
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0, WidthFourth, Height, 0, 0, 100);
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
 
-            glBegin(GL_LINES);
+            ////// Player config 1
+            int i = 0;
+            glViewport(0,0,(xDWORD)WidthFourth,Height);
+
+            glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
+
+            ////// Control mode
+            xFLOAT y = HeadersHeight + lineHeight04;
+            pFont04->Print(WidthFourth * 0.1f, y, 0.0f, "Controls:");
+            controlsY = (xDWORD)y;
+            y += lineHeight04;
+            if (control[i] == 0)
+                glColor3ub(222, 173, 192);
+            else
+                glColor3ub(0, 0, 0);
+            pFont03->Print(WidthFourth * 0.1f, y, 0.0f, "ComBoard");
+            y += lineHeight03;
+            if (control[i] == 1)
+                glColor3ub(222, 173, 192);
+            else
+                glColor3ub(0, 0, 0);
+            pFont03->Print(WidthFourth * 0.1f, y, 0.0f, "ComBoard (auto move)");
+            y += lineHeight03;
+            if (control[i] == 2)
+                glColor3ub(222, 173, 192);
+            else
+                glColor3ub(0, 0, 0);
+            pFont03->Print(WidthFourth * 0.1f, y, 0.0f, "Camera (auto move)");
+
+            ////// Fighters
+            glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
+            y += lineHeight04*2;
+            pFont04->Print(WidthFourth * 0.1f, y, 0.0f, "Fighters:");
+            fightersY = (xDWORD)y;
+            y += lineHeight04;
+            for (size_t j = 0; j < players[i].size(); ++j)
             {
-                glVertex2f((xFLOAT)WidthHalf, HeadersHeight);
-                glVertex2f((xFLOAT)WidthHalf, Height-HeadersHeight);
-
-                glVertex2f(0.f,           HeadersHeight);
-                glVertex2f((xFLOAT)Width, HeadersHeight);
-
-                glVertex2f(0.f,           Height-HeadersHeight);
-                glVertex2f((xFLOAT)Width, Height-HeadersHeight);
+                if (choosen[i] == &players[i][j])
+                    glColor3ub(222, 173, 192);
+                else
+                    glColor3ub(0, 0, 0);
+                const char *name = players[i][j].Name.c_str();
+                pFont03->Print(WidthFourth * 0.1f, y, 0.0f, name);
+                y += lineHeight03;
             }
-            glEnd();
 
-            const char* title = "Select fighters";
-            xFLOAT textLen = pFont05->Length(title);
-            pFont05->Print((Width - textLen) * 0.5f, lineHeight05*1.25f, 0.0f, title);
-
-            const char* menu = "Back";
-            MenuButton = xRectangle(20.f, Height-lineHeight05*1.75f, pFont05->Length(menu), lineHeight05);
-            if (MenuButton.Contains(g_InputMgr.mouseX, g_InputMgr.mouseY))
-                glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-            else
-                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont05->Print(MenuButton.X, Height-lineHeight05*0.75f, 0.0f, menu);
-
-            const char* play = "Play";
-            textLen = pFont05->Length(play);
-            PlayButton = xRectangle(Width - 20.f - textLen, Height-lineHeight05*1.75f, textLen, lineHeight05);
-            if (PlayButton.Contains(g_InputMgr.mouseX, g_InputMgr.mouseY))
-                glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-            else
-                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont05->Print(PlayButton.X, Height-lineHeight05*0.75f, 0.0f, play);
-
-            ////// Player config
-            for(int i = 0; i < 2; ++i)
+            ////// Fighting styles
+            glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
+            y += lineHeight04;
+            pFont04->Print(WidthFourth * 0.1f, y, 0.0f, "Fighting styles:");
+            stylesY = (xDWORD)y;
+            y += lineHeight04;
+            for (size_t j = 0; j < choosen[i]->styles.size(); ++j)
             {
-                glViewport(i*WidthHalf ,0,WidthHalf,Height);
-
-                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-
-                ////// Control mode
-                xFLOAT y = HeightHalf + lineHeight03;
-                pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Controls:");
-                controlsY = (xDWORD)y;
-                y += lineHeight03;
-                if (control[i] == 0)
-                    glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
+                if (choosen[i]->styles[j].FileName == choosen[i]->comBoard.FileName)
+                    glColor3ub(222, 173, 192);
                 else
-                    glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                pFont03->Print(WidthHalf * 0.2f, y, 0.0f, "ComBoard");
+                    glColor3ub(0, 0, 0);
+                const char *name = choosen[i]->styles[j].Name.c_str();
+                pFont03->Print(WidthFourth * 0.1f, y, 0.0f, name);
                 y += lineHeight03;
-                if (control[i] == 1)
-                    glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-                else
-                    glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                pFont03->Print(WidthHalf * 0.2f, y, 0.0f, "ComBoard (auto move)");
-                y += lineHeight03;
-                if (control[i] == 2)
-                    glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-                else
-                    glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                pFont03->Print(WidthHalf * 0.2f, y, 0.0f, "Camera (auto move)");
-                y += lineHeight03*2;
+            }
 
-                ////// Fighters
-                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Fighters:");
-                fightersY = (xDWORD)y;
-                y += lineHeight03;
-                for (size_t j = 0; j < players[i].size(); ++j)
-                {
-                    if (choosen[i] == &players[i][j])
-                        glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-                    else
-                        glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                    const char *name = players[i][j].Name.c_str();
-                    pFont03->Print(WidthHalf * 0.2f, y, 0.0f, name);
-                    y += lineHeight03;
-                }
-                y += lineHeight03;
+            ////// Player config 2
+            i = 1;
+            glViewport(Width-(xDWORD)WidthFourth,0,(xDWORD)WidthFourth,Height);
 
-                ////// Fighting styles
-                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Fighting styles:");
-                stylesY = (xDWORD)y;
+            glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
+
+            ////// Control mode
+            y = HeadersHeight + lineHeight04;
+            xFLOAT textLen = pFont04->Length("Controls:");
+            pFont04->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, "Controls:");
+            controlsY = (xDWORD)y;
+            y += lineHeight04;
+            if (control[i] == 0)
+                glColor3ub(222, 173, 192);
+            else
+                glColor3ub(0, 0, 0);
+            textLen = pFont03->Length("ComBoard");
+            pFont03->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, "ComBoard");
+            y += lineHeight03;
+            if (control[i] == 1)
+                glColor3ub(222, 173, 192);
+            else
+                glColor3ub(0, 0, 0);
+            textLen = pFont03->Length("ComBoard (auto move)");
+            pFont03->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, "ComBoard (auto move)");
+            y += lineHeight03;
+            if (control[i] == 2)
+                glColor3ub(222, 173, 192);
+            else
+                glColor3ub(0, 0, 0);
+            textLen = pFont03->Length("Camera (auto move)");
+            pFont03->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, "Camera (auto move)");
+
+            ////// Fighters
+            glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
+            y += lineHeight04*2;
+            textLen = pFont04->Length("Fighters:");
+            pFont04->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, "Fighters:");
+            fightersY = (xDWORD)y;
+            y += lineHeight04;
+            for (size_t j = 0; j < players[i].size(); ++j)
+            {
+                if (choosen[i] == &players[i][j])
+                    glColor3ub(222, 173, 192);
+                else
+                    glColor3ub(0, 0, 0);
+                const char *name = players[i][j].Name.c_str();
+                textLen = pFont03->Length(name);
+                pFont03->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, name);
                 y += lineHeight03;
-                for (size_t j = 0; j < choosen[i]->styles.size(); ++j)
-                {
-                    if (choosen[i]->styles[j].FileName == choosen[i]->comBoard.FileName)
-                        glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-                    else
-                        glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                    const char *name = choosen[i]->styles[j].Name.c_str();
-                    pFont03->Print(WidthHalf * 0.2f, y, 0.0f, name);
-                    y += lineHeight03;
-                }
+            }
+
+            ////// Fighting styles
+            glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
+            y += lineHeight04;
+            textLen = pFont04->Length("Fighting styles:");
+            pFont04->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, "Fighting styles:");
+            stylesY = (xDWORD)y;
+            y += lineHeight04;
+            for (size_t j = 0; j < choosen[i]->styles.size(); ++j)
+            {
+                if (choosen[i]->styles[j].FileName == choosen[i]->comBoard.FileName)
+                    glColor3ub(222, 173, 192);
+                else
+                    glColor3ub(0, 0, 0);
+                const char *name = choosen[i]->styles[j].Name.c_str();
+                textLen = pFont03->Length(name);
+                pFont03->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, name);
+                y += lineHeight03;
             }
         }
 

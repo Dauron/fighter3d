@@ -1081,7 +1081,7 @@ void SceneSkeleton::MouseMove  (int X, int Y)
         xSkeleton &spine = Model.ModelGr->xModelP->Spine;
         if (Selection.Bone && Selection.Bone != spine.L_bones) // anim-rotate bone (matrix)
         {
-            bool useVerlet = false;
+            bool useVerlet = g_InputMgr.InputDown_Get(IC_RunModifier);
             if (!useVerlet)
             {
                 Selection.Bone->QT_rotation = Animation.Skeleton.PreviousQuaternion;

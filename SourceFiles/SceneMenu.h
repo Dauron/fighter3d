@@ -12,7 +12,7 @@ namespace Scenes {
     public:
         SceneMenu() {
             Name="[Menu]";
-            font03 = font04 = font05 = font10 = HFont();
+            font03 = font04 = HFont();
             root = NULL;
         };
 
@@ -27,8 +27,6 @@ namespace Scenes {
 
         HFont    font03; // 0.03 Window Height
         HFont    font04; // 0.04 Window Height
-        HFont    font05; // 0.05 Window Height
-        HFont    font10; // 0.10 Window Height
 
     private:
         void InitInputMgr();

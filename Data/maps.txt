@@ -4,22 +4,25 @@
 #img   - screenshot of the map - bmp or tga - its size should be power of 2, but other sizes may be obtained by transparency
 
 [map]
-name Dojo
+name "dojo - night"
 file models/level_3.map
 img  models/level_3.tga
 
 [map]
-name "Sumo dohyo"
+name "dojo - day"
+file models/level_3_day.map
+img  models/level_3_day.tga
+
+[map]
+name "sumo dohyo - night"
 file models/level_4.map
+img  models/level_4.tga
 
 [map]
-name "Fast test"
-file models/level_0.map
+name "sumo dohyo - day"
+file models/level_4_day.map
+img models/level_4_day_1.tga
 
 [map]
-name "Bounce test"
+name "bounce test"
 file models/level_1.map
-
-[map]
-name "Motion capture test"
-file models/level_2.map

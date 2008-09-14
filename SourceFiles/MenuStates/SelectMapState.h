@@ -31,6 +31,10 @@ namespace Scenes { namespace Menu {
         xDWORD mapsY;
         xDWORD mapsH;
 
+        HTexture backGround;
+        HTexture nextBtn;
+        HTexture backBtn;
+
         virtual void Init(BaseState *parent)
         {
             BaseState::Init(parent);
@@ -38,6 +42,10 @@ namespace Scenes { namespace Menu {
             LoadMaps();
             selected = 0;
             FL_enabled = L_maps.size();
+
+            backGround = g_TextureMgr.GetTexture("Data/textures/menu/map.tga");
+            nextBtn = g_TextureMgr.GetTexture("Data/textures/menu/next.tga");
+            backBtn = g_TextureMgr.GetTexture("Data/textures/menu/back.tga");
         }
 
         virtual void Clear()
@@ -51,6 +59,8 @@ namespace Scenes { namespace Menu {
                     L_maps[i].Texture = HTexture();
                 }
             L_maps.clear();
+            g_TextureMgr.Release(backGround);
+            nextBtn = backBtn = backGround = HTexture();
         }
 
         virtual bool Update(xFLOAT T_time)
@@ -97,78 +107,86 @@ namespace Scenes { namespace Menu {
         }
 
         virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
-                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                             xDWORD Width, xDWORD Height)
         {
-            xDWORD WidthHalf  = (xDWORD)(Width * 0.5f);
+            glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
+            glEnable (GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_TEXTURE_2D);
 
+            xFLOAT scale   = Height * 0.7f / 1024.f;
+
+            if (!backGround.IsNull())
+            {
+                xFLOAT iWidth  = scale * g_TextureMgr.GetWidth(backGround);
+                xFLOAT iHeight = scale * g_TextureMgr.GetHeight(backGround);
+                xFLOAT left = Width  - iWidth  - 170.f*scale;
+                xFLOAT top  = Height - iHeight - 480.f*scale;
+
+                g_TextureMgr.BindTexture(backGround);
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(left, top);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(left+iWidth, top);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(left+iWidth, top+iHeight);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(left, top+iHeight);
+                }
+                glEnd();
+            }
+
+            if (!nextBtn.IsNull())
+            {
+                NextButton.W = 2.f * scale * g_TextureMgr.GetWidth(nextBtn);
+                NextButton.X = Width - NextButton.W - 100.f * scale;
+                NextButton.H = 2.f * scale * g_TextureMgr.GetHeight(nextBtn);
+                NextButton.Y = Height - NextButton.H - 50.f * scale;
+                g_TextureMgr.BindTexture(nextBtn);
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(NextButton.X, NextButton.Y);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(NextButton.X+NextButton.W, NextButton.Y);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(NextButton.X+NextButton.W, NextButton.Y+NextButton.H);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(NextButton.X, NextButton.Y+NextButton.H);
+                }
+                glEnd();
+            }
+
+            if (!backBtn.IsNull())
+            {
+                BackButton.W = 2.f * scale * g_TextureMgr.GetWidth(backBtn);
+                BackButton.X = 100.f * scale;
+                BackButton.H = 2.f * scale * g_TextureMgr.GetHeight(backBtn);
+                BackButton.Y = Height - BackButton.H - 50.f * scale;
+                g_TextureMgr.BindTexture(backBtn);
+                glBegin(GL_QUADS);
+                {
+                    glTexCoord2f(0.01f,0.99f);
+                    glVertex2f(BackButton.X, BackButton.Y);
+                    glTexCoord2f(0.99f,0.99f);
+                    glVertex2f(BackButton.X+BackButton.W, BackButton.Y);
+                    glTexCoord2f(0.99f,0.01f);
+                    glVertex2f(BackButton.X+BackButton.W, BackButton.Y+BackButton.H);
+                    glTexCoord2f(0.01f,0.01f);
+                    glVertex2f(BackButton.X, BackButton.Y+BackButton.H);
+                }
+                glEnd();
+            }
+
+            widthHalf = Width / 2;
             xFLOAT lineHeight03 = pFont03->LineH();
-            xFLOAT lineHeight05 = pFont05->LineH();
-            xFLOAT HeadersHeight = lineHeight05*2.f;
+            xFLOAT lineHeight04 = pFont04->LineH();
+            xFLOAT HeadersHeight = lineHeight04*2.f;
 
-            widthHalf = WidthHalf;
-
-            glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-
-            glBegin(GL_LINES);
+            if (L_maps[selected].Image.size() && !L_maps[selected].Texture.IsNull())
             {
-                glVertex2f(0.f,           HeadersHeight);
-                glVertex2f((xFLOAT)Width, HeadersHeight);
-
-                glVertex2f(0.f,           Height-HeadersHeight);
-                glVertex2f((xFLOAT)Width, Height-HeadersHeight);
-            }
-            glEnd();
-
-            const char* title = "Select map";
-            xFLOAT textLen = pFont05->Length(title);
-            pFont05->Print((Width - textLen) * 0.5f, lineHeight05*1.25f, 0.0f, title);
-
-            const char* menu = "Back";
-            BackButton = xRectangle(20.f, Height-lineHeight05*1.75f, pFont05->Length(menu), lineHeight05);
-            if (BackButton.Contains(g_InputMgr.mouseX, g_InputMgr.mouseY))
-                glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-            else
-                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont05->Print(BackButton.X, Height-lineHeight05*0.75f, 0.0f, menu);
-
-            const char* play = "Next";
-            textLen = pFont05->Length(play);
-            NextButton = xRectangle(Width - 20.f - textLen, Height-lineHeight05*1.75f, textLen, lineHeight05);
-            if (NextButton.Contains(g_InputMgr.mouseX, g_InputMgr.mouseY))
-                glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-            else
-                glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            pFont05->Print(NextButton.X, Height-lineHeight05*0.75f, 0.0f, play);
-
-            glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-            xFLOAT y = HeadersHeight + lineHeight03*2;
-            mapsY = (xDWORD)y;
-            mapsH = (xDWORD)lineHeight03;
-            ////// Maps
-            textLen = pFont03->Length("Maps:");
-            pFont03->Print(WidthHalf * 0.1f, y, 0.0f, "Maps:");
-            y += lineHeight03;
-
-            for(size_t i = 0; i < L_maps.size(); ++i)
-            {
-                if (selected == i)
-                    glColor4f( 1.0f, 1.0f, 0.0f, 1.f );
-                else
-                    glColor4f( 1.0f, 1.0f, 1.0f, 1.f );
-                const char *name = L_maps[i].Name.c_str();
-                textLen = pFont03->Length(name);
-                pFont03->Print(WidthHalf * 0.2f, y, 0.0f, name);
-                y += lineHeight03;
-            }
-
-            if (L_maps[selected].Image.size())
-            {
-                if (!g_TextureMgr.IsHandleValid(L_maps[selected].Texture))
-                    return;
-                glEnable (GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glEnable(GL_TEXTURE_2D);
                 g_TextureMgr.BindTexture(L_maps[selected].Texture);
                 xFLOAT W = (xFLOAT) g_TextureMgr.GetWidth(L_maps[selected].Texture);
                 xFLOAT H = (xFLOAT) g_TextureMgr.GetHeight(L_maps[selected].Texture);
@@ -178,14 +196,15 @@ namespace Scenes { namespace Menu {
                     H *= widthHalf / W;
                     W = (xFLOAT)widthHalf;
                 }
-                if (H > Height - HeadersHeight*2 - 20)
+                xFLOAT maxH = (Height - HeadersHeight) * 0.5f;
+                if (H > maxH)
                 {
-                    W *= (Height - HeadersHeight*2 - 20) / H;
-                    H = Height - HeadersHeight*2 - 20;
+                    W *= maxH / H;
+                    H = maxH;
                 }
 
-                xFLOAT x = widthHalf + (widthHalf - W) * 0.5f - 10;
-                xFLOAT y = Height - HeadersHeight - H - 10;
+                xFLOAT x = Width - 50.f * scale - W;
+                xFLOAT y = HeadersHeight * 0.5f;
 
                 glBegin(GL_QUADS);
                 {
@@ -199,9 +218,28 @@ namespace Scenes { namespace Menu {
                     glVertex2f(x, y+H);
                 }
                 glEnd();
+            }
 
-                glDisable(GL_TEXTURE_2D);
-                glDisable(GL_BLEND);
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_BLEND);
+
+            glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
+            xFLOAT y = HeadersHeight + lineHeight04;
+            mapsY = (xDWORD)(y + lineHeight03);
+            mapsH = (xDWORD)lineHeight03;
+            ////// Maps
+            pFont04->Print(widthHalf * 0.1f, y, 0.0f, "Maps:");
+            y += lineHeight04;
+
+            for(size_t i = 0; i < L_maps.size(); ++i)
+            {
+                if (selected == i)
+                    glColor3ub(222, 173, 192);
+                else
+                    glColor3ub(0, 0, 0);
+                const char *name = L_maps[i].Name.c_str();
+                pFont03->Print(widthHalf * 0.1f, y, 0.0f, name);
+                y += lineHeight03;
             }
         }
 

@@ -1,23 +1,22 @@
 [general]
 #import   sumo/sumo.map
-# night sky
-skybox   night.3dx
-skycolor 0.04 0.04 0.04
+# day sky
+skycolor 0.8 0.8 1
 spawn1rot    0 0 180
 spawn1pos    -0.35 -1.5 0.95
 spawn2pos    -0.35 1.5 0.95
 
 #################### LIGHTS
 
-# yellow
+# day sky
 [light]
-type	POINT
-att_const	0.9
-att_linear	0.005
-att_square	0.0005
-color	1	0.7	0
-softness	0.4
-position	0	0	9
+type      INFINITE
+color     0.9 0.9 0.9
+softness  0.4
+direction -10 -10 -10
+att_const  0.9
+att_linear 0.005
+att_square 0.0005
 
 #################### OBJECTS
 
