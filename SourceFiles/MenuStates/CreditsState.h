@@ -35,7 +35,6 @@ namespace Scenes { namespace Menu {
         }
 
         virtual void Render(const Graphics::OGL::Font* pFont03, const Graphics::OGL::Font* pFont04,
-                            const Graphics::OGL::Font* pFont05, const Graphics::OGL::Font* pFont10,
                             xDWORD Width, xDWORD Height)
         {
             if (backGround.IsNull()) return;
