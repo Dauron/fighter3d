@@ -99,6 +99,9 @@ public:
         bool        FL_pos_rotation;
         bool        FL_mirror;
 
+        xFLOAT      T_punch;
+        xFLOAT      W_punch;
+
         std::vector<Combo> L_combos;
 
         void Clear ()
@@ -111,6 +114,7 @@ public:
             Anims.L_actions.clear();
             FL_pos_rotation = false;
             FL_mirror = false;
+            T_punch = W_punch = 0.f;
         }
 
         void Destroy ()
@@ -137,6 +141,7 @@ public:
     Vec_Action     L_actions;
     xBYTE          ID_action_cur;
     xFLOAT         T_progress;
+    xFLOAT         T_enter;
 
     bool           FL_mirror;
     Vec_Mirror     L_mirror;

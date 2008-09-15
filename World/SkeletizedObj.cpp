@@ -20,8 +20,8 @@ void SkeletizedObj :: ApplyDefaults()
     FL_phantom      = false;
     W_restitution      = 0.9f;
     W_restitution_self = 0.0f;
-    LifeEnergy         = 100.f;
-    LifeEnergyMax      = 100.f;
+    LifeEnergy         = 400.f;
+    LifeEnergyMax      = 400.f;
     FL_auto_movement   = true;
 
     Tracker.Init();
@@ -209,15 +209,32 @@ xVector3 SkeletizedObj :: MergeCollisions()
     xVector3 NW_fix;   NW_fix.zero();
     xVector3 V_action; V_action.zero();
 
+    xFLOAT   W_reaction = 0.f;
     xVector3 V_reaction[100];
     memset(V_reaction, 0, sizeof(xVector3)*I_bones);
 
     SkeletizedObj *Offender = NULL;
 
     std::vector<Physics::Colliders::CollisionPoint>::iterator
-                            iter_cur = Collisions.begin(),
-                            iter_end = Collisions.end();
-    for (; iter_cur != iter_end; ++iter_cur)
+                            iter_cur, iter_end = Collisions.end();
+    for (iter_cur = Collisions.begin(); iter_cur != iter_end; ++iter_cur)
+    {
+        if (iter_cur->Offender && iter_cur->Offender->Type == AI::ObjectType::Human)
+        {
+            if (Offender != iter_cur->Offender)
+            {
+                Offender = ((SkeletizedObj*)iter_cur->Offender);
+
+                ComBoard::Action &action = Offender->comBoard.L_actions[Offender->comBoard.ID_action_cur];
+                if (action.W_punch > 0.f && action.T_punch > 0.f && Offender->comBoard.T_progress <= action.T_punch)
+                {
+                    xFLOAT W_power = action.W_punch * (Offender->comBoard.T_progress - Offender->comBoard.T_enter) / action.T_punch;
+                    W_reaction += W_power;
+                }
+            }
+        }
+    }
+    for (iter_cur = Collisions.begin(); iter_cur != iter_end; ++iter_cur)
     {
         if (iter_cur->V_action.lengthSqr() > V_action.lengthSqr())
             V_action =  iter_cur->V_action;
@@ -279,14 +296,22 @@ xVector3 SkeletizedObj :: MergeCollisions()
             Offender->postHit = V_reaction.lengthSqr() / 1000.f;// 5.f;
     }
     */
+
+    if (W_reaction > 0.f)
+        LifeEnergy = max (LifeEnergy - W_reaction, 0.f);
+
     for (int i = 0; i < I_bones; ++i)
     {
         xFLOAT V_len = V_reaction[i].lengthSqr();
         if (V_len > 1.f)
         {
-            LifeEnergy = max (LifeEnergy - V_len, 0.f);
-            verletSystem.W_boneMix[i]  = 1.f;
-            T_Verlet[i] = max(V_len*0.1f, T_Verlet[i]);
+            if (W_reaction > 0.f)
+            {
+                T_Verlet[i] = max(V_len*0.1f, T_Verlet[i]);
+                verletSystem.W_boneMix[i] = 1.f;
+            }
+            else
+                verletSystem.W_boneMix[i] = 0.5f;
         }
     }
 
@@ -500,7 +525,7 @@ void SkeletizedObj :: Update(float T_time)
             break;
         }
 
-    xFLOAT T_mod = T_time*0.2f;
+    xFLOAT T_mod = T_time;
     for (int i = 0; i < I_bones; ++i)
         if (T_Verlet[i] > T_time)
         {
@@ -753,6 +778,12 @@ void SkeletizedObj :: LoadLine(char *buffer, std::string &dir)
         sscanf(buffer+5, "%d", &b);
         Tracker.Mode      = Math::Tracking::ObjectTracker::TRACK_OBJECT;
         Tracker.ID_object = b;
+    }
+    if (StartsWith(buffer, "life"))
+    {
+        xFLOAT f;
+        sscanf(buffer+5, "%f", &f);
+        LifeEnergy = LifeEnergyMax = f;
     }
 
     RigidObj::LoadLine(buffer, dir);

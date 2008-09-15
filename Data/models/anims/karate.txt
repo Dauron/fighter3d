@@ -5,6 +5,8 @@
 #post   destination action after finishing current action (default first action)
 #rotate if 1, figure is rotated by last skew of the root bones (default 0)
 #mirror if 1, figure position is mirrored after this action (default 0)
+#power  if not 0, then action is an atack with given maximal power (default 0)
+#puncht if not 0, tells time of maximal power occurance
 #
 #(combo)
 #action destination action of combo
@@ -60,8 +62,14 @@ anim	karate/position.ska 0
 action  kop_podbicie
 key     LeftKick
 (combo)
+action  mai_geri_back_mid
+key     RightKick
+(combo)
 action  jaku_zuki_mid
 key     LeftPunch
+(combo)
+action  oi_zuki_mid
+key     RightPunch
 (combo)
 action  step
 key     Forward
@@ -95,8 +103,14 @@ key     Forward
 action  jaku_zuki_mid
 key     LeftPunch
 (combo)
+action  oi_zuki_mid
+key     RightPunch
+(combo)
 action  kop_podbicie
 key     LeftKick
+(combo)
+action  mai_geri_back_mid
+key     RightKick
 
 [action]
 name    step_back
@@ -115,8 +129,14 @@ key     Right
 action  jaku_zuki_mid
 key     LeftPunch
 (combo)
+action  oi_zuki_mid
+key     RightPunch
+(combo)
 action  kop_podbicie
 key     LeftKick
+(combo)
+action  mai_geri_back_mid
+key     RightKick
 
 [action]
 name    rotate_left
@@ -136,8 +156,14 @@ key     Backward
 action  jaku_zuki_mid
 key     LeftPunch
 (combo)
+action  oi_zuki_mid
+key     RightPunch
+(combo)
 action  kop_podbicie
 key     LeftKick
+(combo)
+action  mai_geri_back_mid
+key     RightKick
 
 [action]
 name    rotate_right
@@ -161,8 +187,14 @@ key     Backward
 action  jaku_zuki_mid
 key     LeftPunch
 (combo)
+action  oi_zuki_mid
+key     RightPunch
+(combo)
 action  kop_podbicie
 key     LeftKick
+(combo)
+action  mai_geri_back_mid
+key     RightKick
 
 [action]
 name    rotate_180
@@ -182,8 +214,20 @@ first   100
 last    500
 prec    1
 (combo)
+action  oi_zuki_mid
+key     RightPunch
+first   100
+last    500
+prec    1
+(combo)
 action  kop_podbicie
 key     LeftKick
+first   100
+last    500
+prec    1
+(combo)
+action  mai_geri_back_mid
+key     RightKick
 first   100
 last    500
 prec    1
@@ -192,6 +236,8 @@ prec    1
 name	kop_podbicie
 anim	karate/kop-podbicie.ska 0
 time	500
+power	20
+puncht  188
 (combo)
 action	mai_geri_front_mid
 key		LeftKick
@@ -209,14 +255,68 @@ shift   0
 name	mai_geri_front_mid
 anim	karate/mai-geri-front-mid.ska 0
 time	600
+power	40
+puncht  300
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+first   500
+last    600
+prec    1
+(combo)
+action  oi_zuki_mid
+key     RightPunch
+first   500
+last    600
+prec    1
 
 [action]
 name	mai_geri_front_high
 anim	karate/mai-geri-front-high.ska 0
 time	600
+power	30
+puncht  300
 (combo)
 action	mai_geri_front_mid
-key		LeftKick
+key		Backward
+first   0
+last    200
+shift   0
+
+[action]
+name	mai_geri_back_mid
+anim	karate/mai-geri-back-mid.ska 0
+time	600
+power	50
+puncht  300
+(combo)
+action	mai_geri_back_high
+key		Forward
+first   0
+last    200
+shift   0
+(combo)
+action  jaku_zuki_mid
+key     LeftPunch
+first   500
+last    600
+prec    1
+(combo)
+action  oi_zuki_mid
+key     RightPunch
+first   500
+last    600
+prec    1
+
+[action]
+name	mai_geri_back_high
+anim	karate/mai-geri-back-high.ska 0
+time	600
+power	40
+puncht  300
+(combo)
+action	mai_geri_back_mid
+key		Backward
 first   0
 last    200
 shift   0
@@ -225,6 +325,8 @@ shift   0
 name    jaku_zuki_mid
 anim    karate/jaku-zuki-mid.ska 0
 time    300
+power	10
+puncht  150
 (combo)
 action	jaku_zuki_high
 key		Forward
@@ -235,23 +337,76 @@ action	jaku_zuki_low
 key		Backward
 first   0
 last    100
+(combo)
+action	oi_zuki_mid
+key		RightPunch
+first   250
+last    300
 
 [action]
 name    jaku_zuki_high
 anim    karate/jaku-zuki-high.ska 0
 time    300
+power	10
+puncht  150
 (combo)
 action	jaku_zuki_mid
 key		Backward
 first   0
 last    100
+(combo)
+action	oi_zuki_mid
+key		RightPunch
+first   250
+last    300
 
 [action]
 name    jaku_zuki_low
 anim    karate/jaku-zuki-low.ska 0
 time    300
+power	10
+puncht  150
 (combo)
 action	jaku_zuki_mid
 key		Forward
 first   0
 last    100
+(combo)
+action	oi_zuki_mid
+key		RightPunch
+first   250
+last    300
+
+[action]
+name    oi_zuki_mid
+anim    karate/oi-zuki-mid.ska 0
+time    300
+power	15
+puncht  150
+(combo)
+action	oi_zuki_high
+key		Forward
+first   0
+last    100
+(combo)
+action	jaku_zuki_mid
+key		LeftPunch
+first   250
+last    300
+
+[action]
+name    oi_zuki_high
+anim    karate/oi-zuki-high.ska 0
+time    300
+power	15
+puncht  150
+(combo)
+action	oi_zuki_mid
+key		Backward
+first   0
+last    100
+(combo)
+action	jaku_zuki_mid
+key		LeftPunch
+first   250
+last    300

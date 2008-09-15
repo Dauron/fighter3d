@@ -20,6 +20,7 @@ void ComBoard :: Destroy()
     }
     ID_action_cur = 0;
     T_progress    = 0.f;
+    T_enter       = 0.f;
     MX_shift.identity();
 
     L_mirror.clear();
@@ -89,7 +90,7 @@ void ComBoard :: Update(xFLOAT T_delta, bool FL_keyboard_on)
         PostActionTransformation(*action, true);
 
         ID_action_cur = action->ID_next;
-        T_progress    = T_progress - action->T_duration;
+        T_enter = T_progress = T_progress - action->T_duration;
     }
 
     action->Anims.T_progress = (xDWORD) T_progress;
@@ -118,7 +119,7 @@ void ComBoard :: Update(xFLOAT T_delta, bool FL_keyboard_on)
             PostActionTransformation(*action, combo.FL_pos_shift);
 
             ID_action_cur = combo.ID_action;
-            T_progress    = (!combo.FL_time_shift || combo.T_last <= 0.f)
+            T_enter = T_progress = (!combo.FL_time_shift || combo.T_last <= 0.f)
                 ? combo.T_time
                 : combo.T_time + T_progress - combo.T_first;
             L_actions[ID_action_cur].Anims.T_progress = (xDWORD) T_progress;
@@ -183,7 +184,7 @@ bool ComBoard :: SetBestAction(AutoHint::Type ActionType, xFLOAT S_dest)
     if (I_best >= 0)
     {
         ID_action_cur = hints[I_best].ID_action;
-        T_progress    = 0.f;
+        T_enter = T_progress = 0.f;
         L_actions[ID_action_cur].Anims.T_progress = 0;
         AutoAction = ActionType;
         return true;
@@ -217,7 +218,7 @@ bool ComBoard :: AutoMovement(const xVector3 &NW_aim, const xVector3 &NW_dst, xF
     {
         PostActionTransformation(L_actions[ID_action_cur], true);
         ID_action_cur = StopAction.ID_action;
-        T_progress    = 0.f;
+        T_enter = T_progress = 0.f;
         L_actions[ID_action_cur].Anims.T_progress = 0;
         AutoAction = AutoHint::HINT_NONE;
     }
@@ -497,6 +498,16 @@ void ComBoard :: Load(const char *fileName, xBYTE I_bones)
                     int val;
                     sscanf(buffer+6, "%d", &val);
                     action.FL_mirror = val;
+                    continue;
+                }
+                if (StartsWith(buffer, "power"))
+                {
+                    sscanf(buffer+5, "%f", &action.W_punch);
+                    continue;
+                }
+                if (StartsWith(buffer, "puncht"))
+                {
+                    sscanf(buffer+6, "%f", &action.T_punch);
                     continue;
                 }
             }

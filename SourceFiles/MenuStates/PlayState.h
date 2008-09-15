@@ -100,8 +100,8 @@ namespace Scenes { namespace Menu {
         {
             ChoosePlayer(0, players[0].front());
             ChoosePlayer(1, players[1].back());
-            control[0] = 0;
-            control[1] = 1;
+            control[0] = 1;
+            control[1] = 0;
         }
 
         virtual void Exit()
@@ -226,7 +226,7 @@ namespace Scenes { namespace Menu {
                     if (player.comBoard.ID_action_cur == player.comBoard.StopAction.ID_action)
                     {
                         player.comBoard.ID_action_cur = (xBYTE) (rand() % player.comBoard.L_actions.size());
-                        player.comBoard.T_progress = 0.f;
+                        player.comBoard.T_enter = player.comBoard.T_progress = 0.f;
                     }
                     player.Update(T_time*0.5f);
                     player.MX_LocalToWorld_Set().row3.init(0,0,0,1);

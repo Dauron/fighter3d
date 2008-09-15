@@ -1,13 +1,4 @@
 [player]
-name        "Male Textured"       # displayed name
-fastm	    models/human1_fst.3dx # simplified physical model
-model	    models/human1.3dx     # graphical model
-customBVH	0                     # should physical engine use custom BVH (generated one is better for skeletal objects)
-mass        70                    # how heavy is it
-style       Dummy  models/anims/dummy.txt   # styles aviable for this model - must match bone configuration
-style       Karate models/anims/karate.txt  # styles aviable for this model - must match bone configuration
-
-[player]
 name        Male
 fastm	    models/human2_fst.3dx
 model	    models/human2.3dx
@@ -15,3 +6,14 @@ customBVH	0
 mass        70
 style       Dummy  models/anims/dummy.txt
 style       Karate models/anims/karate.txt
+life        2000
+
+[player]
+name        "Male Textured"       # displayed name
+fastm	    models/human1_fst.3dx # simplified physical model
+model	    models/human1.3dx     # graphical model
+customBVH	0                     # should physical engine use custom BVH (generated one is better for skeletal objects)
+mass        70                    # how heavy is it
+style       Dummy  models/anims/dummy.txt   # styles aviable for this model - must match bone configuration
+style       Karate models/anims/karate.txt  # styles aviable for this model - must match bone configuration
+life        2000

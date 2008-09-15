@@ -591,19 +591,29 @@ bool SceneGame :: Render()
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glColor3ub( 255, 0, 0 );
         glBegin(GL_QUADS);
+        {
+            if (player1.FL_verlet)
+                glColor3ub( 255, 0, 0 );
+            else
+                glColor3ub( 0, 255, 0 );
             glVertex2f(10.f, lineHeight+10.f);
             glVertex2f(10.f + LifeWidthP1, lineHeight+10.f);
             glVertex2f(10.f + LifeWidthP1, lineHeight+20.f);
             glVertex2f(10.f, lineHeight+20.f);
 
-            glVertex2f(Width - 10.f, lineHeight+10.f);
+            if (player2.FL_verlet)
+                glColor3ub( 255, 0, 0 );
+            else
+                glColor3ub( 0, 255, 0 );glVertex2f(Width - 10.f, lineHeight+10.f);
             glVertex2f(Width - 10.f - LifeWidthP2, lineHeight+10.f);
             glVertex2f(Width - 10.f - LifeWidthP2, lineHeight+20.f);
             glVertex2f(Width - 10.f, lineHeight+20.f);
+        }
         glEnd();
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glColor3ub( 255, 255, 255 );
         glBegin(GL_QUADS);
+        {
             glVertex2f(9.f, lineHeight+10.f);
             glVertex2f(11.f + BarWidth, lineHeight+10.f);
             glVertex2f(11.f + BarWidth, lineHeight+20.f);
@@ -613,6 +623,7 @@ bool SceneGame :: Render()
             glVertex2f(Width - 11.f - BarWidth, lineHeight+10.f);
             glVertex2f(Width - 11.f - BarWidth, lineHeight+20.f);
             glVertex2f(Width - 9.f, lineHeight+20.f);
+        }
         glEnd();
     }
 
