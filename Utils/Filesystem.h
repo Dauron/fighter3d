@@ -168,8 +168,8 @@ public:
             dirp = eps;
             for (int cnt = n; cnt; --cnt, ++dirp)
             {
-                if ( 0 != strcmp( ".", (*dirp)->d_name ) && // skip . and ..
-                     0 != strcmp( "..",(*dirp)->d_name ) )
+                if ( 0 != strcmp( ".", (*dirp)->d_name ) )// && // skip . and ..
+                     //0 != strcmp( "..",(*dirp)->d_name ) )
                 {
                     std::string candidate( p + (*dirp)->d_name );
                     if ( LinuxFileInfo::isDirectory(candidate) )
