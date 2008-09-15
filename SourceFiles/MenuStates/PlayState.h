@@ -320,6 +320,8 @@ namespace Scenes { namespace Menu {
             xFLOAT lineHeight04 = pFont04->LineH();
             xFLOAT HeadersHeight = lineHeight04*2.f;
 
+            controlsH = fightersH = stylesH = (xDWORD)lineHeight04;
+
             ////// Fighter demo
 
             glMatrixMode(GL_PROJECTION);
@@ -407,8 +409,6 @@ namespace Scenes { namespace Menu {
             glMatrixMode(GL_MODELVIEW);
             glPopMatrix();
 
-            controlsH = fightersH = stylesH = (xDWORD)lineHeight04;
-
             // Set projection
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
@@ -416,14 +416,21 @@ namespace Scenes { namespace Menu {
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
 
+            int i;
+            xFLOAT y, textLen;
+
             ////// Player config 1
-            int i = 0;
+            i = 0;
             glViewport(0,0,(xDWORD)WidthFourth,Height);
+            // fix raster pos after viewport change, on some broken GPUs
+            glBegin(GL_POINTS);
+            glVertex2i(-1,-1);
+            glEnd();
 
             glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
 
             ////// Control mode
-            xFLOAT y = HeadersHeight + lineHeight04;
+            y = HeadersHeight + lineHeight04;
             pFont04->Print(WidthFourth * 0.1f, y, 0.0f, "Controls:");
             controlsY = (xDWORD)y;
             y += lineHeight04;
@@ -482,12 +489,16 @@ namespace Scenes { namespace Menu {
             ////// Player config 2
             i = 1;
             glViewport(Width-(xDWORD)WidthFourth,0,(xDWORD)WidthFourth,Height);
+            // fix raster pos after viewport change, on some broken GPUs
+            glBegin(GL_POINTS);
+            glVertex2i(-1,-1);
+            glEnd();
 
             glColor4f( 0.0f, 0.0f, 0.0f, 1.f );
 
             ////// Control mode
             y = HeadersHeight + lineHeight04;
-            xFLOAT textLen = pFont04->Length("Controls:");
+            textLen = pFont04->Length("Controls:");
             pFont04->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, "Controls:");
             controlsY = (xDWORD)y;
             y += lineHeight04;
