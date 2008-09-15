@@ -1,0 +1,147 @@
+[general]
+spawn1rot    0 0 180
+spawn1pos    -0.35 -1.5 0.95
+spawn2pos    -0.35 1.5 0.95
+
+#################### OBJECTS
+
+[model]
+model	tribune.3dx
+position	0.0	-12.6	0.0
+shadows     1
+physical	0
+
+[model]
+model	tribune.3dx
+position	0.0	-11.9	0.0
+rotation    0 0 90
+shadows     1
+physical	0
+
+[model]
+model	tribune.3dx
+#position	0.0	-12.6	0.0
+position	0.7	-11.9	0.0
+rotation    0 0 180
+shadows     1
+physical	0
+
+[model]
+model	tribune.3dx
+position	0.7	-12.6	0.0
+rotation    0 0 -90
+shadows     1
+physical	0
+#
+
+[model]
+model	passage.3dx
+position	-52.07	51.37	0.0
+shadows     0
+physical	0
+
+[model]
+model	passage.3dx
+position	-52.07	52.07	0.0
+rotation    0 0 90
+shadows     0
+physical	0
+
+[model]
+model	passage.3dx
+position	-51.37	52.07	0.0
+rotation    0 0 180
+shadows     0
+physical	0
+
+[model]
+model	passage.3dx
+position	-51.37	51.37	0.0
+rotation    0 0 -90
+shadows     0
+physical	0
+
+#
+
+[model]
+model	floor.3dx
+position	-0.35	-0.35	0.0
+shadows     0
+physical	0
+
+#
+
+[model]
+model	ring.3dx
+position	-0.35	-0.35	0.0
+shadows     0
+physical	0
+
+
+#
+
+[model]
+model	house.3dx
+position	-0.35	-0.35	0.0
+shadows     1
+physical	0
+phantom     1
+
+
+#
+
+[model]
+model	wall.3dx
+position	92.97  -7.03 -34.95
+shadows     1
+physical	0
+phantom     1
+
+[model]
+model	wall.3dx
+position	92.97  -6.24 -34.95
+rotation    0 0 90
+shadows     1
+physical	0
+phantom     1
+
+[model]
+model	wall.3dx
+position	93.75  -7.05 -34.95
+rotation    0 0 -90
+shadows     1
+physical	0
+phantom     1
+
+[model]
+model	wall.3dx
+position	93.75  -6.25 -34.95
+rotation    0 0 180
+shadows     1
+physical	0
+phantom     1
+
+
+#
+
+[model]
+model	pillars.3dx
+position	-0.35	-0.35	20
+shadows     0
+physical	0
+
+#
+
+[model]
+model	lattice.3dx
+position	-0.35	-0.35	42
+shadows     0
+physical	0
+
+#
+
+[model]
+model	roof.3dx
+position	-0.35	-0.35	42
+shadows     0
+physical	0
