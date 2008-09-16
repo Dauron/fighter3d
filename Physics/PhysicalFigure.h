@@ -32,7 +32,9 @@ namespace Physics {
 
         virtual void ApplyDefaults()
         {
+            xBVHierarchy bvh = BVHierarchy;
             PhysicalBody::ApplyDefaults();
+            BVHierarchy = bvh;
 
             M_mass = BVHierarchy.Figure->W_Volume_Get();
             if (BVHierarchy.Figure->Type != xIFigure3d::Capsule)

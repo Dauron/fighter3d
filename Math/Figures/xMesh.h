@@ -92,7 +92,7 @@ namespace Math { namespace Figures {
             , L_VertexData_Transf(NULL)
             , FL_VertexIsTransf(NULL)
             , FL_MeshIsTransf(false)
-        { MX_LocalToWorld.identity(); }
+        { MX_LocalToWorld.x0 = xFLOAT_HUGE_NEGATIVE; }
     };
 
     struct xMesh : xIFigure3d

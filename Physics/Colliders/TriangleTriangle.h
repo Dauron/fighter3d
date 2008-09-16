@@ -528,8 +528,12 @@ xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const x
     CollisionPoint cp1 = CollisionPoint(body2, figure1, P_collision, ID_tri_1);
     CollisionPoint cp2 = CollisionPoint(body1, figure2, P_collision, ID_tri_2);
 
-    xVector3 NW_velocity1 = body1->GetVelocity(cp1);
-    xVector3 NW_velocity2 = body2->GetVelocity(cp2);
+    xVector3 NW_velocity1;
+    xVector3 NW_velocity2;
+    if (body1) NW_velocity1= body1->GetVelocity(cp1);
+    else       NW_velocity1.zero();
+    if (body2) NW_velocity2= body2->GetVelocity(cp2);
+    else       NW_velocity2.zero();
 
     if (!NW_velocity1.isZero() || !NW_velocity2.isZero())
     {

@@ -188,7 +188,7 @@ void RenderMesh(const xMesh &object)
         glDrawElements (GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, object.MeshData->GetFacePtr(*L_FaceIndex_Itr));
 */
 
-    if(object.MeshData->L_BoneData && object.MeshData->MX_Bones && object.MeshData->FL_VertexIsTransf)
+    if(object.MeshData->FL_VertexIsTransf)
     {
         //glPushMatrix();
         //xMatrix MX = object.MeshData->MX_MeshToLocal;

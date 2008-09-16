@@ -78,14 +78,6 @@ phantom  0
 mass     60
 shadows  1
 
-[skip model]
-model    wolf.3ds
-position 1 5 -0.21
-physical 0
-phantom  0
-mass     65
-shadows  1
-
 #################### PLAYERS
 
 [skip person]

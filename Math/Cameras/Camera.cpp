@@ -404,13 +404,13 @@ void Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, xBYTE *CameraDataPtr)
 
     if (ctd.camera->FOV.Projection == FieldOfView::PROJECT_PERSPECTIVE)
     {
-        S_up = max(S_up, S_side/ctd.camera->FOV.Aspect) * 1.5f;
+        S_up = max(S_up, S_side/ctd.camera->FOV.Aspect) * (1.5f + 3.f);
         xFLOAT S_aux = S_up / tan( DegToRad(ctd.camera->FOV.PerspAngle) *0.5f );
         tracker.P_destination = P_center + N_front * (S_front + S_aux);// + tracker.NW_destination_shift;
     }
     else
     {
-        S_up = max(S_up * ctd.camera->FOV.Aspect, S_side) * 0.5f;
+        S_up = max(S_up * ctd.camera->FOV.Aspect, S_side) * (0.5f + 3.f);
         tracker.P_destination = P_center + N_front * S_up;// + tracker.NW_destination_shift;
     }
 

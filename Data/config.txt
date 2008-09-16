@@ -3,7 +3,7 @@ Lighting        2 # 0 = none, 1 = basic, 2 = full
 Shadows         2 # 0 = none, 1 = rigid, 2 = rigid + players
 Shaders         1
 // Some old GPUs has problems with displaying text when multisampling is on :/
-Multisampling   0 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
+Multisampling   1 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
 UseVBO          1
 ShadowMap       512
 VSync           0
@@ -21,7 +21,7 @@ Show_Cameras         0
 
 [general]
 Console         1
-Scene           menu # menu, game, test
+Scene           menu # menu, game, test # for scene test - select case with 0-9 keys
 Level           4
 Speed           1
 Logging         3 # 0 = almost none, 1 = important errors, 2 = all errors, 3 = all errors + warnings

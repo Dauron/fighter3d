@@ -21,7 +21,7 @@ img  models/level_4.tga
 [map]
 name "sumo dohyo - day"
 file models/level_4_day.map
-img models/level_4_day_1.tga
+img models/level_4_day.tga
 
 [map]
 name "bounce test"

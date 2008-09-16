@@ -29,7 +29,6 @@ bool SceneTest::Create(int left, int top, unsigned int width, unsigned int heigh
     pf_cube2.Create(new xBoxO());
     pf_mesh1.Create(new xMesh());
     pf_mesh2.Create(new xMesh());
-    InitObjects();
 
     figures[0].clear();
     figures[0].push_back(&pf_sphere1);
@@ -70,6 +69,8 @@ bool SceneTest::Create(int left, int top, unsigned int width, unsigned int heigh
     figures[9].clear();
     figures[9].push_back(&pf_mesh1);
     figures[9].push_back(&pf_mesh2);
+
+    InitObjects();
 
     Camera.Init(0.0f, 5.0f, 2.2f, 0.0f, 0.0f, 2.2f, 0.0f, 0.0f, 1.0f);
     Camera.FOV.InitPerspective();
