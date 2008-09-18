@@ -42,6 +42,7 @@ bool Graphics::OGL::Font :: Create()
 
     oldfont = (HFONT)SelectObject(hDC, font);       // Selects The Font We Want
 
+    wglUseFontBitmaps(hDC, FIRST_CHAR, 1, ID_GLFontBase); // Create twice, to overcome ATI bug
     wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, ID_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
 
     ABCFLOAT metrics[NUM_CHARS]; // Storage For Information About Our Font

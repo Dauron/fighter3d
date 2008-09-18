@@ -166,6 +166,7 @@ GLenum ShaderProgram :: Create()
             vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
             if (CheckForGLError("Cannot create vertex shader")) {
                 Destroy();
+                FL_invalid = false;
                 break;
             }
             glShaderSourceARB(vertex_shader, 1, (const char **)&vertexShaderSrc, NULL);
@@ -177,6 +178,7 @@ GLenum ShaderProgram :: Create()
             fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
             if (CheckForGLError("Cannot create fragment shader")) {
                 Destroy();
+                FL_invalid = false;
                 break;
             }
             glShaderSourceARB(fragment_shader, 1, (const char **)&fragmentShaderSrc, NULL);
@@ -209,9 +211,10 @@ GLenum ShaderProgram :: Create()
                 LOG(1, "%s,%s\n%s", vertexShaderFile, fragmentShaderFile, linker_log);
                 delete[] linker_log;
                 Destroy();
+                FL_invalid = false;
                 return 0;
             }
-            if (!strstr(linker_log, "successful"))
+            if (!strstr(linker_log, "successful") && !strstr(linker_log, "linked"))
                 LOG(2, "%s,%s\n%s", vertexShaderFile, fragmentShaderFile, linker_log);
             delete[] linker_log;
         }
@@ -515,11 +518,10 @@ bool Shader :: Start()
         currShader = & slShader->Plain;
 
     if (currShader->FL_invalid) currShader->Create();
-    if (!currShader->program) return false;
 
     if (ShaderProgram::currProgram != currShader->program)
         glUseProgramObjectARB(ShaderProgram::currProgram = currShader->program);
-    return true;
+    return currShader->program;
 }
 
 void Shader :: Suspend()
