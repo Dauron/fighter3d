@@ -52,15 +52,16 @@ void xSkeleton :: CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_bone
     if (ID_bone)
     {
         xPoint3 NW_upN = MX_parent_Inv.postTransformV(P_current[ID_bone]-P_current[bone.ID_parent]);
-        if (QT_boneSkew && QT_boneSkew[ID_bone].w < EPSILON)
+        xPoint3 NW_up  = bone.P_end-bone.P_begin;
+        if (QT_boneSkew && QT_boneSkew[ID_bone].w < 1.f-EPSILON)
+        {
             NW_upN = QT_boneSkew[ID_bone].unrotate(NW_upN);
-        xQuaternion quat = xQuaternion::GetRotation(bone.P_end-bone.P_begin, NW_upN);
-
-        if (QT_boneSkew && QT_boneSkew[ID_bone].w < EPSILON)
-            bone.QT_rotation = xQuaternion::Product(QT_boneSkew[ID_bone], quat);
+            bone.QT_rotation = xQuaternion::Product(QT_boneSkew[ID_bone],
+                                                    xQuaternion::GetRotation(NW_up, NW_upN));
+        }
         else
-            bone.QT_rotation = quat;
-        quat.init(-bone.QT_rotation.vector3, bone.QT_rotation.w);
+            bone.QT_rotation = xQuaternion::GetRotation(NW_up, NW_upN);
+        xQuaternion quat; quat.init(-bone.QT_rotation.vector3, bone.QT_rotation.w);
         MX_parent_Inv.preMultiply(xMatrixFromQuaternion(quat));
     }
     else
@@ -82,15 +83,16 @@ void xSkeleton :: CalcQuats(const xPoint3 *P_current, const xQuaternion *QT_bone
     if (ID_bone)
     {
         xPoint3 NW_upN = MX_parent_Inv.postTransformV(P_current[ID_bone]-P_current[bone.ID_parent]);
-        if (QT_boneSkew && QT_boneSkew[ID_bone].w < EPSILON)
+        xPoint3 NW_up  = bone.P_end-bone.P_begin;
+        if (QT_boneSkew && QT_boneSkew[ID_bone].w < 1.f-EPSILON)
+        {
             NW_upN = QT_boneSkew[ID_bone].unrotate(NW_upN);
-        xQuaternion quat = xQuaternion::GetRotation(bone.P_end-bone.P_begin, NW_upN);
-
-        if (QT_boneSkew && QT_boneSkew[ID_bone].w < EPSILON)
-            bone.QT_rotation = xQuaternion::Product(QT_boneSkew[ID_bone], quat);
+            bone.QT_rotation = xQuaternion::Product(QT_boneSkew[ID_bone],
+                                                    xQuaternion::GetRotation(NW_up, NW_upN));
+        }
         else
-            bone.QT_rotation = quat;
-        quat.init(-bone.QT_rotation.vector3, bone.QT_rotation.w);
+            bone.QT_rotation = xQuaternion::GetRotation(NW_up, NW_upN);
+        xQuaternion quat; quat.init(-bone.QT_rotation.vector3, bone.QT_rotation.w);
         MX_parent_Inv.preMultiply(xMatrixFromQuaternion(quat));
     }
     else

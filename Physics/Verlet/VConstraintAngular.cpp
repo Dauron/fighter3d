@@ -23,7 +23,7 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     xVector3 &P_rootE = system->P_current[particleRootE];
     xVector3 &P_curr  = system->P_current[particle];
 
-    xQuaternion QT_parent, QT_current;
+    xQuaternion QT_parent, QT_current, QT_bone;
 
     // calc only needed quats
     bool FL_calculate[100]; FL_calculate[0] = true;
@@ -34,18 +34,25 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     while (!FL_calculate[idx]) { FL_calculate[idx] = true; idx = system->Spine->L_bones[idx].ID_parent; }
     system->Spine->CalcQuats(system->P_current, system->QT_boneSkew, FL_calculate,
                              0, system->MX_WorldToModel_T);
-    xBoneCalculateQuatForVerlet(*system->Spine, particle, QT_parent, QT_current);
-    QT_current = xQuaternion::Product(QT_parent, QT_current);
+    xBoneCalculateQuatForVerlet(*system->Spine, particle, QT_parent, QT_bone);
+    QT_current = xQuaternion::Product(QT_parent, QT_bone);
 
-    xBone   &bone    = system->Spine->L_bones[particle];
-    xVector3 N_up    = system->MX_ModelToWorld.preTransformV(QT_parent.rotate(bone.P_end-bone.P_begin)).normalize();
+    xBone &bone = system->Spine->L_bones[particle];
+
+    xVector3 N_up_loc   = (bone.P_end-bone.P_begin).normalize();
+    //xPoint3  N_up_rot   = QT_bone.rotate(N_up_loc);
+    //xFLOAT   sinSkew = xVector3::DotProduct(N_up_rot, QT_bone.vector3);
+    //xFLOAT   cosSkew = sqrtf(1.f - sinSkew*sinSkew);
+    //xQuaternion QT_skew; QT_skew.init(N_up_rot*sinSkew, cosSkew);
+
+    xVector3 N_up = system->MX_ModelToWorld.preTransformV(QT_parent.rotate(N_up_loc));
     xVector3 N_front = system->MX_ModelToWorld.preTransformV(QT_current.rotate(bone.getFront()));
 
     xMatrix  MX_WorldToBone = xMatrixFromVectors( N_front, N_up, - P_rootE ).invert();
     xVector3 P_curr_Local   = MX_WorldToBone.preTransformP( P_curr );
     xVector3 N_curr_Local   = xVector3::Normalize( P_curr_Local );
 
-    if (N_curr_Local.z > 0.99f) return false;
+    if (N_curr_Local.z > 0.99f /*&& QT_skew.w > 0.92f*/) return false;
 
     xFLOAT w_max = max(system->W_boneMix[particle], system->W_boneMix[particleRootE]);
     xFLOAT w_min = min(system->W_boneMix[particle], system->W_boneMix[particleRootE]);
@@ -60,7 +67,21 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     if (w1 == 0.f && w2 == 0.f) return false;
     w1 /= (w1+w2);
     w2 = 1.f - w1;
-
+/*
+    sinSkew = 0.f;
+    xQuaternion QT_unSkew;
+    if (QT_skew.w <= 0.92f)
+    {
+        xFLOAT angleSkew = asin(sinSkew) - PI * 0.125f;
+        cosSkew          = cos(angleSkew);
+        sinSkew          = sin(angleSkew);
+        QT_unSkew.init(0,0,sinSkew,cosSkew);
+        N_curr_Local = QT_unSkew.rotate(N_curr_Local);
+        QT_unSkew.vector3 = N_up_rot * -sinSkew;
+    }
+    else
+        QT_unSkew.zeroQ();
+*/
     xFLOAT r_Inv = 1.f / sqrt(N_curr_Local.x*N_curr_Local.x+N_curr_Local.y*N_curr_Local.y);
     xFLOAT cosAlpha = fabs(N_curr_Local.x)*r_Inv,
            sinAlpha = fabs(N_curr_Local.y)*r_Inv,
@@ -76,40 +97,64 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     L_gammaMax[2] = FindGammaMax(angleMaxX, angleMinY, tanAlpha, cosAlpha);
     L_gammaMax[3] = FindGammaMax(angleMinX, angleMinY, tanAlpha, cosAlpha);
     // MaxMax = 0, MinMax = 1, MaxMin = 2, MinMin = 3
-    int I_gamma = (P_curr_Local.x < 0) + 2 * (P_curr_Local.y < 0);
+    int I_gamma = (N_curr_Local.x < 0) + 2 * (N_curr_Local.y < 0);
 
     xFLOAT cosMax = cos(L_gammaMax[I_gamma]);
-    if (N_curr_Local.z >= cosMax) return false;
+    if (N_curr_Local.z >= cosMax /*&& QT_skew.w > 0.92f*/) return false;
 
     xFLOAT S_minFix_Sqr = xFLOAT_HUGE_POSITIVE;
-    xQuaternion QT_minFix; //QT_minFix.zeroQ();
+    xQuaternion QT_minFix;
 
-    for (int I_gamma = 0; I_gamma < 4; ++I_gamma)
+    if (N_curr_Local.z < cosMax)
     {
-        // {0,1,2,3} => {0,1} => {0,2} => {-1,1} => {1,-1}
-        int xSign = - ((I_gamma % 2) * 2 - 1) ;
-        // {0,1,2,3} => {1,0} => {2,0} => {1,-1}
-        int ySign = (I_gamma < 2) * 2 - 1;
-
-        xVector3 P_new_Local;
-        xFLOAT xy     = sin(L_gammaMax[I_gamma]-DegToRad(1.f));
-        P_new_Local.x = xSign * xy * cosAlpha;
-        P_new_Local.y = ySign * xy * sinAlpha;
-        P_new_Local.z = cos(L_gammaMax[I_gamma]-DegToRad(1.f));
-
-        xFLOAT S_curFix_Sqr = (N_curr_Local - P_new_Local).lengthSqr();
-        if (S_curFix_Sqr < S_minFix_Sqr)
+        for (int I_gamma = 0; I_gamma < 4; ++I_gamma)
         {
-            S_minFix_Sqr = S_curFix_Sqr;
-            QT_minFix = xQuaternion::GetRotation(N_curr_Local, P_new_Local);
+            // {0,1,2,3} => {0,1} => {0,2} => {-1,1} => {1,-1}
+            int xSign = - ((I_gamma % 2) * 2 - 1) ;
+            // {0,1,2,3} => {1,0} => {2,0} => {1,-1}
+            int ySign = (I_gamma < 2) * 2 - 1;
+
+            xVector3 P_new_Local;
+            xFLOAT xy     = sin(L_gammaMax[I_gamma]-DegToRad(1.f));
+            P_new_Local.x = xSign * xy * cosAlpha;
+            P_new_Local.y = ySign * xy * sinAlpha;
+            P_new_Local.z = cos(L_gammaMax[I_gamma]-DegToRad(1.f));
+
+            xFLOAT S_curFix_Sqr = (N_curr_Local - P_new_Local).lengthSqr();
+            if (S_curFix_Sqr < S_minFix_Sqr)
+            {
+                S_minFix_Sqr = S_curFix_Sqr;
+                QT_minFix = xQuaternion::GetRotation(N_curr_Local, P_new_Local);
+            }
         }
     }
+    else
+        QT_minFix.zeroQ();
 
     xQuaternion QT_curr = xQuaternion::InterpolateFull(QT_minFix, w1);
     xQuaternion QT_root = xQuaternion::InterpolateFull(QT_minFix, w2);
     xMatrix &MX_BoneToWorld = MX_WorldToBone.invert();
     P_rootE = MX_BoneToWorld.preTransformP( QT_root.rotate(-P_curr_Local) + P_curr_Local );
-    P_curr  = MX_BoneToWorld.preTransformP( QT_curr.rotate(P_curr_Local) );
+    P_curr  = MX_BoneToWorld.preTransformP( QT_curr.rotate( /*QT_unSkew.rotate*/( P_curr_Local )) );
+
+    system->QT_boneSkew[particle] = xQuaternion::Product(system->QT_boneSkew[particle], /*xQuaternion::Product(*/QT_curr/*, QT_unSkew)*/);
+    /*QT_unSkew.vector3.invert();
+    for (int i = 0; i < bone.I_kids; ++i)
+    {
+        int id = bone.ID_kids[i];
+        system->QT_boneSkew[id] = xQuaternion::Product(system->QT_boneSkew[id], QT_unSkew);
+    }*/
+
+    if (particleRootE)
+    {
+        QT_root.vector3.invert();
+        system->QT_boneSkew[particleRootE] = xQuaternion::Product(system->QT_boneSkew[particleRootE], QT_root);
+    }
+    else
+    {
+        QT_root.vector3.invert();
+        system->QT_boneSkew[particleRootB] = xQuaternion::Product(system->QT_boneSkew[particleRootB], QT_root);
+    }
 
     //system->P_previous[particleRootE] = P_rootE;
     //system->P_previous[particle] = P_curr;
@@ -117,11 +162,17 @@ bool VConstraintAngular :: Satisfy(VerletSystem *system)
     return true;
 }
 bool VConstraintAngular :: Test(const xVector3 &P_rootB, const xVector3 &P_rootE, const xVector3 &P_curr,
-                                 const xVector3 &N_up, const xVector3 &N_front) const
+                                const xVector3 &N_up, const xVector3 &N_front, const xQuaternion &QT_bone) const
 {
     xMatrix MX_WorldToBone = xMatrixFromVectors(N_front, N_up, -P_rootE).invert();
     xVector3 P_curr_Local  = MX_WorldToBone.preTransformP( P_curr );
     xVector3 N_curr_Local  = xVector3::Normalize( P_curr_Local );
+
+    //xPoint3 P_rot  = QT_bone.rotate(N_up);
+    //xQuaternion QT_rot = xQuaternion::GetRotation(P_rot, N_up);
+    //xFLOAT cosa = xQuaternion::Product(QT_bone, QT_rot).w;
+    //if (cosa < 0.92f)
+    //    return true;
 
     xFLOAT r_Inv = 1.f / sqrt(N_curr_Local.x*N_curr_Local.x+N_curr_Local.y*N_curr_Local.y);
     xFLOAT cosAlpha = fabs(N_curr_Local.x)*r_Inv,

@@ -109,13 +109,13 @@ namespace Math { namespace Figures {
 
         void free()
         {
-            Figure->free();
-            if (Figure)  delete Figure;
+            if (Figure) { Figure->free(); delete Figure; Figure = NULL; }
             if (I_items)
             {
                 xBVHierarchy *iter = L_items;
                 for (int i = I_items; i; --i, ++iter) iter->free();
                 delete[] (xBYTE*) L_items;
+                I_items = 0;
             }
         }
 

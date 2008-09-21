@@ -289,6 +289,44 @@ bool SceneSkeleton::Update(float deltaTime)
     }
 
     UpdateDisplay(deltaTime);
+
+    if (EditMode == emAnimateBones && State.CurrentAction == IC_BE_Move)
+    {
+        xSkeleton &spine = Model.ModelGr->xModelP->Spine;
+        if (Selection.Bone && Selection.Bone != spine.L_bones && g_InputMgr.InputDown_Get(IC_RunModifier)) // anim-rotate bone (matrix)
+        {
+            Model.CalculateSkeleton();
+
+            xQuaternion QT_root = spine.L_bones[0].QT_rotation;
+
+            vSystem.Free();
+            vSystem.Init(spine.I_bones);
+            vSystem.C_lengthConst = spine.C_boneLength;
+            vSystem.I_constraints = spine.I_constraints;
+            vSystem.C_constraints = spine.C_constraints;
+            vSystem.Spine = &spine;
+            vEngine.Init(vSystem);
+            vEngine.I_passes = 1;
+
+            xBone       *bone    = spine.L_bones;
+            xPoint3     *P_cur   = vSystem.P_current, *P_old = vSystem.P_previous;
+            xQuaternion *QT_skew = vSystem.QT_boneSkew;
+            xFLOAT      *M_iter  = vSystem.M_weight_Inv;
+            xMatrix     *MX_bone = Model.ModelGr->instance.MX_bones;
+            xQuaternion *QT_bone = Model.ModelGr->instance.QT_bones;
+            for (int i = spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++MX_bone, ++QT_bone, ++M_iter)
+            {
+                *P_cur   = *P_old = MX_bone->postTransformP(bone->P_end);
+                *QT_skew = bone->QT_rotation; //*QT_skew = bone->getSkew(*QT_bone);
+                *M_iter  = 1 / bone->M_weight;
+            }
+            vEngine.SatisfyConstraints();
+            spine.CalcQuats(vSystem.P_current, vSystem.QT_boneSkew, 0, xMatrix::Identity());
+            spine.L_bones[0].QT_rotation = QT_root;
+        }
+        Model.CalculateSkeleton();                                     // refresh model in GPU
+    }
+
     return true;
 }
 
@@ -1107,6 +1145,8 @@ void SceneSkeleton::MouseMove  (int X, int Y)
             {
                 Model.CalculateSkeleton();
 
+                xQuaternion QT_root = spine.L_bones[0].QT_rotation;
+
                 vSystem.Free();
                 vSystem.Init(spine.I_bones);
                 vSystem.C_lengthConst = spine.C_boneLength;
@@ -1117,23 +1157,21 @@ void SceneSkeleton::MouseMove  (int X, int Y)
                 vEngine.I_passes = 10;
 
                 xBone       *bone    = spine.L_bones;
-                xVector3    *P_cur   = vSystem.P_current, *P_old = vSystem.P_previous;
+                xPoint3     *P_cur   = vSystem.P_current, *P_old = vSystem.P_previous;
                 xQuaternion *QT_skew = vSystem.QT_boneSkew;
                 xFLOAT      *M_iter  = vSystem.M_weight_Inv;
                 xMatrix     *MX_bone = Model.ModelGr->instance.MX_bones;
                 xQuaternion *QT_bone = Model.ModelGr->instance.QT_bones;
                 for (int i = spine.I_bones; i; --i, ++bone, ++P_cur, ++P_old, ++QT_skew, ++MX_bone, ++QT_bone, ++M_iter)
                 {
-                    *P_cur  = *P_old = MX_bone->postTransformP(bone->P_end);
-                    *QT_skew = bone->getSkew(*QT_bone);
-                    *M_iter = 1 / bone->M_weight;
+                    *P_cur   = *P_old = MX_bone->postTransformP(bone->P_end);
+                    *QT_skew = bone->QT_rotation; //*QT_skew = bone->getSkew(*QT_bone);
+                    *M_iter  = 1 / bone->M_weight;
                 }
-
-                vSystem.M_weight_Inv[0] = 0.f;
                 vSystem.P_current[Selection.Bone->ID] = Cameras.Current->FOV.Get3dPos(X, Height-Y, vSystem.P_current[Selection.Bone->ID]);
                 vEngine.SatisfyConstraints();
-
                 spine.CalcQuats(vSystem.P_current, vSystem.QT_boneSkew, 0, xMatrix::Identity());
+                spine.L_bones[0].QT_rotation = QT_root;
             }
             Model.CalculateSkeleton();                                     // refresh model in GPU
         }

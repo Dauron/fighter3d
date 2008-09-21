@@ -30,12 +30,27 @@ public:
     bool                          FL_auto_movement;
     Math::Tracking::ObjectTracker Tracker;
 
-    xVector3     *NW_VerletVelocity;
-    xVector3     *NW_VerletVelocity_new;
-    xVector3     *NW_VerletVelocity_total;
-    xVector3     *F_VerletPower;
-    xFLOAT       *T_Verlet;
+    struct JointInfo {
+        std::vector<xVector3> supportPoints;
+
+        xVector3 NW_VerletVelocity;
+        xVector3 NW_VerletVelocity_new;
+        xVector3 NW_VerletVelocity_total;
+        xVector3 F_VerletPower;
+        xFLOAT   T_Verlet;
+
+        JointInfo()
+        {
+            NW_VerletVelocity.zero();
+            NW_VerletVelocity_new.zero();
+            NW_VerletVelocity_total.zero();
+            F_VerletPower.zero();
+            T_Verlet = 0.f;
+        }
+    } *Joints;
+
     xBYTE         I_bones;
+    bool          FL_recovering;
     bool          FL_verlet;
 
     VerletSystem  verletSystem;
@@ -50,8 +65,7 @@ public:
     SkeletizedObj ()
         : RigidObj()
         , ControlType(Control_AI)
-        , NW_VerletVelocity(NULL)
-        , NW_VerletVelocity_new(NULL)
+        , Joints(NULL)
         , I_bones(0)
     {}
 
@@ -59,12 +73,16 @@ public:
     {
         RigidObj::Stop();
 
-        if (NW_VerletVelocity)
+        if (Joints)
         {
-            memset(NW_VerletVelocity,       0, sizeof(xVector3)*I_bones);
-            memset(NW_VerletVelocity_new,   0, sizeof(xVector3)*I_bones);
-            memset(NW_VerletVelocity_total, 0, sizeof(xVector3)*I_bones);
-            memset(F_VerletPower,           0, sizeof(xVector3)*I_bones);
+            JointInfo *joint = Joints;
+            for (int bi = 0; bi < I_bones; ++bi, ++joint)
+            {
+                joint->NW_VerletVelocity.zero();
+                joint->NW_VerletVelocity_new.zero();
+                joint->NW_VerletVelocity_total.zero();
+                joint->F_VerletPower.zero();
+            }
         }
     }
 

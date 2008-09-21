@@ -22,12 +22,14 @@ void RenderBoneCore ( const xBone &bone )
     W_bone[0] = bone.ID + 0.1f;
     g_AnimSkeletal.SetBoneIdxWghts(W_bone);
 
+    glBegin(GL_TRIANGLES);
     for (int i=0; i<4; ++i) {
         g_AnimSkeletal.SetVertex(bone.P_end.xyz);
         g_AnimSkeletal.SetVertex(bone.P_begin.xyz);
         g_AnimSkeletal.SetVertex(P_third.xyz);
         P_third = QT_rot.rotate(P_third, P_fifth);
     }
+    glEnd();
 }
 
 void RenderBone ( const xBone *L_bones, xBYTE ID_bone, xWORD ID_selBone )
@@ -36,18 +38,22 @@ void RenderBone ( const xBone *L_bones, xBYTE ID_bone, xWORD ID_selBone )
     if (ID_bone)
     {
         if (ID_bone == ID_selBone)
-        {
-            glEnd();
             glColor4f(1.0f,0.0f,1.0f,1.0f);
-            glBegin(GL_TRIANGLES);
-        }
+        else
+            glColor4f(1.0f,1.0f,0.0f,1.0f);
 
         RenderBoneCore(bone);
 
-        if (ID_bone == ID_selBone) {
+        glColor4f(0.0f,1.0f,1.0f,1.0f);
+
+        if (bone.QT_rotation.w < 1.f - EPSILON)
+        {
+            glBegin(GL_LINES);
+            {
+                g_AnimSkeletal.SetVertex(bone.P_begin.xyz);
+                g_AnimSkeletal.SetVertex((bone.P_begin + xVector3::Normalize(bone.QT_rotation.vector3) * 0.1f).xyz);
+            }
             glEnd();
-            glColor4f(1.0f,1.0f,0.0f,1.0f);
-            glBegin(GL_TRIANGLES);
         }
     }
 
@@ -102,15 +108,20 @@ void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *MX_bones,
 
     xVector3 N_front;
     xVector3 N_up = (bone.P_end - bone.P_begin).normalize();
+    xQuaternion QT_bone;
     if (C_angular.particleRootE)
     {
         N_up    = MX_bones[boneRE.ID].postTransformV(N_up);
         N_front = MX_bones[boneRE.ID].postTransformV(bone.getFront());
+        QT_bone = QT_bones[boneRE.ID]; QT_bone.vector3.invert();
+        QT_bone = xQuaternion::Product(QT_bone, QT_bones[C_angular.particle]);
     }
     else
     {
         N_up    = QT_bones[boneRB.ID].rotate(N_up);
         N_front = QT_bones[boneRB.ID].rotate(bone.getFront());
+        QT_bone = QT_bones[boneRB.ID]; QT_bone.vector3.invert();
+        QT_bone = xQuaternion::Product(QT_bone, QT_bones[C_angular.particle]);
     }
 
     xMatrix MX_BoneToWorld = xMatrixFromVectors(N_front, N_up).transpose();
@@ -139,7 +150,7 @@ void RenderConstraintAngular(const xSkeleton &spine, const xMatrix *MX_bones,
         // current axis - aqua
         P_current = (bone.P_end - bone.P_begin).normalize() * 0.2f;
         P_current = P_rootE + MX_bones[bone.ID].postTransformV(P_current);
-        if (C_angular.Test(P_rootB, P_rootE, P_current, N_up, N_front))
+        if (C_angular.Test(P_rootB, P_rootE, P_current, N_up, N_front, QT_bone))
             glColor4f(1.0f,0.0f,0.0f,1.0f);
         else
             glColor4f(0.0f,1.0f,1.0f,1.0f);
@@ -297,9 +308,7 @@ void RendererGL :: RenderSkeleton ( xModel &model, xModelInstance &instance, xWO
                                 instance.P_bone_roots, instance.P_bone_trans, NULL, false);
 
             glColor4f(1.0f,1.0f,0.0f,1.0f);
-            glBegin(GL_TRIANGLES);
-                RenderBone(model.Spine.L_bones, 0, ID_selBone);
-            glEnd();
+            RenderBone(model.Spine.L_bones, 0, ID_selBone);
 
             if (ID_selBone == 0)
                 glColor4f(1.0f,0.0f,1.0f,1.0f);
@@ -355,9 +364,7 @@ void RenderBoneSelection ( const xBone *L_bones, xBYTE ID_bone )
     if (ID_bone)
     {
         glLoadName(ID_bone);
-        glBegin(GL_TRIANGLES);
         RenderBoneCore(bone);
-        glEnd();
     }
 
     xBYTE *ID_iter = bone.ID_kids;

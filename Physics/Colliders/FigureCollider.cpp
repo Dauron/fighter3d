@@ -136,7 +136,7 @@ inline xDWORD CSInvert (xDWORD I_lastCount, CollisionSet &cset)
 {
     CollisionSet::CollisionVec::reverse_iterator
         CS_curr = cset.collisions.rbegin(),
-        CS_last = cset.collisions.rend();
+        CS_last = cset.collisions.rbegin() + I_lastCount;
     for (; CS_curr != CS_last; ++CS_curr) CS_curr->invert();
     return I_lastCount;
 }

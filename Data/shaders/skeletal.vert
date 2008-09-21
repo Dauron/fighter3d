@@ -6,36 +6,36 @@ uniform   vec3 trans[32];
 
 vec3 QuaternionRotate(vec4 q, vec3 p)
 {
-	vec4 a = vec4(
+    vec4 a = vec4(
                   q.w * p + cross ( q.xyz , p ),
                   - dot( q.xyz , p )
                  );
     //vec4 c = vec4(
-    //              q.w * a.xyz + a.w * q.xyz - cross ( a.xyz , q.xyz ),
+    //              q.w * a.xyz - a.w * q.xyz - cross ( a.xyz , q.xyz ),
     //              dot( q , a )
     //             );
-    return q.w * a.xyz - cross ( a.xyz , q.xyz );
+    return q.w * a.xyz - a.w * q.xyz - cross ( a.xyz , q.xyz );
 }
 
 void getPositionAndNormal(int i, inout vec4 position, inout vec3 normal)
 {
-    position.w = gl_Vertex.w;
-    
     float wght = fract(boneIdxWghts[i]);
-	if (wght <= 0.001) return;
-	wght *= 10.0;
-	
-	int idx = int(floor(boneIdxWghts[i]));
-	if (idx == 0)
-	{
-		position.xyz += wght * (gl_Vertex.xyz + quats[0].xyz);
-		normal       += wght * gl_Normal;
-		return;
-	}
+    if (wght <= 0.001) return;
+    wght *= 10.0;
+    
+    int idx = int(floor(boneIdxWghts[i]));
+    if (idx == 0)
+    {
+        position.xyz += wght * (gl_Vertex.xyz + quats[0].xyz);
+        position.w    = gl_Vertex.w;
+        normal       += wght * gl_Normal;
+        return;
+    }
 
-	if (gl_Vertex.w != 0.0)
-		position.xyz += wght * (QuaternionRotate(quats[idx], gl_Vertex.xyz - roots[idx]) + trans[idx]);
-	else
-		position.xyz += wght * QuaternionRotate(quats[idx], gl_Vertex.xyz);
-	normal           += wght * QuaternionRotate(quats[idx], gl_Normal);
+    if (gl_Vertex.w != 0.0)
+        position.xyz += wght * (QuaternionRotate(quats[idx], gl_Vertex.xyz - roots[idx]) + trans[idx]);
+    else
+        position.xyz += wght * QuaternionRotate(quats[idx], gl_Vertex.xyz);
+    position.w        = gl_Vertex.w;
+    normal           += wght * QuaternionRotate(quats[idx], gl_Normal);
 }

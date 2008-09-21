@@ -65,14 +65,14 @@ restitution 0.9
 control     comboard
 style       Karate anims/karate.txt
 name        "ComBoard player"
-enemy       1
+#enemy       1
 
 [person]
 fastm	    human2_fst.3dx
 model	    human2.3dx
 #rotation    0 45 0
-#position   -0.5 -1.5 -0.2
-position    -0.5 -2   -0.2
+#position   -0.5 -1.5 -0.4
+position    -0.5 -2   -0.4
 customBVH	0
 physical    1
 locked      0
@@ -91,4 +91,3 @@ animation   anims/karate/position.ska
 name        "Camera player"
 style       Karate anims/karate.txt
 #enemy       0
-

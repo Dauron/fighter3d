@@ -367,17 +367,6 @@ bool SceneSkeleton::Render()
     Graphics::OGL::Shader::SetLightType(xLight_NONE);
     Graphics::OGL::Shader::Start();
 
-    if (EditMode == emSelectVertex)
-        render.RenderVertices(model, modelInstance, Renderer::smNone, Selection.ElementId, &Selection.Vertices);
-    if ((State.ShowBonesAlways && EditMode != emAnimateBones) ||
-        (EditMode == emAnimateBones && !State.HideBonesOnAnim) ||
-        EditMode == emSelectBone || EditMode == emCreateBone ||
-        EditMode == emCreateConstraint_Node || EditMode == emCreateConstraint_Params ||
-        EditMode == emInputWght  || EditMode == emSelectBVHBone || EditMode == emEditVolume)
-        render.RenderSkeleton(model, modelInstance, Selection.Bone ? Selection.Bone->ID : xWORD_MAX);
-
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
     if (EditMode == emAnimateBones)
     {
         glColor3f(0.2f, 0.5f, 0.2f);
@@ -398,6 +387,15 @@ bool SceneSkeleton::Render()
         }
         glEnd();
     }
+
+    if (EditMode == emSelectVertex)
+        render.RenderVertices(model, modelInstance, Renderer::smNone, Selection.ElementId, &Selection.Vertices);
+    if ((State.ShowBonesAlways && EditMode != emAnimateBones) ||
+        (EditMode == emAnimateBones && !State.HideBonesOnAnim) ||
+        EditMode == emSelectBone || EditMode == emCreateBone ||
+        EditMode == emCreateConstraint_Node || EditMode == emCreateConstraint_Params ||
+        EditMode == emInputWght  || EditMode == emSelectBVHBone || EditMode == emEditVolume)
+        render.RenderSkeleton(model, modelInstance, Selection.Bone ? Selection.Bone->ID : xWORD_MAX);
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);

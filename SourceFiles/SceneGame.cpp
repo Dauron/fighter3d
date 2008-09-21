@@ -592,7 +592,7 @@ bool SceneGame :: Render()
         glColor3ub( 255, 0, 0 );
         glBegin(GL_QUADS);
         {
-            if (player1.FL_verlet)
+            if (player1.FL_recovering)
                 glColor3ub( 255, 0, 0 );
             else
                 glColor3ub( 0, 255, 0 );
@@ -601,7 +601,7 @@ bool SceneGame :: Render()
             glVertex2f(10.f + LifeWidthP1, lineHeight+20.f);
             glVertex2f(10.f, lineHeight+20.f);
 
-            if (player2.FL_verlet)
+            if (player2.FL_recovering)
                 glColor3ub( 255, 0, 0 );
             else
                 glColor3ub( 0, 255, 0 );glVertex2f(Width - 10.f, lineHeight+10.f);

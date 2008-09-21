@@ -15,7 +15,7 @@ struct VConstraintAngular : VConstraint
 
     virtual bool Satisfy(VerletSystem *system);
     bool Test(const xVector3 &P_rootB, const xVector3 &P_rootE, const xVector3 &P_curr,
-              const xVector3 &N_up, const xVector3 &N_front) const;
+              const xVector3 &N_up, const xVector3 &N_front, const xQuaternion &QT_bone) const;
     virtual void CloneTo(VConstraint *&dst) const;
 
     virtual void Save( FILE *file );
