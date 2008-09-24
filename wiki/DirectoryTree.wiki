@@ -4,9 +4,9 @@
 = Introduction =
 
 SVN repository consists of three root direcotries:
- * CamFighter - main development branch
- * Doc        - documentation and concept art branch
- * branches   - major releases
+ * !CamFighter - main development branch
+ * Doc         - documentation and concept art branch
+ * branches    - major releases
 
 = Project Directory Tree =
 
@@ -32,12 +32,13 @@ Main development branch tree looks as follows:
 || \ Models         || 3D models manager                                  ||
 || \ \ lib3ds       || lib3ds copy used by Visual Studio project          ||
 || \ \ lib3dx       || native for this project library of xModel objects  ||
-|| \ Motion Capture || entry point for the motion capture library         ||
+|| \ !MotionCapture || entry point for the motion capture library         ||
 || \ Multiplayer    || entry point for the network comunication           ||
 || \ Physics        || physics engine, base physical objects              ||
 || \ \ Colliders    || BVH collision detection                            ||
 || \ \ Verlet       || Verlet integration and constraints                 ||
 || \ SourceFiles    || game logic, IScene implementations                 ||
-|| \ \ MenuStates   || screens for menu scene                             ||
+|| \ \ !MenuStates  || screens for menu scene                             ||
 || \ Utils          || templates and auxiliary tools                      ||
+|| \ !VisualStudio  || Visual Studio 2005 solution and project            ||
 || \ World          || specific implementation of the object used in game ||
