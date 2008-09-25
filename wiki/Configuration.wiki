@@ -18,6 +18,7 @@ ex. {{{ name "Long name with ""quotation marks"" inside" }}}
 
 = The game =
 The `/Data/config.txt` file configures main options that alter game behaviour. This configuration is divided into two sections - `[graphics]` and `[general]`.
+
 == Graphics section ==
 || *Property `[values]`* || *Description*                  ||
 || `lighting [0/1/2]`    || lighting rendering mode        ||
@@ -44,99 +45,116 @@ The `/Data/config.txt` file configures main options that alter game behaviour. T
 || `show_BVH [0/1]`           || should the lowest BVH levels be displayed?         ||
 || `show_Cameras [0/1]`       || should the symbolic cameras outline be displayed?  ||
 
+== General section ==
+|| *Property `[values]`*    || *Description*                           ||
+|| `console [0/1]`          || disable/enable console                  ||
+|| `scene [menu/game/test]` || initial scene                           ||
+||                          || menu - begin with menu                  ||
+||                          || game - begin with game, load map from `/Data/models/level_*.map`, `*` = `level` property                     ||
+||                          || test - begin with collision test scene (change BVH with `[0]`-`[9]` keys)                                                      ||
+|| `level [int]`            || initial level of game and test scenes   ||
+|| `speed [float]`          || game speed multiplier                   ||
+|| `logging [0/1/2/3]`      || logging level (to `/Data/log.txt` file) ||
+||                          || 0 - log almost nothing                  ||
+||                          || 1 - log important errors                ||
+||                          || 2 - log all errors                      ||
+||                          || 3 - log all errors and warnings         ||
+|| `3dsTo3dx [0/1]`         || should 3ds models be automatically saved to 3dx files - enabling may result in overwriting existing 3dx files                  ||
 
-Sekcja ogólna
-console [0/1]	– czy konsola ma być dostępna
-scene [menu/game/test] – wybór sceny początkowej
-menu – po uruchomieniu gry zobaczymy menu
-game – gra od razu uruchomi się w trybie rozgrywki, pokazując mapę z pliku /Data/models/level_*.map, gdzie * zdefiniowana jest przez opcję level
-test – uruchomiona zostanie scena testująca BVH (zmiana figur:  0-9)
-level [liczba]	– początkowy poziom scen game i test
-speed [liczba]	– mnożnik zmiennoprzecinkowy prędkość rozgrywki
-logging [0/1/2/3]	– poziom logowania błędów do pliku /Data/log.txt
-0 – prawie nic nie jest raportowane
-1 – logowane są ważne błędy
-2 – logowane są wszystkie błędy
-3 – logowane są wszystkie błędy oraz ostrzeżenia
-3dsTo3dx [0/1]	– czy napotkane w mapach modele 3ds mają być automatycznie zapisywane do plików 3dx – włączenie grozi nadpisaniem istniejących modeli
-Klawiatura
+= Keyboard =
+The `/Data/keyboard.txt` file defines mapping of keys into their logical functions. First column contains key name, defined in the `/Data/keys.txt` file (only single word names are allowed). Second column contains numerical function code. Mapping of function codes to function names may be found in the `/SourceFiles/InputCodes.h` file.
 
-Plik /Data/keyboard.txt zwiera mapowanie klawiatury na kody funkcyjne. W pierwszej kolumnie znajduje się nazwa klawisza zdefiniowana w pliku /Data/keys.txt (nazwa klawisza nie może zawierać spacji). W drugiej kolumnie podaje się numeryczny kod funkcyjny – powiązanie tych numerów z nazwami można znaleźć w pliku /Source Files/InputCodes.h.
-Kamery
-W pliku /Data/cameras.txt znajduje się konfiguracja widoku z kamer podczas rozgrywki. Domyślnie jest to podział na trzy ujęcie – od boku, od góry oraz z oczu pierwszego gracza. W plikach /Data/cameras_*.txt znajdują się alternatywne ustawienia kamer.
-Plik konfiguracyjny może zawierać dowolną ilość sekcji [camera human] lub [camera free]. Napotkanie jednej z tych sekcji rozpoczyna definicję nowej kamery podanego typu:
-name [tekst]	– nazwa ujęcia
-eye [x y z]	– pozycja obserwatora
-center [x y z]	– pozycja punktu obserwacji
-up [x y z]	– wektor wskazujący górę ekranu
-speed [liczba]	– zmiennoprzecinkowa szybkość śledzenia kamery
-(viewport)	– rozpoczyna podsekcję definiującą okno docelowe
-left [0-100]	– procent szerokości okna gdzie zaczyna się widok
-top [0-100]	– procent wysokości okna gdzie zaczyna się widok
-width [0-100]	– szerokości widoku
-height [0-100]	– wysokość widoku
-(fov)	– rozpoczyna podsekcję definiującą rzut, ustawia typ rzutu na prostopadły
-angle [stopnie]	– kąt widzenia kamery, zmienia rzut na perspektywiczny
-front [liczba]	– odległość bliskiej granicy widzenia
-back [liczba]	– odległość dalekiej granicy widzenia
-(track eye), (track center) – rozpoczyna podsekcję definiującą automatyczne śledzenie przez dany punkt
-mode [tekst]	– ustawia tryb śledzenia
-nothing	– wyłącza śledzenie
-object	– śledzenie wybranego obiektu
-subobject	– śledzenie wybranego podobiektu
-all_center	– śledzenie środka wszystkich dostępnych elementów
-nazwa skryptu	– śledzenie z wykorzystaniem określonego skryptu – obecnie dostępne są tylko wbudowane skrypty:
-EyeSeeAll_Center – skrypt obserwatora – stara się objąć polem widzenia wszystkie dostępne obiekty (od boku). Za centrum widoku przyjmuje średnią ze środków wszystkich obiektów
-EyeSeeAll_CenterTop – modyfikacja poprzedniego skryptu pozwalająca na widok z góry
-EyeSeeAll_Radius – skrypt obserwatora – stara się objąć polem widzenia wszystkie dostępne obiekty, za centrum przyjmuje środek bryły otaczającej wszystkie obiekty
-object	– numer śledzonego obiektu
-subobj	– numer śledzonego podobiektu (dla śledzonego obiektu)
-shift	– przesunięcie punktu docelowego w układzie współrzędnych zależnym od skryptu
-Lista map
-Plik /Data/maps.txt przechowuje listę map dostępnych do wyboru w menu. Składa się on z szeregu sekcji [map]. Każda sekcja może zawierać właściwości:
-name [tekst]	– wyświetlana nazwa mapy
-file [ścieżka]	– ścieżka dostępu do mapy
-img [ścieżka]	– ścieżka dostępu do zdjęcia mapy
-Lista graczy
-Postacie dostępne do wyboru w menu są wymienione w pliku /Data/players.txt. Plik ten dzieli się na sekcje [player]. Każda z nich powinna definiować następujące właściwości:
-name [tekst]	– wyświetlana nazwa modelu
-model [ścieżka]	– plik z modelem graficznym
-fastm [ścieżka]	– plik z uproszczonym modelem fizycznym
-customBVH [0/1]	– czy ma być stosowana własna, czy automatyczna hierarchia brył otaczających – dla graczy lepiej sprawdza się  automatyczna
-mass [liczba]	– masa modelu
-style [tekst ścieżka]	– nazwa oraz plik definiujący dostępny dla tego modelu styl walki (powtórzenie tej właściwości doda kolejne style)
-Poza wymienionymi powyżej opcjami, dostępne są również inne właściwości dostępne dla modeli definiowanych w plikach z mapami. Większość z nich nie ma jednak sensu w tym kontekście (np. wyłączenie fizyki), bądź zostanie nadpisana przez opcje wybrane w menu.
-Styl walki
+= Cameras =
+In the `/Data/cameras.txt` file you may configure views during game time. By default window is divided into four viewports - from players side, from top and from their eyes. Int the `/Data/cameras_*.txt` files you may find alternative camera sets.
+
+Configuration file may contain any number of `[camera human]` or `[camera free]` sections. Each section defines one camera of given type (check [Cameras] topic for differences between those types).
+
+|| *Property `[values]`* || *Description*                                         ||
+|| `name [text]`         || name of the camera                                    ||
+|| `eye [x y z]`         || viewers position                                      ||
+|| `center [x y z]`      || target of observation                                 ||
+|| `up [x y z]`          || vector pointing to the top of the screen              ||
+|| `speed [float]`       || camera tracking speed                                 ||
+|| `(viewport)`          || starts subsection that define destination window      ||
+|| `left [0-100]`        || percentage of window width where the viewport starts  ||
+|| `width [0-100]`       || percentage of window width that the viewport takes    ||
+|| `top [0-100]`         || percentage of window height where the viewport starts ||
+|| `height [0-100]`      || percentage of window height that the viewport takes   ||
+|| `(fov)`               || begins subsection that defines projection, sets projection type to orthogonal ||
+|| `angle [degrees]`     || camera's angle of view, sets projection type to perspective ||
+|| `front [float]`       || distance to the near clipping plane                   ||
+|| `back [float]`        || distance to the far clipping plane                    ||
+|| `(track eye)`, `(track center)` || starts subsection that defines automatic tracking of targets by given camera property (eye or center) ||
+|| `mode [text]`         || sets tracking mode                                    ||
+||                       || nothing - turns the tracking off                      ||
+||                       || object - tracks given object                          ||
+||                       || subobject - tracks given subobject                    ||
+||                       || all_center - tracks center of all available objects   ||
+||                       || script name - tracks targets with given script, currently only built in scripts are available: ||
+||                       || !EyeSeeAll_Center – script for camera eye point – tries to see all available objects (from their side). The view center is mean of objects centers ||
+||                       || !EyeSeeAll_CenterTop – modification of !EyeSeeAll_Center script that looks from top ||
+||                       || !EyeSeeAll_Radius – script for camera eye point – tries to see all available objects (from their side). The view center is center of the volume that bounds all of the objects || 
+|| `object [int]`        || index of tracked object                               ||
+|| `subobject [int]`     || index of tracked subobject (for given tracked object) ||
+|| `shift [x y z]`       || shift of the tracking destination point in the coordinate system depending on the script ||
+
+= Map list =
+In the `/Data/maps.txt` file there is a list of maps shown on the "Select map" screen. It contains number of `[map]` sections. Each section describes one map with following properties:
+
+|| *Property `[values]`* || *Description*                      ||
+|| `name [text]`         || name of the map                    ||
+|| `file [path]`         || path to the file with map          ||
+|| `img [path]`          || path to the screenshoot of the map ||
+
+= Players list =
+Players that may be selected in menu are listed in the `/Data/players.txt` file. It's divided into several `[player]` sections. Each section should define following properties:
+
+|| *Property `[values]`* || *Description*                         ||
+|| `name [text]`         || player name                           ||
+|| `model [path]`        || path to the graphical model           ||
+|| `fastm [path]`        || path to the simplified physical model ||
+|| `customBVH [0/1]`     || should model use custom or automatic Bounding Volumes Hierarchy - automatic behaves beter for players ||
+|| `mass [int]`          || mass of the model                     ||
+|| `style [text path]`   || name and path to the file that defines fighting style that may be used by this model (multiple style definitions creates list of available styles) ||
+
+Beside abovementioned options, it is possible to use properties of models defined in the map files. However, most of them makes no sense in current context (ex. disabling physics) or will be overwritten by options selected in the menu.
+
+= Fighting styles =
 Przykładowy styl walki dostępny jest w pliku /Data/models/anim/karate.txt. Plik taki powinien zawierać trzy typy sekcji – [auto], [mirror] oraz [action].
-Sekcja “auto”
-Sekcja ta zawiera listę akcji, które model może podjąć bez udziału gracza, by przemieścić się do punktu docelowego:
+
+== Auto movement ==
+Sekcja ta zawiera listę akcji, które model może podjąć bez udziału gracza, by przemieścić się do punktu docelowego:
 stop [akcja]	– wskazanie akcji spoczynkowej
 step [akcja dystans 0/1] – podana akcja przemieści gracza do przodu o podany dystans, flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
 back [akcja dystans 0/1] – podana akcja przemieści gracza do tyłu o podany dystans, flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
-left [akcja kąt 0/1] – podana akcja obróci gracza w lewo o podany kąt (w stopniach), flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
-right [akcja kąt 0/1] – podana akcja obróci gracza w prawo o podany kąt (w stopniach), flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
-Sekcja “mirror”
+left [akcja kąt 0/1] – podana akcja obróci gracza w lewo o podany kąt (w stopniach), flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
+right [akcja kąt 0/1] – podana akcja obróci gracza w prawo o podany kąt (w stopniach), flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
+
+== Animation mirroring ==
 Sekcja ta zawiera listę kości, które są lustrzanym odbiciem, np. lewa dłoń z prawą dłonią. Dane te umożliwiają stosowanie tej samej animacji dla obu stron ciała:
 bones [liczba liczba]	– dodaje parę podanych kości do listy odbić
-Sekcja “action”
+
+== Actions and combos ==
 Sekcja ta definiuje pojedynczą akcję, jaką może podjąć model. Zastosowanie wskazanych kombinacji klawiszy pozwala na przechodzenie między akcjami. Wszystkie czasy trwania są podawane w milisekundach.
 name [tekst]	– nazwa akcji
-anim [ścieżka czas_rozpoczęcia czas_zakończenia] – plik z animacją jaka ma zostać odtworzona w podanej akcji. Zdefiniowanie kilku animacji połączy je w jedną
+anim [ścieżka czas_rozpoczęcia czas_zakończenia] – plik z animacją jaka ma zostać odtworzona w podanej akcji. Zdefiniowanie kilku animacji połączy je w jedną
 time [liczba]	– czas trwania animacji, 0 dla zapętlenia
-post [akcja]	– następna akcja do wykonania (domyślnie jest to pierwsza zdefiniowana akcja)
-rotate [0/1]	– akcja powoduje obrót – po jej zakończeniu macierz modelu zostanie obrócona o różnicę początkowego i końcowego skrętu pierwszej kości (domyślnie 0)
-mirror [0/1]	– akcja powoduje odwrócenie pozycji – po jej zakończeniu wszystkie animacje będą odbijane w lustrze (domyślnie 0)
-(combo)	– rozpoczyna podsekcję definiującą możliwe przejście do innej akcji
+post [akcja]	– następna akcja do wykonania (domyślnie jest to pierwsza zdefiniowana akcja)
+rotate [0/1]	– akcja powoduje obrót – po jej zakończeniu macierz modelu zostanie obrócona o różnicę początkowego i końcowego skrętu pierwszej kości (domyślnie 0)
+mirror [0/1]	– akcja powoduje odwrócenie pozycji – po jej zakończeniu wszystkie animacje będą odbijane w lustrze (domyślnie 0)
+(combo)	– rozpoczyna podsekcję definiującą możliwe przejście do innej akcji
 action [akcja]	– akcja docelowa
-key [nazwa]	– przycisk powodujący przejście do kolejnej akcji, dostępne przyciski to: Forward, Backward, *, *Punch, *Kick, *HandGuard, *LegGuard. * = Left / Right
+key [nazwa]	– przycisk powodujący przejście do kolejnej akcji, dostępne przyciski to: Forward, Backward, *, *Punch, *Kick, *HandGuard, *LegGuard. * = Left / Right
 first [liczba]	– czas otwarcia okna w którym można wykonać kombinację (domyślnie 0)
 last [liczba]	– czas zamknięcia okna w którym można wykonać kombinację (domyślnie 0 = nieskończoność)
-time [liczba]	– moment rozpoczęcia docelowej akcji, jeśli czas zamknięcia okna kombinacji jest różny od zera, to do wartości tej zostanie dodany czas jaki upłynął od otwarcia okna kombinacji (domyślnie 0)
+time [liczba]	– moment rozpoczęcia docelowej akcji, jeśli czas zamknięcia okna kombinacji jest różny od zera, to do wartości tej zostanie dodany czas jaki upłynął od otwarcia okna kombinacji (domyślnie 0)
 prec [0/1]	– jeśli 1, to do time nie będzie dodawany czas jaki upłynął od otwarcia okna kombinacji (domyślnie 0)
 shift [0/1]	– jeśli 1, to macierz pozycji postaci zostanie przemieszczona w momencie wykonania kombinacji o przesunięcie kości podstawowej
-Mapa
+
+= Map =
 Przykładowa mapa dostępna jest w pliku /Data/models/level3.map. Definicja mapy składa się z czterech rodzajów sekcji – [general], [light], [model], [person].
-Sekcja główna
+
+== Main section ==
 Sekcja [general] definiuje globalne ustawienia mapy. Można w niej również wskazać inne mapy, które powinny zostać dołączone do bieżącej mapy.
 import [ścieżka]	– ścieżka do dodatkowej mapy, która powinna zostać wczytana
 skybox [ścieżka]	– ścieżka do modelu 3D, który będzie służył jako niebo
@@ -145,7 +163,8 @@ spawn1rot [x y z]	– obrót pierwszego gracza
 spawn1pos [x y z]	– pozycja pierwszego gracza
 spawn2rot [x y z]	– obrót drugiego gracza
 spawn2pos [x y z]	– pozycja drugiego gracza
-Oświetlenie
+
+== Lighting ==
 Sekcja [light] definiuje pojedyncze światło.
 type [nazwa]	– typ światła
 infinite	– światło nieskończone
@@ -161,8 +180,9 @@ spot_att [liczba]	– tłumienie snopa światła
 att_const [liczba]	– współczynnik stałego tłumienia światła
 att_linear [liczba] – współczynnik liniowego tłumienia światła
 att_square [liczba] – współczynnik kwadratowego tłumienia światła
-Obiekty
-Sekcja [model] definiuje pojedynczy model znajdujący się na scenie. Jedyną wymaganą właściwością jest ścieżka do pliku z modelem.
+
+== Objects ==
+Sekcja [model] definiuje pojedynczy model znajdujący się na scenie. Jedyną wymaganą właściwością jest ścieżka do pliku z modelem.
 name [tekst]	– nazwa modelu
 model [ścieżka]	– plik z modelem graficznym
 fastm [ścieżka]	– plik z uproszczonym modelem fizycznym
@@ -171,13 +191,14 @@ position [x y z]	– pozycja modelu – kolejne wpisy będą ze sobą łączone
 rotation [x y z]	– obrót modelu – kolejne wpisy będą ze sobą łączone
 velocity [x y z]	– prędkość we wskazanym kierunku, position i rotation zerują prędkość
 physical [0/1]	– czy obiekt podlega ciążeniu
-locked [0/1]	– czy obiekt jest stacjonarny (czy nie może się przemieszczać)
+locked [0/1]	– czy obiekt jest stacjonarny (czy nie może się przemieszczać)
 mass [liczba]	– masa obiektu
 restitution [liczba] – współczynnik odbicia – jaki procent energii zostanie przekazane drugiemu obiektowi
 restitution_self [liczba] – współczynnik odbicia – ile energii zostanie zachowane
 shadows [0/1]	– czy obiekt rzuca cienie
+
 W sekcji [person] można użyć dowolne właściwości sekcji [model], ponadto dochodzą następujące parametry:
-animation [ścieżka czas_rozpoczęcia czas_zakończenia] – plik z animacją jaka ma być odtwarzana dla modelu (czas podany w ms)
+animation [ścieżka czas_rozpoczęcia czas_zakończenia] – plik z animacją jaka ma być odtwarzana dla modelu (czas podany w ms)
 style [tekst ścieżka]	– nazwa oraz plik definiujący dostępny dla tego modelu styl walki
 control [nazwa]	– typ kontroli nad obiektem
 camera	– obiekt kontrolowany kamerą
