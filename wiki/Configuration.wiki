@@ -113,96 +113,105 @@ Players that may be selected in menu are listed in the `/Data/players.txt` file.
 || `name [text]`         || player name                           ||
 || `model [path]`        || path to the graphical model           ||
 || `fastm [path]`        || path to the simplified physical model ||
-|| `customBVH [0/1]`     || should model use custom or automatic Bounding Volumes Hierarchy - automatic behaves beter for players ||
+|| `customBVH [0/1]`     || should model use custom or automatic Bounding Volumes Hierarchy - automatic behaves better for players ||
 || `mass [int]`          || mass of the model                     ||
 || `style [text path]`   || name and path to the file that defines fighting style that may be used by this model (multiple style definitions creates list of available styles) ||
 
 Beside abovementioned options, it is possible to use properties of models defined in the map files. However, most of them makes no sense in current context (ex. disabling physics) or will be overwritten by options selected in the menu.
 
 = Fighting styles =
-Przykładowy styl walki dostępny jest w pliku /Data/models/anim/karate.txt. Plik taki powinien zawierać trzy typy sekcji – [auto], [mirror] oraz [action].
+Exemplary fighting style may be found in the `/Data/models/anim/karate.txt` file. Three types of sections should be included in such file – `[auto]`, `[mirror]` and `[action]`.
 
 == Auto movement ==
-Sekcja ta zawiera listę akcji, które model może podjąć bez udziału gracza, by przemieścić się do punktu docelowego:
-stop [akcja]	– wskazanie akcji spoczynkowej
-step [akcja dystans 0/1] – podana akcja przemieści gracza do przodu o podany dystans, flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
-back [akcja dystans 0/1] – podana akcja przemieści gracza do tyłu o podany dystans, flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
-left [akcja kąt 0/1] – podana akcja obróci gracza w lewo o podany kąt (w stopniach), flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
-right [akcja kąt 0/1] – podana akcja obróci gracza w prawo o podany kąt (w stopniach), flaga na końcu mówi, czy akcja może zostać przerwana, jeśli cel zostanie osiągnięty przed jej zakończeniem
+This section defines list of actions which may be automatically taken by the fighter in order to move to its destination point:
+
+|| *Property `[values]`*        || *Description*  ||
+|| `stop [action]`              || resting action ||
+|| `step [action distance 0/1]` || given action will move player by given distance, 0/1 tells if the action may be stopped when destination is reached before finishing ||
+|| `back [action distance 0/1]` || given action will move player backward by given distance, 0/1 flag tells if the action may be stopped ||
+|| `left [action angle 0/1]`    || given action will rotate player left by given angle (degrees), 0/1 flag tells if the action may be stopped ||
+|| `right [action angle 0/1]`   || given action will rotate player right by given angle (degrees), 0/1 flag tells if the action may be stopped ||
 
 == Animation mirroring ==
-Sekcja ta zawiera listę kości, które są lustrzanym odbiciem, np. lewa dłoń z prawą dłonią. Dane te umożliwiają stosowanie tej samej animacji dla obu stron ciała:
-bones [liczba liczba]	– dodaje parę podanych kości do listy odbić
+This section lists bones that form mirroring pairs, ex. left hand with right hand. This data allows using same animation for both sides of the body.
+|| *Property `[values]`* || *Description*                                  ||
+|| `bones [int int]`     || adds given pair of bones to the mirroring list ||
 
 == Actions and combos ==
-Sekcja ta definiuje pojedynczą akcję, jaką może podjąć model. Zastosowanie wskazanych kombinacji klawiszy pozwala na przechodzenie między akcjami. Wszystkie czasy trwania są podawane w milisekundach.
-name [tekst]	– nazwa akcji
-anim [ścieżka czas_rozpoczęcia czas_zakończenia] – plik z animacją jaka ma zostać odtworzona w podanej akcji. Zdefiniowanie kilku animacji połączy je w jedną
-time [liczba]	– czas trwania animacji, 0 dla zapętlenia
-post [akcja]	– następna akcja do wykonania (domyślnie jest to pierwsza zdefiniowana akcja)
-rotate [0/1]	– akcja powoduje obrót – po jej zakończeniu macierz modelu zostanie obrócona o różnicę początkowego i końcowego skrętu pierwszej kości (domyślnie 0)
-mirror [0/1]	– akcja powoduje odwrócenie pozycji – po jej zakończeniu wszystkie animacje będą odbijane w lustrze (domyślnie 0)
-(combo)	– rozpoczyna podsekcję definiującą możliwe przejście do innej akcji
-action [akcja]	– akcja docelowa
-key [nazwa]	– przycisk powodujący przejście do kolejnej akcji, dostępne przyciski to: Forward, Backward, *, *Punch, *Kick, *HandGuard, *LegGuard. * = Left / Right
-first [liczba]	– czas otwarcia okna w którym można wykonać kombinację (domyślnie 0)
-last [liczba]	– czas zamknięcia okna w którym można wykonać kombinację (domyślnie 0 = nieskończoność)
-time [liczba]	– moment rozpoczęcia docelowej akcji, jeśli czas zamknięcia okna kombinacji jest różny od zera, to do wartości tej zostanie dodany czas jaki upłynął od otwarcia okna kombinacji (domyślnie 0)
-prec [0/1]	– jeśli 1, to do time nie będzie dodawany czas jaki upłynął od otwarcia okna kombinacji (domyślnie 0)
-shift [0/1]	– jeśli 1, to macierz pozycji postaci zostanie przemieszczona w momencie wykonania kombinacji o przesunięcie kości podstawowej
+Each occurrence of this section defines one action that may be taken by the fighter. It also defines keys that switch between animations (combos). Each time spans are given in miliseconds.
+|| *Property `[values]`*             || *Description*                      ||
+|| `name [text]`                     || action name                        ||
+|| `anim [path start_time end_time]` || animation connected with this action. Defining few animations will mix them together ||
+|| `time [int]`                      || duration of the action, 0 for loop ||
+|| `post [action]`                   || action to be taken after finishing current (first action by default) ||
+|| `rotate [0/1]`                    || tells if this action will rotate the fighter (0 by default) ||
+|| `mirror [0/1]`                    || tells if this action will mirror the fighter - following animations will be mirrored (0 by default) ||
+|| `(combo)`                         || starts subsection that defines possible pass to other action ||
+|| `action [action]`                 || destination action                 ||
+|| `key [name]`                      || key that activates combo, possible values are: Forward, Backward, *, *Punch, *Kick, *HandGuard, *LegGuard. Where * = Left / Right ||
+|| `first [int]`                     || moment of opening the time window during which combo may be activated (0 by default) ||
+|| `last [int]`                      || moment of closing the time window during which combo may be activated (0 by default = infinity) ||
+|| `time [int]`                      || moment at which target action is started, if `last` is non zero, then `current-first` value is added to this time (0 by default) ||
+|| `prec [0/1]`                      || if 1, then no `current-first` value will be added to `time` (0 by default) ||
+|| `shift [0/1]`                     || if 1, then player's position matrix will be shifted by the shift of the current root bone position ||
 
 = Map =
-Przykładowa mapa dostępna jest w pliku /Data/models/level3.map. Definicja mapy składa się z czterech rodzajów sekcji – [general], [light], [model], [person].
+Exemplary map may be found in the `/Data/models/level3.map` file. It's definition is divided into following sections: `[general]`, `[light]`, `[model]`, `[person]`.
 
 == Main section ==
-Sekcja [general] definiuje globalne ustawienia mapy. Można w niej również wskazać inne mapy, które powinny zostać dołączone do bieżącej mapy.
-import [ścieżka]	– ścieżka do dodatkowej mapy, która powinna zostać wczytana
-skybox [ścieżka]	– ścieżka do modelu 3D, który będzie służył jako niebo
-skycolor [r g b]	– kolor nieba, wartości kolorów w przedziale [0.0, 1.0]
-spawn1rot [x y z]	– obrót pierwszego gracza
-spawn1pos [x y z]	– pozycja pierwszego gracza
-spawn2rot [x y z]	– obrót drugiego gracza
-spawn2pos [x y z]	– pozycja drugiego gracza
+`[general]` section defines global map settings. It also allows for importing contents of other maps.
+|| *Property `[values]`* || *Description*                               ||
+|| `import [path]`       || path to the external map that should be merged with this map ||
+|| `skybox [path]`       || path to the 3D model that will simulate sky ||
+|| `skycolor [r g b]`    || color of the sky, each color takes values between 0.0 and 1.0 ||
+|| `spawn1rot [x y z]`   || initial rotation of the first player ||
+|| `spawn1pos [x y z]`   || initial position of the first player ||
+|| `spawn2rot [x y z]`   || initial rotation of the second player ||
+|| `spawn2pos [x y z]`   || initial position of the second player ||
 
 == Lighting ==
-Sekcja [light] definiuje pojedyncze światło.
-type [nazwa]	– typ światła
-infinite	– światło nieskończone
-point	– światło punktowe
-state [1/0]	– czy światło jest włączone
-position [x y z]	– pozycja światła punktowego
-direction [x y z]	– kierunek światła nieskończonego
-color [r g b]	– kolor światła, wartości kolorów w przedziale [0.0, 1.0]
-softness [0.0-1.0]	– miękkość rzucanych cieni
-spot_dir [x y z]	– kierunek snopa światła
-spot_cut [kąt]	– szerokość snopa światła
-spot_att [liczba]	– tłumienie snopa światła
-att_const [liczba]	– współczynnik stałego tłumienia światła
-att_linear [liczba] – współczynnik liniowego tłumienia światła
-att_square [liczba] – współczynnik kwadratowego tłumienia światła
+Each `[light]` section defines one light.
+|| *Property `[values]`* || *Description*                                            ||
+|| `type [name]`         || type of the light                                        ||
+||                       || infinite - infinite light                                ||
+||                       || point – point light                                      ||
+|| `state [1/0]`         || is it on or off                                          ||
+|| `position [x y z]`    || point light position                                     ||
+|| `direction [x y z]`   || infinite light direction                                 ||
+|| `color [r g b]`       || light color, each color takes values between 0.0 and 1.0 ||
+|| `softness [0.0-1.0]`  || softness of the shadows cast by this light               ||
+|| `spot_dir [x y z]`    || direction of the spot light                              ||
+|| `spot_att [int]`      || attenuation of the spot                                  ||
+|| `att_const [int]`     || constant attenuation of the light                        ||
+|| `att_linear [int]`    || linear attenuation of the light                          ||
+|| `att_square [int]`    || square attenuation of the light                          ||
 
 == Objects ==
-Sekcja [model] definiuje pojedynczy model znajdujący się na scenie. Jedyną wymaganą właściwością jest ścieżka do pliku z modelem.
-name [tekst]	– nazwa modelu
-model [ścieżka]	– plik z modelem graficznym
-fastm [ścieżka]	– plik z uproszczonym modelem fizycznym
-customBVH [0/1]	– czy ma być stosowana własna, czy automatyczna hierarchia brył otaczających – dla postaci lepiej sprawdza się  automatyczna, dla martwych obiektów własna
-position [x y z]	– pozycja modelu – kolejne wpisy będą ze sobą łączone
-rotation [x y z]	– obrót modelu – kolejne wpisy będą ze sobą łączone
-velocity [x y z]	– prędkość we wskazanym kierunku, position i rotation zerują prędkość
-physical [0/1]	– czy obiekt podlega ciążeniu
-locked [0/1]	– czy obiekt jest stacjonarny (czy nie może się przemieszczać)
-mass [liczba]	– masa obiektu
-restitution [liczba] – współczynnik odbicia – jaki procent energii zostanie przekazane drugiemu obiektowi
-restitution_self [liczba] – współczynnik odbicia – ile energii zostanie zachowane
-shadows [0/1]	– czy obiekt rzuca cienie
+Each `[model]` section define one model from the scene. The only required property is the path to the file with a model.
 
-W sekcji [person] można użyć dowolne właściwości sekcji [model], ponadto dochodzą następujące parametry:
-animation [ścieżka czas_rozpoczęcia czas_zakończenia] – plik z animacją jaka ma być odtwarzana dla modelu (czas podany w ms)
-style [tekst ścieżka]	– nazwa oraz plik definiujący dostępny dla tego modelu styl walki
-control [nazwa]	– typ kontroli nad obiektem
-camera	– obiekt kontrolowany kamerą
-network	– obiekt kontrolowany przez sieć (projekt)
-comboard	– obiekt kontrolowany klawiaturą
-ai	– obiekt kontrolowany AI
-enemy [liczba]	– przeciwnik na którym postać będzie skupiała uwagę
+|| *Property `[values]`* || *Description*                         ||
+|| `name [text]`         || model name                            ||
+|| `model [path]`        || path to the graphical model           ||
+|| `fastm [path]`        || path to the simplified physical model ||
+|| `customBVH [0/1]`     || should model use custom or automatic Bounding Volumes Hierarchy - manual behaves better for objects ||
+|| `position [x y z]`    || position of the model, multiple `position` entries will be merged together ||
+|| `rotation [x y z]`    || rotation of the model, multiple `rotation` entries will be merged together (order of `position` and `rotation` entries is important) ||
+|| `velocity [x y z]`    || initial velocity of the model, setting `position` or `rotation` after `velocity` will stop the movement ||
+|| `physical [0/1]`      || is the model affected by the gravity? ||
+|| `locked [0/1]`        || is the model stationary (can't move)? ||
+|| `mass [int]`          || mass of the model                     ||
+|| `restitution [float]` || restitution coefficient - how much of the energy will be passed to other objects ||
+|| `restitution_self [float]` || restitution coefficient - how much of the energy will be retained ||
+|| `shadows [0/1]`       || are the shadows cast by the model?    ||
+
+In the `[person]` section all the properties for `[model]` section are valid, but there are also few more parameters:
+
+|| *Property `[values]`* || *Description*                                       ||
+|| `animation [path start_time end_time]` || animation that will be played by the model ||
+|| `style [text path]`   || name and path to the file that defines fighting style that may be used by this model (multiple style definitions creates list of available styles) ||
+|| `control [name]`      || method of controlling the model                     ||
+||                       || camera – player is controlled via cameras           ||
+||                       || network - player is controlled via network (future) ||
+||                       || comboard - player is controlled with keyboard       ||
+||                       || ai - player is controlled by AI                     ||
+|| `enemy [int]`         || player at which this person will concentrate        ||
