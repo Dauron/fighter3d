@@ -24,9 +24,14 @@ struct Image
 
     unsigned char *data;
 
-    Image() : data(0) {}
-    ~Image()
-    { if (data) delete[] data; }
+    bool mipmap;
+    bool repeatX;
+    bool repeatY;
+
+    void FreeData()
+    { if (data) { delete[] data; data = 0; } }
+
+    Image() : data(0), mipmap(true), repeatX(true), repeatY(true) {}
 };
 
 Image *LoadTGA(const char *filename);

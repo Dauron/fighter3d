@@ -14,6 +14,8 @@ private:
     int x, y;
 
 public:
+    bool IsOpenGL() { return true; }
+
     GLWindow() { Clear(); }
 
     virtual void Clear() { IWindow::Clear(); glctx = NULL; }
@@ -21,7 +23,8 @@ public:
     bool Create();
     void Dispose();
 
-    virtual void SwapBuffers(){ glXSwapBuffers(hDC,win); }
+    bool MakeCurrent()         { return glXMakeCurrent(hDC, win, glctx); }
+    virtual void SwapBuffers() { glXSwapBuffers(hDC,win); }
 
     virtual bool ProcessMessages()
     {

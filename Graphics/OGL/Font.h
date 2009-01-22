@@ -16,17 +16,18 @@ namespace Graphics { namespace OGL {
 
     struct Font : public Resource
     {
-    private:
-        std::string Id;
-
         static const float INTERLINE;
         static const int   FIRST_CHAR = 0;
         static const int   NUM_CHARS  = 32+96+128;
 
-        int         ID_GLFontBase; // GL list identifier
+    private:
+        std::string Id;
+
         float LWidth[NUM_CHARS];
 
     public:
+        int         ID_GLFontBase; // GL list identifier
+
         std::string Name;          // for reconstruction
         int         Size;          // for reconstruction
 

@@ -5,6 +5,10 @@
 #include "../Utils/Manager.h"
 #include "OGL/Font.h"
 
+#ifdef WIN32
+#   include "D3D/Font.h"
+#endif
+
 #define g_FontMgr FontMgr::GetSingleton()
 
 class FontMgr;

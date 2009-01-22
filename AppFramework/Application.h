@@ -27,14 +27,13 @@ public:
         OnApplicationDestroy    = ApplicationEvent(*this);
         SceneCur                = NULL;
         Title                   = NULL;
-        FL_OpenGL               = true;
         MainWindow              = NULL;
     }
 
     // Creates application with given scene... the scene should be a dynamical object
     // (it will be deleted by this class automaticaly on application termination)
     int  Create(const char* title, unsigned int width, unsigned int height,
-                bool fl_fullscreen, IScene &scene);
+                bool fl_openGL,    bool fl_fullscreen, IScene &scene);
     // Creates application with given precreated window and scene... both should be a dynamical object
     // (they will be deleted by this class automaticaly on application termination)
     int  Create(IWindow &window, IScene &scene);
@@ -53,6 +52,8 @@ public:
         SceneCur = &SceneCur->Scene_Set(scene, fl_destroyPrevious);
         return SceneCur == &scene;
     }
+
+    bool      IsOpenGL()       { return MainWindow->IsOpenGL(); }
 
     typedef Delegate<Application, bool> ApplicationEvent;
     ApplicationEvent OnApplicationCreate;
@@ -76,7 +77,6 @@ private:
     IWindow *MainWindow;
     IScene  *SceneCur;
     char    *Title;
-    bool     FL_OpenGL;
     bool     FL_terminated;
 };
 

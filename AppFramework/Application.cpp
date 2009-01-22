@@ -8,14 +8,14 @@ void MainWindow_OnResize(IWindow &window, void* receiver, unsigned int &width, u
 { g_Application.MainWindow_OnResize(window, width, height); }
 
 int Application::Create(const char *title, unsigned int width, unsigned int height,
-                                           bool fl_fullscreen, IScene &scene)
+                        bool fl_openGL,    bool fl_fullscreen, IScene &scene)
 {
     assert( !MainWindow );
 
-    if (FL_OpenGL)
+    if (fl_openGL)
         MainWindow = new GLWindow();
-    //else
-    //  MainWindow = new DXWindow();
+    else
+        return WINDOW_ERROR;
 
     MainWindow->PreCreate(title, width, height, fl_fullscreen);
 
