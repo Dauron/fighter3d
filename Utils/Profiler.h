@@ -3,6 +3,7 @@
 
 #include "Singleton.h"
 #include <string>
+#include <cstring>
 #include <vector>
 #include <ctime>
 

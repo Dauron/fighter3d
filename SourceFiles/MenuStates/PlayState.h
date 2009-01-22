@@ -21,9 +21,9 @@ namespace Scenes { namespace Menu {
 
         Math::Cameras::CameraHuman Front;
 
-        SkeletizedObj             *choosen[2];
-        std::vector<SkeletizedObj> players[2];
-        int                        control[2];
+        SkeletizedObj              *choosen[2];
+        std::vector<SkeletizedObj*> players[2];
+        int                         control[2];
 
         xRectangle MenuButton;
         xRectangle PlayButton;
@@ -58,8 +58,8 @@ namespace Scenes { namespace Menu {
             WorldRenderGL renderer;
             for (int i = 0; i < 2; ++i)
                 for (size_t j = 0; j < players[i].size(); ++j)
-                    if (players[i][j].IsCreated())
-                        renderer.Invalidate(players[i][j]);
+                    if (players[i][j]->IsCreated())
+                        renderer.Invalidate(*players[i][j]);
         }
         virtual void Clear()
         {
@@ -68,10 +68,11 @@ namespace Scenes { namespace Menu {
             for (int i = 0; i < 2; ++i)
             {
                 for (size_t j = 0; j < players[i].size(); ++j)
-                    if (players[i][j].IsCreated())
+                    if (players[i][j]->IsCreated())
                     {
-                        renderer.Free(players[i][j]);
-                        players[i][j].Destroy();
+                        renderer.Free(*players[i][j]);
+                        players[i][j]->Destroy();
+                        delete players[i][j];
                     }
                 players[i].clear();
             }
@@ -98,8 +99,8 @@ namespace Scenes { namespace Menu {
 
         virtual void Enter()
         {
-            ChoosePlayer(0, players[0].front());
-            ChoosePlayer(1, players[1].back());
+            ChoosePlayer(0, *players[0].front());
+            ChoosePlayer(1, *players[1].back());
             control[0] = 1;
             control[1] = 0;
         }
@@ -128,7 +129,7 @@ namespace Scenes { namespace Menu {
                     if (fightersY < y && y < fightersY + fightersH * players[0].size())
                     {
                         xDWORD j = (y - fightersY) / fightersH;
-                        ChoosePlayer(i, players[i][j]);
+                        ChoosePlayer(i, *players[i][j]);
                     }
                     else
                     if (stylesY < y && y < stylesY + stylesH * choosen[0]->styles.size())
@@ -151,8 +152,10 @@ namespace Scenes { namespace Menu {
                 {
                     SkeletizedObj *player1 = new SkeletizedObj(),
                                   *player2 = new SkeletizedObj();
-                    *player1 = *choosen[0];
-                    *player2 = *choosen[1];
+                    memcpy(player1, choosen[0], sizeof(SkeletizedObj));
+                    memcpy(player2, choosen[1], sizeof(SkeletizedObj));
+                    //*player1 = *choosen[0];
+                    //*player2 = *choosen[1];
 
                     player1->FL_shadowcaster = Config::EnableShadowsForPlayers;
                     player1->comBoard.ID_action_cur = player1->comBoard.StopAction.ID_action;
@@ -199,8 +202,11 @@ namespace Scenes { namespace Menu {
                             : SkeletizedObj::Control_ComBoardInput;
                     }
 
-                    *choosen[0] = SkeletizedObj();
-                    *choosen[1] = SkeletizedObj();
+                    SkeletizedObj emptyObject;
+                    memcpy(choosen[0], &emptyObject, sizeof(SkeletizedObj));
+                    memcpy(choosen[1], &emptyObject, sizeof(SkeletizedObj));
+                    //*choosen[0] = SkeletizedObj();
+                    //*choosen[1] = SkeletizedObj();
 
                     player1->comBoard.FL_mirror = false;
                     player2->comBoard.FL_mirror = false;
@@ -460,11 +466,11 @@ namespace Scenes { namespace Menu {
             y += lineHeight04;
             for (size_t j = 0; j < players[i].size(); ++j)
             {
-                if (choosen[i] == &players[i][j])
+                if (choosen[i] == players[i][j])
                     glColor3ub(222, 173, 192);
                 else
                     glColor3ub(0, 0, 0);
-                const char *name = players[i][j].Name.c_str();
+                const char *name = players[i][j]->Name.c_str();
                 pFont03->Print(WidthFourth * 0.1f, y, 0.0f, name);
                 y += lineHeight03;
             }
@@ -532,11 +538,11 @@ namespace Scenes { namespace Menu {
             y += lineHeight04;
             for (size_t j = 0; j < players[i].size(); ++j)
             {
-                if (choosen[i] == &players[i][j])
+                if (choosen[i] == players[i][j])
                     glColor3ub(222, 173, 192);
                 else
                     glColor3ub(0, 0, 0);
-                const char *name = players[i][j].Name.c_str();
+                const char *name = players[i][j]->Name.c_str();
                 textLen = pFont03->Length(name);
                 pFont03->Print(WidthFourth - textLen - WidthFourth * 0.1f, y, 0.0f, name);
                 y += lineHeight03;
@@ -599,10 +605,10 @@ namespace Scenes { namespace Menu {
                         if (StartsWith(buffer, "[player]"))
                         {
                             mode = LoadMode_Player;
-                            players[0].push_back(SkeletizedObj());
-                            players[1].push_back(SkeletizedObj());
-                            player1 = &players[0].back();
-                            player2 = &players[1].back();
+                            players[0].push_back(new SkeletizedObj());
+                            players[1].push_back(new SkeletizedObj());
+                            player1 = players[0].back();
+                            player2 = players[1].back();
                             player1->ApplyDefaults();
                             player2->ApplyDefaults();
                             continue;

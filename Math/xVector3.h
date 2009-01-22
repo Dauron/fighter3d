@@ -1,8 +1,17 @@
 union xVector3 {
     xFLOAT3 xyz;
+    xFLOAT3 rgb;
+    xFLOAT3 uvw;
     struct {
         xFLOAT x, y, z;
     };
+    struct {
+        xFLOAT r, g, b;
+    };
+    struct {
+        xFLOAT u, v, w;
+    };
+    xVector2 vector2;
 
 //    xVector3() {}
 //    xVector3(xFLOAT X, xFLOAT Y, xFLOAT Z) : x(X), y(Y), z(Z) {}

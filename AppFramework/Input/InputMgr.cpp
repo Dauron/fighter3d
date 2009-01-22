@@ -12,10 +12,10 @@ void InputMgr :: Key2InputCode_Set(byte kCode, int iCode)
         if (iIndex == kIndex)
             return;
 
-        InputMap->KeyCode2Index[kCode] = 0;         // remove this kCode from search results
+        InputMap->KeyCode2Index[kCode] = 0;          // remove this kCode from search results
         byte kIndexOld = Index2FirstKeyCode(kIndex); // were there more mappings for this old Input Code?
-        int  iCodeOld  = Index2InputCode(kIndex);    // get old mapped Input Code
-        assert (iCodeOld && iCode != iCodeOld);
+        //int  iCodeOld  = Index2InputCode(kIndex);    // get old mapped Input Code
+        assert (/*iCodeOld*/Index2InputCode(kIndex) && iCode != /*iCodeOld*/Index2InputCode(kIndex));
 
         // it was the only keyCode->oldInputCode mapping
         if (!kIndexOld)

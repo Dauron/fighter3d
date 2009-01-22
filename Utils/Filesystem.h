@@ -4,6 +4,7 @@
 #include "Debug.h"
 #include <vector>
 #include <string>
+#include <cstring>
 
 #ifdef WIN32
 #include <windows.h>
@@ -81,22 +82,27 @@ public:
 
     static std::string GetSystemWorkingDirectory()
     {
-        char buff[255];
+        char buff[512];
 #ifdef WIN32
-        _getcwd(buff, 255);
+        if ( !_getcwd(buff, 512) )
 #else
-        getcwd(buff, 255);
+        if ( !getcwd(buff, 512) )
 #endif
+        {
+            LOG(0, "GetSystemWorkingDirectory() cannot fit 512 characters :/");
+            return NULL;
+        }
         return buff;
     }
 
     static void SetSystemWorkingDirectory(const std::string &path)
     {
 #ifdef WIN32
-        _chdir(path.c_str());
+        if ( _chdir( path.c_str() ) )
 #else
-        chdir(path.c_str());
+        if ( chdir( path.c_str() ) )
 #endif
+            LOG(0, "SetSystemWorkingDirectory() returned errorcode: %d", errno);
     }
 
     static std::string  GetParentDir(const std::string &path)

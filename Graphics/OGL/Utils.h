@@ -27,4 +27,8 @@ inline void ViewportSet_GL(const Math::Cameras::Camera &camera)
     glLoadMatrixf(&camera.MX_WorldToView_Get().x0);
 }
 
+#include "../../Math/xLight.h"
+
+void LightSet_GL(xLight &light, bool t_Ambient = true, bool t_Diffuse = true, bool t_Specular = true, xBYTE light_id = 0);
+
 #endif

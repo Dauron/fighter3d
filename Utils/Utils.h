@@ -7,6 +7,7 @@
 
 #include <sstream>
 #include <string>
+#include <cstring>
 
 // case-insensitive string comparison predicate
 struct istring_less

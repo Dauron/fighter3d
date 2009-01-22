@@ -18,7 +18,7 @@ typedef unsigned char byte;
 class InputMgr : public Singleton<InputMgr>
 {
     typedef std::map<byte, std::string> TKeyCodeNameMap;
-    typedef struct TKeyInputMap
+    struct TKeyInputMap
     {
         int  KeyCode2Index[NUM_KEYS];
         int *InputCode2Index;

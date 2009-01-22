@@ -85,7 +85,13 @@ void Profiler :: FrameEnd()
     T_FrameEnd = GetTick();
 
     float T_delta     = T_FrameEnd - T_FrameStart;
-    if (T_delta < 0.00000001f) return;
+    if (T_delta < 0.00000001f)
+    {
+        while ( iSample < I_MaxSamples && Samples[iSample].FL_valid )
+            Samples[iSample++].FL_valid = false;
+        T_FrameStart = GetTick();
+        return;
+    }
     float T_delta_Inv = 1.f / T_delta;
     float W_newRatio  = T_delta * 0.0008f;
     if (W_newRatio > 1.f) W_newRatio = 1.f;
@@ -94,7 +100,7 @@ void Profiler :: FrameEnd()
     lines.clear();
 
     char buff1[256], buff2[256];
-    lines.push_back("  Mean :   Min :   Max :   # : Name");
+    lines.push_back("  Mean :   Min :   Max :    # : Name");
 
     while ( iSample < I_MaxSamples && Samples[iSample].FL_valid )
     {
@@ -126,7 +132,7 @@ void Profiler :: FrameEnd()
         }
         else
             history.T_AvgPrcnt = history.T_MinPrcnt = history.T_MaxPrcnt = T_Prcnt;
-        history.FL_valid           = true;
+        history.FL_valid = true;
 
         char *name  = buff1;
         char *nameT = buff2;
@@ -138,7 +144,7 @@ void Profiler :: FrameEnd()
             char* swp = name; name = nameT; nameT = swp;
         }
 
-        sprintf(nameT, " %5.1f : %5.1f : %5.1f : %3d : %s",
+        sprintf(nameT, " %5.1f : %5.1f : %5.1f : %4d : %s",
             history.T_AvgPrcnt, history.T_MinPrcnt, history.T_MaxPrcnt,
             sample.I_ProfileInstances, name);
         lines.push_back(nameT);
