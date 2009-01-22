@@ -124,21 +124,33 @@ namespace Math { namespace Figures {
     protected:
         virtual void loadInstance( FILE *file )
         {
-            fread(&S_top,   sizeof(S_top), 1, file);
-            fread(&N_top,   sizeof(N_top), 1, file);
-            fread(&S_front, sizeof(S_front), 1, file);
-            fread(&N_front, sizeof(N_front), 1, file);
-            fread(&S_side,  sizeof(S_side), 1, file);
-            fread(&N_side,  sizeof(N_side), 1, file);
+            SAFE_begin
+            {
+                SAFE_fread(S_top,   1, file);
+                SAFE_fread(N_top,   1, file);
+                SAFE_fread(S_front, 1, file);
+                SAFE_fread(N_front, 1, file);
+                SAFE_fread(S_side,  1, file);
+                SAFE_fread(N_side,  1, file);
+                SAFE_return;
+            }
+            SAFE_catch;
+                LOG(1, "Error reading xBoxO");
         }
         virtual void saveInstance( FILE *file )
         {
-            fwrite(&S_top, sizeof(S_top), 1, file);
-            fwrite(&N_top, sizeof(N_top), 1, file);
-            fwrite(&S_front, sizeof(S_front), 1, file);
-            fwrite(&N_front, sizeof(N_front), 1, file);
-            fwrite(&S_side,  sizeof(S_side), 1, file);
-            fwrite(&N_side,  sizeof(N_side), 1, file);
+            SAFE_begin
+            {
+                SAFE_fwrite(S_top,   1, file);
+                SAFE_fwrite(N_top,   1, file);
+                SAFE_fwrite(S_front, 1, file);
+                SAFE_fwrite(N_front, 1, file);
+                SAFE_fwrite(S_side,  1, file);
+                SAFE_fwrite(N_side,  1, file);
+                SAFE_return;
+            }
+            SAFE_catch;
+                LOG(1, "Error writing xBoxO");
         }
     };
 

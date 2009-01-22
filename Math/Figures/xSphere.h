@@ -50,11 +50,23 @@ namespace Math { namespace Figures {
     protected:
         virtual void loadInstance( FILE *file )
         {
-            fread(&S_radius, sizeof(S_radius), 1, file);
+            SAFE_begin
+            {
+                SAFE_fread(S_radius, 1, file);
+                SAFE_return;
+            }
+            SAFE_catch;
+                LOG(1, "Error reading xSphere");
         }
         virtual void saveInstance( FILE *file )
         {
-            fwrite(&S_radius, sizeof(S_radius), 1, file);
+            SAFE_begin
+            {
+                SAFE_fwrite(S_radius, 1, file);
+                SAFE_return;
+            }
+            SAFE_catch;
+                LOG(1, "Error writing xSphere");
         }
     };
 

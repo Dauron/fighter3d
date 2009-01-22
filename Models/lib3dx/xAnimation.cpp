@@ -549,34 +549,39 @@ bool           xAnimation::Save(const char *fileName)
 {
     FILE *file;
     file = fopen(fileName, "wb");
-    if (file)
-    {
-        xAnimationInfo info = GetInfo();
+    if (!file) return false;
 
+    xAnimationInfo info = GetInfo();
+
+    SAFE_begin
+    {
         xBYTE i = Name.size();
-        fwrite(&i, sizeof(xBYTE), 1, file);
-        fwrite(this->Name.c_str(),  sizeof(char), i, file);
-        fwrite(&(this->I_bones),    sizeof(this->I_bones), 1, file);
-        fwrite(&(this->I_priority), sizeof(this->I_priority), 1, file);
-        fwrite(&(this->I_frames),   sizeof(this->I_frames), 1, file);
-        fwrite(&(info.I_frameNo),   sizeof(int), 1, file);
-        fwrite(&(this->T_progress), sizeof(this->T_progress), 1, file);
+        SAFE_fwrite(i, 1, file);
+        SAFE_fwrite_ex(this->Name.c_str(), sizeof(char), i, file);
+        SAFE_fwrite((this->I_bones),    1, file);
+        SAFE_fwrite((this->I_priority), 1, file);
+        SAFE_fwrite((this->I_frames),   1, file);
+        SAFE_fwrite((info.I_frameNo),   1, file);
+        SAFE_fwrite((this->T_progress), 1, file);
 
         bool loop = this->L_frames && this->L_frames->Prev;
-        fwrite(&loop,               sizeof(bool), 1, file);
+        SAFE_fwrite(loop,               1, file);
 
         int cnt = this->I_frames;
         for (xKeyFrame *frame = L_frames; frame && cnt; frame = frame->Next, --cnt)
         {
-            fwrite(frame->QT_bones,      sizeof(xQuaternion), this->I_bones, file);
-            fwrite(&(frame->T_freeze),   sizeof(frame->T_freeze), 1, file);
-            fwrite(&(frame->T_duration), sizeof(frame->T_duration), 1, file);
+            SAFE_fwrite_ex(frame->QT_bones, sizeof(*frame->QT_bones), this->I_bones, file);
+            SAFE_fwrite((frame->T_freeze),   1, file);
+            SAFE_fwrite((frame->T_duration), 1, file);
         }
 
         fclose(file);
-        return true;
+        SAFE_return true;
     }
-    return false;
+    SAFE_catch;
+        LOG(1, "Error writing xAnimation");
+        fclose(file);
+        return false;
 }
 
 bool           xAnimation::Load(const char *fileName)

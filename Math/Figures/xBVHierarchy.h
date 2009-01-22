@@ -138,28 +138,47 @@ namespace Math { namespace Figures {
         }
         void Save( FILE *file )
         {
-            fwrite(&ID_Bone,       sizeof(ID_Bone), 1, file);
-            fwrite(&FL_RawToLocal, sizeof(FL_RawToLocal), 1, file);
-            fwrite(&MX_RawToLocal, sizeof(MX_RawToLocal), 1, file);
-            Figure->Save(file);
-            fwrite(&I_items,       sizeof(ID_Bone), 1, file);
-            for (int i = 0; i < I_items; ++i)
-                L_items[i].Save(file);
+            SAFE_begin
+            {
+                SAFE_fwrite(ID_Bone,       1, file);
+                SAFE_fwrite(FL_RawToLocal, 1, file);
+                SAFE_fwrite(MX_RawToLocal, 1, file);
+                Figure->Save(file);
+
+                SAFE_fwrite(I_items,       1, file);
+                for (int i = 0; i < I_items; ++i)
+                    L_items[i].Save(file);
+
+                SAFE_return;
+            }
+            SAFE_catch;
+                LOG(1, "Error writing xBVHierarchy");
         }
         void Load( FILE *file )
         {
-            fread(&ID_Bone,       sizeof(ID_Bone), 1, file);
-            fread(&FL_RawToLocal, sizeof(FL_RawToLocal), 1, file);
-            fread(&MX_RawToLocal, sizeof(MX_RawToLocal), 1, file);
-            Figure = xIFigure3d::Load(file);
-            fread(&I_items,       sizeof(ID_Bone), 1, file);
-            L_items = new xBVHierarchy[I_items];
-            for (int i = 0; i < I_items; ++i)
-                L_items[i].Load(file);
-
+            Figure = NULL;
             FigureTransformed = NULL;
             MX_LocalToWorld.identity();
             MX_RawToWorld.identity();
+
+            SAFE_begin
+            {
+                SAFE_fread(ID_Bone,       1, file);
+                SAFE_fread(FL_RawToLocal, 1, file);
+                SAFE_fread(MX_RawToLocal, 1, file);
+
+                Figure = xIFigure3d::Load(file);
+
+                SAFE_fread(I_items, 1, file);
+                L_items = new xBVHierarchy[I_items];
+                for (int i = 0; i < I_items; ++i)
+                    L_items[i].Load(file);
+
+                SAFE_return;
+            }
+            SAFE_catch;
+                LOG(1, "Error reading xBVHierarchy");
+                SAFE_DELETE_IF(Figure);
         }
 
         xBVHierarchy *add (xIFigure3d &figure)

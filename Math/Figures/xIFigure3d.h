@@ -3,6 +3,8 @@
 
 #include <cstdio>
 #include "../xMath.h"
+#include "../../Utils/Utils.h"
+#include "../../Utils/Debug.h"
 
 namespace Math { namespace Figures {
 
