@@ -2,10 +2,6 @@
 #include <cstdio>
 #include <cstring>
 
-#ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
-#endif
-
 #ifndef _WINGDI_
 
 typedef unsigned char  BYTE;
@@ -56,6 +52,7 @@ typedef struct tagBITMAPINFOHEADER{
 
 inline void FreeData(FILE *file, Image *texture)
 {
+    texture->FreeData();
     delete texture;
     if (file)
         fclose(file);               // Close The File
@@ -87,12 +84,14 @@ Image *LoadBMP(const char *filename)
     }
 
     if (bih.biHeight < 0) bih.biHeight = -bih.biHeight;
-    texture->sizeX  = (unsigned int)bih.biWidth;               // Determine The BMP Width
-    texture->sizeY  = (unsigned int)bih.biHeight;              // Determine The BMP Height
-    texture->bpp    = bih.biBitCount;                          // Grab The BMP's Bits Per Pixel (24 or 32)
+    texture->sizeX  = (unsigned int)bih.biWidth;                 // Determine The BMP Width
+    texture->sizeY  = (unsigned int)bih.biHeight;                // Determine The BMP Height
+    texture->bpp    = bih.biBitCount == 8 ? 24 : bih.biBitCount; // Grab The BMP's Bits Per Pixel (24 or 32)
     texture->format = (texture->bpp == 24) ? Image::FT_RGB8 : Image::FT_RGBA8;
-    unsigned int imageSize = texture->sizeX * texture->sizeY * 3;
-    texture->data = new unsigned char[imageSize];              // Reserve Memory To Hold The BMP Data
+    unsigned int BppIn  = bih.biBitCount >> 3;
+    unsigned int BppOut = texture->bpp   >> 3;                         // Holds Number Of Bytes Per Pixel Used In The TGA File
+    unsigned int imageSize = texture->sizeX * texture->sizeY * BppOut; // Calculate The Memory Required For The TGA Data
+    texture->data = new unsigned char[imageSize];                      // Reserve Memory To Hold The BMP Data
 
     if( texture->sizeX == 0 || texture->sizeY == 0 || texture->data == NULL )
     {
@@ -106,13 +105,16 @@ Image *LoadBMP(const char *filename)
     RGBQUAD pal[256];
     if ( bih.biClrUsed>0 ) {
         int fp = 54;
-        fread( &pal, sizeof(RGBQUAD), bih.biClrUsed, file );
+        if (fread( &pal, sizeof(RGBQUAD), bih.biClrUsed, file ) != bih.biClrUsed)
+        {
+            FreeData(file, texture);
+            return NULL;
+        }
         fp += bih.biClrUsed*sizeof(RGBQUAD);
         fseek( file, fp, 0 );
     }
 
-    unsigned int Bpp = texture->bpp >> 3;              // Holds Number Of Bytes Per Pixel Used In The BMP File
-    unsigned int dataPerLine  = texture->sizeX * Bpp;
+    unsigned int dataPerLine  = texture->sizeX * BppIn;
     unsigned int bytesPerLine = ((bih.biWidth * bih.biBitCount + 31) >> 5) << 2;
     unsigned int spamPerLine  = bytesPerLine - dataPerLine;
     unsigned char *dataptr    = texture->data;
@@ -135,7 +137,7 @@ Image *LoadBMP(const char *filename)
                 tmp = *dataptr;
                 *dataptr = *(dataptr+2);
                 *(dataptr+2) = tmp;
-                dataptr += Bpp;
+                dataptr += BppOut;
             }
             */
             dataptr += dataPerLine;
@@ -144,6 +146,7 @@ Image *LoadBMP(const char *filename)
     else // 256 colors
     {
         unsigned char* indices = new unsigned char[dataPerLine];
+        int nLine = 0;
         while (dataptr != dataend)
         {
             if (fread(indices, 1, dataPerLine, file) != dataPerLine ||
@@ -162,6 +165,7 @@ Image *LoadBMP(const char *filename)
                 *(dataptr++) = color->rgbGreen;
                 *(dataptr++) = color->rgbRed;
             }
+            ++nLine;
         }
         delete[] indices;
     }

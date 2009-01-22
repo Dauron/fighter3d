@@ -93,6 +93,8 @@ public:
     int   Height_Get()                           { return Height; }
     int   Width_Get()                            { return Width; }
 
+    virtual bool IsOpenGL() = 0;
+
     virtual void SwapBuffers() = 0;
 };
 

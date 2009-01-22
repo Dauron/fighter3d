@@ -605,13 +605,16 @@ bool SceneConsole::Render()
             xFLOAT y = cHeight-lineHeight*2;
             xFLOAT w = 0.f;
 
+            glListBase(pFont->ID_GLFontBase - Graphics::OGL::Font::FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
             for (; LN_curr != LN_last; ++LN_curr)
             {
                 const char *text = LN_curr->c_str();
-                w = max( w, pFont->Length(text) );
+                xFLOAT len = pFont->Length(text);
+                if (len > w) w = len;
 
                 glRasterPos2f(x, y);
-                pFont->Print(text);
+                //pFont->Print(text);
+                glCallLists(LN_curr->size(), GL_UNSIGNED_BYTE, text);    // Draws The Display List Text
                 y -= lineHeight;
                 if (y < 0.f)
                 {
@@ -627,6 +630,7 @@ bool SceneConsole::Render()
                     y = cHeight-lineHeight*2.f;
                 }
             }
+            glListBase(0);
         }
     }
 

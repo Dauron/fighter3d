@@ -2,12 +2,9 @@
 #include <cstdio>
 #include <cstring>
 
-#ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
-#endif
-
 inline void FreeData(FILE *file, Image *texture)
 {
+    texture->FreeData();
     delete texture;
     if (file)
         fclose(file);               // Close The File
@@ -42,7 +39,7 @@ Image *LoadTGA(const char *filename)
 {
     unsigned char  TGAheader[12] = {1,0,2,0,0,0,0,0,0,0,0,0};  // Uncompressed TGA Header
     unsigned char  TGAcompare[12];                             // Used To Compare TGA Header
-    unsigned char  header[6+256];                                  // First 6 Useful Bytes From The Header
+    unsigned char  header[6+256];                              // First 6 Useful Bytes From The Header
     Image *texture = new Image();
     texture->type  = Image::TP_UNSIGNED_BYTE;
 
@@ -50,7 +47,7 @@ Image *LoadTGA(const char *filename)
     if( file == NULL ||                                         // Does File Even Exist?
         fread(TGAcompare,1,12,file)!=sizeof(TGAcompare) ||      // Are There 12 Bytes To Read?
         memcmp(TGAheader+1,TGAcompare+1,11) != 0        ||      // Does The Header Match What We Want?
-        fread(header,1,6+TGAcompare[0],file)!=6+TGAcompare[0] ) // If So Read Next 6+offset Header Bytes
+        fread(header,1,6+TGAcompare[0],file)!=size_t(6+TGAcompare[0]) ) // If So Read Next 6+offset Header Bytes
     {
         FreeData(file, texture);
         return NULL;                                           // Return False

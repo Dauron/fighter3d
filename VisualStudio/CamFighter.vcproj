@@ -1447,6 +1447,14 @@
 					>
 				</File>
 				<File
+					RelativePath="..\Graphics\Textures\TexResource.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\Textures\Texture.h"
+					>
+				</File>
+				<File
 					RelativePath="..\Graphics\Textures\TextureMgr.cpp"
 					>
 				</File>

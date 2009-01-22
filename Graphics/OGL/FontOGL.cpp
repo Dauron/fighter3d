@@ -1,9 +1,7 @@
 #include "Font.h"
 #include "../../AppFramework/Application.h"
 
-#ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
-#else
+#ifndef WIN32
 #include <stdarg.h>
 #endif
 
@@ -211,11 +209,10 @@ void  Graphics::OGL::Font :: PrintF (float x, float y, float z, const char *fmt,
     glListBase(0);
 }
 
-void  Graphics::OGL::Font :: Print  (const char *text) const
+void Graphics::OGL::Font :: Print  (const char *text) const
 {
     assert(ID_GLFontBase != -1);
     assert(text);
-
     glListBase(ID_GLFontBase - FIRST_CHAR); // Sets The Base Character to FIRST_CHAR
     glCallLists((GLsizei)strlen(text), GL_UNSIGNED_BYTE, text);    // Draws The Display List Text
     glListBase(0);

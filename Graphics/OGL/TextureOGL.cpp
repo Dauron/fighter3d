@@ -1,5 +1,4 @@
 #include "Texture.h"
-#include "../Textures/ImageFile.h"
 #include "../../Utils/Utils.h" // string case compare
 
 using namespace Graphics::OGL;
@@ -9,13 +8,18 @@ bool Texture :: Create()
     assert (ID_GLTexture == 0);
     assert (Name.size());
 
-    Image *image;
-    const char *fname = Name.c_str();
-    if (strcasecmp(fname + Name.size() - 4, ".bmp"))
-        image = LoadTGA( fname );
+    Image *image = NULL;
+    if (this->image.data == NULL)
+    {
+        const char *fname = Name.c_str();
+        if (strcasecmp(fname + Name.size() - 4, ".bmp"))
+            image = LoadTGA( fname );
+        else
+            image = LoadBMP( fname );
+        if (!image) return false;
+    }
     else
-        image = LoadBMP( fname );
-    if (!image) return false;
+        image = &this->image;
 
     Width  = image->sizeX;
     Height = image->sizeY;
@@ -34,8 +38,8 @@ bool Texture :: Create()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
     // Wraping mode
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, image->repeatX ? GL_REPEAT : GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, image->repeatY ? GL_REPEAT : GL_CLAMP);
 
     GLint  components = 3, format = 0;
     GLenum type = 0, colorOrder = 0;
@@ -93,7 +97,11 @@ bool Texture :: Create()
                 image->data);            //picture represented as a byte array
     }
 
-    delete image;
+    if (image != &this->image)
+    {
+        image->FreeData();
+        delete image;
+    }
     return true;
 }
 
@@ -104,4 +112,5 @@ void Texture :: Dispose( void )
         glDeleteTextures(1, &ID_GLTexture);
         ID_GLTexture = 0;
     }
+    image.FreeData();
 }

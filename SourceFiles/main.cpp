@@ -19,7 +19,7 @@ int main( int argc, char **argv )
     Filesystem::SetSystemWorkingDirectory(Filesystem::WorkingDirectory);
 
     logEx(0, false, "***********************************");
-    logEx(0, true, "Game started");
+    logEx(0, true,  "Game started");
 
     Config::Load("Data/config.txt");
     Graphics::OGL::Shader::Load();
@@ -36,14 +36,26 @@ int main( int argc, char **argv )
         scene->PrevScene = prev;
     }
 
+    int width, height;
+    if (Config::FullScreen)
+    {
+        width  = Config::FullScreenX;
+        height = Config::FullScreenY;
+    }
+    else
+    {
+        width  = Config::WindowX;
+        height = Config::WindowY;
+    }
+
     Application game;
     game.OnApplicationCreate.Set     ( Application_OnCreate     );
     game.OnApplicationInvalidate.Set ( Application_OnInvalidate );
     game.OnApplicationDestroy.Set    ( Application_OnDestroy    );
 #ifndef NDEBUG
-    int cres = game.Create("Camera Fighter - Debug", Config::WindowX, Config::WindowY, Config::FullScreen, *scene);
+    int cres = game.Create("Camera Fighter - Debug", width, height, true, Config::FullScreen, *scene);
 #else
-    int cres = game.Create("Camera Fighter", Config::WindowX, Config::WindowY, Config::FullScreen, *scene);
+    int cres = game.Create("Camera Fighter", width, height, true, Config::FullScreen, *scene);
 #endif
     if (cres != Application::SUCCESS) return cres;
 
@@ -52,7 +64,7 @@ int main( int argc, char **argv )
 
     Graphics::OGL::Shader::Unload();
 
-    logEx(0, true, "Game finished");
+    logEx(0, true,  "Game finished");
     logEx(0, false, "***********************************");
 
     return rres;

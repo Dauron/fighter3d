@@ -16,7 +16,6 @@ private:
     HWND       hWnd;
     HGLRC      hRC;
     HINSTANCE  hInstance;
-    MSG        msg;
 
     int                   PixelFormat;
     PIXELFORMATDESCRIPTOR pfd;
@@ -24,6 +23,10 @@ private:
     bool                  FL_multisampleAviable;
 
 public:
+    ::HWND HWND() { return hWnd; }
+
+    bool IsOpenGL() { return true; }
+
     GLWindow() { Clear(); }
 
     void Clear()
@@ -39,10 +42,12 @@ public:
     virtual bool Create();
     virtual void Dispose();
 
+    bool MakeCurrent()         { return wglMakeCurrent(hDC, hRC); }
     virtual void SwapBuffers() { ::SwapBuffers(hDC); }
 
     virtual bool ProcessMessages()
     {
+        MSG msg;
         if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
             if(msg.message==WM_QUIT) return false;
