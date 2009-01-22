@@ -1218,6 +1218,10 @@
 			Name="Math"
 			>
 			<File
+				RelativePath="..\Math\xColor3b.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Math\xLight.cpp"
 				>
 			</File>

@@ -103,6 +103,32 @@ public:
     }
 };
 
+struct Stat_IntPtr : public Stat_Base {
+protected:
+    int   *IntP;
+    char   buff[255];
+
+public:
+    Stat_IntPtr() { IntP = NULL; }
+
+    void Create(const std::string &Name, int &Int)
+    {
+        assert (Name.size() && "Stat_IntPtr::Create : Name is empty");
+
+        this->Name = Name;
+        this->IntP = &Int;
+    }
+
+    virtual const char* Print()
+    {
+        assert (Name.size() && "Stat_IntPtr::Print : Name is empty");
+        assert (IntP && "Stat_IntPtr::Print : IntP is NULL");
+
+        sprintf(buff, "%s = %d", Name.c_str(), *IntP);
+        return buff;
+    }
+};
+
 #define g_StatMgr   StatMgr::GetSingleton()
 
 struct StatPage_Base

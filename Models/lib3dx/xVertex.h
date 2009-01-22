@@ -16,7 +16,9 @@ struct xVertexTex {
 struct xVertexSkel {
     xPoint3 pos;
     union {
-        xFLOAT b0, b1, b2, b3; // bones
+        struct {
+            xFLOAT b0, b1, b2, b3; // bones
+        };
         xFLOAT4 bone;          // up to 4 bones per vertex. boneIndex = floor(bone), boneInfluence = fract(bone)*10
     };
 };
@@ -24,7 +26,9 @@ struct xVertexSkel {
 struct xVertexTexSkel {
     xPoint3 pos;
     union {
-        xFLOAT b0, b1, b2, b3; // bones
+        struct {
+            xFLOAT b0, b1, b2, b3; // bones
+        };
         xFLOAT4 bone;          // up to 4 bones per vertex. boneIndex = floor(bone), boneInfluence = fract(bone)*10
     };
     xTextUV tex;

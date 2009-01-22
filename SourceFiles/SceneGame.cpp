@@ -291,7 +291,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     }
     if (cmd == "tls" || cmd == "toggle_lights")
     {
-        if (Config::EnableLighting = !Config::EnableLighting)
+        if ( (Config::EnableLighting = !Config::EnableLighting) )
             output.append("\nThe lights are ON.\n");
         else
             output.append("\nThe lights are OFF.\n");
@@ -306,7 +306,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     }
     if (cmd == "tshdw" || cmd == "toggle_shadows")
     {
-        if (Config::EnableShadows = !Config::EnableShadows)
+        if ( (Config::EnableShadows = !Config::EnableShadows) )
             output.append("\nThe shadows are ON.\n");
         else
             output.append("\nThe shadows are OFF.\n");
@@ -314,7 +314,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     }
     if (cmd == "tshdv" || cmd == "toggle_shadow_vol")
     {
-        if (Config::DisplayShadowVolumes = !Config::DisplayShadowVolumes)
+        if ( (Config::DisplayShadowVolumes = !Config::DisplayShadowVolumes) )
             output.append("\nShadow volumes drawing is ON.\n");
         else
             output.append("\nShadow volumes drawing is OFF.\n");
@@ -322,7 +322,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     }
     if (cmd == "tskel" || cmd == "toggle_skeleton")
     {
-        if (Config::DisplaySkeleton = !Config::DisplaySkeleton)
+        if ( (Config::DisplaySkeleton = !Config::DisplaySkeleton) )
             output.append("\nSkeleton drawing is ON.\n");
         else
             output.append("\nSkeleton drawing is OFF.\n");
@@ -330,7 +330,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     }
     if (cmd == "tbvh" || cmd == "toggle_bvh")
     {
-        if (Config::DisplayBVH = !Config::DisplayBVH)
+        if ( (Config::DisplayBVH = !Config::DisplayBVH) )
             output.append("\nBVH drawing is ON.\n");
         else
             output.append("\nBVH drawing is OFF.\n");
@@ -338,7 +338,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     }
     if (cmd == "tcam" || cmd == "toggle_cameras")
     {
-        if (Config::DisplayCameras = !Config::DisplayCameras)
+        if ( (Config::DisplayCameras = !Config::DisplayCameras) )
             output.append("\nCameras drawing is ON.\n");
         else
             output.append("\nCameras drawing is OFF.\n");
@@ -346,7 +346,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     }
     if (cmd == "tshdr" || cmd == "toggle_shaders")
     {
-        if (Config::EnableShaders = !Config::EnableShaders)
+        if ( (Config::EnableShaders = !Config::EnableShaders) )
             output.append("\nThe shaders are ON.\n");
         else
             output.append("\nThe shaders are OFF.\n");
@@ -453,12 +453,14 @@ bool SceneGame :: Update(float T_delta)
     {
         RigidObj *obj = Select(g_InputMgr.mouseX, Height-g_InputMgr.mouseY);
         if (obj)
+        {
             if (obj->ModelPh)
                 g_Application.Scene_Set(* new SceneSkeleton(
                     obj->ModelGr->xModelP->FileName, obj->ModelPh->xModelP->FileName), false);
             else
                 g_Application.Scene_Set(* new SceneSkeleton(
                     obj->ModelGr->xModelP->FileName, NULL), false);
+        }
         return true;
     }
 

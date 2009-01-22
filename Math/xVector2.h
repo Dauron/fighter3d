@@ -58,6 +58,10 @@ struct xVector2 {
         x -= v.x; y -= v.y;
         return *this;
     }
+    xVector2 &operator += (float f) {
+        x += f; y += f;
+        return *this;
+    }
     xVector2 &operator *= (float f) {
         x *= f; y *= f;
         return *this;

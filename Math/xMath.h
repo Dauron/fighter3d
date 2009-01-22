@@ -4,14 +4,20 @@
 #include <cstring>
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
 
 const float  PI     = 3.1415926535f;
 const float  PI_inv = 1 / PI;
 const double PI_d   = 3.1415926535897932384626433832795;
 static inline float DegToRad(float a) { return a*0.01745329252f;}
 static inline float RadToDeg(float a) { return a*57.29577951f;}
+static inline float DegToRad(int a)   { return a*0.01745329252f;}
+static inline float RadToDeg(int a)   { return a*57.29577951f;}
 #define             DEGTORAD(a)       ((a)*0.01745329252f)
 #define             RADTODEG(a)       ((a)*57.29577951f)
+
+const double RAND_MAX_INV = 1.0 / RAND_MAX;
+#define randf() (float) (rand() * RAND_MAX_INV)
 
 //#ifndef max
 //#define max(a,b)            (((a) > (b)) ? (a) : (b))
@@ -43,6 +49,8 @@ static inline float Sign(float f)
     return 0.f;
 }
 
+typedef unsigned int   uint;
+
 typedef unsigned char  xBYTE;
 typedef unsigned short xWORD;
 typedef unsigned long  xDWORD;
@@ -50,9 +58,11 @@ typedef signed   char  xCHAR;
 typedef signed   short xSHORT;
 typedef signed   long  xLONG;
 typedef float  xFLOAT;
+typedef xBYTE  xBYTE3    [3];
 typedef xWORD  xWORD2    [2];
 typedef xWORD  xWORD3    [3];
 typedef xWORD  xWORD4    [4];
+typedef xDWORD xDWORD4   [4];
 typedef xFLOAT xFLOAT2   [2];
 typedef xFLOAT xFLOAT3   [3];
 typedef xFLOAT xFLOAT4   [4];
@@ -62,12 +72,17 @@ const xDWORD xDWORD_MAX = (xDWORD)-1;
 const xWORD  xWORD_MAX  = (xWORD)-1;
 const xBYTE  xBYTE_MAX  = (xBYTE)-1;
 
+#include "xColor3b.h"
+
 #include "xVector2.h"
 typedef xVector2 xPoint2;
 typedef xVector2 xTextUV;
 
 #include "xVector3.h"
 typedef xVector3 xPoint3;
+typedef xVector3 xColor3;
+
+typedef xVector2 xTextUVW;
 
 #include "xVector4.h"
 typedef xVector4 xPoint4;

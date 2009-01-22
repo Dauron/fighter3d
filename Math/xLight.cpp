@@ -10,8 +10,8 @@ xFLOAT staticCalculateIntensity ( xFLOAT distance, const xVector3& attenuation )
 xFLOAT staticCalculateRadius(xFLOAT testIncrement, const xVector3& attenuation)
 {
     float testRadius = testIncrement;
-    static const xFLOAT minIntensity = 10.f / 256.f;
-    static const xFLOAT minIntensityI = 25.6f;
+    static const xFLOAT minIntensity = 5.f / 256.f;
+    static const xFLOAT minIntensityI = 1.f / minIntensity;
 
     // make sure the parameters are reasonable and that
     // the algorithm will terminate

@@ -1,5 +1,4 @@
 #include "Utils.h"
-#include "ogl.h"
 
 /*
     Based on NEHE
@@ -52,4 +51,39 @@ void xglPerspective( GLdouble fovY, GLdouble aspect, GLdouble zNear )
     M(3,0) = 0.0;  M(3,1) = 0.0;  M(3,2) = -1.0;   M(3,3) = 0.0;
 #undef M
     glLoadMatrixd(mat);
+}
+
+void LightSet_GL(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular, xBYTE light_id)
+{
+    float light_off[4] = { 0.f, 0.f, 0.f, 0.f };
+    // turn off ambient lighting
+    //glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_off);
+
+    xVector4 position; position.init(light.position, light.type == xLight_INFINITE ? 0.f : 1.f);
+    glLightfv(GL_LIGHT0+light_id, GL_POSITION, position.xyzw);
+
+    glLightfv(GL_LIGHT0+light_id, GL_AMBIENT, t_Ambient ? light.ambient.col : light_off);
+    glLightfv(GL_LIGHT0+light_id, GL_DIFFUSE,  t_Diffuse ? light.diffuse.col : light_off); // direct light
+    glLightfv(GL_LIGHT0+light_id, GL_SPECULAR, t_Specular ? light.diffuse.col : light_off); // light on mirrors/metal
+
+    if (light.type != xLight_INFINITE)
+    {
+        // rozpraszanie siê œwiat³a
+        glLightf(GL_LIGHT0+light_id, GL_CONSTANT_ATTENUATION,  light.attenuationConst);
+        glLightf(GL_LIGHT0+light_id, GL_LINEAR_ATTENUATION,    light.attenuationLinear);
+        glLightf(GL_LIGHT0+light_id, GL_QUADRATIC_ATTENUATION, light.attenuationSquare);
+
+        if (light.type == xLight_SPOT)
+        {
+            glLightfv(GL_LIGHT0+light_id, GL_SPOT_DIRECTION, light.spotDirection.xyz);
+            glLightf(GL_LIGHT0+light_id,  GL_SPOT_CUTOFF,    light.spotCutOff);
+            glLightf(GL_LIGHT0+light_id,  GL_SPOT_EXPONENT,  light.spotAttenuation);
+        }
+        else
+            glLightf(GL_LIGHT0+light_id, GL_SPOT_CUTOFF, 180.0f);
+    }
+
+    glEnable(GL_LIGHT0+light_id);
+
+    //Shader::SetLightType(light.type, t_Ambient, t_Diffuse, t_Specular);
 }
