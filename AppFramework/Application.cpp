@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "OGL/GLWindow.h"
+#include "D3D/DXWindow.h"
 #include "../Utils/Profiler.h"
 
 void MainWindow_OnCreate(IWindow &window, void* receiver)
@@ -15,7 +16,11 @@ int Application::Create(const char *title, unsigned int width, unsigned int heig
     if (fl_openGL)
         MainWindow = new GLWindow();
     else
+#ifdef USE_D3D
+        MainWindow = new DXWindow();
+#else
         return WINDOW_ERROR;
+#endif
 
     MainWindow->PreCreate(title, width, height, fl_fullscreen);
 
