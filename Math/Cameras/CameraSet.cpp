@@ -150,6 +150,10 @@ void CameraSet :: Load(const char *fileName)
                         else
                         if (StartsWith(name, "EyeSeeAll_Radius"))
                             tracker->Script = Camera::SCRIPT_EyeSeeAll_Radius;
+                        else
+                            tracker->InitScript(name, Filesystem::GetFullPath(
+                                    "Data/scripts/cameras/" + tracker->ScriptName + ".lua"));
+
 
                     }
                     continue;

@@ -41,6 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\Lua\libLua"
 				PreprocessorDefinitions="DEBUG;NOMINMAX;WIN32;_DEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -121,6 +122,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\Lua\libLua&quot;"
 				PreprocessorDefinitions="NOMINMAX;WIN32;NDEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -200,6 +202,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\Lua\libLua"
 				PreprocessorDefinitions="NOMINMAX;WIN32;NDEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -1604,6 +1607,46 @@
 		<Filter
 			Name="AI"
 			>
+		</Filter>
+		<Filter
+			Name="Lua"
+			>
+			<File
+				RelativePath="..\Lua\LuaDebugger.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\LuaDebugger.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\LuaMgr.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\LuaRestoreStack.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\LuaScript.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\LuaScript.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\LuaThis.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\LuaVirtualMachine.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\LuaVirtualMachine.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath="..\Config.cpp"

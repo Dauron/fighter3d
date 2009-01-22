@@ -49,9 +49,12 @@ void ObjectTracker :: UpdateDestination()
         P_destination = (P_min + P_max) * 0.5f + NW_destination_shift;
         return;
     }
-    if (Mode == TRACK_CUSTOM_SCRIPT && ScriptData && Script)
+    if (Mode == TRACK_CUSTOM_SCRIPT && ScriptData)
     {
-        Script(*this, ScriptData);
+        if (Script)
+            Script(*this, ScriptData);
+        else
+            CallScript();
         return;
     }
 }

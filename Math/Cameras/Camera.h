@@ -9,7 +9,7 @@ namespace Math { namespace Cameras {
     using namespace Math::Cameras;
     using namespace Math::Tracking;
 
-    struct CameraTrackingData {
+    struct CameraTrackingData : LuaScriptData {
         xPoint3 *P_current;
         Camera  *camera;
 
@@ -19,7 +19,10 @@ namespace Math { namespace Cameras {
         CameraTrackingData (xPoint3 &p_current, Camera  &cam)
             : P_current(&p_current), camera(&cam)
         {}
+
+        virtual int PushParams(lua_State *state);
     };
+
 
     class Camera
     {
@@ -51,6 +54,7 @@ namespace Math { namespace Cameras {
         static const TrackingScript SCRIPT_EyeSeeAll_Center;
         static const TrackingScript SCRIPT_EyeSeeAll_CenterTop;
         static const TrackingScript SCRIPT_EyeSeeAll_Radius;
+        static const TrackingScript SCRIPT_LUA;
 
         virtual ~Camera() = default;
 
@@ -67,8 +71,8 @@ namespace Math { namespace Cameras {
             CenterTracker.Init();
             eyeTrackingData    = CameraTrackingData(P_eye, *this);
             centerTrackingData = CameraTrackingData(P_center, *this);
-            EyeTracker.ScriptData    = (xBYTE*)&eyeTrackingData;
-            CenterTracker.ScriptData = (xBYTE*)&centerTrackingData;
+            EyeTracker.ScriptData    = &eyeTrackingData;
+            CenterTracker.ScriptData = &centerTrackingData;
 
             W_TrackingSpeedEye = 1.f;
             W_TrackingSpeedCtr = 1.f;
