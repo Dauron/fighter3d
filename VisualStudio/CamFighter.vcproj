@@ -633,6 +633,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="D3D"
+				>
+				<File
+					RelativePath="..\App Framework\D3D\DXWindow.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\App Framework\D3D\DXWindow.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="World"
@@ -1464,6 +1476,127 @@
 				</File>
 				<File
 					RelativePath="..\Graphics\Textures\TGAFile.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="D3D"
+				>
+				<File
+					RelativePath="..\Graphics\D3D\d3d.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\D3D\d3d.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\D3D\dxObject.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\D3D\Font.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Check|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\Graphics\D3D\Font.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\D3D\Texture.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Check|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)1.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\Graphics\D3D\Texture.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\D3D\Utils.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)2.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)2.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)2.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)2.xdc"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Check|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							ObjectFile="$(IntDir)\$(InputName)2.obj"
+							XMLDocumentationFileName="$(IntDir)\$(InputName)2.xdc"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\Graphics\D3D\Utils.h"
 					>
 				</File>
 			</Filter>
