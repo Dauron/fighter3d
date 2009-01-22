@@ -4,6 +4,7 @@ LIBS += -lGLEW \
         -l3ds \
         -lXxf86vm \
         -lX11 \
+        -llua5.1 \
         -lm
 
 SRC = $(wildcard *.cpp) \

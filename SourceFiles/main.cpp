@@ -115,12 +115,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #include "../Graphics/OGL/AnimSkeletal.h"
 #include "../Models/ModelMgr.h"
 #include "../Models/lib3dx/xAnimationMgr.h"
+#include "../Lua/LuaMgr.h"
 
 using namespace Graphics::OGL;
 
 void Application_OnCreate(Application& sender, void *receiver, bool &res)
 {
     Profiler       ::CreateS(100);
+    LuaMgr         ::CreateS();
     StatMgr        ::CreateS();
     g_StatMgr.Add(*new ProfilerPage());
     InputMgr       ::CreateS();
@@ -172,5 +174,6 @@ void Application_OnDestroy(Application& sender, void *receiver, bool &res)
     InputMgr       ::DestroyS();
     StatMgr        ::DestroyS();
     Profiler       ::DestroyS();
+    LuaMgr         ::DestroyS();
     res = true;
 }

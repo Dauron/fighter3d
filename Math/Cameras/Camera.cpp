@@ -6,14 +6,32 @@ using namespace Math::Cameras;
 //const char * Camera::SCRIPT_EyeSeeAll_CenterTop = "EyeSeeAll_CenterTop";
 //const char * Camera::SCRIPT_EyeSeeAll_Radius    = "EyeSeeAll_Radius";
 
-void Script_EyeSeeAll_Center   (ObjectTracker &tracker, xBYTE *CameraDataPtr);
-void Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, xBYTE *CameraDataPtr);
-void Script_EyeSeeAll_Radius   (ObjectTracker &tracker, xBYTE *CameraDataPtr);
+void Script_EyeSeeAll_Center   (ObjectTracker &tracker, LuaScriptData *CameraDataPtr);
+void Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, LuaScriptData *CameraDataPtr);
+void Script_EyeSeeAll_Radius   (ObjectTracker &tracker, LuaScriptData *CameraDataPtr);
 
 const TrackingScript Camera::SCRIPT_EyeSeeAll_Center    = Script_EyeSeeAll_Center;
 const TrackingScript Camera::SCRIPT_EyeSeeAll_CenterTop = Script_EyeSeeAll_CenterTop;
 const TrackingScript Camera::SCRIPT_EyeSeeAll_Radius    = Script_EyeSeeAll_Radius;
+const TrackingScript Camera::SCRIPT_LUA                 = NULL;
 
+int CameraTrackingData :: PushParams(lua_State *state)
+{
+    lua_createtable(state, 4, 0);
+    if (camera->FOV.Projection == FieldOfView::PROJECT_PERSPECTIVE)
+        lua_pushstring (state, "perspective");
+    else
+        lua_pushstring (state, "orthogonal");
+    lua_setfield   (state, -2, "Projection");
+    lua_pushPoint  (state, *P_current);
+    lua_setfield   (state, -2, "P_current");
+    lua_pushnumber (state, (lua_Number)camera->FOV.Aspect);
+    lua_setfield   (state, -2, "Aspect");
+    lua_pushnumber (state, (lua_Number)camera->FOV.PerspAngle);
+    lua_setfield   (state, -2, "PerspAngle");
+
+    return 1;
+}
 
 void Camera :: SetCamera (xFLOAT eyex, xFLOAT eyey, xFLOAT eyez,
                           xFLOAT centerx, xFLOAT centery, xFLOAT centerz,
@@ -62,7 +80,7 @@ void Camera :: Update(xFLOAT T_delta)
 
     if (EyeTracker.Mode != ObjectTracker::TRACK_NOTHING && NW_up.z < 1.f-EPSILON)
     {
-        xVector3 N_up = fabs(NW_front.z) > fabs(NW_front.x) && fabs(NW_front.z) > fabs(NW_front.y)
+        xVector3 N_up = fabs(NW_front.x) < EPSILON && fabs(NW_front.y) < EPSILON
             ? xVector3::Create(1.f,0.f,0.f)
             : xVector3::Create(0.f,0.f,1.f);
         if (NW_up.isZero())
@@ -87,7 +105,7 @@ void Camera :: Update(xFLOAT T_delta)
     FOV.Update();
 }
 
-void Script_EyeSeeAll_Center   (ObjectTracker &tracker, xBYTE *CameraDataPtr)
+void Script_EyeSeeAll_Center   (ObjectTracker &tracker, LuaScriptData *CameraDataPtr)
 {
     if (tracker.Targets->L_objects.size() == 0) return;
     CameraTrackingData &ctd = *(CameraTrackingData*) CameraDataPtr;
@@ -201,7 +219,7 @@ void Script_EyeSeeAll_Center   (ObjectTracker &tracker, xBYTE *CameraDataPtr)
                            + N_side  * tracker.NW_destination_shift.x
                            + N_up    * tracker.NW_destination_shift.z;
 }
-void Script_EyeSeeAll_Radius   (ObjectTracker &tracker, xBYTE *CameraDataPtr)
+void Script_EyeSeeAll_Radius   (ObjectTracker &tracker, LuaScriptData *CameraDataPtr)
 {
     if (tracker.Targets->L_objects.size() == 0) return;
     CameraTrackingData &ctd = *(CameraTrackingData*) CameraDataPtr;
@@ -304,7 +322,7 @@ void Script_EyeSeeAll_Radius   (ObjectTracker &tracker, xBYTE *CameraDataPtr)
                            + N_up    * tracker.NW_destination_shift.z;
 
 }
-void Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, xBYTE *CameraDataPtr)
+void Script_EyeSeeAll_CenterTop(ObjectTracker &tracker, LuaScriptData *CameraDataPtr)
 {
     if (tracker.Targets->L_objects.size() == 0) return;
     CameraTrackingData &ctd = *(CameraTrackingData*) CameraDataPtr;
