@@ -3,7 +3,7 @@
 
 #include "../../../Config.h"
 #include "../../Renderer.h"
-#include "../Extensions/ARB_vertex_buffer_object.h"
+#include "../ogl.h"
 
 class RendererGL : public Renderer
 {
@@ -53,7 +53,7 @@ class RendererGL : public Renderer
 
     RendererGL() : UseList(true)
     {
-        UseVBO = GLExtensions::Exists_ARB_VertexBufferObject && Config::UseVBO;
+        UseVBO = GLEW_ARB_vertex_buffer_object && Config::UseVBO;
     }
 
     virtual void InvalidateGraphics(xModel &model, xModelInstance &instance)

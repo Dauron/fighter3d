@@ -1,8 +1,7 @@
 #ifndef __incl_Graphics_OGL_Shader_h
 #define __incl_Graphics_OGL_Shader_h
 
-#include "Extensions/ARB_vertex_shader.h"
-#include "Extensions/ARB_fragment_shader.h"
+#include "ogl.h"
 #include "../../Math/xMath.h"
 #include "../../Math/xLight.h"
 

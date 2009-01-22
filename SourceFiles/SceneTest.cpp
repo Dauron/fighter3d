@@ -4,7 +4,6 @@
 #include "../AppFramework/Input/InputMgr.h"
 #include "InputCodes.h"
 #include "../Graphics/OGL/Utils.h"
-#include "../Graphics/OGL/Extensions/GLExtensions.h"
 #include "../Graphics/OGL/Render/RendererGL.h"
 #include "../Physics/Colliders/FigureCollider.h"
 
@@ -83,7 +82,7 @@ bool SceneTest::Create(int left, int top, unsigned int width, unsigned int heigh
 
     InitInputMgr();
 
-    GLExtensions::SetVSync(Config::VSync);
+    wglSwapIntervalEXT(Config::VSync ? 1 : 0);
 
     return true;
 }

@@ -26,7 +26,7 @@ bool SceneGame :: Create(int left, int top, unsigned int width, unsigned int hei
     InitInputMgr(); // inside -> InitCameras();
     InitMap();
 
-    GLExtensions::SetVSync(Config::VSync);
+    wglSwapIntervalEXT(Config::VSync ? 1 : 0);
 
     font = g_FontMgr.GetFont("Courier New", 12);
 

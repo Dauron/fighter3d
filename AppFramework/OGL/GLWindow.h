@@ -2,7 +2,7 @@
 #define __incl_GLWindow_h
 
 #include "../IWindow.h"
-#include <GL/gl.h>
+#include "../../Graphics/OGL/ogl.h"
 
 #ifndef WIN32
 

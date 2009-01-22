@@ -62,9 +62,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib"
 				OutputFile="$(SolutionDir)..\fighter_dbg.exe"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="..\Graphics\OGL\glew\lib"
 				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -140,9 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib"
 				OutputFile="$(SolutionDir)\..\fighter.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\Graphics\OGL\glew\lib"
 				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -219,9 +219,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="opengl32.lib glu32.lib"
 				OutputFile="$(SolutionDir)\..\fighter_chk.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\Graphics\OGL\glew\lib"
 				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -1550,94 +1550,6 @@
 					RelativePath="..\Graphics\OGL\WorldRenderGL.h"
 					>
 				</File>
-				<Filter
-					Name="Extensions"
-					>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_fragment_shader.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_fragment_shader.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_multisample.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_multisample.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_multitexture.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_multitexture.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_shader_objects.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_shader_objects.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_vertex_buffer_object.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_vertex_buffer_object.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_vertex_shader.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\ARB_vertex_shader.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\EXT_stencil_two_side.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\EXT_stencil_two_side.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\EXT_stencil_wrap.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\EXT_stencil_wrap.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\EXT_texture3D.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\EXT_texture3D.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\GLExtensions.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\GLExtensions.h"
-						>
-					</File>
-					<File
-						RelativePath="..\Graphics\OGL\Extensions\wglext.h"
-						>
-					</File>
-				</Filter>
 				<Filter
 					Name="Render"
 					>

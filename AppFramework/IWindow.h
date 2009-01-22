@@ -7,6 +7,7 @@
 #include <cstring>
 
 #ifndef WIN32
+#include <GL/glew.h>
 #include <GL/glx.h>
 #include <X11/extensions/xf86vmode.h>
 typedef ::Display *HDC;

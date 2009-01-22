@@ -138,13 +138,13 @@ GLenum ShaderProgram :: Create()
 
     if (CheckForGLError("Pre create GLSL program")) {}
 
-    if (!GLExtensions::Exists_ARB_ShaderObjects ||
-        !GLExtensions::Exists_ARB_VertexShader  ||
-        !GLExtensions::Exists_ARB_FragmentShader)
+    if (!GLEW_ARB_shader_objects ||
+        !GLEW_ARB_vertex_shader  ||
+        !GLEW_ARB_fragment_shader)
     {
-        if (!GLExtensions::Exists_ARB_ShaderObjects)  LOG(3, "WARNING: ARB_ShaderObjects is not supported\n");
-        if (!GLExtensions::Exists_ARB_VertexShader)   LOG(3, "WARNING: ARB_VertexShader is not supported\n");
-        if (!GLExtensions::Exists_ARB_FragmentShader) LOG(3, "WARNING: ARB_FragmentShader is not supported\n");
+        if (!GLEW_ARB_shader_objects)  LOG(3, "WARNING: ARB_ShaderObjects is not supported\n");
+        if (!GLEW_ARB_vertex_shader)   LOG(3, "WARNING: ARB_VertexShader is not supported\n");
+        if (!GLEW_ARB_fragment_shader) LOG(3, "WARNING: ARB_FragmentShader is not supported\n");
         return 0;
     }
 

@@ -126,6 +126,13 @@ bool GLWindow::Create()
     else
         printf("Sorry, no Direct Rendering possible!\n");
 
+    GLenum err = glewInit();
+    if (GLEW_OK != err)
+    {
+      /* Problem: glewInit failed, something is seriously wrong. */
+      printf("GLEW error: %s", glewGetErrorString(err));
+    }
+
     OnCreate();
     this->Resize(Width, Height);
 
