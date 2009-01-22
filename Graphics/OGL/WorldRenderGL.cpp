@@ -2,9 +2,6 @@
 
 #include "Utils.h"
 #include "Shader.h"
-#include "Extensions/EXT_stencil_wrap.h"
-#include "Extensions/EXT_stencil_two_side.h"
-#include "Extensions/ARB_multisample.h"
 
 #include "../../Utils/Profiler.h"
 
@@ -74,7 +71,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
 
     //////////////////// WORLD - BEGIN
 
-    if (GLExtensions::Exists_ARB_Multisample)
+    if (GLEW_ARB_multisample)
         glDisable(GL_MULTISAMPLE_ARB);
 
     glClearColor( world.skyColor.r, world.skyColor.g, world.skyColor.b, world.skyColor.a );
@@ -106,7 +103,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         if (world.skyBox)
             renderModel.RenderModel(*world.skyBox->ModelGr->xModelP, world.skyBox->ModelGr->instance, false, camera.FOV);
 
-        if (GLExtensions::Exists_ARB_Multisample && Config::MultisamplingLevel > 0)
+        if (GLEW_ARB_multisample && Config::MultisamplingLevel > 0)
             glEnable(GL_MULTISAMPLE_ARB);
 
         ////// RENDER Z-ONLY PASS
@@ -172,7 +169,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
                     glStencilMask(0xff);
                     glClear(GL_STENCIL_BUFFER_BIT);
                     glEnable(GL_STENCIL_TEST);          // write to stencil buffer
-                    if (GLExtensions::Exists_EXT_StencilTwoSide)
+                    if (GLEW_EXT_stencil_two_side)
                     {
                         glDisable(GL_CULL_FACE);
                         glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
@@ -306,7 +303,7 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
 
     Shader::Suspend();
 
-    if (GLExtensions::Exists_ARB_Multisample)
+    if (GLEW_ARB_multisample)
         glDisable(GL_MULTISAMPLE_ARB);
 }
 
@@ -338,7 +335,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
 
     //////////////////// WORLD - BEGIN
 
-    if (GLExtensions::Exists_ARB_Multisample)
+    if (GLEW_ARB_multisample)
         glDisable(GL_MULTISAMPLE_ARB);
 
     glClearColor( sky.r, sky.g, sky.b, sky.a );
@@ -355,7 +352,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
         glPushAttrib(GL_ALL_ATTRIB_BITS);
 
         Shader::EnableTexturing(xState_Enable);
-        if (GLExtensions::Exists_ARB_Multisample && Config::MultisamplingLevel > 0)
+        if (GLEW_ARB_multisample && Config::MultisamplingLevel > 0)
             glEnable(GL_MULTISAMPLE_ARB);
 
         ////// RENDER GLOBAL AMBIENT PASS
@@ -387,7 +384,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
             glStencilMask(0xff);
             glClear(GL_STENCIL_BUFFER_BIT);
             glEnable(GL_STENCIL_TEST);          // write to stencil buffer
-            if (GLExtensions::Exists_EXT_StencilTwoSide)
+            if (GLEW_EXT_stencil_two_side)
             {
                 glDisable(GL_CULL_FACE);
                 glEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
@@ -508,7 +505,7 @@ void WorldRenderGL :: RenderWorld(World &world, xLight &light, xColor sky, Math:
 
     Shader::Suspend();
 
-    if (GLExtensions::Exists_ARB_Multisample)
+    if (GLEW_ARB_multisample)
         glDisable(GL_MULTISAMPLE_ARB);
 }
 
@@ -540,11 +537,13 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
 
     //////////////////// WORLD - BEGIN
 
-    if (GLExtensions::Exists_ARB_Multisample)
+    if (GLEW_ARB_multisample)
+    {
         if (Config::MultisamplingLevel > 0)
             glEnable(GL_MULTISAMPLE_ARB);
         else
             glDisable(GL_MULTISAMPLE_ARB);
+    }
 
     glClearColor( sky.r, sky.g, sky.b, sky.a );
     glDepthMask(1);
@@ -622,6 +621,6 @@ void WorldRenderGL :: RenderWorldNoLights(World &world, xColor sky, Math::Camera
 
     Shader::Suspend();
 
-    if (GLExtensions::Exists_ARB_Multisample)
+    if (GLEW_ARB_multisample)
         glDisable(GL_MULTISAMPLE_ARB);
 }

@@ -108,7 +108,6 @@ using namespace Graphics::OGL;
 
 void Application_OnCreate(Application& sender, void *receiver, bool &res)
 {
-    GLExtensions   ::Initialize();
     Profiler       ::CreateS(100);
     StatMgr        ::CreateS();
     g_StatMgr.Add(*new ProfilerPage());
@@ -120,7 +119,7 @@ void Application_OnCreate(Application& sender, void *receiver, bool &res)
     CaptureInput   ::CreateS();
     FontMgr        ::CreateS();
     TextureMgr     ::CreateS();
-    Shader         ::CreateS();
+    //Shader         ::CreateS(); // Lazy load
     AnimSkeletal   ::CreateS();
     xAnimationMgr  ::CreateS();
     ModelMgr       ::CreateS();

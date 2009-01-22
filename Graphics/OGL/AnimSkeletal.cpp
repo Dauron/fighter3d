@@ -1,6 +1,5 @@
 #include "AnimSkeletal.h"
 
-#include "Extensions/ARB_vertex_buffer_object.h"
 #include "../../Models/lib3dx/xSkeleton.h"
 
 using namespace Graphics::OGL;

@@ -2,8 +2,6 @@
 
 #include "../../../Config.h"
 #include "../../ShadowVolume.h"
-#include "../Extensions/EXT_stencil_wrap.h"
-#include "../Extensions/EXT_stencil_two_side.h"
 #include "../../../Utils/Profiler.h"
 
 /***************************** shadow volumes *********************************/
@@ -73,15 +71,15 @@ void RenderShadowVolumeZPass(xShadowData &shadowData, bool infiniteL)
     }
 
     ++Performance.Shadows.zPass;
-    if (GLExtensions::Exists_EXT_StencilTwoSide)
+    if (GLEW_EXT_stencil_two_side)
     {
         glActiveStencilFaceEXT(GL_BACK);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_KEEP, GL_DECR_WRAP_EXT);
         else
             glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
         glActiveStencilFaceEXT(GL_FRONT);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR_WRAP_EXT);
         else
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
@@ -91,7 +89,7 @@ void RenderShadowVolumeZPass(xShadowData &shadowData, bool infiniteL)
     else
     {
         glCullFace(GL_FRONT);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR_WRAP_EXT);
         else
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
@@ -99,7 +97,7 @@ void RenderShadowVolumeZPass(xShadowData &shadowData, bool infiniteL)
         glCallList(shadowData.gpuShadowPointers.listIDPass);
 
         glCullFace(GL_BACK);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_KEEP, GL_DECR_WRAP_EXT);
         else
             glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
@@ -179,15 +177,15 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
     if (!modelInFrustum && !extrusionInFrustum && !backCapInFrustum)
         ++Performance.Shadows.culled;
 
-    if (GLExtensions::Exists_EXT_StencilTwoSide)
+    if (GLEW_EXT_stencil_two_side)
     {
         glActiveStencilFaceEXT(GL_BACK);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
         else
             glStencilOp(GL_KEEP, GL_INCR, GL_KEEP);
         glActiveStencilFaceEXT(GL_FRONT);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
         else
             glStencilOp(GL_KEEP, GL_DECR, GL_KEEP);
@@ -219,7 +217,7 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
     else
     {
         glCullFace(GL_BACK);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
         else
             glStencilOp(GL_KEEP, GL_INCR, GL_KEEP);
@@ -249,7 +247,7 @@ void RenderShadowVolumeZFail(xShadowData &shadowData, bool infiniteL, bool model
         }
 
         glCullFace(GL_FRONT);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
         else
             glStencilOp(GL_KEEP, GL_DECR, GL_KEEP);
@@ -387,15 +385,15 @@ void RenderShadowVolumeZPassVBO(xShadowData &shadowData, bool infiniteL)
     /************************* RENDER FACES ****************************/
     glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), 0);
 
-    if (GLExtensions::Exists_EXT_StencilTwoSide)
+    if (GLEW_EXT_stencil_two_side)
     {
         glActiveStencilFaceEXT(GL_BACK);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_KEEP, GL_DECR_WRAP_EXT);
         else
             glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
         glActiveStencilFaceEXT(GL_FRONT);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR_WRAP_EXT);
         else
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
@@ -410,7 +408,7 @@ void RenderShadowVolumeZPassVBO(xShadowData &shadowData, bool infiniteL)
     else
     {
         glCullFace(GL_FRONT);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR_WRAP_EXT);
         else
             glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
@@ -423,7 +421,7 @@ void RenderShadowVolumeZPassVBO(xShadowData &shadowData, bool infiniteL)
             glDrawElements ( GL_TRIANGLES, 3*shadowData.I_sides, GL_UNSIGNED_SHORT, 0);
 
         glCullFace(GL_BACK);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_KEEP, GL_DECR_WRAP_EXT);
         else
             glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
@@ -445,15 +443,15 @@ void RenderShadowVolumeZFailVBO(xShadowData &shadowData, bool infiniteL)
     /************************* RENDER FACES ****************************/
     glVertexPointer   (4, GL_FLOAT, sizeof(xVector4), 0);
 
-    if (GLExtensions::Exists_EXT_StencilTwoSide)
+    if (GLEW_EXT_stencil_two_side)
     {
         glActiveStencilFaceEXT(GL_BACK);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
         else
             glStencilOp(GL_KEEP, GL_INCR, GL_KEEP);
         glActiveStencilFaceEXT(GL_FRONT);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
         else
             glStencilOp(GL_KEEP, GL_DECR, GL_KEEP);
@@ -494,7 +492,7 @@ void RenderShadowVolumeZFailVBO(xShadowData &shadowData, bool infiniteL)
     else
     {
         glCullFace(GL_BACK);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
         else
             glStencilOp(GL_KEEP, GL_INCR, GL_KEEP);
@@ -512,7 +510,7 @@ void RenderShadowVolumeZFailVBO(xShadowData &shadowData, bool infiniteL)
             glDrawElements ( GL_TRIANGLES, 3*(shadowData.I_sides+shadowData.I_fronts), GL_UNSIGNED_SHORT, 0);
 
         glCullFace(GL_FRONT);
-        if (GLExtensions::Exists_EXT_StencilWrap)
+        if (GLEW_EXT_stencil_wrap)
             glStencilOp(GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
         else
             glStencilOp(GL_KEEP, GL_DECR, GL_KEEP);
