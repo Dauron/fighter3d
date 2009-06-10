@@ -9,7 +9,7 @@ Project is written in C++ and uses OpenGL instructions for rendering. This desig
 
 == Windows ==
 
-Prepared Visual Studio 2005 solution is self-sufficient. It already contains source code of the lib3ds, which is the only auxiliary library used in the project. Solution uses also OpenGL library, but it should be available on any computer with Visual Studio.
+Prepared Visual Studio 2005 solution is self-sufficient. It already contains source code of the lib3ds and libLua, which are the only auxiliary library used in the project. Solution uses also OpenGL library, but it should be available on any computer with Visual Studio.
 
 There are two build configurations available:
  * Debug - compiles project with debugging info to `\fighter_dbg.exe` output file
@@ -18,12 +18,14 @@ There are two build configurations available:
 == Linux ==
 
 Several external packages must be installed before compiling project under Linux. As may be seen in `\Makefile`, the project depends on following libraries:
- `-lGL -lGLU -lXxf86vm -lm -l3ds`
+ `-lGLEW -lGLU -lGL -lXxf86vm -l3ds -llua5.1 -lm`
 Most probably the packages will be named something like:
  * libGLdev
  * libGLUdev
+ * libGLEWdev
  * libXxf86vmdev
  * lib3dsdev
+ * liblua5.1dev
 
 There are two make configurations available:
  * make debug - compiles project with debugging info to `\fighter_dbg` output file
