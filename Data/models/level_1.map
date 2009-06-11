@@ -8,11 +8,11 @@ spawn2pos    3.5 -1.5 0.95
 
 # yellow
 [light]
-type	POINT
+type	    INFINITE
 att_const	0.9
 att_linear	0.005
 att_square	0.0005
-color	1	0.7	0
+color	    1	0.7	0
 softness	0.3
 position	0	0	10
 
@@ -23,6 +23,7 @@ model	dojo/floor0.3dx
 position	0.0	0.0	-0.21
 physical	0
 phantom	0
+shadows  0
 
 [model]
 model    crate.3dx

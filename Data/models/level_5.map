@@ -1,0 +1,19 @@
+[general]
+skycolor 0.8 0.8 1.0
+
+spawn1rot 0 0 180
+spawn1pos -0.7 -3.3 -0.4
+spawn2rot 0 0 0
+spawn2pos -0.5 -2 -0.2
+
+# LIGHTS
+
+# yellow
+[light]
+type	POINT
+att_const   0.9
+att_linear  0.005
+att_square  0.0005
+color       1 0.7 0
+softness    0.3
+position    0 0 10

@@ -1,6 +1,21 @@
 #ifndef __incl_Utils_Delegate_h
 #define __incl_Utils_Delegate_h
 
+#define EVENT_HANDLER0(HANDLER_METHOD, SENDER, RECEIVER)                      \
+    static void HANDLER_METHOD(SENDER &control, void* receiver)               \
+    { reinterpret_cast<RECEIVER*>( receiver )->HANDLER_METHOD(control); }     \
+    void HANDLER_METHOD(SENDER &control)
+
+#define EVENT_HANDLER1(HANDLER_METHOD, SENDER, RECEIVER, PARAM1TYPE, PARAM1NAME)       \
+    static void HANDLER_METHOD(SENDER &control, void* receiver, PARAM1TYPE PARAM1NAME) \
+    { reinterpret_cast<RECEIVER*>( receiver )->HANDLER_METHOD(control, PARAM1NAME); }  \
+    void HANDLER_METHOD(SENDER &control, PARAM1TYPE PARAM1NAME)
+
+#define EVENT_HANDLER2(HANDLER_METHOD, SENDER, RECEIVER, PARAM1TYPE, PARAM1NAME, PARAM2TYPE, PARAM2NAME)      \
+    static void HANDLER_METHOD(SENDER &control, void* receiver, PARAM1TYPE PARAM1NAME, PARAM2TYPE PARAM2NAME) \
+    { reinterpret_cast<RECEIVER*>( receiver )->HANDLER_METHOD(control, PARAM1NAME, PARAM2NAME); }             \
+    void HANDLER_METHOD(SENDER &control, PARAM1TYPE PARAM1NAME, PARAM2TYPE PARAM2NAME)
+
 template <typename SENDER, typename DATA1 = void, typename DATA2 = void>
 class Delegate
 {
@@ -137,7 +152,7 @@ public:
 };
 
 /* Usage:
-// Final, uniwersal class
+// Final, universal class
 class Window {
 public:
   // Event declaration
@@ -160,9 +175,6 @@ public:
 };
 
 // New class
-void AnyClass_OnResize(Window &window, void* receiver,
-                unsigned int &width, unsigned int &height);
-
 class AnyClass {
 public:
   Window MainWindow;
@@ -170,20 +182,18 @@ public:
   AnyClass() {
     // Binding of function to the event,
     // parameters are destination class and intermediary function
-    MainWindow.OnResize.Set(*this, ::AnyClass_OnResize);
+    MainWindow.OnResize.Set(*this, ::OnResize);
   }
 
   // Final event handler code
-  void OnResize( Window &window,
-                 unsigned int &width, unsigned int &height );
+  EVENT_HANDLER2(OnResize, Window, AnyClass,
+                 unsigned int &, width, unsigned int &, height);
 };
 
 // Intermediary function
-void AnyClass_OnResize(Window &window, void* receiver,
-                unsigned int &width, unsigned int &height)
+void AnyClas::OnResize(Window &sender, unsigned int &width, unsigned int &height)
 {
-  // Simple trick with pointer casting
-  ((AnyClass*)receiver)->OnResize(window, width, height);
+  //do what you have to do
 }
 */
 

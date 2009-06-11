@@ -25,7 +25,7 @@ public:
         {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->Name );  }
     int GetSize( HFont hfnt ) const
         {  return ( m_HandleMgr.DereferenceNoValidation( hfnt )->Size );  }
-    const Graphics::OGL::Font* GetFont( HFont hfnt ) const
+    Graphics::OGL::Font* GetFont( HFont hfnt )
         {  return ( m_HandleMgr.Dereference( hfnt ) );  }
 };
 

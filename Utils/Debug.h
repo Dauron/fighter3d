@@ -42,7 +42,7 @@ void  log_clear();
 
 bool _CheckForGLError(const char *file, int line);
 
-#ifndef NDEBUG
+#ifdef DEBUG
 
 #include "../AppFramework/System.h" // GetTickCount
 #include <cstdio>

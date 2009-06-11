@@ -66,12 +66,9 @@ private:
      // assignment operator
     Application& operator=(const Application&) { return *this; }
 
-    friend void MainWindow_OnCreate(IWindow &window, void* receiver);
-    friend void MainWindow_OnResize(IWindow &window, void* receiver, unsigned int &width, unsigned int &height);
-
-    void MainWindow_OnCreate(IWindow &window)
+    EVENT_HANDLER0(MainWindow_OnCreate, IWindow, Application)
     { Invalidate(); }
-    void MainWindow_OnResize(IWindow &window, unsigned int width, unsigned int height)
+    EVENT_HANDLER2(MainWindow_OnResize, IWindow, Application, unsigned int &, width, unsigned int &, height)
     { if (SceneCur) SceneCur->Resize(0,0,width,height); }
 
     IWindow *MainWindow;

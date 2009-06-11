@@ -94,7 +94,23 @@ class RendererGL : public Renderer
     }
 
     static void InitVBO (xElement *elem);
-    static void SetMaterial(xColor color, xMaterial *mat, bool toggleShader = true);
+    static void SetMaterial(xMaterial *mat, bool toggleShader = true);
+    static void SetColors(xElement *elem, bool VBO)
+    {
+        if (elem->renderData.L_colors)
+        {
+            if (VBO)
+            {
+                glBindBufferARB( GL_ARRAY_BUFFER_ARB, elem->renderData.gpuMain.colorB );
+                glColorPointer(3, GL_UNSIGNED_BYTE, sizeof(xBYTE3), 0);
+            }
+            else
+                glColorPointer(3, GL_UNSIGNED_BYTE, sizeof(xBYTE3), elem->renderData.L_colors);
+            glEnable(GL_COLOR_ARRAY);
+        }
+        else
+            glColor4fv(elem->Color.rgba);
+    }
 
   protected:
     virtual void RenderBVHExt            ( Math::Figures::xBVHierarchy &bvh,
@@ -106,6 +122,7 @@ class RendererGL : public Renderer
                                            bool           FL_color = true);
 
   private:
+
     void InitTextures(xModel &model);
 
     void InvalidateElementGraphics(xElement *elem)
@@ -125,6 +142,8 @@ class RendererGL : public Renderer
             p = elem->renderData.gpuMain.indexB;
             if (p) glDeleteBuffersARB(1, &p);
             p = elem->renderData.gpuMain.normalB;
+            if (p) glDeleteBuffersARB(1, &p);
+            p = elem->renderData.gpuMain.colorB;
             if (p) glDeleteBuffersARB(1, &p);
             elem->renderData.gpuMain.Invalidate();
             elem->renderData.mode = xGPUPointers::NONE;
@@ -187,6 +206,8 @@ class RendererGL : public Renderer
                     p = iter->gpuMain.indexB;
                     if (p) glDeleteBuffersARB(1, &p);
                     p = iter->gpuMain.normalB;
+                    if (p) glDeleteBuffersARB(1, &p);
+                    p = iter->gpuMain.colorB;
                     if (p) glDeleteBuffersARB(1, &p);
                     iter->gpuMain.Invalidate();
                     iter->mode = xGPUPointers::NONE;

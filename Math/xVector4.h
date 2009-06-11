@@ -1,7 +1,7 @@
 struct xVector4 {
     union {
         xFLOAT4 xyzw;
-        xFLOAT4 col;
+        xFLOAT4 rgba;
         struct {
             xFLOAT  x, y, z, w;
         };
@@ -27,6 +27,7 @@ struct xVector4 {
     static xVector4 Create(const xVector3 &src)                    { xVector4 res; return res.init(src); }
     xVector4       &init  (xFLOAT X, xFLOAT Y, xFLOAT Z, xFLOAT W) { x = X; y = Y; z = Z; w = W; return *this; }
     xVector4       &init  (const xVector3 &src, xFLOAT W)          { vector3 = src; w = W;       return *this; }
+    xVector4       &init  (const xColor3b &src)                    { xFLOAT fScale = 1.f / 255.f; r = src.r * fScale; g = src.g * fScale; b = src.b * fScale; w = 0.f; return *this; }
     xVector4       &init  (const xVector3 &src)                    { vector3 = src; w = 0.f;     return *this; }
     xVector4       &init  (const xFLOAT   *src)                    { memcpy(this, src, 4*sizeof(xFLOAT)); return *this; }
     xVector4       &zero  ()                                       { x = y = z = w = 0.f;        return *this; }

@@ -440,6 +440,9 @@ void Shader :: Invalidate()
     slSpotA.Invalidate();
     slSpotDS.Invalidate();
     slSpotADS.Invalidate();
+
+    Unload();
+    Load();
 }
 
 bool Shader :: Start()

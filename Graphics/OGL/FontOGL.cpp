@@ -1,5 +1,6 @@
 #include "Font.h"
 #include "../../AppFramework/Application.h"
+#include "../../Math/xMath.h"
 
 #ifndef WIN32
 #include <stdarg.h>
@@ -43,10 +44,17 @@ bool Graphics::OGL::Font :: Create()
     wglUseFontBitmaps(hDC, FIRST_CHAR, 1, ID_GLFontBase); // Create twice, to overcome ATI bug
     wglUseFontBitmaps(hDC, FIRST_CHAR, NUM_CHARS, ID_GLFontBase); // Builds NUM_CHARS Characters Starting At Character FIRST_CHAR
 
-    ABCFLOAT metrics[NUM_CHARS]; // Storage For Information About Our Font
-    GetCharABCWidthsFloat(hDC, FIRST_CHAR, FIRST_CHAR+NUM_CHARS-1, metrics);
+    GlyphHeight = 0;
+    ABCFLOAT   metricsW[NUM_CHARS]; // Storage For Information About Our Font
+    TEXTMETRIC metricsH;            // Storage For Information About Our Font
+    GetCharABCWidthsFloat(hDC, FIRST_CHAR, FIRST_CHAR+NUM_CHARS-1, metricsW);
+    GetTextMetrics(hDC, &metricsH);
     for (int i = FIRST_CHAR; i != NUM_CHARS; ++i)
-        LWidth[i] = metrics[i].abcfA + metrics[i].abcfB + metrics[i].abcfC;
+        LWidth[i] = metricsW[i].abcfA + metricsW[i].abcfB + metricsW[i].abcfC;
+
+    GlyphHeight  = metricsH.tmHeight;
+    GlyphAscent  = metricsH.tmAscent;
+    GlyphDescent = metricsH.tmDescent;
 
 /*
     GLYPHMETRICSFLOAT gmf[NUM_CHARS]; // Storage For Information About Our Font
@@ -92,9 +100,20 @@ bool Graphics::OGL::Font :: Create()
     /* build 96 display lists out of our font starting at char 32 */
     glXUseXFont(font->fid, FIRST_CHAR, NUM_CHARS, ID_GLFontBase);
 
+    GlyphHeight = GlyphAscent = GlyphDescent = 0;
     char s = FIRST_CHAR;
     for (int i = 0; i < NUM_CHARS; ++i, ++s)
-        LWidth[i] = XTextWidth(font, &s, 1);
+    {
+        LWidth[i]   = XTextWidth(font, &s, 1);
+
+        int         direction, ascent, descent;
+        XCharStruct charStruct;
+        XTextExtents(font, &s, 1, &direction, &ascent, &descent, &charStruct);
+
+        GlyphAscent  = max(GlyphAscent, ascent);
+        GlyphDescent = max(GlyphDescent, descent);
+    }
+    GlyphHeight = GlyphAscent + GlyphDescent;
 
     /* free our XFontStruct since we have our display lists */
     XFreeFont(hDC, font);

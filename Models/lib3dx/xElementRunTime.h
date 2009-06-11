@@ -20,6 +20,7 @@ union xGPUPointers
         xDWORD vertexB;
         xDWORD normalB;
         xDWORD indexB;
+        xDWORD colorB;
     };
     struct {
         xDWORD listID;          // Compiled Render List
@@ -133,6 +134,7 @@ struct xRenderData
     xWORD              I_vertices;
     xVector3          *L_normals; // smooth normals
     xFace             *L_faces;
+    xColor3b          *L_colors;
 
     xVector3          *L_face_normals;
 
