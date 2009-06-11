@@ -84,7 +84,7 @@ namespace Graphics { namespace OGL {
             if (mOver)
                 glColor4f( 0.7f, 0.7f, 0.0f, 1.f );
             else
-                glColor4fv( Background.col );
+                glColor4fv( Background.rgba );
 
             glRectf(X, Y, X2, Y2);
 

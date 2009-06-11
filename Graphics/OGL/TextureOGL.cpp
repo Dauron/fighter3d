@@ -6,7 +6,7 @@ using namespace Graphics::OGL;
 bool Texture :: Create()
 {
     assert (ID_GLTexture == 0);
-    assert (Name.size());
+    //assert (Name.size());
 
     Image *image = NULL;
     if (this->image.data == NULL)

@@ -24,6 +24,8 @@ struct xElement {
     };
     xWORD       I_vertices;
 
+    xColor3b   *L_colors;
+
     xDWORD     *L_smooth;
     xFace      *L_faces;
     xWORD       I_faces;
@@ -58,7 +60,7 @@ struct xElement {
     static xElement *Load( FILE *file, xModel *xmodel, bool FL_create_CollisionInfo );
 
     void         FillShadowEdges();
-    void         CalculateSmoothVertices();
+    void         CalculateSmoothVertices(bool duplicates = true);
     xSkinnedData GetSkinnedVertices(const xMatrix     *bones) const;
     xSkinnedData GetSkinnedVertices(const xQuaternion *bones, const xPoint3 *roots, const xPoint3 *trans) const;
 

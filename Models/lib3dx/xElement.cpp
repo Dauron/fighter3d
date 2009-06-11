@@ -40,6 +40,8 @@ void      xElement :: Free()
         else
             delete[] this->L_vertices;
     }
+    if (this->L_colors)
+        delete[] this->L_colors;
     if (this->L_faces)
         delete[] this->L_faces;
     if (this->L_smooth)
@@ -102,6 +104,7 @@ xElement *xElement :: Load (FILE *file, xModel *xmodel, bool FL_create_Collision
     elem->I_edges     = 0;
     elem->L_kids      = NULL;
     elem->Next        = NULL;
+    elem->L_colors    = NULL;
     elem->FL_transparent = elem->FL_opaque = false;
 
     if (elem->Name)

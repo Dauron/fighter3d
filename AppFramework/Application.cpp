@@ -3,11 +3,6 @@
 #include "D3D/DXWindow.h"
 #include "../Utils/Profiler.h"
 
-void MainWindow_OnCreate(IWindow &window, void* receiver)
-{ g_Application.MainWindow_OnCreate(window); }
-void MainWindow_OnResize(IWindow &window, void* receiver, unsigned int &width, unsigned int &height)
-{ g_Application.MainWindow_OnResize(window, width, height); }
-
 int Application::Create(const char *title, unsigned int width, unsigned int height,
                         bool fl_openGL,    bool fl_fullscreen, IScene &scene)
 {
@@ -50,8 +45,8 @@ int Application::Create(IWindow &window, IScene &scene)
 
     // Init window events
     SceneCur = &scene;
-    window.OnCreate.Set(this, ::MainWindow_OnCreate);
-    window.OnResize.Set(this, ::MainWindow_OnResize);
+    window.OnCreate.Set(this, MainWindow_OnCreate);
+    window.OnResize.Set(this, MainWindow_OnResize);
 
     // Create scene
     if (! SceneCur->Create(0, 0, window.Width_Get(), window.Height_Get()) )

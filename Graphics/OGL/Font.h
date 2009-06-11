@@ -30,6 +30,9 @@ namespace Graphics { namespace OGL {
 
         std::string Name;          // for reconstruction
         int         Size;          // for reconstruction
+        long        GlyphHeight;
+        long        GlyphAscent;
+        long        GlyphDescent;
 
         float       LineH() const
         { return Size * (1+INTERLINE); }

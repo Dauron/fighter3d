@@ -4,6 +4,8 @@
 #include "../Utils/Filesystem.h"
 #include "../MotionCapture/CaptureInput.h"
 #include "../Multiplayer/NetworkInput.h"
+#include "../Models/Solids/Dome.h"
+#include "../Graphics/OGL/Render/RendererGL.h"
 
 const xFLOAT TIME_STEP = 0.02f;
 
@@ -13,6 +15,25 @@ void World:: Update(float T_delta)
     T_delta *= Config::Speed;
 
     bool FL_firstStep = true;
+
+    particleEngine.Update(T_delta);
+    {
+        skyDome.Update(T_delta);
+
+        if (lights.size() && lights[0].type == xLight_INFINITE)
+        {
+            lights[0].position = skyDome.m_pntSun;
+            lights[0].color.init(skyDome.m_clrSun);
+            lights[0].modified = true;
+
+            xFLOAT fElevation = skyDome.GetSunElevation();
+            if (fElevation < 0.1f) fElevation = 0.1f;
+            else
+            if (fElevation > 0.6f) fElevation = 0.6f;
+
+            lights[0].softness = 1.f - fElevation;
+        }
+    }
 
     float T_step = TIME_STEP;
     while (T_delta > EPSILON)
@@ -50,11 +71,26 @@ void World:: Create(std::string MapFileName)
     if (!MapFileName.size())
         MapFileName = "Data/models/level_" + itos( Config::TestCase ) + ".map";
     Load(MapFileName.c_str());
+
+    skyDome.Create(60, 1000, 10, 10);
+    skyDome.m_nFaceCulling = Models::Solids::CDome::FC_CULL_OUTSIDE;
+
+    particleEngine.Create(true, 2000);
+    particleEngine.ClearForces();
+    particleEngine.AddForce(xVector3::Create(0,0,-0.1f));
+    particleEngine.AddForce(xVector3::Create(0.05f,0.05f,0));
+    particleEngine.m_BaseParticle.m_clrColor.init(100, 100, 100, 50);
+    particleEngine.m_BaseParticle.m_vecVelocity.init(0,0,1);
+    particleEngine.m_BaseParticle.m_fEnergy = 10.f;
+    particleEngine.m_fTimeDeltaPerParticle = 0.006f;
 }
 
 
 void World:: Destroy()
 {
+    particleEngine.Free();
+    skyDome.Free();
+
     if (skyBox)
     {
         skyBox->Destroy();

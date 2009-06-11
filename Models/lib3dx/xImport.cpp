@@ -281,9 +281,9 @@ xModel *xImportFileFrom3ds(Lib3dsFile *model)
         else
             lastm = xmodel->L_material = new xMaterial();
 
-        memcpy(lastm->ambient.col, mat->ambient, sizeof(Lib3dsRgba));
-        memcpy(lastm->diffuse.col, mat->diffuse, sizeof(Lib3dsRgba));
-        memcpy(lastm->specular.col, mat->specular, sizeof(Lib3dsRgba));
+        memcpy(lastm->ambient.rgba, mat->ambient, sizeof(Lib3dsRgba));
+        memcpy(lastm->diffuse.rgba, mat->diffuse, sizeof(Lib3dsRgba));
+        memcpy(lastm->specular.rgba, mat->specular, sizeof(Lib3dsRgba));
         lastm->Name = strdup(mat->name);
         lastm->ID = ++matId;
         lastm->Next = NULL;

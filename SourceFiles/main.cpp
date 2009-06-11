@@ -9,6 +9,8 @@
 #include "SceneTest.h"
 #include "SceneMenu.h"
 
+void PreCreate();
+void PostDestroy();
 void Application_OnCreate     (Application& sender, void *receiver, bool &res);
 void Application_OnInvalidate (Application& sender, void *receiver, bool &res);
 void Application_OnDestroy    (Application& sender, void *receiver, bool &res);
@@ -21,8 +23,7 @@ int main( int argc, char **argv )
     logEx(0, false, "***********************************");
     logEx(0, true,  "Game started");
 
-    Config::Load("Data/config.txt");
-    Graphics::OGL::Shader::Load();
+    PreCreate();
 
     IScene *scene = NULL;
     if (!strcmp(Config::Scene, "test")) scene = new Scenes::SceneTest();
@@ -36,24 +37,17 @@ int main( int argc, char **argv )
         scene->PrevScene = prev;
     }
 
-    int width, height;
-    if (Config::FullScreen)
-    {
-        width  = Config::FullScreenX;
-        height = Config::FullScreenY;
-    }
-    else
-    {
-        width  = Config::WindowX;
-        height = Config::WindowY;
-    }
+    int width  = (Config::FullScreen) ? Config::FullScreenX : Config::WindowX;
+    int height = (Config::FullScreen) ? Config::FullScreenY : Config::WindowY;
 
     Application game;
     game.OnApplicationCreate.Set     ( Application_OnCreate     );
     game.OnApplicationInvalidate.Set ( Application_OnInvalidate );
     game.OnApplicationDestroy.Set    ( Application_OnDestroy    );
-#ifndef NDEBUG
+#ifdef DEBUG
     int cres = game.Create("Camera Fighter - Debug", width, height, true, Config::FullScreen, *scene);
+#elif CHECK
+    int cres = game.Create("Camera Fighter - Check", width, height, true, Config::FullScreen, *scene);
 #else
     int cres = game.Create("Camera Fighter", width, height, true, Config::FullScreen, *scene);
 #endif
@@ -62,7 +56,7 @@ int main( int argc, char **argv )
     int rres = game.Run();
     game.Destroy();
 
-    Graphics::OGL::Shader::Unload();
+    PostDestroy();
 
     logEx(0, true,  "Game finished");
     logEx(0, false, "***********************************");
@@ -119,10 +113,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 using namespace Graphics::OGL;
 
+void PreCreate()
+{
+    Config::Load("Data/config.txt");
+
+    Graphics::OGL::Shader::Load();
+    LuaMgr               ::CreateS();
+}
+
+void PostDestroy()
+{
+    LuaMgr               ::DestroyS();
+    Graphics::OGL::Shader::Unload();
+}
+
 void Application_OnCreate(Application& sender, void *receiver, bool &res)
 {
     Profiler       ::CreateS(100);
-    LuaMgr         ::CreateS();
+    //LuaMgr         ::CreateS();
     StatMgr        ::CreateS();
     g_StatMgr.Add(*new ProfilerPage());
     InputMgr       ::CreateS();
@@ -174,6 +182,6 @@ void Application_OnDestroy(Application& sender, void *receiver, bool &res)
     InputMgr       ::DestroyS();
     StatMgr        ::DestroyS();
     Profiler       ::DestroyS();
-    LuaMgr         ::DestroyS();
+    //LuaMgr         ::DestroyS();
     res = true;
 }

@@ -211,7 +211,7 @@ namespace Scenes { namespace Menu {
                     player1->comBoard.FL_mirror = false;
                     player2->comBoard.FL_mirror = false;
 
-                    SceneGame *scene = new SceneGame(SkeletizedObj::camera_controled ? "[Game]" : "[Game_Set2]");
+                    SceneGame *scene = new SceneGame(SkeletizedObj::camera_controled ? "[Game_Set1]" : "[Game_Set2]");
                     scene->Player1 = player1;
                     scene->Player2 = player2;
                     scene->MapFileName = MapFile;

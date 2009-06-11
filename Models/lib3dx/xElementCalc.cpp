@@ -16,7 +16,7 @@ struct smoothVert {
     xFace  *flatFace;  // used when smooth == 0
 };
 
-void xElement :: CalculateSmoothVertices ()
+void xElement :: CalculateSmoothVertices (bool duplicates)
 {
     size_t stride     = this->GetVertexStride();
     xBYTE *verticesIn = (xBYTE*) this->L_vertices;
@@ -78,36 +78,39 @@ void xElement :: CalculateSmoothVertices ()
         }
     }
 
-    //// smooth normals for original vertex duplicates
     xDWORD verticesC = this->I_vertices;
     std::vector<std::vector<smoothVert> >::iterator vertF = vertices.begin(), vertF2;
     std::vector<std::vector<smoothVert> >::iterator vertE = vertices.end();
-    xBYTE *xvertI = verticesIn, *xvertI2;
 
-    for (int i=0; vertF != vertE; ++vertF, xvertI += stride, ++i)
+    //// smooth normals for original vertex duplicates
+    if (duplicates)
     {
-        if (!vertF->size()) continue;
-        xVector3 *v1 = (xVector3*)xvertI;
-
-        xvertI2 = xvertI+stride;
-        int j = i+1;
-        for (vertF2 = vertF+1; vertF2 != vertE; ++vertF2, xvertI2 += stride, ++j)
+        xBYTE *xvertI = verticesIn, *xvertI2;
+        for (int i=0; vertF != vertE; ++vertF, xvertI += stride, ++i)
         {
-            xVector3 *v2 = (xVector3*)xvertI2;
-            if (!v1->nearlyEqual(*v2)) continue;
+            if (!vertF->size()) continue;
+            xVector3 *v1 = (xVector3*)xvertI;
 
-            iterE  = vertF->end();
-            iterE2 = vertF2->end();
-            for (iterF = vertF->begin(); iterF != iterE; ++iterF)
+            xvertI2 = xvertI+stride;
+            int j = i+1;
+            for (vertF2 = vertF+1; vertF2 != vertE; ++vertF2, xvertI2 += stride, ++j)
             {
-                for (iterF2 = vertF2->begin(); iterF2 != iterE2; ++iterF2)
+                xVector3 *v2 = (xVector3*)xvertI2;
+                if (!v1->nearlyEqual(*v2)) continue;
+
+                iterE  = vertF->end();
+                iterE2 = vertF2->end();
+                for (iterF = vertF->begin(); iterF != iterE; ++iterF)
                 {
-                    if (iterF->smooth & iterF2->smooth)
+                    for (iterF2 = vertF2->begin(); iterF2 != iterE2; ++iterF2)
                     {
-                        iterF->mnormal  += iterF2->normal;
-                        iterF->mcount   += iterF2->count;
-                        iterF2->mnormal += iterF->normal;
-                        iterF2->mcount  += iterF->count;
+                        if (iterF->smooth & iterF2->smooth)
+                        {
+                            iterF->mnormal  += iterF2->normal;
+                            iterF->mcount   += iterF2->count;
+                            iterF2->mnormal += iterF->normal;
+                            iterF2->mcount  += iterF->count;
+                        }
                     }
                 }
             }
@@ -126,11 +129,13 @@ void xElement :: CalculateSmoothVertices ()
             {
                 xDWORD msmooth = iterF->smooth;
                 for (iterF2 = iterF+1; iterF2 != iterE; ++iterF2)
+                {
                     if (!iterF2->mergedWith && (msmooth & iterF2->smooth) && (iterF->count == iterF2->count))
                     {
                         msmooth |= iterF2->smooth;
                         iterF2->mergedWith = &*iterF;
                     }
+                }
             }
         }
     }
@@ -166,11 +171,14 @@ void xElement :: CalculateSmoothVertices ()
     {
         this->renderData.L_vertices = this->L_vertices;
         this->renderData.L_faces    = this->L_faces;
+        this->renderData.L_colors   = this->L_colors;
     }
     else
     {
         this->renderData.L_vertices = (xVertex*) new xBYTE[stride*verticesC];
+        this->renderData.L_colors   = new xColor3b[verticesC];
         memcpy(this->renderData.L_vertices, this->L_vertices, stride*this->I_vertices);
+        memcpy(this->renderData.L_colors,   this->L_colors, sizeof(xBYTE3)*this->I_vertices);
         this->renderData.L_faces = new xFace[this->I_faces];
         //// fill and correct faces
         smooth  = this->L_smooth;
@@ -196,11 +204,13 @@ void xElement :: CalculateSmoothVertices ()
     }
 
     this->renderData.L_normals   = new xVector3[verticesC];
-    //// duplicate vertices and fill normals
+    //// duplicate vertices and fill normals and colors
     xBYTE    *verticesOut = ((xBYTE*) this->renderData.L_vertices) + stride*this->I_vertices;
-    xVector3 *L_normals     = this->renderData.L_normals;
+    xVector3 *L_normals   = this->renderData.L_normals;
     xVector3 *normalP2    = this->renderData.L_normals + this->I_vertices;
-    for (vertF = vertices.begin(); vertF != vertE; ++vertF, verticesIn += stride, ++L_normals)
+    xColor3b *colorIn     = this->renderData.L_colors;
+    xColor3b *colorOut    = this->renderData.L_colors + this->I_vertices;
+    for (vertF = vertices.begin(); vertF != vertE; ++vertF, verticesIn += stride, ++L_normals, ++colorIn)
     {
         if (!vertF->size()) continue;
         iterE = vertF->end();
@@ -213,6 +223,7 @@ void xElement :: CalculateSmoothVertices ()
                     memcpy(verticesOut, verticesIn, stride);
                     verticesOut += stride;
                     *(normalP2++) = iterF->mnormal;
+                    memcpy(colorOut++, colorIn, sizeof(xBYTE3));
                 }
                 else
                     *L_normals = iterF->mnormal;

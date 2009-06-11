@@ -62,9 +62,9 @@ void LightSet_GL(xLight &light, bool t_Ambient, bool t_Diffuse, bool t_Specular,
     xVector4 position; position.init(light.position, light.type == xLight_INFINITE ? 0.f : 1.f);
     glLightfv(GL_LIGHT0+light_id, GL_POSITION, position.xyzw);
 
-    glLightfv(GL_LIGHT0+light_id, GL_AMBIENT, t_Ambient ? light.ambient.col : light_off);
-    glLightfv(GL_LIGHT0+light_id, GL_DIFFUSE,  t_Diffuse ? light.diffuse.col : light_off); // direct light
-    glLightfv(GL_LIGHT0+light_id, GL_SPECULAR, t_Specular ? light.diffuse.col : light_off); // light on mirrors/metal
+    glLightfv(GL_LIGHT0+light_id, GL_AMBIENT, t_Ambient ? light.ambient.rgba : light_off);
+    glLightfv(GL_LIGHT0+light_id, GL_DIFFUSE,  t_Diffuse ? light.diffuse.rgba : light_off); // direct light
+    glLightfv(GL_LIGHT0+light_id, GL_SPECULAR, t_Specular ? light.diffuse.rgba : light_off); // light on mirrors/metal
 
     if (light.type != xLight_INFINITE)
     {

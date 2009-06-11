@@ -203,7 +203,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="$(SolutionDir)\..\Lua\libLua"
-				PreprocessorDefinitions="NOMINMAX;WIN32;NDEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400;_CRT_SECURE_NO_DEPRECATE"
+				PreprocessorDefinitions="NOMINMAX;WIN32;CHECK;NDEBUG;_CONSOLE;_WIN32_WINNT=0x0400;WINVER=0x0400;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="2"
@@ -262,97 +262,97 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Source Files"
+			Name="SourceFiles"
 			>
 			<File
-				RelativePath="..\Source Files\ComBoard.cpp"
+				RelativePath="..\SourceFiles\ComBoard.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\ComBoard.h"
+				RelativePath="..\SourceFiles\ComBoard.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\InputCodes.h"
+				RelativePath="..\SourceFiles\InputCodes.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\main.cpp"
+				RelativePath="..\SourceFiles\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneConsole.cpp"
+				RelativePath="..\SourceFiles\SceneConsole.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneConsole.h"
+				RelativePath="..\SourceFiles\SceneConsole.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneGame.cpp"
+				RelativePath="..\SourceFiles\SceneGame.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneGame.h"
+				RelativePath="..\SourceFiles\SceneGame.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneMenu.cpp"
+				RelativePath="..\SourceFiles\SceneMenu.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneMenu.h"
+				RelativePath="..\SourceFiles\SceneMenu.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneSkeleton.cpp"
+				RelativePath="..\SourceFiles\SceneSkeleton.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneSkeleton.h"
+				RelativePath="..\SourceFiles\SceneSkeleton.h"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneSkeletonUpd.cpp"
+				RelativePath="..\SourceFiles\SceneSkeletonUpd.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneTest.cpp"
+				RelativePath="..\SourceFiles\SceneTest.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\Source Files\SceneTest.h"
+				RelativePath="..\SourceFiles\SceneTest.h"
 				>
 			</File>
 			<Filter
 				Name="MenuStates"
 				>
 				<File
-					RelativePath="..\Source Files\MenuStates\BaseState.h"
+					RelativePath="..\SourceFiles\MenuStates\BaseState.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Source Files\MenuStates\CreditsState.h"
+					RelativePath="..\SourceFiles\MenuStates\CreditsState.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Source Files\MenuStates\EditModelState.h"
+					RelativePath="..\SourceFiles\MenuStates\EditModelState.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Source Files\MenuStates\MainState.h"
+					RelativePath="..\SourceFiles\MenuStates\MainState.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Source Files\MenuStates\MenuStates.h"
+					RelativePath="..\SourceFiles\MenuStates\MenuStates.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Source Files\MenuStates\PlayState.h"
+					RelativePath="..\SourceFiles\MenuStates\PlayState.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Source Files\MenuStates\SelectMapState.h"
+					RelativePath="..\SourceFiles\MenuStates\SelectMapState.h"
 					>
 				</File>
 			</Filter>
@@ -492,6 +492,42 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Solids"
+				>
+				<File
+					RelativePath="..\Models\Solids\Dome.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\Solids\Dome.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\Solids\Plane.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\Solids\Sphere.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Particles"
+				>
+				<File
+					RelativePath="..\Models\Particles\Engine.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\Particles\Engine.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Models\Particles\Particle.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Utils"
@@ -560,59 +596,67 @@
 				RelativePath="..\Utils\Utils.h"
 				>
 			</File>
+			<File
+				RelativePath="..\Utils\xString.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\Utils\xString.h"
+				>
+			</File>
 		</Filter>
 		<Filter
-			Name="App Framework"
+			Name="AppFramework"
 			>
 			<File
-				RelativePath="..\App Framework\Application.cpp"
+				RelativePath="..\AppFramework\Application.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\App Framework\Application.h"
+				RelativePath="..\AppFramework\Application.h"
 				>
 			</File>
 			<File
-				RelativePath="..\App Framework\IScene.cpp"
+				RelativePath="..\AppFramework\IScene.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\App Framework\IScene.h"
+				RelativePath="..\AppFramework\IScene.h"
 				>
 			</File>
 			<File
-				RelativePath="..\App Framework\IWindow.cpp"
+				RelativePath="..\AppFramework\IWindow.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\App Framework\IWindow.h"
+				RelativePath="..\AppFramework\IWindow.h"
 				>
 			</File>
 			<File
-				RelativePath="..\App Framework\System.h"
+				RelativePath="..\AppFramework\System.h"
 				>
 			</File>
 			<File
-				RelativePath="..\App Framework\WindowProc.cpp"
+				RelativePath="..\AppFramework\WindowProc.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\App Framework\WindowProcL.cpp"
+				RelativePath="..\AppFramework\WindowProcL.cpp"
 				>
 			</File>
 			<Filter
 				Name="Input"
 				>
 				<File
-					RelativePath="..\App Framework\Input\InputMgr.cpp"
+					RelativePath="..\AppFramework\Input\InputMgr.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\App Framework\Input\InputMgr.h"
+					RelativePath="..\AppFramework\Input\InputMgr.h"
 					>
 				</File>
 				<File
-					RelativePath="..\App Framework\Input\VirtualKeys.h"
+					RelativePath="..\AppFramework\Input\VirtualKeys.h"
 					>
 				</File>
 			</Filter>
@@ -620,19 +664,19 @@
 				Name="OGL"
 				>
 				<File
-					RelativePath="..\App Framework\OGL\GLWindow.cpp"
+					RelativePath="..\AppFramework\OGL\GLWindow.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\App Framework\OGL\GLWindow.h"
+					RelativePath="..\AppFramework\OGL\GLWindow.h"
 					>
 				</File>
 				<File
-					RelativePath="..\App Framework\OGL\GLWindowL.cpp"
+					RelativePath="..\AppFramework\OGL\GLWindowL.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\App Framework\OGL\GLWindowL.h"
+					RelativePath="..\AppFramework\OGL\GLWindowL.h"
 					>
 				</File>
 			</Filter>
@@ -640,11 +684,11 @@
 				Name="D3D"
 				>
 				<File
-					RelativePath="..\App Framework\D3D\DXWindow.cpp"
+					RelativePath="..\AppFramework\D3D\DXWindow.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\App Framework\D3D\DXWindow.h"
+					RelativePath="..\AppFramework\D3D\DXWindow.h"
 					>
 				</File>
 			</Filter>
@@ -684,6 +728,50 @@
 		<Filter
 			Name="Data"
 			>
+			<File
+				RelativePath="..\Data\cameras.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\cameras_auto_1.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\cameras_auto_2.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\cameras_michal.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\cameras_static.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\config.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\keyboard.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\keys.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\log.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\maps.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\Data\players.txt"
+				>
+			</File>
 			<Filter
 				Name="shaders"
 				>
@@ -1081,6 +1169,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Math\xColor4b.h"
+				>
+			</File>
+			<File
 				RelativePath="..\Math\xLight.cpp"
 				>
 			</File>
@@ -1331,11 +1423,63 @@
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\OGL\Font.cpp"
+					RelativePath="..\Graphics\OGL\Font.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\OGL\Font.h"
+					RelativePath="..\Graphics\OGL\FontOGL.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiButton.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiButton.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiCheckBox.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiCheckBox.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiControl.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiControl.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiLabel.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiLabel.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiManager.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiSlider.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiSlider.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiWindow.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\GuiWindow.h"
 					>
 				</File>
 				<File
@@ -1359,15 +1503,19 @@
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\OGL\Texture.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\Graphics\OGL\Texture.h"
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\OGL\Utils.cpp"
+					RelativePath="..\Graphics\OGL\TextureOGL.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\Utils.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Graphics\OGL\UtilsOGL.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1396,10 +1544,6 @@
 							XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 						/>
 					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\Graphics\OGL\Utils.h"
-					>
 				</File>
 				<File
 					RelativePath="..\Graphics\OGL\WorldRenderGL.cpp"
@@ -1498,7 +1642,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\D3D\Font.cpp"
+					RelativePath="..\Graphics\D3D\FontD3D.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1533,7 +1677,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\D3D\Texture.cpp"
+					RelativePath="..\Graphics\D3D\TextureD3D.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1568,7 +1712,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\Graphics\D3D\Utils.cpp"
+					RelativePath="..\Graphics\D3D\UtilsD3D.cpp"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -1617,6 +1761,10 @@
 			</File>
 			<File
 				RelativePath="..\Lua\LuaDebugger.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Lua\luainc.h"
 				>
 			</File>
 			<File

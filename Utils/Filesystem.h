@@ -113,6 +113,8 @@ public:
 
     static std::string  GetFullPath(const std::string &path)
     {
+        if (path.empty())
+            return "";
         if (path[1] != ':' && path[0] != '/')
             return WorkingDirectory + "/" + path;
         return path;

@@ -17,14 +17,17 @@ void WorldRenderGL :: SetLight(xLight &light, bool t_Ambient, bool t_Diffuse, bo
     xVector4 position; position.init(light.position, light.type == xLight_INFINITE ? 0.f : 1.f);
     glLightfv(GL_LIGHT0, GL_POSITION, position.xyzw);
 
-    glLightfv(GL_LIGHT0, GL_AMBIENT, t_Ambient ? light.ambient.col : light_off);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE,  t_Diffuse ? light.diffuse.col : light_off); // direct light
-    glLightfv(GL_LIGHT0, GL_SPECULAR, t_Specular ? light.diffuse.col : light_off); // light on mirrors/metal
+    glLightfv(GL_LIGHT0, GL_AMBIENT, t_Ambient ? light.ambient.rgba : light_off);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  t_Diffuse ? light.diffuse.rgba : light_off); // direct light
+    glLightfv(GL_LIGHT0, GL_SPECULAR, t_Specular ? light.diffuse.rgba : light_off); // light on mirrors/metal
 
-    // rozpraszanie siê œwiat³a
-    glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION,  light.attenuationConst);
-    glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION,    light.attenuationLinear);
-    glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, light.attenuationSquare);
+    if (light.type == xLight_POINT || light.type == xLight_SPOT)
+    {
+        // light attenuation
+        glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION,  light.attenuationConst);
+        glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION,    light.attenuationLinear);
+        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, light.attenuationSquare);
+    }
 
     if (light.type == xLight_SPOT)
     {
@@ -74,7 +77,8 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
     if (GLEW_ARB_multisample)
         glDisable(GL_MULTISAMPLE_ARB);
 
-    glClearColor( world.skyColor.r, world.skyColor.g, world.skyColor.b, world.skyColor.a );
+    //glClearColor( world.skyColor.r, world.skyColor.g, world.skyColor.b, world.skyColor.a );
+    glClearColor( 0.f, 0.f, 0.f, 0.f );
     glDepthMask(1);
     glColorMask(1,1,1,1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -102,6 +106,9 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
         glDisable(GL_BLEND);
         if (world.skyBox)
             renderModel.RenderModel(*world.skyBox->ModelGr->xModelP, world.skyBox->ModelGr->instance, false, camera.FOV);
+
+        if (world.skyDome.IsValid())
+            world.skyDome.Render(camera);
 
         if (GLEW_ARB_multisample && Config::MultisamplingLevel > 0)
             glEnable(GL_MULTISAMPLE_ARB);
@@ -242,6 +249,15 @@ void WorldRenderGL :: RenderWorld(World &world, Math::Cameras::CameraSet &camera
             }
             LT_curr->modified = false;
         }
+
+        ////// PARTICLE ENGINES PASS
+        Shader::Suspend();
+        Shader::SetLightType(xLight_NONE);
+        Shader::EnableTexturing(xState_Off);
+        glEnable (GL_DEPTH_TEST);
+        glDisable(GL_STENCIL_TEST);
+
+        world.particleEngine.Render(camera);
 
         ////// RENDER TRANSPARENT PASS
         {

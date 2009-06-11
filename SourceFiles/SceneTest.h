@@ -7,6 +7,13 @@
 #include "../Graphics/FontMgr.h"
 #include "../Graphics/OGL/ISelectionProvider.h"
 
+#include "../Graphics/OGL/GuiManager.h"
+#include "../Graphics/OGL/GuiWindow.h"
+#include "../Graphics/OGL/GuiButton.h"
+#include "../Graphics/OGL/GuiCheckBox.h"
+#include "../Graphics/OGL/GuiSlider.h"
+#include "../Graphics/OGL/GuiLabel.h"
+
 #include "../Math/Figures/xSphere.h"
 #include "../Math/Figures/xCapsule.h"
 #include "../Math/Figures/xBoxO.h"
@@ -33,6 +40,8 @@ namespace Scenes {
             IScene::Resize(left, top, width, height);
             Camera.FOV.InitPerspective();
             Camera.FOV.InitViewport(left,top,width,height);
+
+            m_cGuiManager.Resize(left, top, width, height);
         }
 
         virtual bool Update(float deltaTime);
@@ -41,6 +50,15 @@ namespace Scenes {
         virtual bool ShellCommand(std::string &cmd, std::string &output);
 
     private:
+
+        ::Graphics::OGL::CGuiManager m_cGuiManager;
+
+        ::Graphics::OGL::CGuiLabel    *pcLabel;
+        ::Graphics::OGL::CGuiButton   *pcBtn1;
+        ::Graphics::OGL::CGuiButton   *pcBtn2;
+        ::Graphics::OGL::CGuiSlider   *pcSlider;
+        ::Graphics::OGL::CGuiCheckBox *pcCheckThisNot;
+        ::Graphics::OGL::CGuiCheckBox *pcCheckThisOut;
 
         ::Physics::PhysicalFigure  pf_sphere1;
         ::Physics::PhysicalFigure  pf_sphere2;
@@ -69,6 +87,9 @@ namespace Scenes {
         virtual void RenderSelect(const Math::Cameras::FieldOfView &FOV);
         virtual unsigned int CountSelectable();
         xDWORD Select(int X, int Y);
+
+    public:
+        EVENT_HANDLER0(CheckThisOut_CheckedChanged, ::Graphics::OGL::CGuiControl, SceneTest);
     };
 
 } // namespace Scenes

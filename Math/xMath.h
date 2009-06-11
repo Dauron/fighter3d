@@ -60,6 +60,7 @@ typedef int16_t   xSHORT;
 typedef int32_t   xLONG;
 typedef float     xFLOAT;
 typedef xBYTE     xBYTE3    [3];
+typedef xBYTE     xBYTE4    [4];
 typedef xWORD     xWORD2    [2];
 typedef xWORD     xWORD3    [3];
 typedef xWORD     xWORD4    [4];
@@ -74,6 +75,7 @@ const xWORD  xWORD_MAX  = (xWORD)-1;
 const xBYTE  xBYTE_MAX  = (xBYTE)-1;
 
 #include "xColor3b.h"
+#include "xColor4b.h"
 
 #include "xVector2.h"
 typedef xVector2 xPoint2;

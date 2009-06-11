@@ -9,6 +9,7 @@
 #include "../Math/Cameras/CameraFree.h"
 
 #include "../Graphics/OGL/WorldRenderGL.h"
+#include "../Graphics/OGL/Shader.h"
 
 #include "../World/ObjectTypes.h"
 
@@ -141,6 +142,30 @@ void SceneGame :: InitInputMgr()
     if (strcmp(Name, "[Game]") == 0)
     {
         // Cameras
+        im.Key2InputCode_SetIfKeyFree(VK_UP,    IC_TurnUp);
+        im.Key2InputCode_SetIfKeyFree(VK_DOWN,  IC_TurnDown);
+        im.Key2InputCode_SetIfKeyFree(VK_LEFT,  IC_TurnLeft);
+        im.Key2InputCode_SetIfKeyFree(VK_RIGHT, IC_TurnRight);
+        im.Key2InputCode_SetIfKeyFree('Y', IC_RollLeft);
+        im.Key2InputCode_SetIfKeyFree('I', IC_RollRight);
+
+        im.Key2InputCode_SetIfKeyFree('J', IC_OrbitUp);
+        im.Key2InputCode_SetIfKeyFree('U', IC_OrbitDown);
+        im.Key2InputCode_SetIfKeyFree('H', IC_OrbitLeft);
+        im.Key2InputCode_SetIfKeyFree('K', IC_OrbitRight);
+
+        im.Key2InputCode_SetIfKeyFree('W', IC_MoveForward);
+        im.Key2InputCode_SetIfKeyFree('S', IC_MoveBack);
+        im.Key2InputCode_SetIfKeyFree('A', IC_MoveLeft);
+        im.Key2InputCode_SetIfKeyFree('D', IC_MoveRight);
+        im.Key2InputCode_SetIfKeyFree('E', IC_MoveUp);
+        im.Key2InputCode_SetIfKeyFree('Q', IC_MoveDown);
+        im.Key2InputCode_SetIfKeyFree(VK_LSHIFT, IC_RunModifier);
+    }
+    else
+    if (strcmp(Name, "[Game_Set1]") == 0)
+    {
+        // Cameras
         im.Key2InputCode_SetIfKeyFree(VK_NUMPAD8, IC_TurnUp);
         im.Key2InputCode_SetIfKeyFree(VK_NUMPAD5, IC_TurnDown);
         im.Key2InputCode_SetIfKeyFree(VK_NUMPAD4, IC_TurnLeft);
@@ -250,6 +275,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     ------------------------------------------------------------------------\n\
     init map            | initm         | reinitialize map (no players)\n\
     init cam            | initc         | reinitialize cameras\n\
+    init shd            | inits         | reinitialize shaders\n\
     level {int}         | level {int}   | load 'level_{int}.map' scene\n\
     speed {float}       | speed {float} | enter clock speed multiplier\n\
     ------------------------------------------------------------------------\n\
@@ -282,6 +308,14 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     {
         Cameras.Free();
         InitCameras();
+        return true;
+    }
+    if (cmd == "inits" || cmd == "init shd")
+    {
+        Graphics::OGL::Shader::DestroyS();
+        Graphics::OGL::Shader::Unload();
+        Graphics::OGL::Shader::Load();
+        //Graphics::OGL::Shader::CreateS();
         return true;
     }
     if (cmd.substr(0, 6) == "speed ")

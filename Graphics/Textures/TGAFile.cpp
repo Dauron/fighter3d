@@ -37,16 +37,16 @@ BYTE    ITEM         SIZE    DESCRIPTION
 // Loads A TGA File Into Memory
 Image *LoadTGA(const char *filename)
 {
-    unsigned char  TGAheader[12] = {1,0,2,0,0,0,0,0,0,0,0,0};  // Uncompressed TGA Header
-    unsigned char  TGAcompare[12];                             // Used To Compare TGA Header
-    unsigned char  header[6+256];                              // First 6 Useful Bytes From The Header
+    unsigned char  TGAheader[12] = {0,0,2,0,0,0,0,0,0,0,0,0};    // Uncompressed TGA Header
+    unsigned char  TGAcompare[12];                               // Used To Compare TGA Header
+    unsigned char  header[6+256];                                // First 6 Useful Bytes From The Header
     Image *texture = new Image();
     texture->type  = Image::TP_UNSIGNED_BYTE;
 
     FILE *file = fopen(filename, "rb");                         // Open The TGA File
     if( file == NULL ||                                         // Does File Even Exist?
         fread(TGAcompare,1,12,file)!=sizeof(TGAcompare) ||      // Are There 12 Bytes To Read?
-        memcmp(TGAheader+1,TGAcompare+1,11) != 0        ||      // Does The Header Match What We Want?
+        memcmp(TGAheader+1,TGAcompare+1,8) != 0         ||      // Does The Header Match What We Want?
         fread(header,1,6+TGAcompare[0],file)!=size_t(6+TGAcompare[0]) ) // If So Read Next 6+offset Header Bytes
     {
         FreeData(file, texture);

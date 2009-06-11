@@ -1,5 +1,5 @@
 [general]
-skip skybox	night.3dx
+#skip skybox	night.3dx
 skycolor 0.8 0.8 1.0
 
 spawn1rot 0 0 180
@@ -10,8 +10,8 @@ spawn2pos -0.5 -2 -0.2
 # LIGHTS
 
 # yellow
-[skip light]
-type	POINT
+[light]
+type	    infinite
 att_const   0.9
 att_linear  0.005
 att_square  0.0005

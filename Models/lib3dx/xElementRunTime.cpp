@@ -87,6 +87,8 @@ void xRenderData :: Destroy(const xElement &elem)
         delete[] this->L_faces;
     if (this->L_vertices && elem.L_vertices != this->L_vertices)
         delete[] this->L_vertices;
+    if (this->L_colors && elem.L_colors != this->L_colors)
+        delete[] this->L_colors;
     if (this->L_normals)
         delete[] this->L_normals;
     if (this->L_face_normals)

@@ -3,12 +3,22 @@
 
 #include "../Physics/PhysicalWorld.h"
 #include "RigidObj.h"
+#include "../Models/Solids/Dome.h"
+#include "../Models/Particles/Engine.h"
 
 class World : public Physics::PhysicalWorld
 {
 public:
     Vec_Object objects;
     Vec_xLight lights;
+
+    Models::Particles::
+    CEngine         particleEngine;
+
+    Models::Solids::
+    CDome           skyDome;
+    xPoint3         P_Sun;
+    xColor3b        P_SunColor;
 
     RigidObj *skyBox;
     xColor    skyColor;
