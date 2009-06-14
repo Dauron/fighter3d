@@ -1,0 +1,29 @@
+#include "rtti.h"
+#include <iostream>
+
+class RootClass : public CObject
+{
+  DECLARE_CLASS(RootClass, CObject);
+
+};
+
+IMPLEMENT_CLASS(RootClass);
+
+class ChildClass : public RootClass
+{
+  DECLARE_CLASS(ChildClass, RootClass);
+};
+
+IMPLEMENT_CLASS(ChildClass);
+
+int main()
+{
+  RootClass  root;
+  ChildClass child;
+
+  std::cout << child.IsA( CLASS_ID<int>() ) << "\n";
+  std::cout << child.IsA( CLASS_ID<RootClass>() ) << "\n";
+  std::cout << child.IsA( CLASS_ID<ChildClass>() )  << "\n";
+
+  return 0;
+}
