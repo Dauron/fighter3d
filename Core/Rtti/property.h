@@ -2,9 +2,9 @@
 #define __Core_Rtti_property_h
 
 #define ADD_PROPERTY( PROPERTY, DESCRIPTION ) \
-    TThisClass::sm_Properties.push_back( CProperty( this, this->PROPERTY, #PROPERTY, DESCRIPTION ) );
+    TThisClass::sm_Properties.push_back( new CProperty< typeof(PROPERTY) >( this, this->PROPERTY, #PROPERTY, DESCRIPTION ) );
 
-//#include "../stream.h"
+#include "../Stream/stream.h"
 
 class CObject;
 
@@ -17,7 +17,7 @@ protected:
     String        m_sDescription;
 
 public:
-    IProperty( Uint nOffset, String sName, String sDescription )
+    IProperty( Uint nOffset, const String &sName, const String &sDescription )
       : m_nOffset     ( nOffset )
       , m_sName       ( sName )
       , m_sDescription( sDescription)
@@ -25,18 +25,18 @@ public:
     }
     virtual ~IProperty() {}
 
-//    virtual void Serialize( CObject *owner, IStream &stream ) const
-//    {
-        // stream << m_sName;
-//    }
+    const String & GetName()        { return m_sName; }
+    const String & GetDescription() { return m_sDescription; }
+
+    virtual void Serialize( CObject *owner, IStream &stream ) const = 0;
 };
 
 template< typename PropertyType >
 class CProperty : public IProperty
 {
 public:
-    CProperty( CObject *owner, PropertyType &property, String sName, String sDescription )
-      : IProperty( static_cast<char*>( &property ) - static_cast<char*>( owner )
+    CProperty( CObject *owner, PropertyType &property, const String &sName, const String &sDescription )
+      : IProperty( reinterpret_cast<char*>( &property ) - reinterpret_cast<char*>( owner )
                  , sName, sDescription )
     {
     }
@@ -44,11 +44,11 @@ public:
 
     PropertyType &Get( CObject *owner ) const
     {
-        return *static_cast<PropertyType*>( static_cast<void*>( owner ) + m_nOffset );
+        return *reinterpret_cast<PropertyType*>( reinterpret_cast<char*>( owner ) + m_nOffset );
     }
     const PropertyType &Get( const CObject *owner ) const
     {
-        return *static_cast<const PropertyType*>( static_cast<const void*>( owner ) + m_nOffset );
+        return *reinterpret_cast<const PropertyType*>( reinterpret_cast<const char*>( owner ) + m_nOffset );
     }
 
     void Set( CObject *owner, const PropertyType &value ) const
@@ -56,12 +56,10 @@ public:
         Get( owner ) = value;
     }
 
-//    virtual void Serialize( CObject *owner, IStream &stream ) const
-//    {
-//        IProperty::Serialize( owner, stream );
-//
-//        Get( owner ).Serialize( stream );
-//    }
+    virtual void Serialize( CObject *owner, IStream &stream ) const
+    {
+        stream << Get( owner );
+    }
 };
 
 #endif

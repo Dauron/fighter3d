@@ -1,8 +1,6 @@
 #ifndef __Core_Rtti_class_h
 #define __Core_Rtti_class_h
 
-#include <vector>
-
 #include "classid.h"
 #include "property.h"
 
@@ -22,20 +20,8 @@ inline T *Cast( F *object )
                                                     \
     static const ClassId sm_ClassId;                \
                                                     \
-    void InitClassInfo()                            \
-    {                                               \
-        sm_Properties.clear();                      \
-        InitProperties();                           \
-    }                                               \
-                                                    \
   protected:                                        \
     Bool m_bCreated;                                \
-                                                    \
-    typedef std::vector<IProperty> TPropertyVector; \
-    static TPropertyVector sm_Properties;           \
-                                                    \
-    /* Add properties here */                       \
-    virtual void InitProperties() {}                \
                                                     \
   public:                                           \
     static const ClassId &GetClassId()              \

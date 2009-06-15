@@ -1,0 +1,57 @@
+#include "Rtti/rtti.h"
+#include <iostream>
+
+class RootClass : public CObject
+{
+  DECLARE_CLASS(RootClass, CObject);
+
+  Int32  m_nVersion;
+  String m_sName;
+
+  virtual void InitProperties()
+  {
+    ADD_PROPERTY(m_nVersion, TXT("Version number"));
+    ADD_PROPERTY(m_sName,    TXT("Name"));
+  }
+
+public:
+  RootClass(Int32 nVersion, const String &sName)
+    : m_nVersion ( nVersion )
+    , m_sName    ( sName )
+  {}
+};
+
+IMPLEMENT_CLASS(RootClass);
+
+class ChildClass : public RootClass
+{
+  DECLARE_CLASS(ChildClass, RootClass);
+
+public:
+  ChildClass(Int32 nVersion, const String& sName)
+    : RootClass( nVersion, sName )
+  {}
+};
+
+IMPLEMENT_CLASS(ChildClass);
+
+int main()
+{
+  RootClass  root(2, TXT("RootClass"));
+  ChildClass child(3, TXT("ChildClass"));
+
+  std::cout << child.IsA( CLASS_ID<Int>() ) << "\n";
+  std::cout << child.IsA( CLASS_ID<RootClass>() ) << "\n";
+  std::cout << child.IsA( CLASS_ID<ChildClass>() )  << "\n";
+
+  String serialized;
+  
+  CStringWriter writer( serialized );
+
+  writer << root;
+  writer << child;
+
+  std::cout << serialized << '\n';
+
+  return 0;
+}
