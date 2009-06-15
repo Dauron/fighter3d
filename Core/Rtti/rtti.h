@@ -1,14 +1,7 @@
 #ifndef __Core_Rtti_rtti_h
 #define __Core_Rtti_rtti_h
 
-#include <vector>
-
-#include <string>
-typedef std::string String;
-
-//#include "../types.h"
-typedef bool Bool;
-typedef unsigned int Uint;
+#include "../types.h"
 
 #include "classid.h"
 #include "class.h"
@@ -17,11 +10,24 @@ typedef unsigned int Uint;
 class CObject
 {
     DECLARE_ROOT_CLASS( CObject );
+
+protected:
+    typedef TDArray<IProperty*> TPropertyVector;
+    static  TPropertyVector     sm_Properties;
+
+    /* Used by Rtti */
+    void InitClassInfo();
+
+    /* Add properties here */
+    virtual void InitProperties() {}
+
+public:
+    virtual void Serialize( IStream & stream );
 };
 
 class CRtti
 {
-    typedef std::vector< CObject* > TObjectPVector;
+    typedef TDArray< CObject* > TObjectPVector;
 
     TObjectPVector m_ObjectTypes;
 
