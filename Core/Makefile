@@ -1,4 +1,4 @@
 
 release:
-	g++ test.cpp Stream/stringw.cpp Rtti/rtti.cpp
+	g++ -include core.h test.cpp Stream/stringw.cpp Stream/stringr.cpp Rtti/rtti.cpp
 

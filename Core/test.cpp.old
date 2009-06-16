@@ -53,5 +53,14 @@ int main()
 
   std::cout << serialized << '\n';
 
+  CStringReader reader( serialized );
+  reader << child;
+
+  serialized.clear();
+
+  writer << child;
+
+  std::cout << serialized << '\n';
+
   return 0;
 }
