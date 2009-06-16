@@ -18,6 +18,7 @@ typedef signed   long  Int32;
 typedef float          Float32;
 typedef double         Float64;
 
+typedef char           Char;
 typedef std::string    String;
 #define TXT(a)         (a)
 #define TDArray        std::vector
@@ -69,8 +70,6 @@ typedef Float32   Float32_3   [3];
 typedef Float32   Float32_4   [4];
 
 typedef Float32   Float32_4x4 [4][4];
-
-#include "tostring.h"
 
 #endif
 

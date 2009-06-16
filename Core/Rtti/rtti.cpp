@@ -15,13 +15,43 @@ void CObject::InitClassInfo()
 void CObject::Serialize( IStream &stream )
 {
     if ( stream.IsWriter() )
-        for ( Uint i = 0; i < sm_Properties.size(); ++i )
+    {
+        Uint32 numProperties = sm_Properties.size();
+        stream << numProperties;
+
+        for ( Uint i = 0; i < numProperties; ++i )
         {
+            CSkippableBlock block( stream );
+
             IProperty &property = *sm_Properties[i];
 
             String propertyName = property.GetName();
             stream << propertyName;
             stream.Append( *this, property );
         }
+    }
+    else
+    {
+        Uint32 numProperties;
+        stream << numProperties;
+
+        while ( numProperties-- )
+        {
+            CSkippableBlock block( stream );
+
+            String propertyName;
+            stream << propertyName;
+
+            for ( Uint i = 0; i < sm_Properties.size(); ++i )
+            {
+                IProperty &property = *sm_Properties[i];
+                if ( property.GetName() == propertyName )
+                {
+                    stream.Append( *this, property );
+                    break;
+                }
+            }
+        }
+     }
 }
 
