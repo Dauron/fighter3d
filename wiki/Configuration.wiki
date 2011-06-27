@@ -5,11 +5,11 @@
 
 Currently there is no visual configuration of the game. However, it is highly modable via number of configuration files. Some of the settings may be changed during runtime via console (``` for entering the console, `?[ENTER]` for displaying commands available for current scene).
 
-Ale the configuration files obey the following conventions:
+All configuration files obey the following conventions:
  * empty lines and lines beginning with '#' character are ignored
  * lines with unrecognised content are ignored
  * main sections start with `[section name]` line
- * if the section name in unrecognised, all following lines till the next session are ignored. This property is often used in the map files - for skipping models `[skip model]` section is used
+ * if the section name in unrecognised, all following lines till the next section are ignored. This property is often used in the map files - for skipping models `[skip model]` section is used
  * content of the line that follows list of expected parameters is ignored, but for clarity I precede such comments with '#' character
  ex. {{{ Lighting 2 # 0 = none, 1 = basic, 2 = full }}}
  * text parameters are single word by default - you must use quotation marks to enter more words. To insert quotation mark in the text, enter two quotation marks
