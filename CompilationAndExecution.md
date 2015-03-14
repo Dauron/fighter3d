@@ -1,0 +1,47 @@
+# Introduction #
+
+Project is written in C++ and uses OpenGL instructions for rendering. This design potentially allows for running the game on any modern operating system made for the PC.
+
+# Compilation #
+
+## Windows ##
+
+Prepared Visual Studio 2005 solution is self-sufficient. It already contains source code of the lib3ds and libLua, which are the only auxiliary library used in the project. Solution uses also OpenGL library, but it should be available on any computer with Visual Studio.
+
+There are two build configurations available:
+  * Debug - compiles project with debugging info to `\fighter_dbg.exe` output file
+  * Release - compiles project into release `\fighter.exe` executable
+
+## Linux ##
+
+Several external packages must be installed before compiling project under Linux. The project depends on following libraries:
+> `-lGLEW -lGLU -lGL -lXxf86vm -l3ds -llua5.1 -lm`
+Most probably the packages will be named something like:
+  * libGLdev
+  * libGLUdev
+  * libGLEWdev
+  * libXxf86vmdev
+  * lib3dsdev
+  * liblua5.1dev
+
+There are four Makefile configurations available:
+  * `make auto` - initializes/reinitializes automake environment - should be called when new files has been added to the project
+  * `make debug` - compiles project with debugging info to `\fighter_dbg` output file
+  * `make release` - compiles project into release `\fighter` executable
+  * `make clean` - clean-ups automake environment (but doesn't remove `\Debug` nor `\Release` directories and executables) - should be called before svn submits, to clean-up the `\Makefile`.
+
+If the `\Makefile` is corrupted, you should explicitly call the `\make_auto` script to regenerate automake environment and create cleaned Makefile (stored in `\Makefile.def` till `make clean` is called).
+
+# Execution #
+
+Each release branch already contains executables compiled under Windows (`\fighter.exe`) and Ubuntu (`\fighter`).
+
+The game is highly modable - new maps and fighting styles may be created via configuration files. All configuration options are described on the [Configuration](Configuration.md) page.
+
+## Known problems and solutions ##
+
+Default configuration should work on most PCs. However, I've met one computer, which produced errors when trying to use VBO OpenGL extension. If unknown errors appear, try setting the UseVBO propery to 0 (`\Data\config.txt` file).
+
+Another error that I've seen on an old graphics card was improper font rendering when multisampling is used. If you don't see text on map or player selection screens, try setting Multisamplint property to 0 (`\Data\config.txt` file).
+
+Before switching to full screen (F11), you should verify that configured resolution is supported by your graphics card. Default 1280x1024 should be a safe choice nowadays, but it's worth to change it to the monitor's optimal value.
