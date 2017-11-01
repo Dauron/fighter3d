@@ -19,7 +19,7 @@ bool SceneMenu :: Create(int left, int top, unsigned int width, unsigned int hei
     root->Init(NULL);
     Menu::BaseState::SwitchState(*root);
 
-    wglSwapIntervalEXT(Config::VSync ? 1 : 0);
+    SetVSync_GL(Config::VSync);
 
     return true;
 }
