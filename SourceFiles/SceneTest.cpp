@@ -82,7 +82,7 @@ bool SceneTest::Create(int left, int top, unsigned int width, unsigned int heigh
 
     InitInputMgr();
 
-    wglSwapIntervalEXT(Config::VSync ? 1 : 0);
+    SetVSync_GL(Config::VSync);
 
     return true;
 }
