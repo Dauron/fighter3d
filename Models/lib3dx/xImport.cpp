@@ -6,7 +6,6 @@
 
 #ifdef WIN32
 
-#pragma warning(disable : 4996) // deprecated
 #include "../lib3ds/camera.h"
 #include "../lib3ds/mesh.h"
 #include "../lib3ds/node.h"

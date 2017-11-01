@@ -4,7 +4,6 @@
 #ifdef WIN32
 
 #include <windows.h>
-#pragma warning(disable : 4996) // deprecated
 
 #else
 
