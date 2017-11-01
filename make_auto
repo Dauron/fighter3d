@@ -1,0 +1,116 @@
+#!/bin/sh
+
+cat >Makefile.am <<EOF
+bin_PROGRAMS = fighter
+
+LDADD += -lGLEW \
+         -lGLU \
+         -lGL \
+         -l3ds \
+         -llua5.1 \
+         -lXxf86vm \
+         -lX11 \
+         -lm
+SOURCES = \\
+EOF
+
+find | grep -v "^./Doc" | grep -e '\.cpp$' | sed -e 's/$/ \\/' | sed -e '$ s/ \\$//' >>Makefile.am
+
+cat >>Makefile.am <<EOF
+
+fighter_SOURCES  = \$(SOURCES)
+fighter_LDADD    = \$(LDADD)
+fighter_CPPFLAGS = -Wall
+
+release:
+	mv config.status config.status.org
+
+	if test ! -d Release ; then mkdir Release; cd Release; ../configure CPPFLAGS='-O2'; fi
+	( cd Release && make && cp fighter ../fighter )  || echo "build failed"
+
+	mv config.status.org config.status
+
+debug:
+	mv config.status config.status.org
+
+	if test ! -d Debug ; then mkdir Debug; cd Debug; ../configure CPPFLAGS='-ggdb'; fi
+	( cd Debug && make && cp fighter ../fighter_dbg )  || echo "build failed"
+
+	mv config.status.org config.status
+
+auto:
+	./make_auto
+
+clean:
+	-mv fighter fighter.org
+
+	make distclean
+
+	rm -rf autom4te.cache .deps
+	rm -f \$(DIST_COMMON)
+
+	mv Makefile.def Makefile
+	-mv fighter.org fighter
+EOF
+
+cat >Makefile.def <<EOF
+all: release
+
+auto:
+	./make_auto
+
+debug:
+	./make_auto
+	make debug
+
+release:
+	./make_auto
+	make release
+
+clean:
+	echo "Workspace is clean"
+
+EOF
+
+cat >configure.ac <<EOF
+AC_INIT(Config.cpp)
+AM_INIT_AUTOMAKE(fighter,1.1)
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_OUTPUT(Makefile)
+EOF
+
+cat >AUTHORS <<EOF
+Dariusz Maciejewski <darekmac@gmail.com>
+EOF
+
+touch ChangeLog
+touch NEWS
+touch README
+
+aclocal
+autoconf
+automake -a
+./configure
+
+rm -f *.o
+rm -f *.tab.c
+test -z "" || rm -f
+rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
+rm -f config.cache config.log configure.lineno config.status.lineno
+mv config.status config.status.org
+
+ROOT=`pwd`
+
+if test ! -d Debug ; then mkdir Debug; fi
+cd Debug && ../configure CPPFLAGS='-ggdb'
+
+cd $ROOT
+
+if test ! -d Release ; then mkdir Release; fi
+cd Release && ../configure CPPFLAGS='-O2'
+
+cd $ROOT
+
+mv config.status.org config.status
+
