@@ -6,9 +6,7 @@
 #include "Filesystem.h"
 #include <GL/gl.h>
 
-#ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
-#else
+#ifndef WIN32
 #include <stdarg.h>
 #endif
 

@@ -1,10 +1,6 @@
 #include <cstdio>
 #include "xAnimation.h"
 
-#ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
-#endif
-
 void xKeyFrame::LoadFromSkeleton(const xSkeleton &spine)
 {
     spine.QuatsToArray(QT_bones);

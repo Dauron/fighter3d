@@ -2,8 +2,7 @@
 #define __incl_Utils_h
 
 #ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
-#define strcasecmp  stricmp
+#   define strcasecmp  stricmp
 #endif
 
 #include <sstream>

@@ -4,8 +4,6 @@
 
 #ifdef WIN32
 
-#pragma warning(disable : 4996) // deprecated
-
 #include "../../Graphics/OGL/Extensions/wglext.h"
 
 bool GLWindow::Create()

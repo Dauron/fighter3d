@@ -3,10 +3,6 @@
 #include <vector>
 #include "../../Utils/Debug.h"
 
-#ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
-#endif
-
 /* SKELETON */
 void _xElement_SkeletonAdd(xElement *elem)
 {

@@ -1,10 +1,6 @@
 #include <fstream>
 #include "InputMgr.h"
 
-#ifdef WIN32
-#pragma warning(disable : 4996) // deprecated
-#endif
-
 void InputMgr :: Key2InputCode_Set(byte kCode, int iCode)
 {
     int kIndex = KeyCode2Index(kCode);
