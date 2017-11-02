@@ -50,10 +50,10 @@ void Camera :: Update(xFLOAT T_delta)
     EyeTracker.UpdateDestination();
     CenterTracker.UpdateDestination();
 
-    xFLOAT W_weight = min(W_TrackingSpeed * T_delta, 1.f);
-
-    EyeTracker.InterpolatePosition(P_eye, CenterTracker.P_destination, W_weight);
-    CenterTracker.InterpolatePosition(P_center, EyeTracker.P_destination, W_weight);
+    xFLOAT W_weightEye = min(W_TrackingSpeedEye * T_delta, 1.f);
+    EyeTracker.InterpolatePosition(P_eye, CenterTracker.P_destination, W_weightEye);
+    xFLOAT W_weightCtr = min(W_TrackingSpeedCtr * T_delta, 1.f);
+    CenterTracker.InterpolatePosition(P_center, EyeTracker.P_destination, W_weightCtr);
 
     xVector3 NW_front = P_center - P_eye;
     NW_up = xVector3::CrossProduct(
@@ -70,7 +70,7 @@ void Camera :: Update(xFLOAT T_delta)
         else
         {
             xQuaternion QT_rot = xQuaternion::GetRotation(NW_up, N_up).
-                interpolate(W_weight);
+                interpolate(max(W_weightEye,W_weightCtr));
             if (QT_rot.w < 0.99f)
                 NW_up = QT_rot.rotate(NW_up);
             else
