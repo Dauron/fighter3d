@@ -152,6 +152,9 @@ xVector3 CameraHuman::OrthoPointUp(const xVector3 &source, const xVector3 &oldUp
 // rotate 2D point by given angle
 void CameraHuman::RotatePoint(xFLOAT &pX, xFLOAT &pY, xFLOAT angle)
 {
+    if ( pX*pX < EPSILON && pY*pY < EPSILON ) {
+        return;
+    }
     xFLOAT radius = sqrt ( pX * pX + pY * pY );
 
     angle = atan2(pY,pX) + angle;
