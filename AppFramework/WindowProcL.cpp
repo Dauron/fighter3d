@@ -46,9 +46,9 @@ bool WindowProc(IWindow *thisWnd, XEvent &event)
             if (event.xbutton.button == Button1)
                 g_InputMgr.KeyDown_Set(VK_LBUTTON, true);
             if (event.xbutton.button == Button2)
-                g_InputMgr.KeyDown_Set(VK_RBUTTON, true);
-            if (event.xbutton.button == Button3)
                 g_InputMgr.KeyDown_Set(VK_MBUTTON, true);
+            if (event.xbutton.button == Button3)
+                g_InputMgr.KeyDown_Set(VK_RBUTTON, true);
             if (event.xbutton.button == Button4)
                 g_InputMgr.mouseWheel += 120;
             if (event.xbutton.button == Button5)
@@ -58,9 +58,9 @@ bool WindowProc(IWindow *thisWnd, XEvent &event)
             if (event.xbutton.button == Button1)
                 g_InputMgr.KeyDown_Set(VK_LBUTTON, false);
             if (event.xbutton.button == Button2)
-                g_InputMgr.KeyDown_Set(VK_RBUTTON, false);
-            if (event.xbutton.button == Button3)
                 g_InputMgr.KeyDown_Set(VK_MBUTTON, false);
+            if (event.xbutton.button == Button3)
+                g_InputMgr.KeyDown_Set(VK_RBUTTON, false);
             break;
         case MotionNotify:
             g_InputMgr.mouseX = event.xmotion.x;
