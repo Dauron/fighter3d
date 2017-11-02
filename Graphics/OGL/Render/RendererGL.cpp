@@ -33,7 +33,9 @@ void RendererGL :: InitVBO (xElement *elem)
 
 void RendererGL :: InitTextures(xModel &model)
 {
-    if (!model.FL_textures_loaded)
+    if (model.FL_textures_loaded)
+        return;
+
     for (xMaterial *mat = model.L_material; mat; mat = mat->Next)
         if (mat->texture.Name)
         {
@@ -189,7 +191,7 @@ void RenderElementFacesVBO(
         float g = (rand() % 9) / 10.f;
         float b = (rand() % 9) / 10.f;
         glColor3f(0.1f+r, 0.1f+g, 0.1f+b);
-        glDrawElements( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, (GLvoid*) (*iter - (xDWORD)elem->L_faces) );
+        glDrawElements( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, (GLvoid*) (*iter - (off_t)elem->L_faces) );
     }
     /*
     if (elem->collisionData.hierarchyP)
@@ -248,7 +250,7 @@ void RenderElementFacesLST(
         float g = (rand() % 9) / 10.f;
         float b = (rand() % 9) / 10.f;
         glColor3f(0.1f+r, 0.1f+g, 0.1f+b);
-        glDrawElements( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, (GLvoid *) *iter );
+        glDrawElements( GL_TRIANGLES, 3, GL_UNSIGNED_SHORT, (GLvoid *)(off_t)*iter );
     }
     /*
     if (elem->collisionData.hierarchyP)

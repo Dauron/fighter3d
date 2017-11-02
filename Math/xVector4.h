@@ -37,7 +37,7 @@ struct xVector4 {
         assert (i<4);
         return xyzw[i];
     }
-    const xFLOAT operator [] (unsigned int i) const {
+    xFLOAT operator [] (unsigned int i) const {
         assert (i<4);
         return xyzw[i];
     }

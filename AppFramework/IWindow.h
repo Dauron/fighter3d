@@ -41,6 +41,7 @@ public:
     WindowResizeEvent OnResize;
 
     IWindow() { Clear(); }
+    virtual ~IWindow() = default;
 
     virtual void Clear()
     {

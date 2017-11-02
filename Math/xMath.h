@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
+#include <stdint.h>
 
 const float  PI     = 3.1415926535f;
 const float  PI_inv = 1 / PI;
@@ -51,22 +52,22 @@ static inline float Sign(float f)
 
 typedef unsigned int   uint;
 
-typedef unsigned char  xBYTE;
-typedef unsigned short xWORD;
-typedef unsigned long  xDWORD;
-typedef signed   char  xCHAR;
-typedef signed   short xSHORT;
-typedef signed   long  xLONG;
-typedef float  xFLOAT;
-typedef xBYTE  xBYTE3    [3];
-typedef xWORD  xWORD2    [2];
-typedef xWORD  xWORD3    [3];
-typedef xWORD  xWORD4    [4];
-typedef xDWORD xDWORD4   [4];
-typedef xFLOAT xFLOAT2   [2];
-typedef xFLOAT xFLOAT3   [3];
-typedef xFLOAT xFLOAT4   [4];
-typedef xFLOAT xFLOAT4x4 [4][4];
+typedef uint8_t   xBYTE;
+typedef uint16_t  xWORD;
+typedef uint32_t  xDWORD;
+typedef int8_t    xCHAR;
+typedef int16_t   xSHORT;
+typedef int32_t   xLONG;
+typedef float     xFLOAT;
+typedef xBYTE     xBYTE3    [3];
+typedef xWORD     xWORD2    [2];
+typedef xWORD     xWORD3    [3];
+typedef xWORD     xWORD4    [4];
+typedef xDWORD    xDWORD4   [4];
+typedef xFLOAT    xFLOAT2   [2];
+typedef xFLOAT    xFLOAT3   [3];
+typedef xFLOAT    xFLOAT4   [4];
+typedef xFLOAT    xFLOAT4x4 [4][4];
 
 const xDWORD xDWORD_MAX = (xDWORD)-1;
 const xWORD  xWORD_MAX  = (xWORD)-1;

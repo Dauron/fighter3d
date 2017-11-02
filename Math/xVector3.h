@@ -18,7 +18,7 @@ union xVector3 {
 //    xVector3(const xVector3 &src) {
 //        *this = src;
 //    }
-    static xVector3 Create(xFLOAT X, xFLOAT Y, xFLOAT Z) { xVector3 res;        return res.init(X,Y,Z); }
+    static xVector3 Create(xFLOAT X, xFLOAT Y, xFLOAT Z) { xVector3 res; res.init(X,Y,Z); return res; }
     xVector3       &init  (xFLOAT X, xFLOAT Y, xFLOAT Z) { x = X; y = Y; z = Z; return *this; }
     xVector3       &zero  ()                             { x = y = z = 0.f;     return *this; }
 
@@ -27,7 +27,7 @@ union xVector3 {
         assert (i<3);
         return xyz[i];
     }
-    const xFLOAT operator [] (unsigned int i) const {
+    xFLOAT operator [] (unsigned int i) const {
         assert (i<3);
         return xyz[i];
     }

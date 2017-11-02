@@ -107,11 +107,13 @@ void ComBoard :: Update(xFLOAT T_delta, bool FL_keyboard_on)
 
         int key = combo.Key;
         if (FL_mirror)
+        {
             if (key >= Combo::Keys::LeftFirst && key <= Combo::Keys::LeftLast)
                 key += Combo::Keys::RightFirst - Combo::Keys::LeftFirst;
             else
             if (key >= Combo::Keys::RightFirst && key <= Combo::Keys::RightLast)
                 key += Combo::Keys::LeftFirst - Combo::Keys::RightFirst;
+        }
 
         if (g_InputMgr.InputDown_GetAndRaise(PlayerSet + key - Combo::Keys::FirstKey))
         {

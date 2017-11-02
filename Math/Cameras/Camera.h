@@ -51,6 +51,8 @@ namespace Math { namespace Cameras {
         static const TrackingScript SCRIPT_EyeSeeAll_CenterTop;
         static const TrackingScript SCRIPT_EyeSeeAll_Radius;
 
+        virtual ~Camera() = default;
+
         virtual void Init()
         { Init (0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 1.f); }
         virtual void Init (xFLOAT eyex, xFLOAT eyey, xFLOAT eyez,

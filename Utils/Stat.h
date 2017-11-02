@@ -9,6 +9,8 @@ typedef std::vector<std::string> Vec_string;
 struct Stat_Base {
     std::string Name;
 
+    virtual ~Stat_Base() = default;
+
     virtual const char* Print() = 0;
 };
 

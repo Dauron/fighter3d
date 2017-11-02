@@ -99,7 +99,9 @@ void xElement :: CalculateSmoothVertices ()
             iterE  = vertF->end();
             iterE2 = vertF2->end();
             for (iterF = vertF->begin(); iterF != iterE; ++iterF)
+            {
                 for (iterF2 = vertF2->begin(); iterF2 != iterE2; ++iterF2)
+                {
                     if (iterF->smooth & iterF2->smooth)
                     {
                         iterF->mnormal  += iterF2->normal;
@@ -107,6 +109,8 @@ void xElement :: CalculateSmoothVertices ()
                         iterF2->mnormal += iterF->normal;
                         iterF2->mcount  += iterF->count;
                     }
+                }
+            }
         }
     }
 
@@ -117,6 +121,7 @@ void xElement :: CalculateSmoothVertices ()
 
         iterE = vertF->end();
         for (iterF = vertF->begin(); iterF != iterE; ++iterF)
+        {
             if (!iterF->mergedWith)
             {
                 xDWORD msmooth = iterF->smooth;
@@ -127,6 +132,7 @@ void xElement :: CalculateSmoothVertices ()
                         iterF2->mergedWith = &*iterF;
                     }
             }
+        }
     }
 
     //// normalize normals and assign ids for new vertex duplicates
@@ -137,6 +143,7 @@ void xElement :: CalculateSmoothVertices ()
         bool used = false;
         iterE = vertF->end();
         for (iterF = vertF->begin(); iterF != iterE; ++iterF)
+        {
             if (!iterF->mergedWith)
             {
                 iterF->mnormal /= (float)iterF->mcount;
@@ -151,6 +158,7 @@ void xElement :: CalculateSmoothVertices ()
             }
             else
                 iterF->vertexId = iterF->mergedWith->vertexId;
+        }
     }
 
     this->renderData.I_vertices = verticesC;
@@ -169,18 +177,22 @@ void xElement :: CalculateSmoothVertices ()
         faceIn  = this->L_faces;
         xFace *faceOut = this->renderData.L_faces;
         for (int fP=this->I_faces; fP; --fP, ++smooth, ++faceIn, ++faceOut)
+        {
             for (int i=0; i<3; ++i)
             {
                 int  idx = (*faceOut)[i] = (*faceIn)[i];
                 iterE = vertices[idx].end();
                 for (iterF = vertices[idx].begin(); iterF != iterE; ++iterF)
+                {
                     if (iterF->smooth == *smooth && (*smooth || iterF->flatFace == faceIn))
                     {
                         if (iterF->vertexId) idx = iterF->vertexId;
                         (*faceOut)[i] = idx;
                         break;
                     }
+                }
             }
+        }
     }
 
     this->renderData.L_normals   = new xVector3[verticesC];
@@ -193,7 +205,9 @@ void xElement :: CalculateSmoothVertices ()
         if (!vertF->size()) continue;
         iterE = vertF->end();
         for (iterF = vertF->begin(); iterF != iterE; ++iterF)
+        {
             if (!iterF->mergedWith)
+            {
                 if (iterF->vertexId)
                 {
                     memcpy(verticesOut, verticesIn, stride);
@@ -202,6 +216,8 @@ void xElement :: CalculateSmoothVertices ()
                 }
                 else
                     *L_normals = iterF->mnormal;
+            }
+        }
     }
 }
 

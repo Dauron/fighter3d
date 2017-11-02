@@ -87,7 +87,7 @@ void Application::Destroy()
 int Application::Run()
 {
     float T_currrent  = GetTick();
-    float T_preRender = T_currrent;
+    //float T_preRender = T_currrent;
     float T_prev;
 
     g_Profiler.ClearSamples();
@@ -108,7 +108,7 @@ int Application::Run()
 
             Update(T_total * 0.001f);
 
-            T_preRender = GetTick();
+            //T_preRender = GetTick();
             Render();
 
             if (!MainWindow || MainWindow->IsDestroyed()) return 0;

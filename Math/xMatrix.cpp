@@ -266,31 +266,34 @@ xQuaternion xMatrixToQuaternion(const xMatrix &m)
     /* w >= 0.5 ? */
     if (Tr >= 1.0)
     {
-    fourD = 2.0*sqrt(Tr);
+        fourD = 2.0*sqrt(Tr);
         q.w = fourD/4.0;
-    q.x = (m.z1 - m.y2)/fourD;
-    q.y = (m.x2 - m.z0)/fourD;
-    q.z = (m.y0 - m.x1)/fourD;
+        q.x = (m.z1 - m.y2)/fourD;
+        q.y = (m.x2 - m.z0)/fourD;
+        q.z = (m.y0 - m.x1)/fourD;
     }
     else
     {
-    /* Find the largest component. */
-    if (m.x0 > m.y1)
-        i = 0;
-    else
-        i = 1;
-        if (m.z2 > m.matrix[i][i])
-        i = 2;
+        /* Find the largest component. */
+        if (m.x0 > m.y1) {
+            i = 0;
+        }
+        else {
+            i = 1;
+        }
+        if (m.z2 > m.matrix[i][i]) {
+            i = 2;
+        }
 
-    /* Set j and k to point to the next two components */
-    j = (i+1)%3;
-    k = (j+1)%3;
-    /* fourD = 4 * largest component */
+        /* Set j and k to point to the next two components */
+        j = (i+1)%3;
+        k = (j+1)%3;
+        /* fourD = 4 * largest component */
         fourD = 2.0*sqrt(m.matrix[i][i] - m.matrix[j][j] - m.matrix[k][k] + 1.0 );
-    /* Set the largest component */
+        /* Set the largest component */
         q.xyzw[i] = fourD/4.0;
-    /* Calculate remaining components */
-    q.xyzw[j]  = (m.matrix[j][i] + m.matrix[i][j])/fourD;
+        /* Calculate remaining components */
+        q.xyzw[j]  = (m.matrix[j][i] + m.matrix[i][j])/fourD;
         q.xyzw[k]  = (m.matrix[k][i] + m.matrix[i][k])/fourD;
         q.w = (m.matrix[k][j] - m.matrix[j][k])/fourD;
     }

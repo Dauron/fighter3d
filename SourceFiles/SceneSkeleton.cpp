@@ -539,10 +539,12 @@ bool SceneSkeleton::Render()
     {
         pFont->Print(5.f, Height-5.f, 0.f, "Animation |");
         if (EditMode != emSelectAnimation && EditMode != emLoadAnimation)
+        {
             if (AnimationName.size())
                 pFont->Print(150.f, 20.f, 0.f, ("Animation: " + AnimationName).c_str());
             else
                 pFont->Print(150.f, 20.f, 0.f, "Animation: new animation");
+        }
     }
 
     if (EditMode == emEditAnimation)

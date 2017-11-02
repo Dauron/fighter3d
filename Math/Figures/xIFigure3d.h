@@ -31,6 +31,8 @@ namespace Math { namespace Figures {
 
         xVector3 P_center;
 
+        virtual ~xIFigure3d() = default;
+
         virtual void   P_MinMax_Get( xPoint3 &P_min, xPoint3 &P_max ) = 0;
         virtual xFLOAT S_Radius_Sqr_Get() = 0;
         virtual xFLOAT W_Volume_Get() = 0;

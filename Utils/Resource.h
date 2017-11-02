@@ -11,7 +11,7 @@ private:
 public:
 
     Resource()          { Clear(); }
-    //virtual ~Resource() { Destroy(); }
+    virtual ~Resource() = default;// { Destroy(); }
 
     virtual void Clear() { m_References = 0; }
 

@@ -15,6 +15,7 @@ public:
     IScene      * PrevScene;
 
     IScene() { Name = NULL; FL_destroyed = true; PrevScene = NULL; }
+    virtual ~IScene() = default;
 
     virtual bool Create(int left, int top, unsigned int width, unsigned int height, IScene *prevScene = NULL);
     virtual void Destroy();
