@@ -1,7 +1,6 @@
 LIBS += -lGLEW \
         -lGLU \
         -lGL \
-        -l3ds \
         -lXxf86vm \
         -lX11 \
         -lm
@@ -20,13 +19,13 @@ CXXFLAGS_RLS = $(CXXFLAGS) -s -O3 -DNDEBUG
 LDFLAGS_RLS  = $(LDFLAGS)
 OBJ_DIR_RLS  = obj/rls
 OBJ_RLS      = $(patsubst %.cpp,$(OBJ_DIR_RLS)/%.o, $(SRC))
-BIN_RLS      = fighter
+BIN_RLS      = run
 
 CXXFLAGS_DBG = $(CXXFLAGS) -g -rdynamic -DDEBUG
 LDFLAGS_DBG  = $(LDFLAGS) -rdynamic
 OBJ_DIR_DBG  = obj/dbg
 OBJ_DBG      = $(patsubst %.cpp,$(OBJ_DIR_DBG)/%.o, $(SRC))
-BIN_DBG      = fighter_dbg
+BIN_DBG      = run_dbg
 
 all: release
 

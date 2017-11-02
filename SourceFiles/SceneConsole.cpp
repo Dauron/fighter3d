@@ -1,12 +1,12 @@
 #include "SceneConsole.h"
-#include "SceneGame.h"
-#include "SceneMenu.h"
-#include "SceneTest.h"
+#include "SceneWorld.h"
 
 #include "../AppFramework/Application.h"
 #include "../AppFramework/Input/InputMgr.h"
-#include "InputCodes.h"
-#include "../Graphics/OGL/AnimSkeletal.h"
+#include "../Graphics/OGL/Shader.h"
+#include "InputCodesWorld.h"
+
+#include "../Graphics/OGL/Shader.h"
 
 #include "../Utils/Debug.h"
 #include "../Utils/Stat.h"
@@ -341,7 +341,6 @@ bool SceneConsole :: ShellCommand(std::string &cmd, std::string &output)
     ------------------------------------------------------------------------\n\
     graphical_mode_list | gml           | list possible pixel formats\n\
     opengl_extensions   | ext           | list available OpenGL extensions\n\
-    status              | status        | show execution status\n\
     ------------------------------------------------------------------------\n\
     log message         | log message   | adds given message to the log file\n\
     log_tail            | tail          | displays tail of the log file\n\
@@ -404,22 +403,6 @@ bool SceneConsole :: ShellCommand(std::string &cmd, std::string &output)
 
         return true;
     }
-    if (cmd == "status")
-    {
-    std::stringstream ss;
-    std::string txt = "\n\
-speed = *", txt2;
-    ss << Config::Speed; ss >> txt2; txt += txt2 + "\n\
-test  = ";
-    ss.clear();
-    ss << Config::TestCase;  ss >> txt2; txt += txt2 + '\n';
-    AppendConsole(txt);
-    if (Graphics::OGL::g_AnimSkeletal.HardwareEnabled())
-        output.append("hardware skeletal animation ENABLED\n");
-    else
-        output.append("hardware skeletal animation DISABLED\n");
-    return true;
-    }
     if (cmd == "clrfps" || cmd == "zero_fps_counters")
     {
         Performance.FPSmin = 1000.f;
@@ -453,11 +436,7 @@ test  = ";
     if (cmd.substr(0, 6) == "scene ")
     {
         IScene *newScene = NULL;
-        if (cmd == "scene test") newScene = new SceneTest();
-        else
-        if (cmd == "scene game") newScene = new SceneGame();
-        else
-        if (cmd == "scene menu") newScene = new SceneMenu();
+        if (cmd == "scene world") newScene = new SceneWorld();
         if (!newScene) return true;
         if (PrevScene)
         {
@@ -488,9 +467,10 @@ bool SceneConsole::Render()
     GLint cHeight = Height/2;
 
     glDisable(GL_DEPTH_TEST);                      // Disable depth testing
-    Graphics::OGL::Shader::SetLightType(xLight_NONE);
-    Graphics::OGL::Shader::EnableTexturing(Graphics::OGL::xState_Off);
-    glDisable (GL_POLYGON_SMOOTH);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_POLYGON_SMOOTH);
+    Graphics::OGL::Shader::Suspend();
 
     const Graphics::OGL::Font* pFont = g_FontMgr.GetFont(font);
     float lineHeight = pFont->LineH();
@@ -548,11 +528,6 @@ bool SceneConsole::Render()
             "Console    MinFPS: %u MeanFPS: %2u MaxFPS: %u T_world: %4.3f",
             (int)Performance.FPSmin, (int)Performance.FPSsnap, (int)Performance.FPSmax,
             Performance.T_world);
-        pFont->PrintF(0.0f, (float)cHeight-2*lineHeight, 0.0f,
-            "   Num culled elements: %3u diffuse: %u shadows: %u culled: %u zP: %u zF: %u zFs: %u zFf: %u zFb: %u",
-            (int)Performance.CulledElements, Performance.CulledDiffuseElements,
-            Performance.Shadows.shadows, Performance.Shadows.culled, Performance.Shadows.zPass, Performance.Shadows.zFail,
-            Performance.Shadows.zFailS, Performance.Shadows.zFailF, Performance.Shadows.zFailB);
 
         glScissor(0, cHeight, Width, cHeight);                 // Define Scissor Region
         glEnable(GL_SCISSOR_TEST);                             // Enable Scissor Testing

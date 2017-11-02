@@ -1,28 +1,60 @@
 [graphics]
-Lighting        2 # 0 = none, 1 = basic, 2 = full
-Shadows         2 # 0 = none, 1 = rigid, 2 = rigid + players
 Shaders         1
 // Some old GPUs has problems with displaying text when multisampling is on :/
 Multisampling   1 # 0 = none, 1 = 2xAntialiasing, 2 = 4xAntialiasing, ...
-UseVBO          1
-ShadowMap       512
 VSync           0
 WindowX         800
 WindowY         600
-FillScreen      0
-FullScreenX     1280
-FullScreenY     1024
-
-# rendering modes for debugging
-Show_ShadowVolumes   0
-Show_Skeleton        0
-Show_BVH             0
-Show_Cameras         0
+FullScreen      0
+FullScreenX     1680
+FullScreenY     1050
 
 [general]
-Console         1
-Scene           menu # menu, game, test # for scene test - select case with 0-9 keys
-Level           4
-Speed           1
+Console         1 # Enable / Disable console
+Scene           world
 Logging         3 # 0 = almost none, 1 = important errors, 2 = all errors, 3 = all errors + warnings
-3dsTo3dx        0 # 1 = automaticaly export 3ds models to 3dx format (may overwrite!)
+
+[map]
+Night           1    # evening or night infinite lighting
+Generate        1    # generate map? (overwrites map.txt)
+Cols            50   # number of cols to generate
+Rows            50   # number of rows to generate
+Birds           1000 # initial bird population
+DistrictSize    55   # size of the district (building rendering batch)
+
+[quarter]
+SquareWidth     75  # quarter width
+WallWidth       25  # building wall width
+MaxHeight       100 # max generated building height
+
+[bird]
+EyeDistance          50  # Bird's view distance
+KeepAwayDistance     5   # Obstacle avoidance distance
+DesiredSpeed         40  # How fast the bird would like to fly
+MaxSpeed             60  # Bird's maximal speed
+MaxAcceleration      2.5 # Bird's maximal acceleration
+MinAltitude          5   # Minimal altitude above ground/obstacles
+MaxAltitude          80  # Maximal altitude above ground
+Size                 1   # Size of the bird (radius)
+
+CruiseAcceleration        0.5 # Cruising mode acceleration
+MinAltitudeAcceleration   0.8 # MinAltitude avoidance acceleration
+MaxAltitudeAcceleration   0.5 # MaxAltitude avoidance acceleration
+FlockCenterAcceleration   0.1 # "Steer towards flock center" rule acceleration
+FlockNearestAcceleration  0.5 # "Match neighbour heading" rule acceleration
+FlockKeepAwayAcceleration 0.5 # "Keep distance from neighbours" rule acceleration
+AvoidEnemyAcceleration    0.3 # "Avoid enemy" rule acceleration
+BounceSpeedRetention      0.4 # How much speed will be retained after collision
+
+[hawk]
+EatEnergy            500   # Energy gained when a bird is eaten
+InitialEnergy        2000  # Initial energy
+InitialSpeed         200   # Initial speed
+InitialSpeedDump     0.2   # Dumping of the initial velocity
+SpeedDump            0.5   # Dumping of the bird tracking velocity
+EyeDistance          200   # Hawk's view distance
+MaxSpeed             90    # Hawk's maximal speed
+MaxAcceleration      2.5   # Hawk's maximal acceleration
+
+FlockCenterAcceleration   1.1 # "Steer towards closest bird" rule acceleration
+FlockNearestAcceleration  0.9 # "Match closest bird heading" rule acceleration

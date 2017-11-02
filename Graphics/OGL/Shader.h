@@ -39,30 +39,59 @@ namespace Graphics { namespace OGL {
         }
     };
 
-    struct ShaderSkeletal : public ShaderProgram
+    struct ShaderDeferredS2 : public ShaderProgram
     {
-        // identifiers of vertex uniforms and attributes
-        int uQuats;
-        int uRoots;
-        int uTrans;
-        int aBoneIdxWghts;
+        int uTEX_position;
+        int uTEX_normal;
+        int uTEX_material;
 
-        ShaderSkeletal();
-        virtual ~ShaderSkeletal() {}
+        ShaderDeferredS2();
+        virtual ~ShaderDeferredS2() {}
 
         virtual GLenum Create();
     };
 
-    struct ShaderLighting
+    struct ShaderDeferredS3 : public ShaderProgram
     {
-        ShaderProgram  Plain;
-        ShaderProgram  Textured;
-        ShaderSkeletal PlainSkeletal;
-        ShaderSkeletal TexturedSkeletal;
+        int uTEX_diffuse;
+        int uTEX_specular;
 
-        void Create();
-        void Destroy();
-        void Invalidate();
+        ShaderDeferredS3();
+        virtual ~ShaderDeferredS3() {}
+
+        virtual GLenum Create();
+    };
+
+    struct ShaderDeferredS4 : public ShaderProgram
+    {
+        int uTEX_image;
+
+        ShaderDeferredS4();
+        virtual ~ShaderDeferredS4() {}
+
+        virtual GLenum Create();
+    };
+
+    struct ShaderConvolution : public ShaderDeferredS4
+    {
+        int uTexOffset;
+        int uMask;
+
+        ShaderConvolution();
+        virtual ~ShaderConvolution() {}
+
+        virtual GLenum Create();
+    };
+
+    struct ShaderTexBump : public ShaderProgram
+    {
+        int uTEX_color;
+        int uTEX_bump;
+
+        ShaderTexBump();
+        virtual ~ShaderTexBump() {}
+
+        virtual GLenum Create();
     };
 
     enum xState
@@ -73,28 +102,29 @@ namespace Graphics { namespace OGL {
         xState_On      =  1
     };
 
+    enum xDeferredProgramStage
+    {
+        xDPS_Stage1_MRT         = 1,
+        xDPS_Stage2_Infinite    = 2,
+        xDPS_Stage2_Point       = 3,
+        xDPS_Stage3_Join        = 4,
+        xDPS_Stage4_Convolution = 5,
+        xDPS_Stage4_Tint        = 6
+    };
+
     class Shader
     {
-        static xLightType     lightType;
+        static bool   FL_deferredMRT;
+        static GLuint TexDiffuseImg, TexDiffuseUnit;
+        static GLuint TexBumpImg,    TexBumpUnit;
 
-        static xState         shaderState;   // can we use gl shaders ?
-        static xState         textureState;  // can we use textures ?
-        static xState         skeletalState; // can we use skeleton ?
-        static bool ambient;
-        static bool diffuse;
-        static bool specular;
-
-        static ShaderLighting slNoLighting;
-        static ShaderLighting slGlobalA;
-        static ShaderLighting slInfiniteA;
-        static ShaderLighting slInfiniteDS;
-        static ShaderLighting slInfiniteADS;
-        static ShaderLighting slPointA;
-        static ShaderLighting slPointDS;
-        static ShaderLighting slPointADS;
-        static ShaderLighting slSpotA;
-        static ShaderLighting slSpotDS;
-        static ShaderLighting slSpotADS;
+        static ShaderProgram     spDeferred_Stage1_MRT;
+        static ShaderTexBump     spDeferred_Stage1_MRT_TexBump;
+        static ShaderDeferredS2  spDeferred_Stage2_Infinite;
+        static ShaderDeferredS2  spDeferred_Stage2_Point;
+        static ShaderDeferredS3  spDeferred_Stage3_Join;
+        static ShaderConvolution spDeferred_Stage4_Convolution;
+        static ShaderDeferredS4  spDeferred_Stage4_Tint;
 
         Shader() {}
         ~Shader() {}
@@ -108,72 +138,33 @@ namespace Graphics { namespace OGL {
         static void DestroyS();
         static void Invalidate();
 
+        static bool StartDeferred(xDeferredProgramStage stage);
+        static void StopDeferred();
+
         static bool Start();
         static void Suspend();
 
-        static void EnableShaders(xState val)
+        static void UseDiffuseMap (GLuint ID_texture, GLuint ID_unit = 0)
         {
-            if (shaderState == xState_Disable && val != xState_Enable)
-                return; // textures are disabled
-            if (val == xState_Disable) Suspend();
-            shaderState = val;
-        }
-
-        static bool NeedNormals()
-        {
-            return diffuse || specular;
-        }
-
-        static void SetLightType(xLightType type, bool ambient = true, bool diffuse = true, bool specular = true)
-        {
-            lightType = type;
-            if (type == xLight_NONE)
-            {
-                glDisable(GL_LIGHTING);
-                Shader::ambient  = false;
-                Shader::diffuse  = false;
-                Shader::specular = false;
-            }
-            else
-            {
-                glEnable(GL_LIGHTING);
-                Shader::ambient  = ambient;
-                Shader::diffuse  = diffuse;
-                Shader::specular = specular;
-            }
-        }
-
-        static xLightType GetLightType()
-        {
-            return lightType;
-        }
-
-        static void EnableTexturing(xState val)
-        {
-            if (textureState == xState_Disable && val != xState_Enable)
-                return; // textures are disabled
-            textureState = val;
-            if (val == xState_On)
+            TexDiffuseImg  = ID_texture;
+            TexDiffuseUnit = ID_unit;
+            glActiveTextureARB(GL_TEXTURE0 + ID_unit);
+            glBindTexture(GL_TEXTURE_2D, ID_texture);
+            if (ID_texture)
                 glEnable(GL_TEXTURE_2D);
             else
                 glDisable(GL_TEXTURE_2D);
         }
-
-        static void EnableSkeleton(xState val)
+        static void UseBumpMap    (GLuint ID_texture, GLuint ID_unit = 1)
         {
-            if (skeletalState == xState_Disable && val != xState_Enable)
-                return; // skeleton is disabled
-            skeletalState = val;
-        }
-
-        static xState TexturingState()
-        {
-            return textureState;
-        }
-
-        static xState SkeletonState()
-        {
-            return skeletalState;
+            TexBumpImg  = ID_texture;
+            TexBumpUnit = ID_unit;
+            glActiveTextureARB(GL_TEXTURE0 + ID_unit);
+            glBindTexture(GL_TEXTURE_2D, ID_texture);
+            if (ID_texture)
+                glEnable(GL_TEXTURE_2D);
+            else
+                glDisable(GL_TEXTURE_2D);
         }
     };
 

@@ -10,26 +10,22 @@
 using namespace Graphics::OGL;
 
 ShaderProgram *Shader::currShader       = NULL;
-xLightType     Shader::lightType        = xLight_NONE;
-xState         Shader::shaderState      = xState_Enable;
-xState         Shader::textureState     = xState_Enable;
-xState         Shader::skeletalState    = xState_Enable;
-bool           Shader::ambient          = false;
-bool           Shader::diffuse          = false;
-bool           Shader::specular         = false;
+
+bool           Shader::FL_deferredMRT   = false;
+GLuint         Shader::TexDiffuseImg    = 0;
+GLuint         Shader::TexDiffuseUnit   = 0;
+GLuint         Shader::TexBumpImg       = 0;
+GLuint         Shader::TexBumpUnit      = 0;
+
 GLenum         ShaderProgram::currProgram = 0;
 
-ShaderLighting Shader::slNoLighting;
-ShaderLighting Shader::slGlobalA;
-ShaderLighting Shader::slInfiniteA;
-ShaderLighting Shader::slInfiniteDS;
-ShaderLighting Shader::slInfiniteADS;
-ShaderLighting Shader::slPointA;
-ShaderLighting Shader::slPointDS;
-ShaderLighting Shader::slPointADS;
-ShaderLighting Shader::slSpotA;
-ShaderLighting Shader::slSpotDS;
-ShaderLighting Shader::slSpotADS;
+ShaderProgram     Shader::spDeferred_Stage1_MRT;
+ShaderTexBump     Shader::spDeferred_Stage1_MRT_TexBump;
+ShaderDeferredS2  Shader::spDeferred_Stage2_Infinite;
+ShaderDeferredS2  Shader::spDeferred_Stage2_Point;
+ShaderDeferredS3  Shader::spDeferred_Stage3_Join;
+ShaderConvolution Shader::spDeferred_Stage4_Convolution;
+ShaderDeferredS4  Shader::spDeferred_Stage4_Tint;
 
 ShaderProgram :: ShaderProgram()
 {
@@ -234,212 +230,192 @@ void ShaderProgram :: Destroy()
     Invalidate();
 }
 
-ShaderSkeletal :: ShaderSkeletal() : ShaderProgram()
+/*********** ShaderDeferredS2 ***********/
+ShaderDeferredS2 :: ShaderDeferredS2() : ShaderProgram()
 {
-    uQuats        = 0;
-    uRoots        = 0;
-    uTrans        = 0;
-    aBoneIdxWghts = 0;
+    uTEX_position = 0;
+    uTEX_normal   = 0;
+    uTEX_material = 0;
 }
 
-GLenum ShaderSkeletal :: Create()
+GLenum ShaderDeferredS2 :: Create()
 {
     ShaderProgram::Create();
     if (program)
     {
-        uQuats        = glGetUniformLocationARB(program, "quats");
-        uRoots        = glGetUniformLocationARB(program, "roots");
-        uTrans        = glGetUniformLocationARB(program, "trans");
-        aBoneIdxWghts = glGetAttribLocationARB (program, "boneIdxWghts");
+        uTEX_position = glGetUniformLocationARB(program, "TEX_position");
+        uTEX_normal   = glGetUniformLocationARB(program, "TEX_normal");
+        uTEX_material = glGetUniformLocationARB(program, "TEX_material");
     }
     return program;
 }
 
-void ShaderLighting :: Create()
+/*********** ShaderDeferredS3 ***********/
+ShaderDeferredS3 :: ShaderDeferredS3() : ShaderProgram()
 {
-    Plain.Create();
-    Textured.Create();
-    PlainSkeletal.Create();
-    TexturedSkeletal.Create();
+    uTEX_diffuse  = 0;
+    uTEX_specular = 0;
 }
 
-void ShaderLighting :: Destroy()
+GLenum ShaderDeferredS3 :: Create()
 {
-    Plain.Destroy();
-    Textured.Destroy();
-    PlainSkeletal.Destroy();
-    TexturedSkeletal.Destroy();
+    ShaderProgram::Create();
+    if (program)
+    {
+        uTEX_diffuse  = glGetUniformLocationARB(program, "TEX_diffuse");
+        uTEX_specular = glGetUniformLocationARB(program, "TEX_specular");
+    }
+    return program;
 }
 
-void ShaderLighting :: Invalidate()
+/*********** ShaderDeferredS4 ***********/
+ShaderDeferredS4 :: ShaderDeferredS4() : ShaderProgram()
 {
-    Plain.Invalidate();
-    Textured.Invalidate();
-    PlainSkeletal.Invalidate();
-    TexturedSkeletal.Invalidate();
+    uTEX_image = 0;
 }
 
+GLenum ShaderDeferredS4 :: Create()
+{
+    ShaderProgram::Create();
+    if (program)
+        uTEX_image = glGetUniformLocationARB(program, "TEX_image");
+    return program;
+}
+
+/*********** ShaderConvolution ***********/
+ShaderConvolution :: ShaderConvolution() : ShaderDeferredS4()
+{
+    uTexOffset = 0;
+    uMask      = 0;
+}
+
+GLenum ShaderConvolution :: Create()
+{
+    ShaderDeferredS4::Create();
+    if (program)
+    {
+        uTexOffset = glGetUniformLocationARB(program, "TexOffset");
+        uMask      = glGetUniformLocationARB(program, "Mask");
+    }
+    return program;
+}
+
+/*********** ShaderTexBump ***********/
+ShaderTexBump :: ShaderTexBump() : ShaderProgram()
+{
+    uTEX_color = 0;
+    uTEX_bump = 0;
+}
+
+GLenum ShaderTexBump :: Create()
+{
+    ShaderProgram::Create();
+    if (program)
+    {
+        uTEX_color = glGetUniformLocationARB(program, "TEX_color");
+        uTEX_bump  = glGetUniformLocationARB(program, "TEX_bump");
+    }
+    return program;
+}
+/*********** Shader ***********/
 void Shader :: Load()
 {
-    slNoLighting.Plain.Load("NoLights_noTex.vert", "NoLights_noTex.frag");
-    slNoLighting.Textured.Load("NoLights_Tex.vert", "NoLights_Tex.frag");
-    slNoLighting.PlainSkeletal.Load("NoLights_noTex_Skel.vert", "NoLights_noTex.frag");
-    slNoLighting.TexturedSkeletal.Load("NoLights_Tex_Skel.vert", "NoLights_Tex.frag");
+    spDeferred_Stage1_MRT.Load("Deferred_MRT.vert", "Deferred_MRT.frag");
+    spDeferred_Stage1_MRT_TexBump.Load("Deferred_MRT_TexBump.vert", "Deferred_MRT_TexBump.frag");
 
-    slGlobalA.Plain.Load("Global_A_noTex.vert", "Global_A_noTex.frag");
-    slGlobalA.Textured.Load("Global_A_Tex.vert", "Global_A_Tex.frag");
-    slGlobalA.PlainSkeletal.Load("Global_A_noTex_Skel.vert", "Global_A_noTex.frag");
-    slGlobalA.TexturedSkeletal.Load("Global_A_Tex_Skel.vert", "Global_A_Tex.frag");
+    spDeferred_Stage2_Infinite.Load("PostProcessing.vert", "Deferred_Infinite.frag");
+    spDeferred_Stage2_Point.Load("PostProcessing.vert", "Deferred_Point.frag");
+    spDeferred_Stage3_Join.Load("PostProcessing.vert", "Deferred_Join.frag");
 
-    slInfiniteA.Plain.Load("Infinite_A_noTex.vert", "Infinite_A_noTex.frag");
-    slInfiniteA.Textured.Load("Infinite_A_Tex.vert", "Infinite_A_Tex.frag");
-    slInfiniteA.PlainSkeletal.Load("Infinite_A_noTex_Skel.vert", "Infinite_A_noTex.frag");
-    slInfiniteA.TexturedSkeletal.Load("Infinite_A_Tex_Skel.vert", "Infinite_A_Tex.frag");
-
-    slInfiniteDS.Plain.Load("Infinite_DS_noTex.vert", "Infinite_DS_noTex.frag");
-    slInfiniteDS.Textured.Load("Infinite_DS_Tex.vert", "Infinite_DS_Tex.frag");
-    slInfiniteDS.PlainSkeletal.Load("Infinite_DS_noTex_Skel.vert", "Infinite_DS_noTex.frag");
-    slInfiniteDS.TexturedSkeletal.Load("Infinite_DS_Tex_Skel.vert", "Infinite_DS_Tex.frag");
-
-    slInfiniteADS.Plain.Load("Infinite_DS_noTex.vert", "Infinite_ADS_noTex.frag");
-    slInfiniteADS.Textured.Load("Infinite_DS_Tex.vert", "Infinite_ADS_Tex.frag");
-    slInfiniteADS.PlainSkeletal.Load("Infinite_DS_noTex_Skel.vert", "Infinite_ADS_noTex.frag");
-    slInfiniteADS.TexturedSkeletal.Load("Infinite_DS_Tex_Skel.vert", "Infinite_ADS_Tex.frag");
-
-    slPointA.Plain.Load("Point_A_noTex.vert", "Point_A_noTex.frag");
-    slPointA.Textured.Load("Point_A_Tex.vert", "Point_A_Tex.frag");
-    slPointA.PlainSkeletal.Load("Point_A_noTex_Skel.vert", "Point_A_noTex.frag");
-    slPointA.TexturedSkeletal.Load("Point_A_Tex_Skel.vert", "Point_A_Tex.frag");
-
-    slPointDS.Plain.Load("Point_DS_noTex.vert", "Point_DS_noTex.frag");
-    slPointDS.Textured.Load("Point_DS_Tex.vert", "Point_DS_Tex.frag");
-    slPointDS.PlainSkeletal.Load("Point_DS_noTex_Skel.vert", "Point_DS_noTex.frag");
-    slPointDS.TexturedSkeletal.Load("Point_DS_Tex_Skel.vert", "Point_DS_Tex.frag");
-
-    slPointADS.Plain.Load("Point_DS_noTex.vert", "Point_ADS_noTex.frag");
-    slPointADS.Textured.Load("Point_DS_Tex.vert", "Point_ADS_Tex.frag");
-    //slPointADS.PlainSkeletal.Load("Point_DS_noTex_Skel.vert", "Point_ADS_noTex.frag");
-    // ATI compiler workaround
-    slPointADS.PlainSkeletal.Load("Point_DS_Tex_Skel.vert", "Point_ADS_noTex.frag");
-    slPointADS.TexturedSkeletal.Load("Point_DS_Tex_Skel.vert", "Point_ADS_Tex.frag");
-
-    slSpotA.Plain.Load("Spot_A_noTex.vert", "Spot_A_noTex.frag");
-    slSpotA.Textured.Load("Spot_A_Tex.vert", "Spot_A_Tex.frag");
-    slSpotA.PlainSkeletal.Load("Spot_A_noTex_Skel.vert", "Spot_A_noTex.frag");
-    slSpotA.TexturedSkeletal.Load("Spot_A_Tex_Skel.vert", "Spot_A_Tex.frag");
-
-    slSpotDS.Plain.Load("Spot_DS_noTex.vert", "Spot_DS_noTex.frag");
-    slSpotDS.Textured.Load("Spot_DS_Tex.vert", "Spot_DS_Tex.frag");
-    slSpotDS.PlainSkeletal.Load("Spot_DS_noTex_Skel.vert", "Spot_DS_noTex.frag");
-    slSpotDS.TexturedSkeletal.Load("Spot_DS_Tex_Skel.vert", "Spot_DS_Tex.frag");
-
-    slSpotADS.Plain.Load("Spot_DS_noTex.vert", "Spot_ADS_noTex.frag");
-    slSpotADS.Textured.Load("Spot_DS_Tex.vert", "Spot_ADS_Tex.frag");
-    slSpotADS.PlainSkeletal.Load("Spot_DS_noTex_Skel.vert", "Spot_ADS_noTex.frag");
-    slSpotADS.TexturedSkeletal.Load("Spot_DS_Tex_Skel.vert", "Spot_ADS_Tex.frag");
+    spDeferred_Stage4_Convolution.Load("PostProcessing.vert", "ConvolutionFilter.frag");
+    spDeferred_Stage4_Tint.Load("PostProcessing.vert", "Tint.frag");
 }
 
 void Shader :: Unload()
 {
-    slNoLighting.Plain.Unload();
-    slNoLighting.Textured.Unload();
-    slNoLighting.PlainSkeletal.Unload();
-    slNoLighting.TexturedSkeletal.Unload();
-
-    slGlobalA.Plain.Unload();
-    slGlobalA.Textured.Unload();
-    slGlobalA.PlainSkeletal.Unload();
-    slGlobalA.TexturedSkeletal.Unload();
-
-    slInfiniteA.Plain.Unload();
-    slInfiniteA.Textured.Unload();
-    slInfiniteA.PlainSkeletal.Unload();
-    slInfiniteA.TexturedSkeletal.Unload();
-
-    slInfiniteDS.Plain.Unload();
-    slInfiniteDS.Textured.Unload();
-    slInfiniteDS.PlainSkeletal.Unload();
-    slInfiniteDS.TexturedSkeletal.Unload();
-
-    slInfiniteADS.Plain.Unload();
-    slInfiniteADS.Textured.Unload();
-    slInfiniteADS.PlainSkeletal.Unload();
-    slInfiniteADS.TexturedSkeletal.Unload();
-
-    slPointA.Plain.Unload();
-    slPointA.Textured.Unload();
-    slPointA.PlainSkeletal.Unload();
-    slPointA.TexturedSkeletal.Unload();
-
-    slPointDS.Plain.Unload();
-    slPointDS.Textured.Unload();
-    slPointDS.PlainSkeletal.Unload();
-    slPointDS.TexturedSkeletal.Unload();
-
-    slPointADS.Plain.Unload();
-    slPointADS.Textured.Unload();
-    slPointADS.PlainSkeletal.Unload();
-    slPointADS.TexturedSkeletal.Unload();
-
-    slSpotA.Plain.Unload();
-    slSpotA.Textured.Unload();
-    slSpotA.PlainSkeletal.Unload();
-    slSpotA.TexturedSkeletal.Unload();
-
-    slSpotDS.Plain.Unload();
-    slSpotDS.Textured.Unload();
-    slSpotDS.PlainSkeletal.Unload();
-    slSpotDS.TexturedSkeletal.Unload();
-
-    slSpotADS.Plain.Unload();
-    slSpotADS.Textured.Unload();
-    slSpotADS.PlainSkeletal.Unload();
-    slSpotADS.TexturedSkeletal.Unload();
+    spDeferred_Stage1_MRT.Unload();
+    spDeferred_Stage1_MRT_TexBump.Unload();
+    spDeferred_Stage2_Infinite.Unload();
+    spDeferred_Stage2_Point.Unload();
+    spDeferred_Stage3_Join.Unload();
+    spDeferred_Stage4_Convolution.Unload();
+    spDeferred_Stage4_Tint.Unload();
 }
 
 void Shader :: CreateS()
 {
-    slNoLighting.Create();
-    slGlobalA.Create();
-    slInfiniteA.Create();
-    slInfiniteDS.Create();
-    slInfiniteADS.Create();
-    slPointA.Create();
-    slPointDS.Create();
-    slPointADS.Create();
-    slSpotA.Create();
-    slSpotDS.Create();
-    slSpotADS.Create();
+    spDeferred_Stage1_MRT.Create();
+    spDeferred_Stage1_MRT_TexBump.Create();
+    spDeferred_Stage2_Infinite.Create();
+    spDeferred_Stage2_Point.Create();
+    spDeferred_Stage3_Join.Create();
+    spDeferred_Stage4_Convolution.Create();
+    spDeferred_Stage4_Tint.Create();
 }
 
 void Shader :: DestroyS()
 {
-    slNoLighting.Destroy();
-    slGlobalA.Destroy();
-    slInfiniteA.Destroy();
-    slInfiniteDS.Destroy();
-    slInfiniteADS.Destroy();
-    slPointA.Destroy();
-    slPointDS.Destroy();
-    slPointADS.Destroy();
-    slSpotA.Destroy();
-    slSpotDS.Destroy();
-    slSpotADS.Destroy();
+    spDeferred_Stage1_MRT.Destroy();
+    spDeferred_Stage1_MRT_TexBump.Destroy();
+    spDeferred_Stage2_Infinite.Destroy();
+    spDeferred_Stage2_Point.Destroy();
+    spDeferred_Stage3_Join.Destroy();
+    spDeferred_Stage4_Convolution.Destroy();
+    spDeferred_Stage4_Tint.Destroy();
 }
 
 void Shader :: Invalidate()
 {
-    slNoLighting.Invalidate();
-    slGlobalA.Invalidate();
-    slInfiniteA.Invalidate();
-    slInfiniteDS.Invalidate();
-    slInfiniteADS.Invalidate();
-    slPointA.Invalidate();
-    slPointDS.Invalidate();
-    slPointADS.Invalidate();
-    slSpotA.Invalidate();
-    slSpotDS.Invalidate();
-    slSpotADS.Invalidate();
+    spDeferred_Stage1_MRT.Invalidate();
+    spDeferred_Stage1_MRT_TexBump.Invalidate();
+    spDeferred_Stage2_Infinite.Invalidate();
+    spDeferred_Stage2_Point.Invalidate();
+    spDeferred_Stage3_Join.Invalidate();
+    spDeferred_Stage4_Convolution.Invalidate();
+    spDeferred_Stage4_Tint.Invalidate();
+}
+
+bool Shader :: StartDeferred(xDeferredProgramStage stage)
+{
+    FL_deferredMRT = false;
+    switch(stage)
+    {
+        case xDPS_Stage1_MRT:
+            currShader = &spDeferred_Stage1_MRT;
+            FL_deferredMRT = true;
+            break;
+        case xDPS_Stage2_Infinite:
+            currShader = &spDeferred_Stage2_Infinite;
+            break;
+        case xDPS_Stage2_Point:
+            currShader = &spDeferred_Stage2_Point;
+            break;
+        case xDPS_Stage3_Join:
+            currShader = &spDeferred_Stage3_Join;
+            break;
+        case xDPS_Stage4_Convolution:
+            currShader = &spDeferred_Stage4_Convolution;
+            break;
+        case xDPS_Stage4_Tint:
+            currShader = &spDeferred_Stage4_Tint;
+            break;
+    }
+    if (!currShader) return false;
+
+    if (currShader->FL_invalid) currShader->Create();
+
+    if (ShaderProgram::currProgram != currShader->program)
+        glUseProgramObjectARB(ShaderProgram::currProgram = currShader->program);
+
+    return currShader->program;
+}
+
+void Shader :: StopDeferred()
+{
+    currShader = NULL;
+    if (ShaderProgram::currProgram)
+        glUseProgramObjectARB(ShaderProgram::currProgram = 0);
+    FL_deferredMRT = false;
 }
 
 bool Shader :: Start()
@@ -449,78 +425,24 @@ bool Shader :: Start()
     // Use The Program Object Instead Of Fixed Function OpenGL
     //assert(shaderState == xState_Disable || shaderState == xState_Enable || shaderState == xState_Off);
 
-    if (shaderState == xState_Disable) return false;
-    if (!Config::EnableShaders) return false;
-    //if (shaderState != xState_Enable || shaderState == xState_Off) return false;
-    shaderState = xState_On;
+    if (!FL_deferredMRT) return false;
 
-    ShaderLighting *slShader;
-
-    switch (lightType)
-    {
-        case xLight_NONE:
-            slShader = &slNoLighting;
-            break;
-        case xLight_GLOBAL:
-            slShader = &slGlobalA;
-            break;
-        case xLight_INFINITE:
-            if (ambient && !diffuse && !specular)
-                slShader = &slInfiniteA;
-            else
-            if (!ambient && diffuse && specular)
-                slShader = &slInfiniteDS;
-            else
-            if (ambient && diffuse && specular)
-                slShader = &slInfiniteADS;
-            else
-                slShader = NULL;
-            break;
-        case xLight_POINT:
-            if (ambient && !diffuse && !specular)
-                slShader = &slPointA;
-            else
-            if (!ambient && diffuse && specular)
-                slShader = &slPointDS;
-            else
-            if (ambient && diffuse && specular)
-                slShader = &slPointADS;
-            else
-                slShader = NULL;
-            break;
-        case xLight_SPOT:
-            if (ambient && !diffuse && !specular)
-                slShader = &slSpotA;
-            else
-            if (!ambient && diffuse && specular)
-                slShader = &slSpotDS;
-            else
-            if (ambient && diffuse && specular)
-                slShader = &slSpotADS;
-            else
-                slShader = NULL;
-            break;
-        default:
-            slShader = NULL;
-            break;
-    }
-    if (!slShader) return false;
-
-    if (textureState == xState_On && skeletalState == xState_On)
-        currShader = & slShader->TexturedSkeletal;
-    else
-    if (textureState == xState_On)
-        currShader = & slShader->Textured;
-    else
-    if (skeletalState == xState_On)
-        currShader = & slShader->PlainSkeletal;
-    else
-        currShader = & slShader->Plain;
+    currShader = &spDeferred_Stage1_MRT;
+    if (TexDiffuseImg && TexBumpImg)
+        currShader = &spDeferred_Stage1_MRT_TexBump;
 
     if (currShader->FL_invalid) currShader->Create();
 
     if (ShaderProgram::currProgram != currShader->program)
+    {
         glUseProgramObjectARB(ShaderProgram::currProgram = currShader->program);
+        if (TexDiffuseImg && TexBumpImg)
+        {
+            ShaderTexBump *currShader = (ShaderTexBump *)Shader::currShader;
+            glUniform1iARB( currShader->uTEX_color, TexDiffuseUnit);
+            glUniform1iARB( currShader->uTEX_bump,  TexBumpUnit);
+        }
+    }
     return currShader->program;
 }
 
@@ -529,8 +451,7 @@ void Shader :: Suspend()
     //assert(program);
     //assert(IsCurrent());
     // Use The Fixed Function OpenGL
-    if (shaderState == xState_Disable) return;
-    shaderState = xState_Enable;
+    if (!FL_deferredMRT) return;
     if (ShaderProgram::currProgram)
         glUseProgramObjectARB(ShaderProgram::currProgram = 0);
     currShader = NULL;

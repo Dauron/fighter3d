@@ -1,20 +1,15 @@
 #include <fstream>
 #include "Utils/Filesystem.h"
 #include "Utils/Utils.h"
+#include "Utils/Stat.h"
 #include <cstring>
 
 #include "Config.h"
 
 int   Config::Initialize           = false;
 bool  Config::EnableLighting       = true;
-bool  Config::EnableFullLighting   = true;
-bool  Config::EnableShadows        = true;
-bool  Config::EnableShadowsForPlayers = true;
 bool  Config::EnableShaders        = true;
 int   Config::MultisamplingLevel   = 0;
-bool  Config::UseVBO               = true;
-int   Config::PolygonMode          = 0x1B02;
-int   Config::ShadowMapSize        = 512;
 bool  Config::VSync                = false;
 int   Config::WindowX              = 800;
 int   Config::WindowY              = 600;
@@ -22,24 +17,26 @@ bool  Config::FullScreen           = false;
 int   Config::FullScreenX          = 800;
 int   Config::FullScreenY          = 600;
 
-
-bool  Config::DisplayShadowVolumes = false;
-bool  Config::DisplaySkeleton      = false;
-bool  Config::DisplayBVH           = false;
-bool  Config::DisplayCameras       = false;
-
 bool  Config::EnableConsole      = false;
 char* Config::Scene              = strdup("menu");
-int   Config::TestCase           = 0;
-float Config::Speed              = 1.f;
 
 int   Config::LoggingLevel       = 3;
-bool  Config::Save3dsTo3dx       = false;
 
 bool  State::RenderingSelection  = false;
-bool  State::RenderingShadows    = false;
 
 _Performance Performance;
+
+void _Performance :: RegisterStatPage()
+{
+    StatPage *page = new StatPage();
+    page->Name = "Performance";
+
+    Stat_IntPtr *stat = new Stat_IntPtr();
+    stat->Create("RenderedBirds", RenderedBirds);
+    page->Add(*stat);
+
+    g_StatMgr.Add(*page);
+}
 
 void _Performance :: Clear()
 {
@@ -59,10 +56,6 @@ void _Performance :: Update(float T_delta)
     if (_timeCounter > 0.5f)
     {
         _timeCounter -= 0.5f;
-        snapCollisionDataFillMS      = CollisionDataFillMS_max;
-        snapCollisionDeterminationMS = CollisionDeterminationMS_max;
-        CollisionDataFillMS_max      = 0.f;
-        CollisionDeterminationMS_max = 0.f;
         if (FPSmeanCount > 0.f)
             FPSsnap = FPSmeanAccum / FPSmeanCount;
         else
@@ -73,19 +66,7 @@ void _Performance :: Update(float T_delta)
         FPSmax = 0.f;
     }
 
-    CulledElements         = 0;
-    CulledDiffuseElements  = 0;
-    CollidedPreTreeLevels  = 0;
-    CollidedTreeLevels     = 0;
-    CollidedTriangleBounds = 0;
-    CollidedTriangles      = 0;
-
-    memset(&Shadows, 0, sizeof(_Shadows));
-
-    CollisionDataFillMS_max      = CollisionDataFillMS > CollisionDataFillMS_max ? CollisionDataFillMS : CollisionDataFillMS_max;
-    CollisionDeterminationMS_max = CollisionDeterminationMS > CollisionDeterminationMS_max ? CollisionDeterminationMS : CollisionDeterminationMS_max;
-    CollisionDataFillMS      = 0.f;
-    CollisionDeterminationMS = 0.f;
+    RenderedBirds = 0;
 
     FPSmeanAccum += T_delta*FPS;
     FPSmeanCount += T_delta;
@@ -95,6 +76,8 @@ void _Performance :: Update(float T_delta)
     if (FPS > 0.f && FPS < FPSmin)
         FPSmin = FPS;
 }
+
+#include "World/Map.h"
 
 void Config :: Load(const char *fileName)
 {
@@ -110,7 +93,11 @@ void Config :: Load(const char *fileName)
         {
             LoadMode_None,
             LoadMode_Graphics,
-            LoadMode_General
+            LoadMode_General,
+            LoadMode_Map,
+            LoadMode_Quarter,
+            LoadMode_Bird,
+            LoadMode_Hawk
         } mode = LoadMode_None;
 
         while (in.good())
@@ -132,6 +119,26 @@ void Config :: Load(const char *fileName)
                     mode = LoadMode_General;
                     continue;
                 }
+                if (StartsWith(buffer, "[map]"))
+                {
+                    mode = LoadMode_Map;
+                    continue;
+                }
+                if (StartsWith(buffer, "[quarter]"))
+                {
+                    mode = LoadMode_Quarter;
+                    continue;
+                }
+                if (StartsWith(buffer, "[bird]"))
+                {
+                    mode = LoadMode_Bird;
+                    continue;
+                }
+                if (StartsWith(buffer, "[hawk]"))
+                {
+                    mode = LoadMode_Hawk;
+                    continue;
+                }
                 mode = LoadMode_None;
                 continue;
             }
@@ -141,16 +148,7 @@ void Config :: Load(const char *fileName)
                 {
                     int level;
                     sscanf(buffer+8, "%d", &level);
-                    Config::EnableLighting     = level > 0;
-                    Config::EnableFullLighting = level > 1;
-                    continue;
-                }
-                if (StartsWith(buffer, "shadows"))
-                {
-                    int level;
-                    sscanf(buffer+7, "%d", &level);
-                    Config::EnableShadows = level > 0;
-                    Config::EnableShadowsForPlayers = level > 1;
+                    Config::EnableLighting = level;
                     continue;
                 }
                 if (StartsWith(buffer, "shaders"))
@@ -165,20 +163,6 @@ void Config :: Load(const char *fileName)
                     int level;
                     sscanf(buffer+13, "%d", &level);
                     Config::MultisamplingLevel = level;
-                    continue;
-                }
-                if (StartsWith(buffer, "usevbo"))
-                {
-                    int level;
-                    sscanf(buffer+6, "%d", &level);
-                    Config::UseVBO = level;
-                    continue;
-                }
-                if (StartsWith(buffer, "shadowmap"))
-                {
-                    int level;
-                    sscanf(buffer+9, "%d", &level);
-                    Config::ShadowMapSize = level;
                     continue;
                 }
                 if (StartsWith(buffer, "vsync"))
@@ -223,34 +207,6 @@ void Config :: Load(const char *fileName)
                     Config::FullScreen = level;
                     continue;
                 }
-                if (StartsWith(buffer, "show_shadowvolumes"))
-                {
-                    int level;
-                    sscanf(buffer+18, "%d", &level);
-                    Config::DisplayShadowVolumes = level;
-                    continue;
-                }
-                if (StartsWith(buffer, "show_skeleton"))
-                {
-                    int level;
-                    sscanf(buffer+13, "%d", &level);
-                    Config::DisplaySkeleton = level;
-                    continue;
-                }
-                if (StartsWith(buffer, "show_bvh"))
-                {
-                    int level;
-                    sscanf(buffer+8, "%d", &level);
-                    Config::DisplayBVH = level;
-                    continue;
-                }
-                if (StartsWith(buffer, "show_cameras"))
-                {
-                    int level;
-                    sscanf(buffer+12, "%d", &level);
-                    Config::DisplayCameras = level;
-                    continue;
-                }
             }
             if (mode == LoadMode_General)
             {
@@ -266,20 +222,6 @@ void Config :: Load(const char *fileName)
                     Config::Scene = strdup( ReadSubstring(buffer+5) );
                     continue;
                 }
-                if (StartsWith(buffer, "level"))
-                {
-                    int level;
-                    sscanf(buffer+5, "%d", &level);
-                    Config::TestCase = level;
-                    continue;
-                }
-                if (StartsWith(buffer, "speed"))
-                {
-                    float level;
-                    sscanf(buffer+5, "%f", &level);
-                    Config::Speed = level;
-                    continue;
-                }
                 if (StartsWith(buffer, "logging"))
                 {
                     int level;
@@ -287,13 +229,26 @@ void Config :: Load(const char *fileName)
                     Config::LoggingLevel = level;
                     continue;
                 }
-                if (StartsWith(buffer, "3dsTo3dx"))
-                {
-                    int level;
-                    sscanf(buffer+8, "%d", &level);
-                    Config::Save3dsTo3dx = level;
-                    continue;
-                }
+            }
+            if (mode == LoadMode_Map)
+            {
+                World::Map::LoadConfigLine(buffer);
+                continue;
+            }
+            if (mode == LoadMode_Quarter)
+            {
+                World::Quarter::LoadConfigLine(buffer);
+                continue;
+            }
+            if (mode == LoadMode_Bird)
+            {
+                World::Bird::LoadConfigLine(buffer);
+                continue;
+            }
+            if (mode == LoadMode_Hawk)
+            {
+                World::Hawk::LoadConfigLine(buffer);
+                continue;
             }
         }
 

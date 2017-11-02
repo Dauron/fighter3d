@@ -5,14 +5,8 @@ struct Config
 {
     static int   Initialize;
     static bool  EnableLighting;
-    static bool  EnableFullLighting;
-    static bool  EnableShadows;
-    static bool  EnableShadowsForPlayers;
     static bool  EnableShaders;
-    static bool  UseVBO;
     static int   MultisamplingLevel;
-    static int   PolygonMode;
-    static int   ShadowMapSize;
     static bool  VSync;
     static int   WindowX;
     static int   WindowY;
@@ -20,17 +14,9 @@ struct Config
     static int   FullScreenX;
     static int   FullScreenY;
 
-    static bool  DisplayShadowVolumes;
-    static bool  DisplaySkeleton;
-    static bool  DisplayBVH;
-    static bool  DisplayCameras;
-
     static bool  EnableConsole;
     static char* Scene;
-    static int   TestCase;
-    static float Speed;
     static int   LoggingLevel;
-    static bool  Save3dsTo3dx;
 
     static void Load(const char *fileName);
 
@@ -41,7 +27,6 @@ struct Config
 struct State
 {
     static bool RenderingSelection;
-    static bool RenderingShadows;
 };
 
 struct _Performance
@@ -49,37 +34,11 @@ struct _Performance
 private:
     float _timeCounter;
 
-    float CollisionDataFillMS_max;
-    float CollisionDeterminationMS_max;
-
     float FPSmeanAccum;
     float FPSmeanCount;
 
 public:
-    struct _Shadows
-    {
-        int shadows;
-        int culled;
-        int zPass;
-        int zFail;
-        int zFailS;
-        int zFailF;
-        int zFailB;
-
-    } Shadows;
-
-    int CulledElements;
-    int CulledDiffuseElements;
-
-    int CollidedPreTreeLevels;
-    int CollidedTreeLevels;
-    int CollidedTriangleBounds;
-    int CollidedTriangles;
-
-    float CollisionDataFillMS;
-    float CollisionDeterminationMS;
-    float snapCollisionDataFillMS;
-    float snapCollisionDeterminationMS;
+    int RenderedBirds;
 
     float FPS;
     float FPSmin;
@@ -90,6 +49,7 @@ public:
 
     void Clear();
     void Update(float T_delta);
+    void RegisterStatPage();
 };
 extern _Performance Performance;
 

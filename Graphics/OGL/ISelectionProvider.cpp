@@ -23,8 +23,8 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const Math::Cameras::Camera &C
     glSelectBuffer(capacity, selectBuffer);
     glRenderMode(GL_SELECT);
     State::RenderingSelection = true;
-    Shader::SetLightType(xLight_NONE);
-    Shader::EnableTexturing(xState_Disable);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
 
     //Select the projection matrix
     glViewport(Camera.FOV.ViewportLeft, Camera.FOV.ViewportTop, Camera.FOV.ViewportWidth, Camera.FOV.ViewportHeight);
@@ -52,8 +52,6 @@ std::vector<xDWORD> * ISelectionProvider:: Select(const Math::Cameras::Camera &C
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
-
-    Shader::EnableTexturing(xState_Enable);
 
     if(nbRecords <= 0)
     {

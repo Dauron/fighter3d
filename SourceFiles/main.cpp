@@ -5,9 +5,7 @@
 #include "../Graphics/OGL/Shader.h"
 
 #include "SceneConsole.h"
-#include "SceneGame.h"
-#include "SceneTest.h"
-#include "SceneMenu.h"
+#include "SceneWorld.h"
 
 void Application_OnCreate     (Application& sender, void *receiver, bool &res);
 void Application_OnInvalidate (Application& sender, void *receiver, bool &res);
@@ -24,11 +22,7 @@ int main( int argc, char **argv )
     Config::Load("Data/config.txt");
     Graphics::OGL::Shader::Load();
 
-    IScene *scene = NULL;
-    if (!strcmp(Config::Scene, "test")) scene = new Scenes::SceneTest();
-    else
-    if (!strcmp(Config::Scene, "game")) scene = new Scenes::SceneGame();
-    else                                scene = new Scenes::SceneMenu();
+    IScene *scene = new Scenes::SceneWorld();
     if (Config::EnableConsole)
     {
         IScene *prev = scene;
@@ -53,9 +47,9 @@ int main( int argc, char **argv )
     game.OnApplicationInvalidate.Set ( Application_OnInvalidate );
     game.OnApplicationDestroy.Set    ( Application_OnDestroy    );
 #ifndef NDEBUG
-    int cres = game.Create("Camera Fighter - Debug", width, height, true, Config::FullScreen, *scene);
+    int cres = game.Create("Hawker - Debug", width, height, true, Config::FullScreen, *scene);
 #else
-    int cres = game.Create("Camera Fighter", width, height, true, Config::FullScreen, *scene);
+    int cres = game.Create("Hawker", width, height, true, Config::FullScreen, *scene);
 #endif
     if (cres != Application::SUCCESS) return cres;
 
@@ -107,14 +101,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 #endif
 
 #include "../AppFramework/Input/InputMgr.h"
-#include "InputCodes.h"
-#include "../MotionCapture/CaptureInput.h"
-#include "../Multiplayer/NetworkInput.h"
+#include "InputCodesWorld.h"
 #include "../Graphics/Textures/TextureMgr.h"
 #include "../Graphics/FontMgr.h"
-#include "../Graphics/OGL/AnimSkeletal.h"
-#include "../Models/ModelMgr.h"
-#include "../Models/lib3dx/xAnimationMgr.h"
+#include "../Utils/Stat.h"
 
 using namespace Graphics::OGL;
 
@@ -123,18 +113,16 @@ void Application_OnCreate(Application& sender, void *receiver, bool &res)
     Profiler       ::CreateS(100);
     StatMgr        ::CreateS();
     g_StatMgr.Add(*new ProfilerPage());
+    Performance.RegisterStatPage();
+
     InputMgr       ::CreateS();
     g_InputMgr.Create(IC_CODE_COUNT);
     g_InputMgr.LoadKeyCodeMap("Data/keys.txt");
     g_InputMgr.LoadMap("Data/keyboard.txt");
-    NetworkInput   ::CreateS();
-    CaptureInput   ::CreateS();
+
     FontMgr        ::CreateS();
     TextureMgr     ::CreateS();
     //Shader         ::CreateS(); // Lazy load
-    AnimSkeletal   ::CreateS();
-    xAnimationMgr  ::CreateS();
-    ModelMgr       ::CreateS();
     res = true;
 }
 
@@ -149,26 +137,15 @@ void Application_OnInvalidate(Application& sender, void *receiver, bool &res)
     Shader::Invalidate();
     g_InputMgr.AllKeysUp();
 
-    if (xAnimationMgr::GetSingletonPtr())
-        g_AnimationMgr.InvalidateItems();
-
-    if (ModelMgr::GetSingletonPtr())
-        g_ModelMgr.InvalidateItems();
-
     res = true;
 }
 
 void Application_OnDestroy(Application& sender, void *receiver, bool &res)
 {
-    ModelMgr       ::DestroyS();
-    xAnimationMgr  ::DestroyS();
-    AnimSkeletal   ::DestroyS();
     Shader         ::DestroyS();
     TextureMgr     ::DestroyS();
     FontMgr        ::DestroyS();
-    CaptureInput   ::DestroyS();
-    NetworkInput   ::DestroyS();
-    g_InputMgr.SaveMap("Data/keyboard.txt");
+    //g_InputMgr.SaveMap("Data/keyboard.txt");
     InputMgr       ::DestroyS();
     StatMgr        ::DestroyS();
     Profiler       ::DestroyS();
