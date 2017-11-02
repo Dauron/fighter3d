@@ -140,9 +140,9 @@ void FieldOfView :: Update()
         Corners3D[0].z = -FrontClip*2.f;
         Corners3D[0].y = -Corners3D[0].z * (xFLOAT)tan( DegToRad(PerspAngle) * 0.5f );
         Corners3D[0].x = Corners3D[0].y * Aspect;
-        Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, -FrontClip*2.f);
-        Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, -FrontClip*2.f);
-        Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, -FrontClip*2.f);
+        Corners3D[1].init(-Corners3D[0].x,  Corners3D[0].y, Corners3D[0].z);
+        Corners3D[2].init(-Corners3D[0].x, -Corners3D[0].y, Corners3D[0].z);
+        Corners3D[3].init( Corners3D[0].x, -Corners3D[0].y, Corners3D[0].z);
         xPoint3 eye; eye.zero();
 
         Corners3D[0] = MX_ViewToWorld.preTransformP(Corners3D[0]);
@@ -177,7 +177,7 @@ void FieldOfView :: Update()
     }
 }
 
-xPoint3 FieldOfView :: Get3dPos(xLONG ScreenX, xLONG ScreenY, xPoint3 P_onPlane)
+xPoint3 FieldOfView :: Get3dPos(xLONG ScreenX, xLONG ScreenY, xPlane PN_plane)
 {
     if (!ViewportContains(ScreenX, ScreenY))
         return xPoint3::Create(xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE, xFLOAT_HUGE_NEGATIVE);
@@ -203,8 +203,13 @@ xPoint3 FieldOfView :: Get3dPos(xLONG ScreenX, xLONG ScreenY, xPoint3 P_onPlane)
     N_ray = camera->MX_ViewToWorld_Get().preTransformV(N_ray);
 
     // get plane of ray intersection
-    xPlane PN_plane; PN_plane.init((camera->P_eye - camera->P_center).normalize(), P_onPlane);
     return PN_plane.intersectRay(P_ray, N_ray);
+}
+
+xPoint3 FieldOfView :: Get3dPos(xLONG ScreenX, xLONG ScreenY, xPoint3 P_onPlane)
+{
+    xPlane PN_plane; PN_plane.init((camera->P_eye - camera->P_center).normalize(), P_onPlane);
+    return Get3dPos(ScreenX,ScreenY, PN_plane);
 }
 
 bool FieldOfView :: CheckSphere(const xPoint3 &P_center, xFLOAT S_radius) const

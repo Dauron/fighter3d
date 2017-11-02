@@ -70,12 +70,16 @@ namespace Math { namespace Cameras {
         const xMatrix &MX_Projection_Get() const
         { return MX_Projection; }
 
+        const Camera *Camera_Get() const
+        { return camera; }
+
         bool    ViewportContains(xLONG ScreenX, xLONG ScreenY)
         {
             return ScreenX >= ViewportLeft && ScreenY >= ViewportTop &&
                    ScreenX <= ViewportLeft + ViewportWidth &&
                    ScreenY <= ViewportTop + ViewportHeight;
         }
+        xPoint3 Get3dPos(xLONG ScreenX, xLONG ScreenY, xPlane  PN_plane);
         xPoint3 Get3dPos(xLONG ScreenX, xLONG ScreenY, xPoint3 P_onPlane);
 
         bool CheckSphere(const xPoint3 &P_center, xFLOAT S_radius) const;
