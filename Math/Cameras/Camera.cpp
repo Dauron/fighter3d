@@ -30,7 +30,7 @@ void Camera :: LookAtMatrix(xMatrix &MX_WorldToView)
     /* Forward = center - eye */
     xVector3 N_forward = (P_center - P_eye).normalize();
     /* Side = forward x up */
-    xVector3 &N_side = xVector3::CrossProduct(N_forward, NW_up).normalize();
+    xVector3 N_side = xVector3::CrossProduct(N_forward, NW_up).normalize();
     /* Recompute up as: up = side x forward */
     xVector3 N_up = xVector3::CrossProduct(N_side, N_forward);
     /* Fill matrix */
