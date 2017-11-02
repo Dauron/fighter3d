@@ -60,12 +60,15 @@ void SceneConsole :: InitInputMgr()
     KeyNextPage = "[" + g_InputMgr.GetKeyName(g_InputMgr.Input2KeyCode(IC_Con_StatPrevPage)) + "] or [" +
         g_InputMgr.GetKeyName(g_InputMgr.Input2KeyCode(IC_Con_StatNextPage)) + "]";
 
-    im.SetScene(PrevScene->Name);
+    if (PrevScene)
+    {
+        im.SetScene(PrevScene->Name);
 #ifdef WIN32
-    im.Key2InputCode_SetIfKeyFree(VK_OEM_3,  IC_Console);
+        im.Key2InputCode_SetIfKeyFree(VK_OEM_3,  IC_Console);
 #else
-    im.Key2InputCode_SetIfKeyFree('`',       IC_Console);
+        im.Key2InputCode_SetIfKeyFree('`',       IC_Console);
 #endif
+    }
 }
 
 void SceneConsole :: Destroy()
@@ -515,6 +518,7 @@ bool SceneConsole::Render()
             glVertex2f((GLfloat)Width, (GLfloat)cHeight);
             glVertex2f(0.0f, (GLfloat)cHeight);
         glEnd();
+
         // Draw scrollbar
         glColor4ub( 255, 255, 255, 128 );
         float size = (float)(pageSize+1) / histLines;
