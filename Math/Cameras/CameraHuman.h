@@ -6,17 +6,16 @@
 namespace Math { namespace Cameras {
     using namespace Math::Cameras;
 
-    #define STEP_DEPTH           0.1f;
+    #define STEP_DEPTH           0.2f;
     #define FRAMES_PER_HALF_STEP 20;
 
     class CameraHuman : public Camera
     {
     protected:
-        xVector3 N_front;
+        xVector2 N_front;
 
         xVector3 OrthoPointUp (const xVector3 &source, const xVector3 &oldUp);
         void RotatePoint      (xFLOAT &pX, xFLOAT &pY, xFLOAT angle);
-        void RotatePointPitch (const xVector3 front, xFLOAT &pX, xFLOAT &pY, xFLOAT &pZ, xFLOAT angle);
 
         virtual void SetCamera(xFLOAT eyex, xFLOAT eyey, xFLOAT eyez,
                        xFLOAT centerx, xFLOAT centery, xFLOAT centerz,
@@ -33,7 +32,8 @@ namespace Math { namespace Cameras {
         virtual void Update(xFLOAT T_delta)
         {
             Camera::Update(T_delta);
-            N_front.init(P_center.x-P_eye.x, P_center.y-P_eye.y, 0).normalize();
+            N_front.init(P_center.x-P_eye.x, P_center.y-P_eye.y).normalize();
+            if (NW_up.z < 0.f) N_front.invert();
         }
 
         void MakeStep(xFLOAT numFrames)

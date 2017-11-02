@@ -7,19 +7,19 @@ void CameraHuman::SetCamera(xFLOAT eyex, xFLOAT eyey, xFLOAT eyez,
                             xFLOAT upx, xFLOAT upy, xFLOAT upz)
 {
     Camera::SetCamera(eyex, eyey, eyez, centerx, centery, centerz, upx, upy, upz);
-    N_front.init(centerx-eyex, centery-eyey, 0).normalize();
+    N_front.init(centerx-eyex, centery-eyey).normalize();
     stepv = step = 0.f;
 }
 
 void CameraHuman::Move(xFLOAT frwd, xFLOAT side, xFLOAT vert)
 {
     // move forward/backwards
-    xVector3 NW_shift = N_front * frwd;
+    xVector3 NW_shift; NW_shift.init(N_front.x * frwd, N_front.y * frwd, 0);
     P_eye    += NW_shift;
     P_center += NW_shift;
 
     // move left/right
-    NW_shift.init(N_front.y, -N_front.x, N_front.z) *= side;
+    NW_shift.init(N_front.y, -N_front.x, 0) *= side;
     P_eye    += NW_shift;
     P_center += NW_shift;
 
@@ -65,11 +65,16 @@ void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         }
         */
         // 'human' head pitch
-        pitch = DegToRad (pitch) * 0.5f;
-        xFLOAT s = sin(pitch);
-        xQuaternion q; q.init(N_front.y*s, -N_front.x*s, 0.f, cos(pitch));
-        NW_forward = q.rotate(NW_forward);
-        NW_up      = q.rotate(NW_up);
+        if (!( (pitch < 0 && NW_up.z < 0 && NW_forward.z < 0) ||
+               (pitch > 0 && NW_up.z < 0 && NW_forward.z > 0) ) )
+        {
+            pitch = DegToRad (pitch) * 0.5f;
+            xFLOAT s = sin(pitch);
+            xQuaternion q; q.init(N_front.y*s, -N_front.x*s, 0.f, cos(pitch));
+
+            NW_forward = q.rotate(NW_forward);
+            NW_up      = q.rotate(NW_up);
+        }
     }
 
     if (!IsZero(roll))
@@ -77,7 +82,7 @@ void CameraHuman::Rotate(xFLOAT heading, xFLOAT pitch, xFLOAT roll)
         // 'human' head roll
         roll = DegToRad (roll) * 0.5f;
         xFLOAT s = sin(roll);
-        xQuaternion q; q.init(N_front.x*s, N_front.y*s, N_front.z*s, cos(roll));
+        xQuaternion q; q.init(N_front.x*s, N_front.y*s, 0, cos(roll));
         NW_up = q.rotate(NW_up);
     }
 
@@ -161,18 +166,4 @@ void CameraHuman::RotatePoint(xFLOAT &pX, xFLOAT &pY, xFLOAT angle)
 
     pX = radius * (xFLOAT)cos (angle);
     pY = radius * (xFLOAT)sin (angle);
-}
-
-void CameraHuman::RotatePointPitch(const xVector3 front, xFLOAT &pX, xFLOAT &pY, xFLOAT &pZ, xFLOAT angle)
-{
-    xFLOAT angleXY = atan2(N_front.x,N_front.y);
-    if (IsZero(angleXY))
-        angleXY = -atan2(pY,pX);
-    xFLOAT radiusXY = sqrt ( pX * pX + pY * pY );
-    radiusXY *= (xFLOAT)(-Sign(pZ)*Sign(N_front.z));
-
-    RotatePoint (radiusXY, pZ, angle);
-
-    pX = radiusXY * cos (angleXY);
-    pY = radiusXY * sin (angleXY);
 }
