@@ -19,7 +19,7 @@ struct xVector2 {
         assert (i<2);
         return xy[i];
     }
-    const xFLOAT operator [] (unsigned int i) const {
+    xFLOAT operator [] (unsigned int i) const {
         assert (i<2);
         return xy[i];
     }

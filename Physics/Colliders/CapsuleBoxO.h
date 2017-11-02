@@ -195,6 +195,7 @@ xDWORD CollideCapsuleBoxO(const xCapsule &cp1, const xBoxO &bo2,
     HitPointsCapsuleBoxO(bo, P_closest2, PPosition2, P_hits, I_hits);
 
     if (I_hits == 0)
+    {
         if (PPosition == POINT_NearCorner)
             P_hits[I_hits++] = P_closest[0];
         else
@@ -213,6 +214,7 @@ xDWORD CollideCapsuleBoxO(const xCapsule &cp1, const xBoxO &bo2,
             if (PPosition2 == POINT_NearCorner) P_hits[I_hits++] = P_closest2[0];
             else                                P_hits[I_hits++] = (P_closest2[0]+P_closest2[1])*0.5f;
         }
+    }
 
     for (int i = 0; i < I_hits; ++i)
         cset.Add(CollisionInfo(body1, body2, cp1, bo2, NW_fix, P_hits[i], P_hits[i]+NW_fix));

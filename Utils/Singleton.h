@@ -18,6 +18,7 @@
 #endif
 
 #include <cassert>
+#include <sys/types.h>
 
 template <typename T> class Singleton
 {
@@ -25,11 +26,11 @@ template <typename T> class Singleton
 
 protected:
     Singleton( void )
-    {
-        assert( !ms_Singleton );
-        int offset = (int)(T*)1 - (int)(Singleton <T>*)(T*)1;
-        ms_Singleton = (T*)((int)this + offset);
-    }
+        {
+            assert( !ms_Singleton );
+            off_t offset = (off_t)(T*)1 - (off_t)(Singleton <T>*)(T*)1;
+            ms_Singleton = (T*)((off_t)this + offset);
+        }
    ~Singleton( void )
         {  assert( ms_Singleton );  ms_Singleton = 0;  }
 

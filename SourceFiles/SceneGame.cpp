@@ -300,7 +300,7 @@ bool SceneGame :: ShellCommand (std::string &cmd, std::string &output)
     if (cmd.substr(0, 4) == "tls ")
     {
         unsigned int id = (unsigned int)atoi(cmd.substr(4).c_str());
-        if (id >= 0 && id < Map.lights.size())
+        if (id < Map.lights.size())
             Map.lights[id].turned_on = !Map.lights[id].turned_on;
         return true;
     }
@@ -423,26 +423,21 @@ bool SceneGame :: Update(float T_delta)
 
     T_scaled = T_delta*MULT_MOVE*run;
 
-    bool moving = false;
     if (im.InputDown_Get(IC_MoveForward))
     {
         MainCamera->Move (T_scaled, 0.0f, 0.0f);
-        moving = true;
     }
     if (im.InputDown_Get(IC_MoveBack))
     {
         MainCamera->Move (-T_scaled, 0.0f, 0.0f);
-        moving = true;
     }
     if (im.InputDown_Get(IC_MoveLeft))
     {
         MainCamera->Move (0.0f, -T_scaled, 0.0f);
-        moving = true;
     }
     if (im.InputDown_Get(IC_MoveRight))
     {
         MainCamera->Move (0.0f, T_scaled, 0.0f);
-        moving = true;
     }
     if (im.InputDown_Get(IC_MoveUp))
         MainCamera->Move (0.0f, 0.0f, T_scaled);
@@ -606,7 +601,8 @@ bool SceneGame :: Render()
             if (player2.FL_recovering)
                 glColor3ub( 255, 0, 0 );
             else
-                glColor3ub( 0, 255, 0 );glVertex2f(Width - 10.f, lineHeight+10.f);
+                glColor3ub( 0, 255, 0 );
+            glVertex2f(Width - 10.f, lineHeight+10.f);
             glVertex2f(Width - 10.f - LifeWidthP2, lineHeight+10.f);
             glVertex2f(Width - 10.f - LifeWidthP2, lineHeight+20.f);
             glVertex2f(Width - 10.f, lineHeight+20.f);

@@ -196,8 +196,6 @@ void   xModel :: BoneDelete(xBYTE ID_bone)
 ////////////////////// xModel
 void   xModel :: Free()
 {
-    if (!this) return;
-
     if (this->FileName)
         delete[] this->FileName;
     xMaterial *currM = this->L_material, *nextM;
@@ -268,7 +266,7 @@ xModel *xModel :: Load(const char *fileName, bool FL_create_CollisionInfo)
                     {
                         xmodel->Free();
                         fclose(file);
-                        return false;
+                        return NULL;
                     }
                     bool transparent = last->transparency > 0.f;
                     xmodel->FL_transparent |= transparent;

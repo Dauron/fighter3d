@@ -471,6 +471,8 @@ xDWORD CollideTriangleTriangle(const xPoint3 &P_a1, const xPoint3 &P_a2, const x
     if (!p2b) p2b = -1;
     xPoint3 p1, p2;
     bool    FL_p1_used = false;
+    p1.zero();
+    p2.zero();
 
     if (p1a*p2b < 0.f || p2a*p1b < 0.f)
     {

@@ -9,7 +9,8 @@ using namespace Graphics::OGL;
 std::vector<xDWORD> * ISelectionProvider:: Select(const Math::Cameras::Camera &Camera,
                                                   int X, int Y, int W, int H)
 {
-    if (W == 0) W = 1; if (H == 0) H = 1;
+    if (W == 0) W = 1;
+    if (H == 0) H = 1;
 
     int nbRecords = 0;
     GLuint objectID = xDWORD_MAX;

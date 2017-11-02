@@ -25,6 +25,7 @@ namespace Math { namespace Tracking {
             P_center = p_center;
             S_radius = s_radius;
             Type     = 0;
+            P_center_Trfm.zero();
         }
 
         virtual const xMatrix &MX_LocalToWorld_Get() const

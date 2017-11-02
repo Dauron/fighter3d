@@ -135,10 +135,12 @@ namespace ShadowVolume
             xWORD3 *backCapP  = NULL;
 
             if (shadowData.zDataLevel == xShadowData::ZFAIL_PASS)
+            {
                 if (optimizeBackCap)
                     backCapP = new xWORD3[elem->I_edges];
                 else
                     backCapP = new xWORD3[elem->I_faces];
+            }
             xWORD3 *backDest  = backCapP;
 
             for (; edgeIter != edgeEnd; ++edgeIter)

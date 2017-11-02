@@ -625,6 +625,7 @@ bool           xAnimation::Load(const char *fileName)
         prevFrame = frame;
     }
     if (frame)
+    {
         if (loop)
         {
             frame->Next = this->L_frames;
@@ -632,6 +633,7 @@ bool           xAnimation::Load(const char *fileName)
         }
         else
             frame->Next = NULL;
+    }
 
     fclose(file);
     return true;

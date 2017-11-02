@@ -19,6 +19,8 @@ namespace Scenes { namespace Menu {
         BaseState  *Parent;
         Vec_State   SubStates;
 
+        virtual ~BaseState() = default;
+
         virtual void Init(BaseState *parent)
         {
             Parent = parent;

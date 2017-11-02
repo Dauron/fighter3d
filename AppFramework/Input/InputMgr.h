@@ -184,7 +184,7 @@ public:
         std::map<byte, std::string>::iterator iter = KeyCodeNameMap.find(kCode);
         if (iter != KeyCodeNameMap.end())
             return iter->second;
-        char c[2] = { kCode, 0 };
+        char c[2] = { (char)kCode, 0 };
         return c;
     }
     byte GetKeyCode(const std::string &kName)

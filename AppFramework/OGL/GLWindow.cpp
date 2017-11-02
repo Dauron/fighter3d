@@ -49,7 +49,7 @@ void BrowseSupportedPixelFormats(HDC hDC)
             continue;
 
         //Save the number of samples in this pixel format
-        //if(    results[10]==false)
+        //if( results[10]==false)
         //    samplesSupported[0]=true;
         //else if(results[11]<=16)                        //don't support >16x AA
         //    samplesSupported[results[11]]=true;

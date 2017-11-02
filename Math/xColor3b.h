@@ -13,7 +13,7 @@ union xColor3b {
         assert (i<3);
         return rgb[i];
     }
-    const xBYTE operator [] (unsigned int i) const {
+    xBYTE operator [] (unsigned int i) const {
         assert (i<3);
         return rgb[i];
     }

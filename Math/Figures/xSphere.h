@@ -14,10 +14,10 @@ namespace Math { namespace Figures {
 
         virtual void ComputeSpan(const xVector3 &N_axis, xFLOAT &P_min, xFLOAT &P_max, int axis = -1) const
         {
-            ComputeSpan(P_center, S_radius, N_axis, P_min, P_max, axis);
+            ComputeSpan(P_center, S_radius, N_axis, P_min, P_max);
         }
         static void ComputeSpan(const xPoint3 &P_center, xFLOAT S_radius,
-                                const xVector3 &N_axis, xFLOAT &P_min, xFLOAT &P_max, int axis = -1)
+                                const xVector3 &N_axis, xFLOAT &P_min, xFLOAT &P_max)
         {
             xFLOAT P_middle = xVector3::DotProduct(N_axis, P_center);
             P_min = P_middle - S_radius;
