@@ -3,7 +3,7 @@
 3	VK_CANCEL
 4	M_Mouse_Button
 5	X_Mouse_Button1
-6	X_Mouse_Button1
+6	X_Mouse_Button2
 
 8	Backspace
 9	Tab
