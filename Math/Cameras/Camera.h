@@ -35,7 +35,8 @@ namespace Math { namespace Cameras {
 
         ObjectTracker EyeTracker;
         ObjectTracker CenterTracker;
-        xFLOAT        W_TrackingSpeed;
+        xFLOAT        W_TrackingSpeedEye;
+        xFLOAT        W_TrackingSpeedCtr;
 
         FieldOfView   FOV;
 
@@ -69,7 +70,8 @@ namespace Math { namespace Cameras {
             EyeTracker.ScriptData    = (xBYTE*)&eyeTrackingData;
             CenterTracker.ScriptData = (xBYTE*)&centerTrackingData;
 
-            W_TrackingSpeed = 1.f;
+            W_TrackingSpeedEye = 1.f;
+            W_TrackingSpeedCtr = 1.f;
             FOV.InitCamera(this);
         }
 
